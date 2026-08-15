@@ -181,3 +181,4 @@
 "miniPlayer.progress" = "播放进度";
 "miniPlayer.volume" = "音量";
 "miniPlayer.stereoMeter" = "立体声电平";
+"command.softwareUpdate" = "软件更新…";

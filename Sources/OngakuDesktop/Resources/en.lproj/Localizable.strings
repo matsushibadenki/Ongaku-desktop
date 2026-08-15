@@ -181,3 +181,4 @@
 "miniPlayer.progress" = "Playback progress";
 "miniPlayer.volume" = "Volume";
 "miniPlayer.stereoMeter" = "Stereo level";
+"command.softwareUpdate" = "Software Update…";

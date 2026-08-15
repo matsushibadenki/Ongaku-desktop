@@ -1,4 +1,22 @@
 import SwiftUI
+import Sparkle
+
+@MainActor
+final class SoftwareUpdateController: ObservableObject {
+    let updaterController: SPUStandardUpdaterController
+
+    init() {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+    }
+
+    func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
+    }
+}
 
 @main
 struct OngakuDesktopApp: App {
@@ -8,6 +26,7 @@ struct OngakuDesktopApp: App {
     @StateObject private var appearance: AppAppearanceSettings
     @StateObject private var windowPresentation = WindowPresentationController()
     @StateObject private var player = PlaybackController()
+    @StateObject private var softwareUpdater = SoftwareUpdateController()
 
     init() {
         let storage = LibraryStorageSettings()
@@ -42,6 +61,12 @@ struct OngakuDesktopApp: App {
         }
         .defaultSize(width: 1_320, height: 780)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button(L10n.text("command.softwareUpdate")) {
+                    softwareUpdater.checkForUpdates()
+                }
+            }
+
             CommandGroup(after: .newItem) {
                 Button(L10n.text("command.import")) {
                     NotificationCenter.default.post(name: .requestImport, object: nil)

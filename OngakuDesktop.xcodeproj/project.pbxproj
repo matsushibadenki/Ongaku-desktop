@@ -44,6 +44,7 @@
 		200000000000000000000023 /* AppAppearanceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000035 /* AppAppearanceSettings.swift */; };
 		200000000000000000000024 /* WindowPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000036 /* WindowPresentationController.swift */; };
 		200000000000000000000025 /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000037 /* MiniPlayerView.swift */; };
+		200000000000000000000026 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C00000000000000000000002 /* Sparkle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -94,6 +95,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				200000000000000000000026 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -177,6 +179,9 @@
 			dependencies = (
 			);
 			name = OngakuDesktop;
+			packageProductDependencies = (
+				C00000000000000000000002 /* Sparkle */,
+			);
 			productName = OngakuDesktop;
 			productReference = 100000000000000000000020 /* OngakuDesktop.app */;
 			productType = "com.apple.product-type.application";
@@ -207,6 +212,9 @@
 				Base,
 			);
 			mainGroup = 400000000000000000000001;
+			packageReferences = (
+				C00000000000000000000001 /* XCLocalSwiftPackageReference "Sparkle" */,
+			);
 			productRefGroup = 400000000000000000000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -309,12 +317,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "arm64 x86_64";
 				CLANG_ENABLE_MODULES = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
@@ -330,7 +340,8 @@
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Packaging/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
@@ -355,7 +366,8 @@
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Packaging/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
@@ -392,6 +404,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C00000000000000000000001 /* XCLocalSwiftPackageReference "Sparkle" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/Sparkle;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C00000000000000000000002 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C00000000000000000000001 /* XCLocalSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 800000000000000000000001 /* Project object */;
 }

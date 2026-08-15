@@ -14,6 +14,8 @@ Ongaku Desktop is a native macOS music manager and player. It aims to cover the 
 - Atomic import journal with verified recovery after interruption or restart
 - Full-library verification with missing, changed, and unreadable states
 - English, Japanese, and Simplified Chinese UI
+- Universal macOS release packaging for Apple Silicon and Intel Macs
+- Signed in-app software updates through the app menu
 
 ## Run
 
@@ -24,6 +26,10 @@ For command-line development you can also use:
 ```sh
 swift run OngakuDesktop
 ```
+
+Release archives, signing instructions, and the Sparkle update feed live in
+[`Releases`](Releases/README.md). Published builds contain both `arm64` and
+`x86_64` slices in one Universal Binary.
 
 The first import creates the managed library under the current user’s Application Support directory. Source files are never modified.
 

@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode user and machine-local state
+xcuserdata/
+*.xcuserstate
+DerivedData/
+*.xccheckout
+*.xcscmblueprint
+
+# Swift Package Manager output and local IDE state
+.build/
+.swiftpm/
+
+# Generated release output. Keep scripts, SparkleTools, appcast.xml, and docs.
+/Releases/build/
+/Releases/dist/
+/Releases/*.xcarchive
+/Releases/*.app
+/Releases/*.zip
+/Releases/*.dmg
+/Releases/*.dSYM
+/Releases/private/
+
+# Local convenience alias
+/Ongakuのエイリアス

@@ -10,6 +10,8 @@
 - [Done] Mobile DSP migration with ten real-time effect modules and persistent presets
 - [Done] Compact rotary parameter controls with Basic and Pro effect racks
 - [Done] English, Japanese, and Simplified Chinese localization
+- [Done] Universal arm64 and x86_64 release packaging with architecture verification
+- [Done] Signed Sparkle software updates with a localized app-menu command
 - [Next] Editable metadata, album artwork extraction, and batch editing
 - [Next] Playlists, play queue, shuffle, repeat, and gapless playback
 - [Next] Watched folders with explicit conflict handling
