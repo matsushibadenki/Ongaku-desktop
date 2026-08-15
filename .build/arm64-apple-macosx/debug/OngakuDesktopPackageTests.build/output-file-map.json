@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/primary.swiftdeps"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner.d",
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner.dia"
+  }
+}

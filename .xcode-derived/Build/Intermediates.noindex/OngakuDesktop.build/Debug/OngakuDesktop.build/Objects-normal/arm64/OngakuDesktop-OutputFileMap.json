@@ -1,0 +1,369 @@
+{
+  "" : {
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-primary.dia",
+    "emit-module-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-primary-emit-module.dia",
+    "pch" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-primary.swiftdeps"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppAppearanceSettings.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppAppearanceSettings~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppLanguageSettings.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AppLanguageSettings~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectModuleRegistry.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectModuleRegistry~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectNode~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectPreset.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioEffectPreset~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioOutputManager.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/AudioOutputManager~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BBEAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/BodyAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ContentView~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/DesignTokens~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EffectsRackView~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/EqualizerAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExciterAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GlossAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/HighQualityEnhancementAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryContent~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryModels~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryRepository~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibrarySidebar~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStorageSettings~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/LibraryStore~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/Localization~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniPlayerView.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniPlayerView~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniToggleSwitch.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/MiniToggleSwitch~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktopApp~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OptoFETAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlaybackController~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PlayerBar~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/PreferencesView~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/RotaryKnob.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/RotaryKnob~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SimulationAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpaceAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/StorageSettingsView~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TrackInspector~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WarmAudioEffect~partial.swiftmodule"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift" : {
+    "const-values" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController.swiftconstvalues",
+    "dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController.d",
+    "diagnostics" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController.dia",
+    "index-unit-output-path" : "/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController.o",
+    "llvm-bc" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController.bc",
+    "object" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController.o",
+    "swift-dependencies" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController.swiftdeps",
+    "swiftmodule" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/WindowPresentationController~partial.swiftmodule"
+  }
+}

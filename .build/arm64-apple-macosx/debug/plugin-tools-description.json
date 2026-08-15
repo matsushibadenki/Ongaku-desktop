@@ -1,0 +1,1593 @@
+{
+  "builtTestProducts" : [
+    {
+      "binaryPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.xctest/Contents/MacOS/OngakuDesktopPackageTests",
+      "packagePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop",
+      "productName" : "OngakuDesktopPackageTests"
+    }
+  ],
+  "copyCommands" : {
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/Info.plist" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/Info.plist"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/Info.plist"
+        }
+      ]
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/en.lproj/Localizable.strings" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/en.lproj/Localizable.strings"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/en.lproj/Localizable.strings"
+        }
+      ]
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/ja.lproj/Localizable.strings" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/ja.lproj/Localizable.strings"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/ja.lproj/Localizable.strings"
+        }
+      ]
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/zh-hans.lproj/Localizable.strings" : {
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/zh-Hans.lproj/Localizable.strings"
+        }
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop_OngakuDesktop.bundle/zh-hans.lproj/Localizable.strings"
+        }
+      ]
+    }
+  },
+  "explicitTargetDependencyImportCheckingMode" : {
+    "none" : {
+
+    }
+  },
+  "generatedSourceTargetSet" : [
+
+  ],
+  "pluginDescriptions" : [
+
+  ],
+  "swiftCommands" : {
+    "C.OngakuDesktop-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/sources",
+      "importPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppAppearanceSettings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppLanguageSettings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectModuleRegistry.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectPreset.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioOutputManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniPlayerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniToggleSwitch.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/RotaryKnob.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DerivedSources/resource_bundle_accessor.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<OngakuDesktop-arm64-apple-macosx-debug.module-resources>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/sources"
+        }
+      ],
+      "isLibrary" : false,
+      "moduleName" : "OngakuDesktop",
+      "moduleOutputPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules/OngakuDesktop.swiftmodule",
+      "objects" : [
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppAppearanceSettings.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppLanguageSettings.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectModuleRegistry.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectNode.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectPreset.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioOutputManager.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BBEAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BodyAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ContentView.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DesignTokens.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EffectsRackView.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EqualizerAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ExciterAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/GlossAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/HighQualityEnhancementAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryContent.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryModels.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryRepository.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibrarySidebar.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStorageSettings.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStore.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/Localization.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniPlayerView.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniToggleSwitch.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OngakuDesktopApp.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OptoFETAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlaybackController.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlayerBar.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PreferencesView.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/RotaryKnob.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SimulationAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SpaceAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/StorageSettingsView.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/TrackInspector.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WarmAudioEffect.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WindowPresentationController.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/resource_bundle_accessor.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+        "-module-cache-path",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-Xfrontend",
+        "-entry-point-function-name",
+        "-Xfrontend",
+        "OngakuDesktop_main",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "ongaku_desktop"
+      ],
+      "outputFileMapPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppAppearanceSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppLanguageSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectModuleRegistry.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectNode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectPreset.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioOutputManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BBEAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BodyAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ContentView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DesignTokens.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EffectsRackView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EqualizerAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ExciterAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/GlossAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/HighQualityEnhancementAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryContent.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryRepository.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibrarySidebar.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStorageSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/Localization.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniPlayerView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniToggleSwitch.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OngakuDesktopApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OptoFETAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlaybackController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlayerBar.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PreferencesView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/RotaryKnob.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SimulationAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SpaceAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/StorageSettingsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/TrackInspector.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WarmAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WindowPresentationController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules/OngakuDesktop.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppAppearanceSettings.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppLanguageSettings.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectModuleRegistry.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectPreset.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioOutputManager.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniPlayerView.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniToggleSwitch.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/RotaryKnob.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DerivedSources/resource_bundle_accessor.swift"
+      ],
+      "tempsPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.OngakuDesktopPackageTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/sources",
+      "importPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.derived/runner.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules/OngakuDesktopTests.swiftmodule"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "OngakuDesktopPackageTests",
+      "moduleOutputPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules/OngakuDesktopPackageTests.swiftmodule",
+      "objects" : [
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-emit-objc-header",
+        "-emit-objc-header-path",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/include/OngakuDesktopPackageTests-Swift.h",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "ongaku_desktop"
+      ],
+      "outputFileMapPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules/OngakuDesktopPackageTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.derived/runner.swift"
+      ],
+      "tempsPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build",
+      "wholeModuleOptimization" : false
+    },
+    "C.OngakuDesktopTests-arm64-apple-macosx-debug.module" : {
+      "executable" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "fileList" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/sources",
+      "importPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules",
+      "inputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/ApplicationSettingsTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/AudioEffectPresetTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/StereoLevelMeterTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/UpsamplingPolicyTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/sources"
+        }
+      ],
+      "isLibrary" : true,
+      "moduleName" : "OngakuDesktopTests",
+      "moduleOutputPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules/OngakuDesktopTests.swiftmodule",
+      "objects" : [
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests.swift.o",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests.swift.o"
+      ],
+      "otherArguments" : [
+        "-target",
+        "arm64-apple-macosx14.0",
+        "-incremental",
+        "-enable-batch-mode",
+        "-serialize-diagnostics",
+        "-index-store-path",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/index/store",
+        "-Onone",
+        "-enable-testing",
+        "-Xfrontend",
+        "-enable-cross-import-overlays",
+        "-j10",
+        "-DSWIFT_PACKAGE",
+        "-DDEBUG",
+        "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+        "-module-cache-path",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/ModuleCache",
+        "-parseable-output",
+        "-parse-as-library",
+        "-swift-version",
+        "6",
+        "-plugin-path",
+        "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+        "-sdk",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-F",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-I",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-L",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+        "-g",
+        "-Xcc",
+        "-isysroot",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+        "-Xcc",
+        "-F",
+        "-Xcc",
+        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+        "-Xcc",
+        "-fPIC",
+        "-Xcc",
+        "-g",
+        "-package-name",
+        "ongaku_desktop"
+      ],
+      "outputFileMapPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/output-file-map.json",
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules/OngakuDesktopTests.swiftmodule"
+        }
+      ],
+      "prepareForIndexing" : false,
+      "sources" : [
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/ApplicationSettingsTests.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/AudioEffectPresetTests.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/StereoLevelMeterTests.swift",
+        "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/UpsamplingPolicyTests.swift"
+      ],
+      "tempsPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build",
+      "wholeModuleOptimization" : false
+    }
+  },
+  "swiftFrontendCommands" : {
+
+  },
+  "swiftTargetScanArgs" : {
+    "OngakuDesktop" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OngakuDesktop",
+      "-package-name",
+      "ongaku_desktop",
+      "-c",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppAppearanceSettings.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppLanguageSettings.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectModuleRegistry.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectPreset.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioOutputManager.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniPlayerView.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniToggleSwitch.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/RotaryKnob.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DerivedSources/resource_bundle_accessor.swift",
+      "-I",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_AVAILABLE",
+      "-module-cache-path",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-Xfrontend",
+      "-entry-point-function-name",
+      "-Xfrontend",
+      "OngakuDesktop_main",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "ongaku_desktop",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "OngakuDesktopPackageTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OngakuDesktopPackageTests",
+      "-package-name",
+      "ongaku_desktop",
+      "-c",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.derived/runner.swift",
+      "-I",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-emit-objc-header",
+      "-emit-objc-header-path",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/include/OngakuDesktopPackageTests-Swift.h",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "ongaku_desktop",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ],
+    "OngakuDesktopTests" : [
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+      "-module-name",
+      "OngakuDesktopTests",
+      "-package-name",
+      "ongaku_desktop",
+      "-c",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/ApplicationSettingsTests.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/AudioEffectPresetTests.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/StereoLevelMeterTests.swift",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/UpsamplingPolicyTests.swift",
+      "-I",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/Modules",
+      "-target",
+      "arm64-apple-macosx14.0",
+      "-incremental",
+      "-enable-batch-mode",
+      "-serialize-diagnostics",
+      "-index-store-path",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/index/store",
+      "-Onone",
+      "-enable-testing",
+      "-Xfrontend",
+      "-enable-cross-import-overlays",
+      "-j10",
+      "-DSWIFT_PACKAGE",
+      "-DDEBUG",
+      "-DSWIFT_MODULE_RESOURCE_BUNDLE_UNAVAILABLE",
+      "-module-cache-path",
+      "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/ModuleCache",
+      "-parseable-output",
+      "-parse-as-library",
+      "-swift-version",
+      "6",
+      "-plugin-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/host/plugins/testing",
+      "-sdk",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-F",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-I",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-L",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib",
+      "-g",
+      "-Xcc",
+      "-isysroot",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.sdk",
+      "-Xcc",
+      "-F",
+      "-Xcc",
+      "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/Library/Frameworks",
+      "-Xcc",
+      "-fPIC",
+      "-Xcc",
+      "-g",
+      "-package-name",
+      "ongaku_desktop",
+      "-driver-use-frontend-path",
+      "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+    ]
+  },
+  "targetDependencyMap" : {
+    "OngakuDesktop" : [
+
+    ],
+    "OngakuDesktopPackageTests" : [
+      "OngakuDesktopTests",
+      "OngakuDesktop"
+    ],
+    "OngakuDesktopTests" : [
+      "OngakuDesktop"
+    ]
+  },
+  "testDiscoveryCommands" : {
+
+  },
+  "testEntryPointCommands" : {
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.derived/runner.swift" : {
+      "inputs" : [
+
+      ],
+      "outputs" : [
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.derived/runner.swift"
+        }
+      ]
+    }
+  },
+  "traitConfiguration" : {
+    "default" : {
+
+    }
+  },
+  "writeCommands" : {
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop-entitlement.plist" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<entitlement-plist>"
+        },
+        {
+          "kind" : "virtual",
+          "name" : "<com.apple.security.get-task-allow>"
+        }
+      ],
+      "outputFilePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop-entitlement.plist"
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppAppearanceSettings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppLanguageSettings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectModuleRegistry.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectPreset.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioOutputManager.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniPlayerView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniToggleSwitch.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/RotaryKnob.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DerivedSources/resource_bundle_accessor.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/sources"
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppAppearanceSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppLanguageSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectModuleRegistry.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectNode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectPreset.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioOutputManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BBEAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BodyAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ContentView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DesignTokens.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EffectsRackView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EqualizerAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ExciterAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/GlossAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/HighQualityEnhancementAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryContent.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryRepository.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibrarySidebar.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStorageSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/Localization.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniPlayerView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniToggleSwitch.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OngakuDesktopApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OptoFETAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlaybackController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlayerBar.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PreferencesView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/RotaryKnob.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SimulationAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SpaceAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/StorageSettingsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/TrackInspector.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WarmAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WindowPresentationController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/resource_bundle_accessor.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.product/Objects.LinkFileList"
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.derived/runner.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/sources"
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.product/Objects.LinkFileList" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<link-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppAppearanceSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AppLanguageSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectModuleRegistry.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectNode.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioEffectPreset.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/AudioOutputManager.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BBEAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/BodyAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ContentView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/DesignTokens.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EffectsRackView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/EqualizerAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/ExciterAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/GlossAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/HighQualityEnhancementAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryContent.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryModels.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryRepository.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibrarySidebar.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStorageSettings.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/LibraryStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/Localization.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniPlayerView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/MiniToggleSwitch.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OngakuDesktopApp.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/OptoFETAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlaybackController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PlayerBar.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/PreferencesView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/RotaryKnob.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SimulationAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/SpaceAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/StorageSettingsView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/TrackInspector.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WarmAudioEffect.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/WindowPresentationController.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktop.build/resource_bundle_accessor.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.build/runner.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests.swift.o"
+        }
+      ],
+      "outputFilePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopPackageTests.product/Objects.LinkFileList"
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/sources" : {
+      "alwaysOutOfDate" : false,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<sources-file-list>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/ApplicationSettingsTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/AudioEffectPresetTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/StereoLevelMeterTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/UpsamplingPolicyTests.swift"
+        }
+      ],
+      "outputFilePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/sources"
+    },
+    "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt" : {
+      "alwaysOutOfDate" : true,
+      "inputs" : [
+        {
+          "kind" : "virtual",
+          "name" : "<swift-get-version>"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc"
+        }
+      ],
+      "outputFilePath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
+    }
+  }
+}

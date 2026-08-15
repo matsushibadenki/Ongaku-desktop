@@ -1,0 +1,24 @@
+{
+  "source": "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Ongaku",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 48
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 32
+        }
+      }
+    ]
+  },
+  "version": 1
+}

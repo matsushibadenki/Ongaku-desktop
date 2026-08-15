@@ -1,0 +1,2 @@
+Target dependency graph (1 target)
+Target 'OngakuDesktop' in project 'OngakuDesktop' (no dependencies)

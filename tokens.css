@@ -1,0 +1,41 @@
+/* Hallmark · macrostructure: Workbench · tone: technical-atmospheric · anchor hue: amber
+ * contrast: pass (40–41) · chrome: native macOS · honest: pass (46)
+ * tokens: pass (48) · responsive: desktop pass at 950–1240 pt · icons: SF Symbols
+ */
+:root {
+  --color-paper: oklch(14% 0.008 55);
+  --color-paper-2: oklch(18% 0.010 55);
+  --color-paper-3: oklch(22% 0.012 55);
+  --color-rule: oklch(35% 0.015 55);
+  --color-muted: oklch(72% 0.018 65);
+  --color-ink: oklch(95% 0.012 80);
+  --color-accent: oklch(74% 0.16 58);
+  --color-accent-ink: oklch(15% 0.015 55);
+  --color-focus: oklch(80% 0.14 65);
+  --color-success: oklch(72% 0.12 155);
+  --color-warning: oklch(78% 0.14 75);
+  --color-error: oklch(68% 0.18 28);
+  --font-display: "SF Pro Rounded", "Avenir Next", ui-sans-serif, sans-serif;
+  --font-body: "SF Pro Text", ui-sans-serif, sans-serif;
+  --font-mono: "SF Mono", ui-monospace, monospace;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 200ms;
+  --dur-long: 420ms;
+  --rule-hairline: 1px;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+}

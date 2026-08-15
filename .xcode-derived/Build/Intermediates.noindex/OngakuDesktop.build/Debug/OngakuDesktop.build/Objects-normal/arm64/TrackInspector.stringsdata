@@ -1,0 +1,16 @@
+{
+  "source": "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "SHA-256",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 83
+        }
+      }
+    ]
+  },
+  "version": 1
+}

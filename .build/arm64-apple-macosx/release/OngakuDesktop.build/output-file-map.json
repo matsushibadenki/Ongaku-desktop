@@ -1,0 +1,85 @@
+{
+  "": {
+    "dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/OngakuDesktop.d",
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/OngakuDesktop.o",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/primary.swiftdeps"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/ContentView.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/ContentView~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/ContentView.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/ContentView.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/DesignTokens.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/DesignTokens~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/DesignTokens.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/DesignTokens.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryContent.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryContent~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryContent.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryContent.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryModels.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryModels~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryModels.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryModels.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryRepository.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryRepository~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryRepository.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryRepository.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibrarySidebar.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibrarySidebar~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibrarySidebar.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibrarySidebar.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryStore.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryStore.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/LibraryStore.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/Localization.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/Localization~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/Localization.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/Localization.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/OngakuDesktopApp.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/OngakuDesktopApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/OngakuDesktopApp.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/OngakuDesktopApp.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlaybackController.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlaybackController~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlaybackController.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlaybackController.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlayerBar.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlayerBar~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlayerBar.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/PlayerBar.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/TrackInspector.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/TrackInspector~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/TrackInspector.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/TrackInspector.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/DerivedSources/resource_bundle_accessor.swift": {
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/resource_bundle_accessor.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/resource_bundle_accessor~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/resource_bundle_accessor.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/release/OngakuDesktop.build/resource_bundle_accessor.dia"
+  }
+}

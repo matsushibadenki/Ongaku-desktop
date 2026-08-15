@@ -1,0 +1,16 @@
+[
+  {
+    "date": "2026-08-11",
+    "macrostructure": "Workbench",
+    "theme": "Midnight",
+    "enrichment": "none",
+    "brief": "Music.app alternative focused on durable managed audio files"
+  },
+  {
+    "date": "2026-08-14",
+    "macrostructure": "Workbench extension",
+    "theme": "Midnight",
+    "enrichment": "reference-derived rotary control",
+    "brief": "Compact desktop effects rack migrated from Ongaku mobile DSP"
+  }
+]

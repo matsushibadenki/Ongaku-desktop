@@ -1,0 +1,7 @@
+{
+  "date": "2026-08-11",
+  "framework": "SwiftUI / Swift Package Manager",
+  "source_reference": "/Users/Shared/Program/Xcode/Ongaku",
+  "preserved": ["dark music-player identity", "three-language localization requirement"],
+  "introduced": ["macOS Workbench structure", "managed-file integrity workflow", "compact rotary effects rack"]
+}

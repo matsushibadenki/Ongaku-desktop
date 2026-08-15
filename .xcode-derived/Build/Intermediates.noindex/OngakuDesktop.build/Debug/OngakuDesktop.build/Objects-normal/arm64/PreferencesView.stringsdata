@@ -1,0 +1,24 @@
+{
+  "source": "/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 108
+        }
+      }
+    ]
+  },
+  "version": 1
+}

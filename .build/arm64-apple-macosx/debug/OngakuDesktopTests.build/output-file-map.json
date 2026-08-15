@@ -1,0 +1,40 @@
+{
+  "": {
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/primary.swiftdeps"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/ApplicationSettingsTests.swift": {
+    "dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests.d",
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/ApplicationSettingsTests.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/AudioEffectPresetTests.swift": {
+    "dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests.d",
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/AudioEffectPresetTests.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift": {
+    "dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests.d",
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/LibraryRepositoryTests.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/StereoLevelMeterTests.swift": {
+    "dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests.d",
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/StereoLevelMeterTests.dia"
+  },
+  "/Users/Shared/Program/Xcode/Ongaku-desktop/Tests/OngakuDesktopTests/UpsamplingPolicyTests.swift": {
+    "dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests.d",
+    "object": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests.swift.o",
+    "swiftmodule": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests.swiftdeps",
+    "diagnostics": "/Users/Shared/Program/Xcode/Ongaku-desktop/.build/arm64-apple-macosx/debug/OngakuDesktopTests.build/UpsamplingPolicyTests.dia"
+  }
+}

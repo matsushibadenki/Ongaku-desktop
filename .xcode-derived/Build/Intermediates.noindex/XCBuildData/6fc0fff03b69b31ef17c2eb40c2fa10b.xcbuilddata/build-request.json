@@ -1,0 +1,66 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "bb67e9b638c0b5b847e8f9394af8fabc932c492724929dff532f3029a340b4f3"
+    }
+  ],
+  "containerPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "arm64",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : false,
+      "hostTargetedPlatform" : null,
+      "platform" : "macosx",
+      "sdk" : "macosx26.5",
+      "sdkVariant" : "macos",
+      "supportedArchitectures" : [
+        "arm64e",
+        "arm64",
+        "x86_64"
+      ],
+      "targetArchitecture" : "arm64"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Products",
+      "derivedDataPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived",
+      "indexDataStoreFolderPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/Shared/Program/Xcode/Ongaku-desktop/.xcode-derived/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES",
+          "TOOLCHAINS" : "com.apple.dt.toolchain.Metal.32023.883 $(inherited)"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

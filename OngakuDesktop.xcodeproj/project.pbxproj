@@ -1,0 +1,397 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		200000000000000000000001 /* OngakuDesktopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* OngakuDesktopApp.swift */; };
+		200000000000000000000002 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000002 /* DesignTokens.swift */; };
+		200000000000000000000003 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* Localization.swift */; };
+		200000000000000000000004 /* LibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000004 /* LibraryModels.swift */; };
+		200000000000000000000005 /* LibraryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000005 /* LibraryRepository.swift */; };
+		200000000000000000000006 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000006 /* LibraryStore.swift */; };
+		200000000000000000000007 /* PlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000007 /* PlaybackController.swift */; };
+		200000000000000000000008 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000008 /* ContentView.swift */; };
+		200000000000000000000009 /* LibrarySidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000009 /* LibrarySidebar.swift */; };
+		20000000000000000000000A /* LibraryContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000A /* LibraryContent.swift */; };
+		20000000000000000000000B /* TrackInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000B /* TrackInspector.swift */; };
+		20000000000000000000000C /* PlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000C /* PlayerBar.swift */; };
+		20000000000000000000000D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000010 /* Localizable.strings */; };
+		20000000000000000000000E /* AudioOutputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000011 /* AudioOutputManager.swift */; };
+		20000000000000000000000F /* AudioEffectPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000021 /* AudioEffectPreset.swift */; };
+		200000000000000000000010 /* AudioEffectNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000022 /* AudioEffectNode.swift */; };
+		200000000000000000000011 /* AudioEffectModuleRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000023 /* AudioEffectModuleRegistry.swift */; };
+		200000000000000000000012 /* SimulationAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000024 /* SimulationAudioEffect.swift */; };
+		200000000000000000000013 /* EqualizerAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000025 /* EqualizerAudioEffect.swift */; };
+		200000000000000000000014 /* BodyAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000026 /* BodyAudioEffect.swift */; };
+		200000000000000000000015 /* ExciterAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000027 /* ExciterAudioEffect.swift */; };
+		200000000000000000000016 /* OptoFETAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000028 /* OptoFETAudioEffect.swift */; };
+		200000000000000000000017 /* WarmAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000029 /* WarmAudioEffect.swift */; };
+		200000000000000000000018 /* GlossAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002A /* GlossAudioEffect.swift */; };
+		200000000000000000000019 /* SpaceAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002B /* SpaceAudioEffect.swift */; };
+		20000000000000000000001A /* BBEAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002C /* BBEAudioEffect.swift */; };
+		20000000000000000000001B /* HighQualityEnhancementAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002D /* HighQualityEnhancementAudioEffect.swift */; };
+		20000000000000000000001C /* RotaryKnob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002E /* RotaryKnob.swift */; };
+		20000000000000000000001D /* EffectsRackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002F /* EffectsRackView.swift */; };
+		20000000000000000000001E /* MiniToggleSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000030 /* MiniToggleSwitch.swift */; };
+		20000000000000000000001F /* LibraryStorageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000031 /* LibraryStorageSettings.swift */; };
+		200000000000000000000020 /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000032 /* StorageSettingsView.swift */; };
+		200000000000000000000021 /* AppLanguageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000033 /* AppLanguageSettings.swift */; };
+		200000000000000000000022 /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000034 /* PreferencesView.swift */; };
+		200000000000000000000023 /* AppAppearanceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000035 /* AppAppearanceSettings.swift */; };
+		200000000000000000000024 /* WindowPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000036 /* WindowPresentationController.swift */; };
+		200000000000000000000025 /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000037 /* MiniPlayerView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		100000000000000000000001 /* OngakuDesktopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuDesktopApp.swift; sourceTree = "<group>"; };
+		100000000000000000000002 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		100000000000000000000003 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
+		100000000000000000000004 /* LibraryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryModels.swift; sourceTree = "<group>"; };
+		100000000000000000000005 /* LibraryRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryRepository.swift; sourceTree = "<group>"; };
+		100000000000000000000006 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		100000000000000000000007 /* PlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackController.swift; sourceTree = "<group>"; };
+		100000000000000000000008 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		100000000000000000000009 /* LibrarySidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebar.swift; sourceTree = "<group>"; };
+		10000000000000000000000A /* LibraryContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryContent.swift; sourceTree = "<group>"; };
+		10000000000000000000000B /* TrackInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackInspector.swift; sourceTree = "<group>"; };
+		10000000000000000000000C /* PlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerBar.swift; sourceTree = "<group>"; };
+		10000000000000000000000D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		10000000000000000000000E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		10000000000000000000000F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		100000000000000000000011 /* AudioOutputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputManager.swift; sourceTree = "<group>"; };
+		100000000000000000000021 /* AudioEffectPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEffectPreset.swift; sourceTree = "<group>"; };
+		100000000000000000000022 /* AudioEffectNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEffectNode.swift; sourceTree = "<group>"; };
+		100000000000000000000023 /* AudioEffectModuleRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEffectModuleRegistry.swift; sourceTree = "<group>"; };
+		100000000000000000000024 /* SimulationAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationAudioEffect.swift; sourceTree = "<group>"; };
+		100000000000000000000025 /* EqualizerAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EqualizerAudioEffect.swift; sourceTree = "<group>"; };
+		100000000000000000000026 /* BodyAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyAudioEffect.swift; sourceTree = "<group>"; };
+		100000000000000000000027 /* ExciterAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExciterAudioEffect.swift; sourceTree = "<group>"; };
+		100000000000000000000028 /* OptoFETAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptoFETAudioEffect.swift; sourceTree = "<group>"; };
+		100000000000000000000029 /* WarmAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmAudioEffect.swift; sourceTree = "<group>"; };
+		10000000000000000000002A /* GlossAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlossAudioEffect.swift; sourceTree = "<group>"; };
+		10000000000000000000002B /* SpaceAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaceAudioEffect.swift; sourceTree = "<group>"; };
+		10000000000000000000002C /* BBEAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BBEAudioEffect.swift; sourceTree = "<group>"; };
+		10000000000000000000002D /* HighQualityEnhancementAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighQualityEnhancementAudioEffect.swift; sourceTree = "<group>"; };
+		10000000000000000000002E /* RotaryKnob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RotaryKnob.swift; sourceTree = "<group>"; };
+		10000000000000000000002F /* EffectsRackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EffectsRackView.swift; sourceTree = "<group>"; };
+		100000000000000000000030 /* MiniToggleSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniToggleSwitch.swift; sourceTree = "<group>"; };
+		100000000000000000000031 /* LibraryStorageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStorageSettings.swift; sourceTree = "<group>"; };
+		100000000000000000000032 /* StorageSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageSettingsView.swift; sourceTree = "<group>"; };
+		100000000000000000000033 /* AppLanguageSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLanguageSettings.swift; sourceTree = "<group>"; };
+		100000000000000000000034 /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
+		100000000000000000000035 /* AppAppearanceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearanceSettings.swift; sourceTree = "<group>"; };
+		100000000000000000000036 /* WindowPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPresentationController.swift; sourceTree = "<group>"; };
+		100000000000000000000037 /* MiniPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniPlayerView.swift; sourceTree = "<group>"; };
+		100000000000000000000020 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		300000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		400000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				400000000000000000000002 /* OngakuDesktop */,
+				400000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		400000000000000000000002 /* OngakuDesktop */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000001 /* OngakuDesktopApp.swift */,
+				100000000000000000000002 /* DesignTokens.swift */,
+				100000000000000000000003 /* Localization.swift */,
+				100000000000000000000004 /* LibraryModels.swift */,
+				100000000000000000000005 /* LibraryRepository.swift */,
+				100000000000000000000006 /* LibraryStore.swift */,
+				100000000000000000000031 /* LibraryStorageSettings.swift */,
+				100000000000000000000033 /* AppLanguageSettings.swift */,
+				100000000000000000000035 /* AppAppearanceSettings.swift */,
+				100000000000000000000036 /* WindowPresentationController.swift */,
+				100000000000000000000007 /* PlaybackController.swift */,
+				100000000000000000000011 /* AudioOutputManager.swift */,
+				100000000000000000000021 /* AudioEffectPreset.swift */,
+				100000000000000000000022 /* AudioEffectNode.swift */,
+				100000000000000000000023 /* AudioEffectModuleRegistry.swift */,
+				100000000000000000000024 /* SimulationAudioEffect.swift */,
+				100000000000000000000025 /* EqualizerAudioEffect.swift */,
+				100000000000000000000026 /* BodyAudioEffect.swift */,
+				100000000000000000000027 /* ExciterAudioEffect.swift */,
+				100000000000000000000028 /* OptoFETAudioEffect.swift */,
+				100000000000000000000029 /* WarmAudioEffect.swift */,
+				10000000000000000000002A /* GlossAudioEffect.swift */,
+				10000000000000000000002B /* SpaceAudioEffect.swift */,
+				10000000000000000000002C /* BBEAudioEffect.swift */,
+				10000000000000000000002D /* HighQualityEnhancementAudioEffect.swift */,
+				10000000000000000000002E /* RotaryKnob.swift */,
+				10000000000000000000002F /* EffectsRackView.swift */,
+				100000000000000000000030 /* MiniToggleSwitch.swift */,
+				100000000000000000000008 /* ContentView.swift */,
+				100000000000000000000009 /* LibrarySidebar.swift */,
+				10000000000000000000000A /* LibraryContent.swift */,
+				10000000000000000000000B /* TrackInspector.swift */,
+				10000000000000000000000C /* PlayerBar.swift */,
+				100000000000000000000037 /* MiniPlayerView.swift */,
+				100000000000000000000032 /* StorageSettingsView.swift */,
+				100000000000000000000034 /* PreferencesView.swift */,
+				100000000000000000000010 /* Localizable.strings */,
+			);
+			name = OngakuDesktop;
+			path = Sources/OngakuDesktop;
+			sourceTree = "<group>";
+		};
+		400000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				100000000000000000000020 /* OngakuDesktop.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		500000000000000000000001 /* OngakuDesktop */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 900000000000000000000002 /* Build configuration list for PBXNativeTarget "OngakuDesktop" */;
+			buildPhases = (
+				600000000000000000000001 /* Sources */,
+				300000000000000000000001 /* Frameworks */,
+				700000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OngakuDesktop;
+			productName = OngakuDesktop;
+			productReference = 100000000000000000000020 /* OngakuDesktop.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		800000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					500000000000000000000001 = {
+						CreatedOnToolsVersion = 26.6;
+					};
+				};
+			};
+			buildConfigurationList = 900000000000000000000001 /* Build configuration list for PBXProject "OngakuDesktop" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				ja,
+				"zh-Hans",
+				Base,
+			);
+			mainGroup = 400000000000000000000001;
+			productRefGroup = 400000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				500000000000000000000001 /* OngakuDesktop */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		700000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				20000000000000000000000D /* Localizable.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		600000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				200000000000000000000001 /* OngakuDesktopApp.swift in Sources */,
+				200000000000000000000002 /* DesignTokens.swift in Sources */,
+				200000000000000000000003 /* Localization.swift in Sources */,
+				200000000000000000000004 /* LibraryModels.swift in Sources */,
+				200000000000000000000005 /* LibraryRepository.swift in Sources */,
+				200000000000000000000006 /* LibraryStore.swift in Sources */,
+				20000000000000000000001F /* LibraryStorageSettings.swift in Sources */,
+				200000000000000000000021 /* AppLanguageSettings.swift in Sources */,
+				200000000000000000000023 /* AppAppearanceSettings.swift in Sources */,
+				200000000000000000000024 /* WindowPresentationController.swift in Sources */,
+				200000000000000000000007 /* PlaybackController.swift in Sources */,
+				20000000000000000000000E /* AudioOutputManager.swift in Sources */,
+				20000000000000000000000F /* AudioEffectPreset.swift in Sources */,
+				200000000000000000000010 /* AudioEffectNode.swift in Sources */,
+				200000000000000000000011 /* AudioEffectModuleRegistry.swift in Sources */,
+				200000000000000000000012 /* SimulationAudioEffect.swift in Sources */,
+				200000000000000000000013 /* EqualizerAudioEffect.swift in Sources */,
+				200000000000000000000014 /* BodyAudioEffect.swift in Sources */,
+				200000000000000000000015 /* ExciterAudioEffect.swift in Sources */,
+				200000000000000000000016 /* OptoFETAudioEffect.swift in Sources */,
+				200000000000000000000017 /* WarmAudioEffect.swift in Sources */,
+				200000000000000000000018 /* GlossAudioEffect.swift in Sources */,
+				200000000000000000000019 /* SpaceAudioEffect.swift in Sources */,
+				20000000000000000000001A /* BBEAudioEffect.swift in Sources */,
+				20000000000000000000001B /* HighQualityEnhancementAudioEffect.swift in Sources */,
+				20000000000000000000001C /* RotaryKnob.swift in Sources */,
+				20000000000000000000001D /* EffectsRackView.swift in Sources */,
+				20000000000000000000001E /* MiniToggleSwitch.swift in Sources */,
+				200000000000000000000008 /* ContentView.swift in Sources */,
+				200000000000000000000009 /* LibrarySidebar.swift in Sources */,
+				20000000000000000000000A /* LibraryContent.swift in Sources */,
+				20000000000000000000000B /* TrackInspector.swift in Sources */,
+				20000000000000000000000C /* PlayerBar.swift in Sources */,
+				200000000000000000000025 /* MiniPlayerView.swift in Sources */,
+				200000000000000000000020 /* StorageSettingsView.swift in Sources */,
+				200000000000000000000022 /* PreferencesView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		100000000000000000000010 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				10000000000000000000000D /* en */,
+				10000000000000000000000E /* ja */,
+				10000000000000000000000F /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		A00000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A00000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		B00000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		B00000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		900000000000000000000001 /* Build configuration list for PBXProject "OngakuDesktop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A00000000000000000000001 /* Debug */,
+				A00000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		900000000000000000000002 /* Build configuration list for PBXNativeTarget "OngakuDesktop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B00000000000000000000001 /* Debug */,
+				B00000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 800000000000000000000001 /* Project object */;
+}
