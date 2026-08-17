@@ -418,66 +418,135 @@ private struct ArtistGroup: Identifiable {
     }
 }
 
+enum AlbumTitleGrouping {
+    static let miscellaneousInitial = "#"
+
+    static func initial(for title: String, locale: Locale = .current) -> String {
+        let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)
+            .folding(
+                options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+                locale: locale
+            )
+        guard let firstCharacter = normalized.first else { return miscellaneousInitial }
+        let initial = String(firstCharacter)
+        guard initial.unicodeScalars.contains(where: CharacterSet.letters.contains) else {
+            return miscellaneousInitial
+        }
+        return initial.uppercased(with: locale)
+    }
+
+    static func ordered(_ initials: some Sequence<String>, locale: Locale = .current) -> [String] {
+        initials.sorted { lhs, rhs in
+            if lhs == miscellaneousInitial { return false }
+            if rhs == miscellaneousInitial { return true }
+            return lhs.compare(rhs, options: [.caseInsensitive, .diacriticInsensitive], locale: locale)
+                == .orderedAscending
+        }
+    }
+}
+
 private struct AlbumGrid: View {
+    private struct AlbumSection: Identifiable {
+        let initial: String
+        let albums: [AlbumGroup]
+        var id: String { initial }
+    }
+
     let albums: [AlbumGroup]
     @Binding var selectedAlbumID: AlbumGroup.ID?
     let onEditAlbum: (AlbumGroup) -> Void
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 170, maximum: 210), spacing: AppTheme.spaceLG)], spacing: AppTheme.spaceLG) {
-                ForEach(albums) { album in
-                    Button {
-                        selectedAlbumID = album.id
-                    } label: {
-                        VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
-                            GeometryReader { geometry in
-                                ArtworkThumbnail(
-                                    tracks: album.tracks,
-                                    subject: .album(name: album.name, artist: album.artist),
-                                    shape: .roundedRectangle,
-                                    fallbackSymbol: "square.stack.3d.up.fill",
-                                    fallbackLetter: String(album.name.prefix(1)).uppercased(),
-                                    onEditAlbum: { onEditAlbum(album) }
-                                )
-                                .frame(
-                                    width: geometry.size.width,
-                                    height: geometry.size.height
-                                )
+            LazyVStack(alignment: .leading, spacing: AppTheme.spaceLG, pinnedViews: [.sectionHeaders]) {
+                ForEach(sections) { section in
+                    Section {
+                        LazyVGrid(columns: columns, spacing: AppTheme.spaceLG) {
+                            ForEach(section.albums) { album in
+                                albumCard(album)
                             }
-                            .aspectRatio(1, contentMode: .fit)
-
-                            Text(album.name)
-                                .font(.headline)
+                        }
+                        .padding(.horizontal, AppTheme.spaceLG)
+                    } header: {
+                        HStack(spacing: AppTheme.spaceSM) {
+                            Text(section.initial)
+                                .font(.title2.weight(.bold))
                                 .foregroundStyle(AppTheme.ink)
-                                .lineLimit(1)
-                                .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+                                .accessibilityAddTraits(.isHeader)
 
-                            Text(album.artist)
-                                .font(.callout)
-                                .foregroundStyle(AppTheme.secondaryInk)
-                                .lineLimit(1)
-                                .frame(maxWidth: .infinity, minHeight: 18, alignment: .leading)
-
-                            Text(L10n.format("album.songCount", album.tracks.count))
-                                .font(.caption.monospacedDigit())
-                                .foregroundStyle(AppTheme.secondaryInk)
-                                .frame(maxWidth: .infinity, minHeight: 16, alignment: .leading)
+                            Rectangle()
+                                .fill(AppTheme.rule)
+                                .frame(height: 1)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityLabel("\(album.name), \(album.artist)")
-                    .contextMenu {
-                        Button(L10n.text("metadataEditor.album.menu")) {
-                            onEditAlbum(album)
-                        }
+                        .padding(.horizontal, AppTheme.spaceLG)
+                        .padding(.vertical, AppTheme.spaceXS)
+                        .background(AppTheme.canvas)
                     }
                 }
             }
-            .padding(AppTheme.spaceLG)
+            .padding(.vertical, AppTheme.spaceMD)
+        }
+    }
+
+    private var columns: [GridItem] {
+        [GridItem(.adaptive(minimum: 170, maximum: 210), spacing: AppTheme.spaceLG)]
+    }
+
+    private var sections: [AlbumSection] {
+        let grouped = Dictionary(grouping: albums) {
+            AlbumTitleGrouping.initial(for: $0.name)
+        }
+        return AlbumTitleGrouping.ordered(grouped.keys).compactMap { initial in
+            guard let albums = grouped[initial] else { return nil }
+            return AlbumSection(initial: initial, albums: albums)
+        }
+    }
+
+    private func albumCard(_ album: AlbumGroup) -> some View {
+        Button {
+            selectedAlbumID = album.id
+        } label: {
+            VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                GeometryReader { geometry in
+                    ArtworkThumbnail(
+                        tracks: album.tracks,
+                        subject: .album(name: album.name, artist: album.artist),
+                        shape: .roundedRectangle,
+                        fallbackSymbol: "square.stack.3d.up.fill",
+                        fallbackLetter: String(album.name.prefix(1)).uppercased(),
+                        onEditAlbum: { onEditAlbum(album) }
+                    )
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                }
+                .aspectRatio(1, contentMode: .fit)
+
+                Text(album.name)
+                    .font(.headline)
+                    .foregroundStyle(AppTheme.ink)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+
+                Text(album.artist)
+                    .font(.callout)
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, minHeight: 18, alignment: .leading)
+
+                Text(L10n.format("album.songCount", album.tracks.count))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .frame(maxWidth: .infinity, minHeight: 16, alignment: .leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityLabel("\(album.name), \(album.artist)")
+        .contextMenu {
+            Button(L10n.text("metadataEditor.album.menu")) {
+                onEditAlbum(album)
+            }
         }
     }
 }

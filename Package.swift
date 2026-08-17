@@ -17,7 +17,8 @@ let package = Package(
             dependencies: [
                 .product(name: "Sparkle", package: "Sparkle")
             ],
-            resources: [.process("Resources")]
+            resources: [.process("Resources")],
+            linkerSettings: [.linkedLibrary("sqlite3")]
         ),
         .testTarget(
             name: "OngakuDesktopTests",

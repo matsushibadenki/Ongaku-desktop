@@ -120,7 +120,10 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] 旧形式、無バージョン、破損形式、将来バージョンのfixtureをテスト資産化
 - [Done] `Playlist`、`PlaylistEntry`、`PlaybackEvent`の安定IDと保存モデルをカタログスキーマ3へ追加
 - [Done] スキーマ2からの原子的マイグレーションと、楽曲保存時にプレイリスト／履歴を失わない永続化を実装
-- [Next] 10万曲性能fixtureを追加し、SQLite移行条件をADRで確定
+- [Done] 決定論的な10万曲性能fixtureと任意実行ベンチマークを追加
+- [Done] [ADR-0001](adr/0001-large-library-storage.md)で性能予算とSQLite移行条件を確定
+- [Done] 10万曲検索の予算超過に対し、[ADR-0001](adr/0001-large-library-storage.md)準拠のSQLiteカタログ、FTS5検索、JSON移行・ロールバック検証を実装
+- [Next] JSON／SQLiteのdual-read一致検証と、アプリ内検索経路のSQLite切り替えを実装
 - [Next] MusicKit entitlement、認証、カタログ検索、再生、ライブラリ更新の技術スパイク
 - [Next] 公開API制約表とプライバシーデータフローを確定
 - [Next] UIテスト、VoiceOver、キーボード操作、英日中表示崩れのCIゲートを追加
@@ -266,7 +269,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 ### データ
 
 - JSONカタログを直ちに破棄せず、スキーマ版とマイグレーションを追加する。
-- 10万曲、スマートプレイリスト、全文検索、再生履歴に耐えられないことが計測で確認された時点でSQLiteへ段階移行する。
+- 10万曲、スマートプレイリスト、全文検索、再生履歴の性能は[ADR-0001](adr/0001-large-library-storage.md)の予算と手順で計測し、条件成立時にSQLiteへ段階移行する。
 - 楽曲、アルバム、アーティスト、プレイリストは表示文字列ではなく安定IDで関連付ける。
 - Apple Music ID、MusicBrainz ID、ローカルSHA-256を別namespaceとして保持する。
 - ファイル操作は常に計画、実行、検証、確定の4段階とし、ジャーナルから再開できるようにする。
