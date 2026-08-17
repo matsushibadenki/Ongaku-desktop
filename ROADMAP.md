@@ -12,7 +12,10 @@
 - [Done] English, Japanese, and Simplified Chinese localization
 - [Done] Universal arm64 and x86_64 release packaging with architecture verification
 - [Done] Signed Sparkle software updates with a localized app-menu command
-- [Next] Editable metadata, album artwork extraction, and batch editing
+- [Done] Embedded and automatic online album/artist artwork with local caching
+- [Done] User-registered album artwork from song and album information editors
+- [Done] Catalog metadata editing for songs and whole albums
+- [Next] Batch editing across arbitrary song selections
 - [Next] Playlists, play queue, shuffle, repeat, and gapless playback
 - [Next] Watched folders with explicit conflict handling
 - [Next] Real-time level metering, clipping protection, and DSP load monitoring

@@ -1,5 +1,13 @@
 import SwiftUI
 
+struct PreferencesContentHeightPreferenceKey: PreferenceKey {
+    static let defaultValue: CGFloat = 0
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 private enum PreferencesSection: String, CaseIterable, Identifiable {
     case general
     case storage
@@ -22,9 +30,14 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
 }
 
 struct PreferencesView: View {
+    private static let fixedWidth: CGFloat = 761
+    private static let minimumHeight: CGFloat = 440
+    private static let verticalContentPadding: CGFloat = 48
+
     @EnvironmentObject private var language: AppLanguageSettings
     @EnvironmentObject private var appearance: AppAppearanceSettings
     @State private var selection: PreferencesSection = .general
+    @State private var measuredContentHeight: CGFloat = 0
 
     var body: some View {
         HStack(spacing: 0) {
@@ -33,7 +46,8 @@ struct PreferencesView: View {
                     .tag(section)
             }
             .listStyle(.sidebar)
-            .frame(width: 190, height: 440)
+            .frame(width: 190)
+            .frame(maxHeight: .infinity)
 
             Divider()
 
@@ -47,13 +61,29 @@ struct PreferencesView: View {
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 24)
-            .frame(width: 570, height: 440, alignment: .topLeading)
+            .frame(width: 570)
+            .frame(maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: 761, height: 440)
+        .frame(
+            minWidth: Self.fixedWidth,
+            maxWidth: Self.fixedWidth,
+            minHeight: Self.minimumHeight,
+            maxHeight: maximumHeight
+        )
         .background(AppTheme.canvas)
         .tint(AppTheme.accent)
         .preferredColorScheme(appearance.selectedAppearance.colorScheme)
         .environment(\.locale, language.selectedLanguage.locale ?? .current)
+        .onPreferenceChange(PreferencesContentHeightPreferenceKey.self) { height in
+            measuredContentHeight = ceil(height)
+        }
+        .onChange(of: selection) {
+            measuredContentHeight = 0
+        }
+    }
+
+    private var maximumHeight: CGFloat {
+        max(Self.minimumHeight, measuredContentHeight + Self.verticalContentPadding)
     }
 }
 
@@ -113,6 +143,14 @@ private struct GeneralSettingsView: View {
                 .labelsHidden()
                 .pickerStyle(.segmented)
                 .frame(width: 180)
+            }
+        }
+        .background {
+            GeometryReader { proxy in
+                Color.clear.preference(
+                    key: PreferencesContentHeightPreferenceKey.self,
+                    value: proxy.size.height
+                )
             }
         }
     }

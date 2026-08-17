@@ -9,6 +9,73 @@ struct StereoLevels: Equatable, Sendable {
     static let silent = StereoLevels(left: 0, right: 0)
 }
 
+enum PlaybackMode: String, CaseIterable, Identifiable, Sendable {
+    case sequential
+    case repeatOne
+    case repeatAll
+    case repeatAlbum
+    case shuffle
+
+    var id: String { rawValue }
+    var localizationKey: String { "player.mode.\(rawValue)" }
+
+    var systemImage: String {
+        switch self {
+        case .sequential: "arrow.right"
+        case .repeatOne: "repeat.1"
+        case .repeatAll: "repeat"
+        case .repeatAlbum: "square.stack.3d.up"
+        case .shuffle: "shuffle"
+        }
+    }
+}
+
+enum PlaybackQueueNavigator {
+    nonisolated static func nextTrack(
+        after current: Track,
+        in queue: [Track],
+        mode: PlaybackMode,
+        randomIndex: (Int) -> Int = { Int.random(in: 0..<$0) }
+    ) -> Track? {
+        switch mode {
+        case .sequential:
+            guard let index = queue.firstIndex(where: { $0.id == current.id }) else {
+                return queue.first
+            }
+            let nextIndex = queue.index(after: index)
+            return nextIndex < queue.endIndex ? queue[nextIndex] : nil
+
+        case .repeatOne:
+            return current
+
+        case .repeatAll:
+            guard !queue.isEmpty else { return nil }
+            guard let index = queue.firstIndex(where: { $0.id == current.id }) else {
+                return queue.first
+            }
+            let nextIndex = queue.index(after: index)
+            return nextIndex < queue.endIndex ? queue[nextIndex] : queue.first
+
+        case .repeatAlbum:
+            let albumTracks = queue.filter {
+                $0.album == current.album && $0.artist == current.artist
+            }
+            guard !albumTracks.isEmpty else { return current }
+            guard let index = albumTracks.firstIndex(where: { $0.id == current.id }) else {
+                return albumTracks.first
+            }
+            let nextIndex = albumTracks.index(after: index)
+            return nextIndex < albumTracks.endIndex ? albumTracks[nextIndex] : albumTracks.first
+
+        case .shuffle:
+            let candidates = queue.filter { $0.id != current.id }
+            guard !candidates.isEmpty else { return queue.first ?? current }
+            let index = min(max(randomIndex(candidates.count), 0), candidates.count - 1)
+            return candidates[index]
+        }
+    }
+}
+
 enum StereoLevelMath {
     private static let floorDecibels = -60.0
 
@@ -90,6 +157,7 @@ final class PlaybackController: ObservableObject {
     private static let automaticUpsamplingKey = "audio.automaticUpsampling"
     private static let effectSettingsKey = "audio.effectSettings.v1"
     private static let effectsBypassedKey = "audio.effectsBypassed"
+    private static let playbackModeKey = "audio.playbackMode.v1"
 
     @Published private(set) var currentTrack: Track?
     @Published private(set) var isPlaying = false
@@ -103,6 +171,9 @@ final class PlaybackController: ObservableObject {
     @Published private(set) var stereoLevels = StereoLevels.silent
     @Published private(set) var effectSettings: [RealtimeAudioEffectSetting]
     @Published private(set) var effectsBypassed: Bool
+    @Published var playbackMode: PlaybackMode {
+        didSet { UserDefaults.standard.set(playbackMode.rawValue, forKey: Self.playbackModeKey) }
+    }
     @Published var automaticUpsampling: Bool {
         didSet {
             UserDefaults.standard.set(automaticUpsampling, forKey: Self.automaticUpsamplingKey)
@@ -116,6 +187,7 @@ final class PlaybackController: ObservableObject {
     private var audioFile: AVAudioFile?
     private var scheduledStartFrame: AVAudioFramePosition = 0
     private var playbackGeneration = UUID()
+    private var playbackQueue: [Track] = []
     private var timer: Timer?
     private var isMeterTapInstalled = false
     private let meterThrottle = StereoMeterThrottle()
@@ -125,6 +197,8 @@ final class PlaybackController: ObservableObject {
         effectPipeline = AudioEffectModuleRegistry.makePipeline()
         effectSettings = Self.loadEffectSettings(defaults: defaultSettings)
         effectsBypassed = UserDefaults.standard.bool(forKey: Self.effectsBypassedKey)
+        playbackMode = UserDefaults.standard.string(forKey: Self.playbackModeKey)
+            .flatMap(PlaybackMode.init(rawValue:)) ?? .sequential
         automaticUpsampling = UserDefaults.standard.object(forKey: Self.automaticUpsamplingKey) as? Bool ?? true
         engine.attach(playerNode)
         effectPipeline.forEach { $0.attach(to: engine) }
@@ -186,6 +260,9 @@ final class PlaybackController: ObservableObject {
     }
 
     func play(_ track: Track) {
+        if !playbackQueue.contains(where: { $0.id == track.id }) {
+            playbackQueue.append(track)
+        }
         do {
             stopCurrentPlayback()
             let file = try AVAudioFile(forReading: track.fileURL)
@@ -215,6 +292,15 @@ final class PlaybackController: ObservableObject {
         }
     }
 
+    func updatePlaybackQueue(_ tracks: [Track]) {
+        var seen = Set<Track.ID>()
+        playbackQueue = tracks.filter { seen.insert($0.id).inserted }
+        if let currentID = currentTrack?.id,
+           let updatedCurrent = playbackQueue.first(where: { $0.id == currentID }) {
+            currentTrack = updatedCurrent
+        }
+    }
+
     func togglePlayback() {
         guard audioFile != nil else { return }
         if playerNode.isPlaying {
@@ -240,6 +326,12 @@ final class PlaybackController: ObservableObject {
                 errorMessage = error.localizedDescription
             }
         }
+    }
+
+    func clearCurrentTrack() {
+        stopCurrentPlayback()
+        currentTrack = nil
+        errorMessage = nil
     }
 
     func seek(to value: TimeInterval) {
@@ -370,6 +462,15 @@ final class PlaybackController: ObservableObject {
 
     private func didFinishPlaying(generation: UUID) {
         guard generation == playbackGeneration else { return }
+        if let currentTrack,
+           let nextTrack = PlaybackQueueNavigator.nextTrack(
+               after: currentTrack,
+               in: playbackQueue,
+               mode: playbackMode
+           ) {
+            play(nextTrack)
+            return
+        }
         isPlaying = false
         elapsed = duration
         stereoLevels = .silent

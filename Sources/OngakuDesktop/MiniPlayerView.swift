@@ -1,11 +1,10 @@
-@preconcurrency import AVFoundation
 import AppKit
 import SwiftUI
 
 struct MiniPlayerView: View {
+    @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
     @State private var isShowingVolume = false
-    @State private var artwork: NSImage?
 
     var body: some View {
         HStack(spacing: 14) {
@@ -34,6 +33,19 @@ struct MiniPlayerView: View {
                 .padding(.bottom, 5)
 
                 HStack(spacing: AppTheme.spaceSM) {
+                    Button(action: primaryPlaybackAction) {
+                        Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                            .frame(width: 24, height: 24)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .buttonBorderShape(.circle)
+                    .controlSize(.small)
+                    .disabled(player.currentTrack == nil && library.selectedTrack == nil)
+                    .accessibilityLabel(
+                        L10n.text(player.isPlaying ? "player.pause" : "track.play")
+                    )
+
                     Slider(
                         value: Binding(
                             get: { player.elapsed },
@@ -43,6 +55,8 @@ struct MiniPlayerView: View {
                     )
                     .disabled(player.currentTrack == nil)
                     .accessibilityLabel(L10n.text("miniPlayer.progress"))
+
+                    PlaybackModeMenu()
 
                     Button {
                         isShowingVolume.toggle()
@@ -65,25 +79,33 @@ struct MiniPlayerView: View {
         .frame(width: WindowPresentationController.miniContentSize.width,
                height: WindowPresentationController.miniContentSize.height)
         .background(AppTheme.surface)
-        .task(id: player.currentTrack?.id) {
-            await loadArtwork()
+        .task(id: library.contentRevision) {
+            player.updatePlaybackQueue(library.tracks)
+        }
+    }
+
+    private func primaryPlaybackAction() {
+        if player.currentTrack != nil {
+            player.togglePlayback()
+        } else if let selectedTrack = library.selectedTrack {
+            player.play(selectedTrack)
         }
     }
 
     private var albumArtwork: some View {
         Group {
-            if let artwork {
-                Image(nsImage: artwork)
-                    .resizable()
-                    .scaledToFill()
+            if let track = player.currentTrack {
+                ArtworkThumbnail(
+                    tracks: [track],
+                    subject: .album(name: track.album, artist: track.artist),
+                    shape: .roundedRectangle,
+                    fallbackSymbol: "waveform",
+                    fallbackLetter: String(track.album.prefix(1)).uppercased()
+                )
             } else {
                 RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
                     .fill(AppTheme.raised)
-                    .overlay {
-                        Image(systemName: "waveform")
-                            .font(.system(size: 24, weight: .medium))
-                            .foregroundStyle(player.currentTrack == nil ? AppTheme.secondaryInk : AppTheme.accent)
-                    }
+                    .overlay { Image(systemName: "waveform").foregroundStyle(AppTheme.secondaryInk) }
             }
         }
         .frame(width: 96, height: 96)
@@ -112,19 +134,6 @@ struct MiniPlayerView: View {
         }
     }
 
-    @MainActor
-    private func loadArtwork() async {
-        artwork = nil
-        guard let url = player.currentTrack?.fileURL else { return }
-        let asset = AVURLAsset(url: url)
-        guard let metadata = try? await asset.load(.commonMetadata),
-              let item = AVMetadataItem.metadataItems(
-                  from: metadata,
-                  filteredByIdentifier: .commonIdentifierArtwork
-              ).first,
-              let data = try? await item.load(.dataValue) else { return }
-        artwork = NSImage(data: data)
-    }
 }
 
 struct StereoLevelMeter: View {

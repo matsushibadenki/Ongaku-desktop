@@ -114,6 +114,22 @@ actor LibraryRepository {
         try reconcileImportJournal(with: tracks)
     }
 
+    /// Clears Ongaku's catalog records without deleting, moving, renaming, or
+    /// otherwise touching any referenced or managed audio file.
+    func clearAllRegistrations() throws {
+        try prepareDirectories()
+        let emptyDocument = LibraryDocument(updatedAt: .now, tracks: [])
+        let data = try encoder.encode(emptyDocument)
+
+        // Clear recovery metadata first. If the operation is interrupted before
+        // the primary manifest is replaced, the previous catalog remains valid.
+        // Once the primary becomes empty, neither recovery path can re-register
+        // tracks. Incoming audio files themselves are deliberately left untouched.
+        try persistImportJournal(ImportJournal())
+        try data.write(to: backupURL, options: [.atomic])
+        try data.write(to: manifestURL, options: [.atomic])
+    }
+
     func importFiles(
         _ sourceURLs: [URL],
         existing: [Track],

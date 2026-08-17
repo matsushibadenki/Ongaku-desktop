@@ -32,6 +32,55 @@ struct LibraryRepositoryTests {
         try? FileManager.default.removeItem(at: root)
     }
 
+    @Test("Clearing registrations leaves every audio file untouched")
+    func clearsRegistrationsWithoutTouchingAudioFiles() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let audioDirectory = root.appendingPathComponent("Media/Artist/Album", isDirectory: true)
+        let audioFile = audioDirectory.appendingPathComponent("Track.m4a")
+        try FileManager.default.createDirectory(
+            at: audioDirectory, withIntermediateDirectories: true)
+        let originalAudio = Data([0, 0, 0, 20, 21, 22, 23, 24])
+        try originalAudio.write(to: audioFile)
+
+        let track = Track(
+            id: UUID(),
+            title: "Track",
+            artist: "Artist",
+            album: "Album",
+            duration: 12,
+            fileSize: Int64(originalAudio.count),
+            managedPath: audioFile.path,
+            sha256: try LibraryRepository.sha256(of: audioFile),
+            addedAt: .now,
+            lastVerifiedAt: .now,
+            health: .verified
+        )
+        let repository = LibraryRepository(
+            rootURL: catalog,
+            mediaURL: root.appendingPathComponent("Media")
+        )
+        try await repository.save(tracks: [track])
+
+        try await repository.clearAllRegistrations()
+
+        let cleared = try await repository.load()
+        #expect(cleared.document.tracks.isEmpty)
+        #expect(FileManager.default.fileExists(atPath: audioFile.path))
+        #expect(try Data(contentsOf: audioFile) == originalAudio)
+
+        // Backup recovery must preserve the intentionally empty catalog too.
+        try Data("invalid catalog".utf8).write(
+            to: catalog.appendingPathComponent("library-v1.json")
+        )
+        let recovered = try await repository.load()
+        #expect(recovered.recoveredFromBackup)
+        #expect(recovered.document.tracks.isEmpty)
+        #expect(FileManager.default.fileExists(atPath: audioFile.path))
+        #expect(try Data(contentsOf: audioFile) == originalAudio)
+        try? FileManager.default.removeItem(at: root)
+    }
+
     @Test("Verification detects changed content")
     func detectsChangedContent() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -202,6 +251,50 @@ struct LibraryRepositoryTests {
         #expect(second.relinked == 0)
         #expect(store.tracks.count == 2)
         try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test("Registering a dropped folder preserves its hierarchy and every audio file")
+    @MainActor
+    func registersDroppedFolderInPlace() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let musicFolder = root.appendingPathComponent("Existing Music", isDirectory: true)
+        let firstDirectory = musicFolder.appendingPathComponent(
+            "Artist/First Album", isDirectory: true)
+        let secondDirectory = musicFolder.appendingPathComponent(
+            "Artist/Second Album/Disc 2", isDirectory: true)
+        let first = firstDirectory.appendingPathComponent("First Track.mp3")
+        let second = secondDirectory.appendingPathComponent("Second Track.flac")
+        let firstData = Data([0x49, 0x44, 0x33, 31, 32, 33])
+        let secondData = Data([0x66, 0x4C, 0x61, 0x43, 41, 42, 43])
+        try FileManager.default.createDirectory(
+            at: firstDirectory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: secondDirectory, withIntermediateDirectories: true)
+        try firstData.write(to: first)
+        try secondData.write(to: second)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let repository = LibraryRepository(
+            rootURL: root.appendingPathComponent("Catalog"),
+            mediaURL: musicFolder
+        )
+        let store = LibraryStore(repository: repository)
+        let summary = await store.registerMediaFolderInPlace(musicFolder)
+
+        #expect(summary.discovered == 2)
+        #expect(summary.imported == 2)
+        #expect(summary.issues == 0)
+        #expect(
+            Set(store.tracks.map { $0.fileURL.standardizedFileURL })
+                == Set([
+                    first.standardizedFileURL,
+                    second.standardizedFileURL,
+                ]))
+        #expect(try Data(contentsOf: first) == firstData)
+        #expect(try Data(contentsOf: second) == secondData)
+        #expect(
+            !FileManager.default.fileExists(
+                atPath: musicFolder.appendingPathComponent("Ongaku Media").path))
     }
 
     @Test("Apple Music media-folder-url is decoded")

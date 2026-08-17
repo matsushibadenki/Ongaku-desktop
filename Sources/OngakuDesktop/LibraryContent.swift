@@ -6,6 +6,13 @@ struct LibraryContent: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
     @State private var sortOrder = [KeyPathComparator(\Track.title)]
+    @State private var sortedTracks: [Track] = []
+    @State private var isSortingTracks = false
+    @State private var trackSortTask: Task<Void, Never>?
+    @State private var trackSortGeneration = UUID()
+    @State private var selectedAlbumID: AlbumGroup.ID?
+    @State private var selectedArtistID: ArtistGroup.ID?
+    @State private var metadataEditTarget: MetadataEditTarget?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,15 +31,48 @@ struct LibraryContent: View {
         .background(AppTheme.canvas)
         .navigationTitle(L10n.text(library.selectedSection.titleKey))
         .searchable(text: $library.searchText, placement: .toolbar, prompt: L10n.text("library.search"))
+        .sheet(item: $metadataEditTarget) { target in
+            MetadataEditorView(target: target)
+                .environmentObject(library)
+        }
     }
 
     @ViewBuilder
     private var sectionContent: some View {
         switch library.selectedSection {
         case .albums:
-            AlbumGrid(tracks: library.filteredTracks)
+            if let album = selectedAlbum {
+                AlbumDetail(
+                    album: album,
+                    onBack: { selectedAlbumID = nil },
+                    onEditTrack: editTrack,
+                    onEditAlbum: editAlbum
+                )
+            } else {
+                AlbumGrid(
+                    albums: albums,
+                    selectedAlbumID: $selectedAlbumID,
+                    onEditAlbum: editAlbum
+                )
+            }
         case .artists:
-            ArtistBrowser(tracks: library.filteredTracks)
+            if let artist = selectedArtist {
+                ArtistDetail(
+                    artist: artist,
+                    onBack: { selectedArtistID = nil },
+                    onSelectAlbum: { album in
+                        selectedAlbumID = album.id
+                        library.selectedSection = .albums
+                    },
+                    onEditTrack: editTrack,
+                    onEditAlbum: editAlbum
+                )
+            } else {
+                ArtistBrowser(
+                    artists: artists,
+                    selectedArtistID: $selectedArtistID
+                )
+            }
         case .songs, .recentlyAdded, .needsAttention:
             trackTable
         case .effects:
@@ -64,8 +104,26 @@ struct LibraryContent: View {
         return L10n.format("library.visibleCount", library.filteredTracks.count)
     }
 
+    private var albums: [AlbumGroup] {
+        AlbumGroup.makeGroups(from: library.filteredTracks)
+    }
+
+    private var selectedAlbum: AlbumGroup? {
+        guard let selectedAlbumID else { return nil }
+        return albums.first { $0.id == selectedAlbumID }
+    }
+
+    private var artists: [ArtistGroup] {
+        ArtistGroup.makeGroups(from: library.filteredTracks)
+    }
+
+    private var selectedArtist: ArtistGroup? {
+        guard let selectedArtistID else { return nil }
+        return artists.first { $0.id == selectedArtistID }
+    }
+
     private var trackTable: some View {
-        Table(library.filteredTracks.sorted(using: sortOrder), selection: $library.selectedTrackID, sortOrder: $sortOrder) {
+        Table(sortedTracks, selection: $library.selectedTrackID, sortOrder: $sortOrder) {
             TableColumn(L10n.text("column.title"), value: \.title) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
@@ -79,6 +137,8 @@ struct LibraryContent: View {
                 .onTapGesture(count: 2) { player.play(track) }
                 .contextMenu {
                     Button(L10n.text("track.play")) { player.play(track) }
+                    Button(L10n.text("metadataEditor.track.menu")) { editTrack(track) }
+                    Divider()
                     Button(L10n.text("track.reveal")) { library.reveal(track) }
                 }
             }
@@ -90,7 +150,17 @@ struct LibraryContent: View {
             .width(min: 130, ideal: 180)
 
             TableColumn(L10n.text("column.album"), value: \.album) { track in
-                Text(track.album).lineLimit(1)
+                Text(track.album)
+                    .lineLimit(1)
+                    .contextMenu {
+                        if let album = albums.first(where: {
+                            $0.name == track.album && $0.artist == track.artist
+                        }) {
+                            Button(L10n.text("metadataEditor.album.menu")) {
+                                editAlbum(album)
+                            }
+                        }
+                    }
             }
             .width(min: 150, ideal: 200)
 
@@ -106,6 +176,78 @@ struct LibraryContent: View {
             .width(min: 64, ideal: 72)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
+        .overlay(alignment: .topTrailing) {
+            if isSortingTracks {
+                HStack(spacing: 7) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(L10n.text("library.sorting"))
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
+                .padding(.horizontal, AppTheme.spaceSM)
+                .frame(height: 30)
+                .background(.regularMaterial, in: Capsule())
+                .padding(AppTheme.spaceSM)
+                .allowsHitTesting(false)
+            }
+        }
+        .task(id: trackSortRequest) {
+            startTrackSort()
+        }
+        .onDisappear {
+            trackSortTask?.cancel()
+            trackSortTask = nil
+        }
+    }
+
+    private func editTrack(_ track: Track) {
+        metadataEditTarget = .track(track)
+    }
+
+    private func editAlbum(_ album: AlbumGroup) {
+        metadataEditTarget = .album(
+            id: album.id,
+            name: album.name,
+            artist: album.artist,
+            trackIDs: album.tracks.map(\.id)
+        )
+    }
+
+    private var trackSortRequest: TrackSortRequest {
+        TrackSortRequest(
+            contentRevision: library.contentRevision,
+            section: library.selectedSection,
+            searchText: library.searchText,
+            rules: sortOrder.compactMap(TrackSortRule.init)
+        )
+    }
+
+    private func startTrackSort() {
+        trackSortTask?.cancel()
+
+        let sourceTracks = library.filteredTracks
+        let rules = trackSortRequest.rules
+        let request = trackSortRequest
+        let generation = UUID()
+        trackSortGeneration = generation
+        isSortingTracks = true
+
+        trackSortTask = Task.detached(priority: .userInitiated) {
+            let result = sourceTracks.sorted { lhs, rhs in
+                guard !Task.isCancelled else { return false }
+                return TrackSortRule.areInIncreasingOrder(lhs, rhs, using: rules)
+            }
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard request == trackSortRequest,
+                      generation == trackSortGeneration else { return }
+                sortedTracks = result
+                isSortingTracks = false
+                trackSortTask = nil
+            }
+        }
     }
 
     @ViewBuilder
@@ -147,18 +289,95 @@ struct LibraryContent: View {
     }
 }
 
-private struct AlbumGrid: View {
-    let tracks: [Track]
+private struct TrackSortRequest: Hashable, Sendable {
+    let contentRevision: Int
+    let section: LibrarySection
+    let searchText: String
+    let rules: [TrackSortRule]
+}
 
-    private struct AlbumGroup: Identifiable {
-        let name: String
-        let artist: String
-        let tracks: [Track]
-
-        var id: String { "\(name)\u{001F}\(artist)" }
+private struct TrackSortRule: Hashable, Sendable {
+    enum Field: Hashable, Sendable {
+        case title
+        case artist
+        case album
     }
 
-    private var albums: [AlbumGroup] {
+    let field: Field
+    let isAscending: Bool
+
+    init?(_ comparator: KeyPathComparator<Track>) {
+        if comparator.keyPath == \Track.title {
+            field = .title
+        } else if comparator.keyPath == \Track.artist {
+            field = .artist
+        } else if comparator.keyPath == \Track.album {
+            field = .album
+        } else {
+            return nil
+        }
+        isAscending = comparator.order == .forward
+    }
+
+    static func areInIncreasingOrder(
+        _ lhs: Track,
+        _ rhs: Track,
+        using rules: [TrackSortRule]
+    ) -> Bool {
+        let effectiveRules = rules.isEmpty
+            ? [TrackSortRule(field: .title, isAscending: true)]
+            : rules
+
+        for rule in effectiveRules {
+            let comparison = rule.compare(lhs, rhs)
+            guard comparison != .orderedSame else { continue }
+            return rule.isAscending
+                ? comparison == .orderedAscending
+                : comparison == .orderedDescending
+        }
+
+        let titleComparison = lhs.title.localizedStandardCompare(rhs.title)
+        if titleComparison != .orderedSame {
+            return titleComparison == .orderedAscending
+        }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    private init(field: Field, isAscending: Bool) {
+        self.field = field
+        self.isAscending = isAscending
+    }
+
+    private func compare(_ lhs: Track, _ rhs: Track) -> ComparisonResult {
+        switch field {
+        case .title:
+            lhs.title.localizedStandardCompare(rhs.title)
+        case .artist:
+            lhs.artist.localizedStandardCompare(rhs.artist)
+        case .album:
+            lhs.album.localizedStandardCompare(rhs.album)
+        }
+    }
+}
+
+private struct AlbumGroup: Identifiable {
+    let name: String
+    let artist: String
+    let tracks: [Track]
+
+    var id: String { "\(name)\u{001F}\(artist)" }
+
+    var sortedTracks: [Track] {
+        tracks.sorted {
+            $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+    }
+
+    var totalDuration: TimeInterval {
+        tracks.reduce(0) { $0 + $1.duration }
+    }
+
+    static func makeGroups(from tracks: [Track]) -> [AlbumGroup] {
         let groups = Dictionary(grouping: tracks) { "\($0.album)\u{001F}\($0.artist)" }
         return groups.values.compactMap { group in
             guard let first = group.first else { return nil }
@@ -166,30 +385,91 @@ private struct AlbumGrid: View {
         }
         .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
+}
+
+private struct ArtistGroup: Identifiable {
+    let name: String
+    let tracks: [Track]
+
+    var id: String { name }
+    var albumCount: Int { Set(tracks.map(\.album)).count }
+
+    var sortedTracks: [Track] {
+        tracks.sorted {
+            let albumComparison = $0.album.localizedStandardCompare($1.album)
+            if albumComparison != .orderedSame { return albumComparison == .orderedAscending }
+            return $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+    }
+
+    var albums: [AlbumGroup] {
+        AlbumGroup.makeGroups(from: tracks)
+    }
+
+    static func makeGroups(from tracks: [Track]) -> [ArtistGroup] {
+        Dictionary(grouping: tracks, by: \.artist).map { artist, songs in
+            ArtistGroup(name: artist, tracks: songs)
+        }
+        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+}
+
+private struct AlbumGrid: View {
+    let albums: [AlbumGroup]
+    @Binding var selectedAlbumID: AlbumGroup.ID?
+    let onEditAlbum: (AlbumGroup) -> Void
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150, maximum: 210), spacing: AppTheme.spaceLG)], spacing: AppTheme.spaceLG) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 170, maximum: 210), spacing: AppTheme.spaceLG)], spacing: AppTheme.spaceLG) {
                 ForEach(albums) { album in
-                    VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
-                        EmbeddedArtworkThumbnail(
-                            tracks: album.tracks,
-                            shape: .roundedRectangle,
-                            fallbackSymbol: "square.stack.3d.up.fill",
-                            fallbackLetter: String(album.name.prefix(1)).uppercased()
-                        )
-                        .aspectRatio(1, contentMode: .fit)
-                        Text(album.name)
-                            .font(.headline)
-                            .foregroundStyle(AppTheme.ink)
-                            .lineLimit(1)
-                        Text(album.artist)
-                            .font(.callout)
-                            .foregroundStyle(AppTheme.secondaryInk)
-                            .lineLimit(1)
-                        Text(L10n.format("album.songCount", album.tracks.count))
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(AppTheme.secondaryInk)
+                    Button {
+                        selectedAlbumID = album.id
+                    } label: {
+                        VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                            GeometryReader { geometry in
+                                ArtworkThumbnail(
+                                    tracks: album.tracks,
+                                    subject: .album(name: album.name, artist: album.artist),
+                                    shape: .roundedRectangle,
+                                    fallbackSymbol: "square.stack.3d.up.fill",
+                                    fallbackLetter: String(album.name.prefix(1)).uppercased(),
+                                    onEditAlbum: { onEditAlbum(album) }
+                                )
+                                .frame(
+                                    width: geometry.size.width,
+                                    height: geometry.size.height
+                                )
+                            }
+                            .aspectRatio(1, contentMode: .fit)
+
+                            Text(album.name)
+                                .font(.headline)
+                                .foregroundStyle(AppTheme.ink)
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
+
+                            Text(album.artist)
+                                .font(.callout)
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .lineLimit(1)
+                                .frame(maxWidth: .infinity, minHeight: 18, alignment: .leading)
+
+                            Text(L10n.format("album.songCount", album.tracks.count))
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .frame(maxWidth: .infinity, minHeight: 16, alignment: .leading)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityLabel("\(album.name), \(album.artist)")
+                    .contextMenu {
+                        Button(L10n.text("metadataEditor.album.menu")) {
+                            onEditAlbum(album)
+                        }
                     }
                 }
             }
@@ -198,167 +478,466 @@ private struct AlbumGrid: View {
     }
 }
 
-private struct ArtistBrowser: View {
-    let tracks: [Track]
+private struct AlbumDetail: View {
+    @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var player: PlaybackController
 
-    private struct ArtistGroup: Identifiable {
-        let name: String
-        let tracks: [Track]
-
-        var id: String { name }
-        var albumCount: Int { Set(tracks.map(\.album)).count }
-    }
-
-    private var artists: [ArtistGroup] {
-        Dictionary(grouping: tracks, by: \.artist).map { artist, songs in
-            ArtistGroup(name: artist, tracks: songs)
-        }
-        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-    }
+    let album: AlbumGroup
+    let onBack: () -> Void
+    let onEditTrack: (Track) -> Void
+    let onEditAlbum: (AlbumGroup) -> Void
 
     var body: some View {
-        List {
-            ForEach(artists) { artist in
-                HStack(spacing: AppTheme.spaceMD) {
-                    EmbeddedArtworkThumbnail(
-                        tracks: artist.tracks,
-                        shape: .circle,
-                        fallbackSymbol: "person.crop.circle.fill",
-                        fallbackLetter: String(artist.name.prefix(1)).uppercased()
-                    )
-                    .frame(width: 52, height: 52)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(artist.name)
-                            .font(.headline)
-                            .foregroundStyle(AppTheme.ink)
-                        Text(L10n.format("artist.summary", artist.albumCount, artist.tracks.count))
-                            .font(.callout.monospacedDigit())
-                            .foregroundStyle(AppTheme.secondaryInk)
+        VStack(spacing: 0) {
+            albumHeader
+
+            Divider()
+                .overlay(AppTheme.rule)
+
+            trackTable
+        }
+        .background(AppTheme.canvas)
+    }
+
+    private var albumHeader: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
+            Button(action: onBack) {
+                Label(L10n.text("album.back"), systemImage: "chevron.left")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(AppTheme.secondaryInk)
+
+            HStack(alignment: .bottom, spacing: AppTheme.spaceLG) {
+                ArtworkThumbnail(
+                    tracks: album.tracks,
+                    subject: .album(name: album.name, artist: album.artist),
+                    shape: .roundedRectangle,
+                    fallbackSymbol: "square.stack.3d.up.fill",
+                    fallbackLetter: String(album.name.prefix(1)).uppercased(),
+                    onEditAlbum: { onEditAlbum(album) }
+                )
+                .frame(width: 168, height: 168)
+                .shadow(color: .black.opacity(0.16), radius: 14, y: 7)
+
+                VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                    Text(album.name)
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.ink)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(album.artist)
+                        .font(.title3.weight(.medium))
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .lineLimit(1)
+
+                    HStack(spacing: 6) {
+                        Text(L10n.format("album.songCount", album.tracks.count))
+                        Text("·")
+                        Text(DurationFormatter.string(album.totalDuration))
                     }
-                    Spacer()
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(AppTheme.secondaryInk)
+
+                    Button {
+                        guard let firstTrack = album.sortedTracks.first else { return }
+                        library.selectedTrackID = firstTrack.id
+                        player.play(firstTrack)
+                    } label: {
+                        Label(L10n.text("album.play"), systemImage: "play.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .disabled(album.tracks.isEmpty)
                 }
-                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contextMenu {
+                    Button(L10n.text("metadataEditor.album.menu")) {
+                        onEditAlbum(album)
+                    }
+                }
             }
         }
-        .listStyle(.inset)
-        .scrollContentBackground(.hidden)
+        .padding(.horizontal, AppTheme.spaceLG)
+        .padding(.top, AppTheme.spaceXS)
+        .padding(.bottom, AppTheme.spaceLG)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var trackTable: some View {
+        Table(album.sortedTracks, selection: $library.selectedTrackID) {
+            TableColumn(L10n.text("column.title")) { track in
+                HStack(spacing: 10) {
+                    Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
+                        .foregroundStyle(player.currentTrack?.id == track.id ? AppTheme.accent : AppTheme.secondaryInk)
+                        .frame(width: 16)
+                    Text(track.title)
+                        .foregroundStyle(AppTheme.ink)
+                        .lineLimit(1)
+                }
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { player.play(track) }
+                .contextMenu {
+                    Button(L10n.text("track.play")) { player.play(track) }
+                    Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
+                    Divider()
+                    Button(L10n.text("track.reveal")) { library.reveal(track) }
+                }
+            }
+            .width(min: 260, ideal: 380)
+
+            TableColumn(L10n.text("column.duration")) { track in
+                Text(DurationFormatter.string(track.duration))
+                    .font(.callout.monospacedDigit())
+            }
+            .width(min: 68, ideal: 76)
+
+            TableColumn(L10n.text("column.health")) { track in
+                HealthLabel(health: track.health, compact: true)
+            }
+            .width(min: 64, ideal: 72)
+        }
+        .tableStyle(.inset(alternatesRowBackgrounds: true))
+        .padding(.bottom, AppTheme.spaceMD)
     }
 }
 
-private enum ArtworkThumbnailShape: Equatable {
-    case roundedRectangle
-    case circle
-}
-
-private struct EmbeddedArtworkThumbnail: View {
-    let tracks: [Track]
-    let shape: ArtworkThumbnailShape
-    let fallbackSymbol: String
-    let fallbackLetter: String
-
-    @State private var artwork: NSImage?
-
-    private var requestID: String {
-        tracks.map(\.sha256).joined(separator: "|")
-    }
+private struct ArtistBrowser: View {
+    let artists: [ArtistGroup]
+    @Binding var selectedArtistID: ArtistGroup.ID?
 
     var body: some View {
-        Group {
-            if let artwork {
-                Image(nsImage: artwork)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                fallback
+        ScrollViewReader { proxy in
+            HStack(spacing: 0) {
+                ArtistInitialIndex(
+                    targetByInitial: targetByInitial,
+                    onSelect: { artistID in
+                        withAnimation(.easeOut(duration: 0.18)) {
+                            proxy.scrollTo(artistID, anchor: .top)
+                        }
+                    }
+                )
+
+                Divider()
+                    .overlay(AppTheme.rule)
+
+                List {
+                    ForEach(artists) { artist in
+                        Button {
+                            selectedArtistID = artist.id
+                        } label: {
+                            HStack(spacing: AppTheme.spaceMD) {
+                                ArtworkThumbnail(
+                                    tracks: artist.tracks,
+                                    subject: .artist(name: artist.name),
+                                    shape: .circle,
+                                    fallbackSymbol: "person.crop.circle.fill",
+                                    fallbackLetter: String(artist.name.prefix(1)).uppercased()
+                                )
+                                .frame(width: 52, height: 52)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(artist.name)
+                                        .font(.headline)
+                                        .foregroundStyle(AppTheme.ink)
+                                    Text(L10n.format("artist.summary", artist.albumCount, artist.tracks.count))
+                                        .font(.callout.monospacedDigit())
+                                        .foregroundStyle(AppTheme.secondaryInk)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(AppTheme.secondaryInk)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.vertical, 6)
+                        .id(artist.id)
+                    }
+                }
+                .listStyle(.inset)
+                .scrollContentBackground(.hidden)
             }
         }
-        .clipShape(thumbnailShape)
-        .overlay {
-            thumbnailShape
-                .stroke(AppTheme.rule.opacity(0.45), lineWidth: 1)
-        }
-        .contentShape(thumbnailShape)
-        .accessibilityHidden(true)
-        .task(id: requestID) {
-            artwork = nil
-            guard let data = await EmbeddedArtworkCache.shared.firstArtworkData(
-                for: tracks.map(\.fileURL)
-            ), !Task.isCancelled else { return }
-            artwork = NSImage(data: data)
-        }
     }
 
-    private var fallback: some View {
-        ZStack(alignment: .bottomLeading) {
-            thumbnailShape.fill(AppTheme.raised)
-            Image(systemName: fallbackSymbol)
-                .font(.system(size: shape == .circle ? 28 : 38, weight: .ultraLight))
-                .foregroundStyle(AppTheme.accent)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            Text(fallbackLetter)
-                .font(.system(size: shape == .circle ? 20 : 42, weight: .black, design: .rounded))
-                .foregroundStyle(AppTheme.ink.opacity(0.10))
-                .padding(shape == .circle ? 6 : AppTheme.spaceSM)
+    private var targetByInitial: [String: ArtistGroup.ID] {
+        var result: [String: ArtistGroup.ID] = [:]
+        for artist in artists {
+            guard let initial = ArtistInitialIndex.initial(for: artist.name),
+                  result[initial] == nil else { continue }
+            result[initial] = artist.id
         }
-    }
-
-    private var thumbnailShape: AnyShape {
-        switch shape {
-        case .roundedRectangle:
-            AnyShape(RoundedRectangle(cornerRadius: AppTheme.radiusLarge, style: .continuous))
-        case .circle:
-            AnyShape(Circle())
-        }
+        return result
     }
 }
 
-private actor EmbeddedArtworkCache {
-    static let shared = EmbeddedArtworkCache()
+private struct ArtistInitialIndex: View {
+    private static let japaneseRows = ["あ", "か", "さ", "た", "な", "は", "ま", "や", "ら", "わ", "ん"]
+    private static let latinRows = (65...90).compactMap(UnicodeScalar.init).map(String.init)
+    private static let numberRows = (0...9).map(String.init)
+    private static let allInitials = japaneseRows + latinRows + numberRows
 
-    private let maximumCost = 96 * 1_024 * 1_024
-    private var dataByPath: [String: Data] = [:]
-    private var missingPaths = Set<String>()
-    private var insertionOrder: [String] = []
-    private var totalCost = 0
+    let targetByInitial: [String: ArtistGroup.ID]
+    let onSelect: (ArtistGroup.ID) -> Void
 
-    func firstArtworkData(for urls: [URL]) async -> Data? {
-        for url in urls {
-            let key = url.standardizedFileURL.path
-            if let cached = dataByPath[key] { return cached }
-            if missingPaths.contains(key) { continue }
+    var body: some View {
+        GeometryReader { geometry in
+            let rowHeight = max(8, geometry.size.height / CGFloat(Self.allInitials.count))
 
-            let data = await loadArtworkData(from: url)
-            if let data {
-                insert(data, forKey: key)
-                return data
+            VStack(spacing: 0) {
+                ForEach(Self.allInitials, id: \.self) { initial in
+                    let target = targetByInitial[initial]
+                    Button {
+                        if let target { onSelect(target) }
+                    } label: {
+                        Text(initial)
+                            .font(.system(size: min(9, rowHeight * 0.72), weight: .semibold, design: .rounded))
+                            .foregroundStyle(target == nil ? AppTheme.rule : AppTheme.secondaryInk)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(target == nil)
+                    .frame(height: rowHeight)
+                    .accessibilityLabel(L10n.format("artist.index.jump", initial))
+                }
             }
-            missingPaths.insert(key)
+            .frame(maxHeight: .infinity, alignment: .center)
+        }
+        .frame(width: 26)
+        .padding(.vertical, 4)
+        .background(AppTheme.raised.opacity(0.35))
+    }
+
+    static func initial(for artistName: String) -> String? {
+        let trimmed = artistName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let widthFolded = trimmed.folding(
+            options: [.widthInsensitive, .caseInsensitive],
+            locale: Locale(identifier: "ja_JP")
+        )
+        guard let firstCharacter = widthFolded.first else { return nil }
+        let first = String(firstCharacter)
+
+        if let scalar = first.unicodeScalars.first {
+            let value = scalar.value
+            if (65...90).contains(value) { return first.uppercased() }
+            if (97...122).contains(value), let uppercase = UnicodeScalar(value - 32) {
+                return String(uppercase)
+            }
+            if (48...57).contains(value) { return first }
+        }
+
+        let hiragana = first.applyingTransform(.hiraganaToKatakana, reverse: true) ?? first
+        for (row, characters) in kanaRows where characters.contains(hiragana) {
+            return row
         }
         return nil
     }
 
-    private func loadArtworkData(from url: URL) async -> Data? {
-        let didAccess = url.startAccessingSecurityScopedResource()
-        defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
-        let asset = AVURLAsset(url: url)
-        guard let metadata = try? await asset.load(.commonMetadata),
-              let item = AVMetadataItem.metadataItems(
-                from: metadata,
-                filteredByIdentifier: .commonIdentifierArtwork
-              ).first else { return nil }
-        return try? await item.load(.dataValue)
+    private static let kanaRows: [(String, String)] = [
+        ("あ", "あいうえおぁぃぅぇぉ"),
+        ("か", "かきくけこがぎぐげご"),
+        ("さ", "さしすせそざじずぜぞ"),
+        ("た", "たちつてとだぢづでどっ"),
+        ("な", "なにぬねの"),
+        ("は", "はひふへほばびぶべぼぱぴぷぺぽ"),
+        ("ま", "まみむめも"),
+        ("や", "やゆよゃゅょ"),
+        ("ら", "らりるれろ"),
+        ("わ", "わをゎ"),
+        ("ん", "ん")
+    ]
+}
+
+private struct ArtistDetail: View {
+    @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var player: PlaybackController
+
+    let artist: ArtistGroup
+    let onBack: () -> Void
+    let onSelectAlbum: (AlbumGroup) -> Void
+    let onEditTrack: (Track) -> Void
+    let onEditAlbum: (AlbumGroup) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            artistHeader
+
+            Divider()
+                .overlay(AppTheme.rule)
+
+            albumStrip
+
+            Divider()
+                .overlay(AppTheme.rule)
+
+            trackTable
+        }
+        .background(AppTheme.canvas)
     }
 
-    private func insert(_ data: Data, forKey key: String) {
-        dataByPath[key] = data
-        insertionOrder.append(key)
-        totalCost += data.count
-        while totalCost > maximumCost, let oldest = insertionOrder.first {
-            insertionOrder.removeFirst()
-            if let removed = dataByPath.removeValue(forKey: oldest) {
-                totalCost -= removed.count
+    private var artistHeader: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
+            Button(action: onBack) {
+                Label(L10n.text("artist.back"), systemImage: "chevron.left")
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(AppTheme.secondaryInk)
+
+            HStack(spacing: AppTheme.spaceLG) {
+                ArtworkThumbnail(
+                    tracks: artist.tracks,
+                    subject: .artist(name: artist.name),
+                    shape: .circle,
+                    fallbackSymbol: "person.crop.circle.fill",
+                    fallbackLetter: String(artist.name.prefix(1)).uppercased()
+                )
+                .frame(width: 112, height: 112)
+                .shadow(color: .black.opacity(0.14), radius: 12, y: 6)
+
+                VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                    Text(artist.name)
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppTheme.ink)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(L10n.format("artist.summary", artist.albumCount, artist.tracks.count))
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+
+                    Button {
+                        guard let firstTrack = artist.sortedTracks.first else { return }
+                        library.selectedTrackID = firstTrack.id
+                        player.play(firstTrack)
+                    } label: {
+                        Label(L10n.text("artist.play"), systemImage: "play.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(artist.tracks.isEmpty)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        .padding(.horizontal, AppTheme.spaceLG)
+        .padding(.top, AppTheme.spaceXS)
+        .padding(.bottom, AppTheme.spaceMD)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var albumStrip: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+            Text(L10n.text("artist.albums"))
+                .font(.headline)
+                .foregroundStyle(AppTheme.ink)
+
+            ScrollView(.horizontal) {
+                LazyHStack(alignment: .top, spacing: AppTheme.spaceMD) {
+                    ForEach(artist.albums) { album in
+                        Button {
+                            onSelectAlbum(album)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ArtworkThumbnail(
+                                    tracks: album.tracks,
+                                    subject: .album(name: album.name, artist: album.artist),
+                                    shape: .roundedRectangle,
+                                    fallbackSymbol: "square.stack.3d.up.fill",
+                                    fallbackLetter: String(album.name.prefix(1)).uppercased(),
+                                    onEditAlbum: { onEditAlbum(album) }
+                                )
+                                .frame(width: 88, height: 88)
+
+                                Text(album.name)
+                                    .font(.callout.weight(.medium))
+                                    .foregroundStyle(AppTheme.ink)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(width: 120, height: 36, alignment: .topLeading)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .contextMenu {
+                            Button(L10n.text("metadataEditor.album.menu")) {
+                                onEditAlbum(album)
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 2)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .padding(.horizontal, AppTheme.spaceLG)
+        .padding(.vertical, AppTheme.spaceMD)
+        .frame(height: 196, alignment: .top)
+    }
+
+    private var trackTable: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+            Text(L10n.text("artist.songs"))
+                .font(.headline)
+                .foregroundStyle(AppTheme.ink)
+                .padding(.horizontal, AppTheme.spaceLG)
+                .padding(.top, AppTheme.spaceSM)
+
+            Table(artist.sortedTracks, selection: $library.selectedTrackID) {
+                TableColumn(L10n.text("column.title")) { track in
+                    HStack(spacing: 10) {
+                        Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
+                            .foregroundStyle(player.currentTrack?.id == track.id ? AppTheme.accent : AppTheme.secondaryInk)
+                            .frame(width: 16)
+                        Text(track.title)
+                            .foregroundStyle(AppTheme.ink)
+                            .lineLimit(1)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) { player.play(track) }
+                    .contextMenu {
+                        Button(L10n.text("track.play")) { player.play(track) }
+                        Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
+                        Divider()
+                        Button(L10n.text("track.reveal")) { library.reveal(track) }
+                    }
+                }
+                .width(min: 220, ideal: 300)
+
+                TableColumn(L10n.text("column.album")) { track in
+                    Text(track.album)
+                        .lineLimit(1)
+                        .contextMenu {
+                            if let album = artist.albums.first(where: {
+                                $0.name == track.album && $0.artist == track.artist
+                            }) {
+                                Button(L10n.text("metadataEditor.album.menu")) {
+                                    onEditAlbum(album)
+                                }
+                            }
+                        }
+                }
+                .width(min: 150, ideal: 210)
+
+                TableColumn(L10n.text("column.duration")) { track in
+                    Text(DurationFormatter.string(track.duration))
+                        .font(.callout.monospacedDigit())
+                }
+                .width(min: 68, ideal: 76)
+
+                TableColumn(L10n.text("column.health")) { track in
+                    HealthLabel(health: track.health, compact: true)
+                }
+                .width(min: 64, ideal: 72)
+            }
+            .tableStyle(.inset(alternatesRowBackgrounds: true))
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: AppTheme.spaceLG)
+            }
+        }
+        .padding(.bottom, AppTheme.spaceSM)
     }
 }
 

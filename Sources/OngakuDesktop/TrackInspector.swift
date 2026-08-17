@@ -43,18 +43,13 @@ struct TrackInspector: View {
     }
 
     private func artwork(for track: Track) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: AppTheme.radiusLarge, style: .continuous)
-                .fill(AppTheme.raised)
-            Image(systemName: "waveform")
-                .font(.system(size: 54, weight: .ultraLight))
-                .foregroundStyle(AppTheme.accent)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            Text(String(track.album.prefix(1)).uppercased())
-                .font(.system(size: 46, weight: .black, design: .rounded))
-                .foregroundStyle(AppTheme.ink.opacity(0.12))
-                .padding(AppTheme.spaceMD)
-        }
+        ArtworkThumbnail(
+            tracks: [track],
+            subject: .album(name: track.album, artist: track.artist),
+            shape: .roundedRectangle,
+            fallbackSymbol: "waveform",
+            fallbackLetter: String(track.album.prefix(1)).uppercased()
+        )
         .aspectRatio(1, contentMode: .fit)
         .accessibilityHidden(true)
     }

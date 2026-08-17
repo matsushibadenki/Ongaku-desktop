@@ -1,6 +1,6 @@
 import Foundation
 
-enum LibrarySection: String, CaseIterable, Identifiable {
+enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
     case songs
     case albums
     case artists

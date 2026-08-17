@@ -19,6 +19,9 @@ struct PlayerBar: View {
             .frame(height: 78)
             .background(AppTheme.surface)
         }
+        .task(id: library.contentRevision) {
+            player.updatePlaybackQueue(library.tracks)
+        }
     }
 
     private var nowPlaying: some View {
@@ -56,6 +59,8 @@ struct PlayerBar: View {
             .disabled(player.currentTrack == nil && library.selectedTrack == nil)
             .keyboardShortcut(.space, modifiers: [])
             .accessibilityLabel(L10n.text(player.isPlaying ? "player.pause" : "track.play"))
+
+            PlaybackModeMenu()
 
             VStack(spacing: 8) {
                 HStack(spacing: AppTheme.spaceMD) {
@@ -115,6 +120,33 @@ struct PlayerBar: View {
                     .foregroundStyle(AppTheme.secondaryInk)
             }
         }
+    }
+}
+
+struct PlaybackModeMenu: View {
+    @EnvironmentObject private var player: PlaybackController
+
+    var body: some View {
+        Menu {
+            Picker(L10n.text("player.mode.title"), selection: $player.playbackMode) {
+                ForEach(PlaybackMode.allCases) { mode in
+                    Label(L10n.text(mode.localizationKey), systemImage: mode.systemImage)
+                        .tag(mode)
+                }
+            }
+        } label: {
+            Image(systemName: player.playbackMode.systemImage)
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .foregroundStyle(
+            player.playbackMode == .sequential ? AppTheme.secondaryInk : AppTheme.accent
+        )
+        .help(L10n.text(player.playbackMode.localizationKey))
+        .accessibilityLabel(L10n.text("player.mode.title"))
+        .accessibilityValue(L10n.text(player.playbackMode.localizationKey))
     }
 }
 

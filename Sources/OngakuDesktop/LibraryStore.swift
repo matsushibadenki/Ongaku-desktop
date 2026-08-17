@@ -7,6 +7,12 @@ import AppKit
 
 @MainActor
 final class LibraryStore: ObservableObject {
+    enum MetadataEditError: LocalizedError {
+        case trackNotFound
+
+        var errorDescription: String? { L10n.text("metadataEditor.error.trackNotFound") }
+    }
+
     enum Activity: Equatable {
         case idle
         case importing
@@ -16,6 +22,7 @@ final class LibraryStore: ObservableObject {
     }
 
     @Published private(set) var tracks: [Track] = []
+    @Published private(set) var contentRevision = 0
     @Published var selectedSection: LibrarySection = .songs
     @Published var selectedTrackID: Track.ID?
     @Published var searchText = ""
@@ -58,11 +65,14 @@ final class LibraryStore: ObservableObject {
         do {
             let result = try await repository.load()
             tracks = result.document.tracks
+            contentRevision &+= 1
             selectedTrackID = selectedTrackID ?? tracks.first?.id
             if result.unresolvedImportCount > 0 {
-                activity = .failed(L10n.format("status.importRecoveryIssues", result.unresolvedImportCount))
+                activity = .failed(
+                    L10n.format("status.importRecoveryIssues", result.unresolvedImportCount))
             } else if result.recoveredImportCount > 0 {
-                activity = .notice(L10n.format("status.recoveredImports", result.recoveredImportCount))
+                activity = .notice(
+                    L10n.format("status.recoveredImports", result.recoveredImportCount))
             } else if result.recoveredFromBackup {
                 activity = .notice(L10n.text("status.recoveredManifest"))
             } else {
@@ -80,12 +90,15 @@ final class LibraryStore: ObservableObject {
         let result = await repository.importFiles(urls, existing: tracks)
         tracks.append(contentsOf: result.imported)
         tracks.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        contentRevision &+= 1
         lastIssues = result.issues
 
         do {
             try await repository.save(tracks: tracks)
             selectedTrackID = result.imported.first?.id ?? selectedTrackID
-            activity = result.issues.isEmpty ? .idle : .failed(L10n.format("import.issueCount", result.issues.count))
+            activity =
+                result.issues.isEmpty
+                ? .idle : .failed(L10n.format("import.issueCount", result.issues.count))
         } catch {
             activity = .failed(error.localizedDescription)
         }
@@ -95,16 +108,42 @@ final class LibraryStore: ObservableObject {
         _ mediaFolderURL: URL,
         excluding managedDirectoryURL: URL
     ) async -> AppleMusicImportSummary {
+        let legacyManagedDirectory =
+            mediaFolderURL
+            .appendingPathComponent("Ongaku Media", isDirectory: true)
+        return await registerMediaFolderInPlace(
+            mediaFolderURL,
+            excluding: [managedDirectoryURL, legacyManagedDirectory],
+            noFilesMessageKey: "status.appleMusicNoFiles",
+            successMessageKey: "status.appleMusicImported"
+        )
+    }
+
+    func registerMediaFolderInPlace(_ folderURL: URL) async -> AppleMusicImportSummary {
+        await registerMediaFolderInPlace(
+            folderURL,
+            excluding: [],
+            noFilesMessageKey: "status.folderNoFiles",
+            successMessageKey: "status.folderRegistered"
+        )
+    }
+
+    private func registerMediaFolderInPlace(
+        _ folderURL: URL,
+        excluding excludedDirectories: [URL],
+        noFilesMessageKey: String,
+        successMessageKey: String
+    ) async -> AppleMusicImportSummary {
         activity = .importing
         lastIssues = []
         let sourceURLs = await Task.detached(priority: .userInitiated) {
             Self.discoverAudioFiles(
-                in: mediaFolderURL,
-                excluding: managedDirectoryURL
+                in: folderURL,
+                excluding: excludedDirectories
             )
         }.value
         guard !sourceURLs.isEmpty else {
-            activity = .notice(L10n.text("status.appleMusicNoFiles"))
+            activity = .notice(L10n.text(noFilesMessageKey))
             return AppleMusicImportSummary(discovered: 0, imported: 0, relinked: 0, issues: 0)
         }
 
@@ -116,7 +155,9 @@ final class LibraryStore: ObservableObject {
         var relinkedCount = 0
         for referencedTrack in result.imported {
             if let index = tracks.firstIndex(where: { $0.sha256 == referencedTrack.sha256 }) {
-                if tracks[index].fileURL.standardizedFileURL != referencedTrack.fileURL.standardizedFileURL {
+                if tracks[index].fileURL.standardizedFileURL
+                    != referencedTrack.fileURL.standardizedFileURL
+                {
                     relinkedCount += 1
                 }
                 tracks[index] = referencedTrack
@@ -126,13 +167,15 @@ final class LibraryStore: ObservableObject {
             }
         }
         tracks.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        contentRevision &+= 1
         lastIssues = result.issues
 
         do {
             try await repository.save(tracks: tracks)
             selectedTrackID = result.imported.first?.id ?? selectedTrackID
-            activity = result.issues.isEmpty
-                ? .notice(L10n.format("status.appleMusicImported", importedCount, relinkedCount))
+            activity =
+                result.issues.isEmpty
+                ? .notice(L10n.format(successMessageKey, importedCount, relinkedCount))
                 : .failed(L10n.format("import.issueCount", result.issues.count))
         } catch {
             activity = .failed(error.localizedDescription)
@@ -149,6 +192,7 @@ final class LibraryStore: ObservableObject {
         guard !tracks.isEmpty else { return }
         activity = .verifying
         tracks = await repository.verify(tracks)
+        contentRevision &+= 1
         do {
             try await repository.save(tracks: tracks)
             activity = .idle
@@ -162,48 +206,111 @@ final class LibraryStore: ObservableObject {
         activity = .notice(L10n.text("status.storageChanged"))
     }
 
+    func clearAllRegistrations() async throws {
+        do {
+            try await repository.clearAllRegistrations()
+            tracks.removeAll(keepingCapacity: false)
+            selectedTrackID = nil
+            selectedSection = .songs
+            searchText = ""
+            lastIssues = []
+            contentRevision &+= 1
+            activity = .notice(L10n.text("settings.storage.clearSuccess"))
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
+
     func reveal(_ track: Track) {
 #if canImport(AppKit)
         NSWorkspace.shared.activateFileViewerSelecting([track.fileURL])
 #endif
     }
 
+    func updateTrackMetadata(
+        id: Track.ID,
+        title: String,
+        artist: String,
+        album: String
+    ) async throws {
+        var updated = tracks
+        guard let index = updated.firstIndex(where: { $0.id == id }) else {
+            throw MetadataEditError.trackNotFound
+        }
+        updated[index].title = title
+        updated[index].artist = artist
+        updated[index].album = album
+        try await persistMetadataUpdate(updated)
+    }
+
+    func updateAlbumMetadata(
+        trackIDs: [Track.ID],
+        artist: String,
+        album: String
+    ) async throws {
+        let ids = Set(trackIDs)
+        var updated = tracks
+        let indices = updated.indices.filter { ids.contains(updated[$0].id) }
+        guard !indices.isEmpty, indices.count == ids.count else {
+            throw MetadataEditError.trackNotFound
+        }
+        for index in indices {
+            updated[index].artist = artist
+            updated[index].album = album
+        }
+        try await persistMetadataUpdate(updated)
+    }
+
+    private func persistMetadataUpdate(_ updated: [Track]) async throws {
+        do {
+            try await repository.save(tracks: updated)
+            tracks = updated
+            contentRevision &+= 1
+            activity = .notice(L10n.text("status.metadataSaved"))
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
 
     private nonisolated static func discoverAudioFiles(
         in mediaFolderURL: URL,
-        excluding managedDirectoryURL: URL
+        excluding excludedDirectories: [URL]
     ) -> [URL] {
         let fileManager = FileManager.default
-        let resourceKeys: [URLResourceKey] = [.isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey]
-        guard let enumerator = fileManager.enumerator(
-            at: mediaFolderURL,
-            includingPropertiesForKeys: resourceKeys,
-            options: [.skipsHiddenFiles, .skipsPackageDescendants]
-        ) else { return [] }
+        let resourceKeys: [URLResourceKey] = [
+            .isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey,
+        ]
+        guard
+            let enumerator = fileManager.enumerator(
+                at: mediaFolderURL,
+                includingPropertiesForKeys: resourceKeys,
+                options: [.skipsHiddenFiles, .skipsPackageDescendants]
+            )
+        else { return [] }
 
-        let managedPath = managedDirectoryURL.standardizedFileURL.path
-        let legacyAppleMediaManagedPath = mediaFolderURL
-            .appendingPathComponent("Ongaku Media", isDirectory: true)
-            .standardizedFileURL.path
+        let excludedPaths = excludedDirectories.map { $0.standardizedFileURL.path }
         let supportedExtensions: Set<String> = [
-            "aac", "aif", "aiff", "alac", "caf", "flac", "m4a", "mp3", "wav"
+            "aac", "aif", "aiff", "alac", "caf", "flac", "m4a", "mp3", "wav",
         ]
         var audioFiles: [URL] = []
         for case let url as URL in enumerator {
             let standardized = url.standardizedFileURL
             let path = standardized.path
-            if path == managedPath || path.hasPrefix(managedPath + "/")
-                || path == legacyAppleMediaManagedPath
-                || path.hasPrefix(legacyAppleMediaManagedPath + "/") {
-                if (try? standardized.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
+            if excludedPaths.contains(where: { path == $0 || path.hasPrefix($0 + "/") }) {
+                if (try? standardized.resourceValues(forKeys: [.isDirectoryKey]).isDirectory)
+                    == true
+                {
                     enumerator.skipDescendants()
                 }
                 continue
             }
             guard supportedExtensions.contains(standardized.pathExtension.lowercased()),
-                  let values = try? standardized.resourceValues(forKeys: Set(resourceKeys)),
-                  values.isRegularFile == true,
-                  values.isSymbolicLink != true else { continue }
+                let values = try? standardized.resourceValues(forKeys: Set(resourceKeys)),
+                values.isRegularFile == true,
+                values.isSymbolicLink != true
+            else { continue }
             audioFiles.append(standardized)
         }
         return audioFiles.sorted {

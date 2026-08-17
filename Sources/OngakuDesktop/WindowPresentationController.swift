@@ -18,6 +18,9 @@ final class WindowPresentationController: ObservableObject {
     func attach(to window: NSWindow) {
         managedWindow = window
         updateMiniaturizeButtonHelp(in: window)
+        if isMiniPlayer {
+            enforceMiniPlayerSize(in: window)
+        }
     }
 
     func toggleMiniPlayer(in window: NSWindow) {
@@ -37,19 +40,25 @@ final class WindowPresentationController: ObservableObject {
         Task { @MainActor in
             await Task.yield()
             guard self.managedWindow === window, self.isMiniPlayer else { return }
-            let topLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
             window.minSize = NSSize(width: 1, height: 1)
             window.maxSize = NSSize(
                 width: CGFloat.greatestFiniteMagnitude,
                 height: CGFloat.greatestFiniteMagnitude
             )
-            window.styleMask.remove(.resizable)
-            window.standardWindowButton(.zoomButton)?.isEnabled = false
-            window.setContentSize(Self.miniContentSize)
-            window.setFrameTopLeftPoint(topLeft)
-            window.minSize = window.frame.size
-            window.maxSize = window.frame.size
+            self.enforceMiniPlayerSize(in: window)
         }
+    }
+
+    private func enforceMiniPlayerSize(in window: NSWindow) {
+        let topLeft = NSPoint(x: window.frame.minX, y: window.frame.maxY)
+        window.styleMask.remove(.resizable)
+        window.standardWindowButton(.zoomButton)?.isEnabled = false
+        window.contentMinSize = Self.miniContentSize
+        window.contentMaxSize = Self.miniContentSize
+        window.setContentSize(Self.miniContentSize)
+        window.setFrameTopLeftPoint(topLeft)
+        window.minSize = window.frame.size
+        window.maxSize = window.frame.size
     }
 
     private func restoreRegularPlayer(in window: NSWindow) {
@@ -121,7 +130,10 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
 
         func connect(to window: NSWindow?) {
             guard let window else { return }
-            if self.window === window, button?.target === self { return }
+            if self.window === window, button?.target === self {
+                controller.attach(to: window)
+                return
+            }
             disconnect()
             guard let button = window.standardWindowButton(.miniaturizeButton) else { return }
             self.window = window

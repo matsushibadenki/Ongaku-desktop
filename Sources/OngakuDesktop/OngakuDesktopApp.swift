@@ -60,6 +60,7 @@ struct OngakuDesktopApp: App {
                 .task { await library.load() }
         }
         .defaultSize(width: 1_320, height: 780)
+        .windowResizability(.contentSize)
         .commands {
             CommandGroup(after: .appInfo) {
                 Button(L10n.text("command.softwareUpdate")) {
@@ -89,11 +90,14 @@ struct OngakuDesktopApp: App {
         Settings {
             PreferencesView()
                 .environmentObject(library)
+                .environmentObject(player)
                 .environmentObject(storage)
                 .environmentObject(language)
                 .environmentObject(appearance)
                 .id(language.selectedLanguage.rawValue)
         }
+        .defaultSize(width: 761, height: 440)
+        .windowResizability(.contentSize)
     }
 }
 

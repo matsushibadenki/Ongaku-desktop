@@ -45,6 +45,8 @@
 		200000000000000000000024 /* WindowPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000036 /* WindowPresentationController.swift */; };
 		200000000000000000000025 /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000037 /* MiniPlayerView.swift */; };
 		200000000000000000000026 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C00000000000000000000002 /* Sparkle */; };
+		200000000000000000000027 /* ArtworkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000038 /* ArtworkResolver.swift */; };
+		200000000000000000000028 /* MetadataEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000039 /* MetadataEditorView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -87,6 +89,8 @@
 		100000000000000000000035 /* AppAppearanceSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAppearanceSettings.swift; sourceTree = "<group>"; };
 		100000000000000000000036 /* WindowPresentationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowPresentationController.swift; sourceTree = "<group>"; };
 		100000000000000000000037 /* MiniPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniPlayerView.swift; sourceTree = "<group>"; };
+		100000000000000000000038 /* ArtworkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkResolver.swift; sourceTree = "<group>"; };
+		100000000000000000000039 /* MetadataEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataEditorView.swift; sourceTree = "<group>"; };
 		100000000000000000000020 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -144,6 +148,8 @@
 				100000000000000000000008 /* ContentView.swift */,
 				100000000000000000000009 /* LibrarySidebar.swift */,
 				10000000000000000000000A /* LibraryContent.swift */,
+				100000000000000000000038 /* ArtworkResolver.swift */,
+				100000000000000000000039 /* MetadataEditorView.swift */,
 				10000000000000000000000B /* TrackInspector.swift */,
 				10000000000000000000000C /* PlayerBar.swift */,
 				100000000000000000000037 /* MiniPlayerView.swift */,
@@ -271,6 +277,8 @@
 				200000000000000000000008 /* ContentView.swift in Sources */,
 				200000000000000000000009 /* LibrarySidebar.swift in Sources */,
 				20000000000000000000000A /* LibraryContent.swift in Sources */,
+				200000000000000000000027 /* ArtworkResolver.swift in Sources */,
+				200000000000000000000028 /* MetadataEditorView.swift in Sources */,
 				20000000000000000000000B /* TrackInspector.swift in Sources */,
 				20000000000000000000000C /* PlayerBar.swift in Sources */,
 				200000000000000000000025 /* MiniPlayerView.swift in Sources */,
@@ -344,6 +352,7 @@
 				INFOPLIST_FILE = Packaging/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
@@ -370,6 +379,7 @@
 				INFOPLIST_FILE = Packaging/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;

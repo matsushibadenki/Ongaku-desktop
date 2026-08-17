@@ -88,3 +88,63 @@ struct StereoLevelMeterTests {
         #expect(levels.left > levels.right)
     }
 }
+
+@Suite("Playback queue navigation")
+struct PlaybackQueueNavigatorTests {
+    private let albumOneFirst = Track(
+        id: UUID(), title: "One", artist: "Artist", album: "Album One", duration: 1,
+        fileSize: 1, managedPath: "/tmp/one.mp3", sha256: "one", addedAt: .now,
+        health: .verified)
+    private let albumTwo = Track(
+        id: UUID(), title: "Two", artist: "Artist", album: "Album Two", duration: 1,
+        fileSize: 1, managedPath: "/tmp/two.mp3", sha256: "two", addedAt: .now,
+        health: .verified)
+    private let albumOneSecond = Track(
+        id: UUID(), title: "Three", artist: "Artist", album: "Album One", duration: 1,
+        fileSize: 1, managedPath: "/tmp/three.mp3", sha256: "three", addedAt: .now,
+        health: .verified)
+
+    @Test("Sequential playback stops at the end")
+    func sequentialStops() {
+        let queue = [albumOneFirst, albumTwo, albumOneSecond]
+        #expect(PlaybackQueueNavigator.nextTrack(
+            after: albumOneFirst, in: queue, mode: .sequential)?.id == albumTwo.id)
+        #expect(PlaybackQueueNavigator.nextTrack(
+            after: albumOneSecond, in: queue, mode: .sequential) == nil)
+    }
+
+    @Test("Repeat one returns the current track")
+    func repeatsOne() {
+        #expect(PlaybackQueueNavigator.nextTrack(
+            after: albumOneFirst, in: [albumOneFirst, albumTwo], mode: .repeatOne)?.id
+            == albumOneFirst.id)
+    }
+
+    @Test("Repeat all wraps to the first track")
+    func repeatsAll() {
+        #expect(PlaybackQueueNavigator.nextTrack(
+            after: albumTwo, in: [albumOneFirst, albumTwo], mode: .repeatAll)?.id
+            == albumOneFirst.id)
+    }
+
+    @Test("Repeat album skips other albums and wraps")
+    func repeatsAlbum() {
+        let queue = [albumOneFirst, albumTwo, albumOneSecond]
+        #expect(PlaybackQueueNavigator.nextTrack(
+            after: albumOneFirst, in: queue, mode: .repeatAlbum)?.id == albumOneSecond.id)
+        #expect(PlaybackQueueNavigator.nextTrack(
+            after: albumOneSecond, in: queue, mode: .repeatAlbum)?.id == albumOneFirst.id)
+    }
+
+    @Test("Shuffle does not immediately replay the current track")
+    func shuffleAvoidsCurrentTrack() {
+        let next = PlaybackQueueNavigator.nextTrack(
+            after: albumOneFirst,
+            in: [albumOneFirst, albumTwo, albumOneSecond],
+            mode: .shuffle,
+            randomIndex: { _ in 0 }
+        )
+        #expect(next?.id == albumTwo.id)
+        #expect(next?.id != albumOneFirst.id)
+    }
+}

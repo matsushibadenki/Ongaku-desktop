@@ -14,6 +14,7 @@ Ongaku Desktop is a native macOS music manager and player. It aims to cover the 
 - Atomic import journal with verified recovery after interruption or restart
 - Full-library verification with missing, changed, and unreadable states
 - English, Japanese, and Simplified Chinese UI
+- Embedded artwork with automatic MusicBrainz/Cover Art Archive and Wikidata/Wikimedia fallback
 - Universal macOS release packaging for Apple Silicon and Intel Macs
 - Signed in-app software updates through the app menu
 
@@ -32,6 +33,13 @@ Release archives, signing instructions, and the Sparkle update feed live in
 `x86_64` slices in one Universal Binary.
 
 The first import creates the managed library under the current user’s Application Support directory. Source files are never modified.
+
+When an audio file has no embedded image, Ongaku looks up an exact album-and-artist or
+artist match online. Downloaded thumbnails are kept in the user cache for 30 days;
+failed lookups are retried after 24 hours. Ongaku sends only the album and artist names
+needed for that lookup and continues to show its local placeholder when offline.
+Right-click an album thumbnail and choose the refresh command to bypass both caches and
+perform a new lookup immediately; a failed manual lookup keeps the current image intact.
 
 During playback, Ongaku reads the default output device's supported nominal sample
 rates and prefers the highest compatible 44.1 kHz or 48 kHz family rate up to
