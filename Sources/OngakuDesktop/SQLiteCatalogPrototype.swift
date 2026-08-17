@@ -13,6 +13,14 @@ actor SQLiteCatalogPrototype {
         let rollbackSnapshotURL: URL
     }
 
+    struct ParityReport: Equatable, Sendable {
+        let trackCount: Int
+        let checkedQueries: [String]
+        let mismatchedQueries: [String]
+
+        var isMatch: Bool { mismatchedQueries.isEmpty }
+    }
+
     enum PrototypeError: LocalizedError {
         case sqlite(String)
         case invalidCatalog(String)
@@ -110,23 +118,42 @@ actor SQLiteCatalogPrototype {
     }
 
     func search(_ query: String, limit: Int = 200) throws -> [Track.ID] {
-        let match = matchExpression(for: query)
-        guard !match.isEmpty, limit > 0 else { return [] }
+        let normalizedQuery = CatalogSearch.normalize(query)
+        guard !normalizedQuery.isEmpty, limit > 0 else { return [] }
         // WAL databases may need to recreate their shared-memory sidecar after
         // the staged file is installed under its final name.
         return try withOpenDatabase(readOnly: false) { database in
-            try withStatement(
-                database,
-                sql: """
-                    SELECT track_id
-                    FROM track_search
+            let usesTrigramIndex = normalizedQuery.count >= 3
+            let sql = usesTrigramIndex
+                ? """
+                    SELECT track_id FROM track_search
                     WHERE track_search MATCH ?
-                    ORDER BY bm25(track_search), title COLLATE NOCASE
+                    ORDER BY bm25(track_search), track_id
                     LIMIT ?
                     """
-            ) { statement in
-                try bind(match, to: 1, in: statement, database: database)
-                try bind(Int64(limit), to: 2, in: statement, database: database)
+                : """
+                    SELECT id FROM track
+                    WHERE instr(title_search, ?) > 0
+                       OR instr(artist_search, ?) > 0
+                       OR instr(album_search, ?) > 0
+                    ORDER BY title_search, id
+                    LIMIT ?
+                    """
+            return try withStatement(database, sql: sql) { statement in
+                if usesTrigramIndex {
+                    try bind(
+                        quotedFTSExpression(for: normalizedQuery),
+                        to: 1,
+                        in: statement,
+                        database: database
+                    )
+                    try bind(Int64(limit), to: 2, in: statement, database: database)
+                } else {
+                    try bind(normalizedQuery, to: 1, in: statement, database: database)
+                    try bind(normalizedQuery, to: 2, in: statement, database: database)
+                    try bind(normalizedQuery, to: 3, in: statement, database: database)
+                    try bind(Int64(limit), to: 4, in: statement, database: database)
+                }
                 var ids: [Track.ID] = []
                 while true {
                     let result = sqlite3_step(statement)
@@ -141,6 +168,32 @@ actor SQLiteCatalogPrototype {
                 return ids
             }
         }
+    }
+
+    func verifyParity(
+        document: LibraryDocument,
+        queries: [String]
+    ) throws -> ParityReport {
+        let identities = try catalogIdentities(from: document.tracks)
+        try withOpenDatabase(readOnly: false) { database in
+            try validate(document: document, identities: identities, in: database)
+        }
+
+        var mismatches: [String] = []
+        for query in queries {
+            let jsonIDs = Set(
+                document.tracks.lazy
+                    .filter { CatalogSearch.matches($0, query: query) }
+                    .map(\.id)
+            )
+            let sqliteIDs = Set(try search(query, limit: max(document.tracks.count, 1)))
+            if jsonIDs != sqliteIDs { mismatches.append(query) }
+        }
+        return ParityReport(
+            trackCount: document.tracks.count,
+            checkedQueries: queries,
+            mismatchedQueries: mismatches
+        )
     }
 
     @discardableResult
@@ -223,7 +276,10 @@ actor SQLiteCatalogPrototype {
                     sha256 TEXT NOT NULL,
                     added_at REAL NOT NULL,
                     last_verified_at REAL,
-                    health TEXT NOT NULL
+                    health TEXT NOT NULL,
+                    title_search TEXT NOT NULL,
+                    artist_search TEXT NOT NULL,
+                    album_search TEXT NOT NULL
                 );
                 CREATE INDEX track_artist_id_idx ON track(artist_id);
                 CREATE INDEX track_album_id_idx ON track(album_id);
@@ -257,10 +313,10 @@ actor SQLiteCatalogPrototype {
                     ON playback_event(track_id, occurred_at DESC);
                 CREATE VIRTUAL TABLE track_search USING fts5(
                     track_id UNINDEXED,
-                    title,
-                    artist,
-                    album,
-                    tokenize = 'unicode61 remove_diacritics 2'
+                    title_search,
+                    artist_search,
+                    album_search,
+                    tokenize = 'trigram case_sensitive 0'
                 );
                 """
         )
@@ -306,13 +362,18 @@ actor SQLiteCatalogPrototype {
             sql: """
                 INSERT INTO track(
                     id, title, artist_id, album_id, duration, file_size, managed_path,
-                    sha256, added_at, last_verified_at, health
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    sha256, added_at, last_verified_at, health,
+                    title_search, artist_search, album_search
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """
         ) { trackStatement in
             try withStatement(
                 database,
-                sql: "INSERT INTO track_search(track_id, title, artist, album) VALUES (?, ?, ?, ?)"
+                sql: """
+                    INSERT INTO track_search(
+                        track_id, title_search, artist_search, album_search
+                    ) VALUES (?, ?, ?, ?)
+                    """
             ) { searchStatement in
                 for track in document.tracks {
                     try reset(trackStatement, database: database)
@@ -331,13 +392,16 @@ actor SQLiteCatalogPrototype {
                         try bindNull(to: 10, in: trackStatement, database: database)
                     }
                     try bind(track.health.rawValue, to: 11, in: trackStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.title), to: 12, in: trackStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.artist), to: 13, in: trackStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.album), to: 14, in: trackStatement, database: database)
                     try stepDone(trackStatement, database: database)
 
                     try reset(searchStatement, database: database)
                     try bind(track.id.uuidString, to: 1, in: searchStatement, database: database)
-                    try bind(track.title, to: 2, in: searchStatement, database: database)
-                    try bind(track.artist, to: 3, in: searchStatement, database: database)
-                    try bind(track.album, to: 4, in: searchStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.title), to: 2, in: searchStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.artist), to: 3, in: searchStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.album), to: 4, in: searchStatement, database: database)
                     try stepDone(searchStatement, database: database)
                 }
             }
@@ -562,12 +626,9 @@ actor SQLiteCatalogPrototype {
         }
     }
 
-    private func matchExpression(for query: String) -> String {
-        query.split(whereSeparator: \.isWhitespace).map { component in
-            let escaped = component.replacingOccurrences(of: "\"", with: "\"\"")
-            return "\"\(escaped)\"*"
-        }
-        .joined(separator: " AND ")
+    private func quotedFTSExpression(for normalizedQuery: String) -> String {
+        let escaped = normalizedQuery.replacingOccurrences(of: "\"", with: "\"\"")
+        return "\"\(escaped)\""
     }
 
     private func withOpenDatabase<T>(

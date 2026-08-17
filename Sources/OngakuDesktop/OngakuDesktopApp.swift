@@ -83,6 +83,15 @@ struct OngakuDesktopApp: App {
             }
 
             CommandMenu(L10n.text("command.playback")) {
+                Picker(L10n.text("player.mode.title"), selection: $player.playbackMode) {
+                    ForEach(PlaybackMode.allCases) { mode in
+                        Label(L10n.text(mode.localizationKey), systemImage: mode.systemImage)
+                            .tag(mode)
+                    }
+                }
+
+                Divider()
+
                 Toggle(L10n.text("command.automaticUpsampling"), isOn: $player.automaticUpsampling)
             }
         }

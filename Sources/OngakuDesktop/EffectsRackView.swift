@@ -249,12 +249,13 @@ private struct EffectModuleCard: View {
             .foregroundStyle(AppTheme.secondaryInk)
             .help(L10n.text("effects.reset"))
 
-            Toggle("", isOn: Binding(
-                get: { setting.isEnabled },
-                set: { player.setEffectEnabled($0, for: kind) }
-            ))
-            .labelsHidden()
-            .toggleStyle(.switch)
+            SquareLeverToggle(
+                isOn: Binding(
+                    get: { setting.isEnabled },
+                    set: { player.setEffectEnabled($0, for: kind) }
+                ),
+                accessibilityLabel: kind.displayName
+            )
             .help(setting.isEnabled ? L10n.text("effects.disable") : L10n.text("effects.enable"))
         }
     }

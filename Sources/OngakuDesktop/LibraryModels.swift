@@ -71,6 +71,23 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var fileURL: URL { URL(fileURLWithPath: managedPath) }
 }
 
+enum CatalogSearch {
+    static func normalize(_ value: String) -> String {
+        value.folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: Locale(identifier: "en_US_POSIX")
+        )
+    }
+
+    static func matches(_ track: Track, query: String) -> Bool {
+        let normalizedQuery = normalize(query)
+        guard !normalizedQuery.isEmpty else { return true }
+        return normalize(track.title).contains(normalizedQuery)
+            || normalize(track.artist).contains(normalizedQuery)
+            || normalize(track.album).contains(normalizedQuery)
+    }
+}
+
 struct PlaylistEntry: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     var trackID: Track.ID

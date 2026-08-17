@@ -128,18 +128,24 @@ struct PlaybackModeMenu: View {
 
     var body: some View {
         Menu {
-            Picker(L10n.text("player.mode.title"), selection: $player.playbackMode) {
-                ForEach(PlaybackMode.allCases) { mode in
+            ForEach(PlaybackMode.allCases) { mode in
+                Button {
+                    player.playbackMode = mode
+                } label: {
                     Label(L10n.text(mode.localizationKey), systemImage: mode.systemImage)
-                        .tag(mode)
                 }
             }
         } label: {
-            Image(systemName: player.playbackMode.systemImage)
-                .frame(width: 24, height: 24)
-                .contentShape(Rectangle())
+            Label(
+                L10n.text(player.playbackMode.localizationKey),
+                systemImage: player.playbackMode.systemImage
+            )
+            .labelStyle(.iconOnly)
+            .frame(width: 28, height: 28)
+            .contentShape(Rectangle())
         }
-        .menuStyle(.borderlessButton)
+        .menuStyle(.button)
+        .buttonStyle(.plain)
         .fixedSize()
         .foregroundStyle(
             player.playbackMode == .sequential ? AppTheme.secondaryInk : AppTheme.accent

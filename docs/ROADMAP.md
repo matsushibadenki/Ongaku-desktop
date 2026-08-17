@@ -123,7 +123,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] 決定論的な10万曲性能fixtureと任意実行ベンチマークを追加
 - [Done] [ADR-0001](adr/0001-large-library-storage.md)で性能予算とSQLite移行条件を確定
 - [Done] 10万曲検索の予算超過に対し、[ADR-0001](adr/0001-large-library-storage.md)準拠のSQLiteカタログ、FTS5検索、JSON移行・ロールバック検証を実装
-- [Next] JSON／SQLiteのdual-read一致検証と、アプリ内検索経路のSQLite切り替えを実装
+- [Done] JSON／SQLiteのdual-read一致検証を追加し、一致確認後のアプリ内検索をSQLiteへ切り替え（同期中・失敗時はJSON検索へ自動フォールバック）
 - [Next] MusicKit entitlement、認証、カタログ検索、再生、ライブラリ更新の技術スパイク
 - [Next] 公開API制約表とプライバシーデータフローを確定
 - [Next] UIテスト、VoiceOver、キーボード操作、英日中表示崩れのCIゲートを追加

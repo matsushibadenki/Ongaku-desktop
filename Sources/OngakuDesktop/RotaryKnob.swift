@@ -78,19 +78,21 @@ struct RotaryKnob: View {
                 }
             }
 
-            Text(label)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(AppTheme.ink)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.85)
-                .frame(height: 26, alignment: .top)
-                .help(label)
+            VStack(spacing: 2) {
+                Text(label)
+                    .font(.caption2.weight(.medium))
+                    .foregroundStyle(AppTheme.ink)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .help(label)
 
-            Text(valueText)
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundStyle(AppTheme.secondaryInk)
-                .contentTransition(.numericText())
+                Text(valueText)
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .contentTransition(.numericText())
+            }
+            .frame(minHeight: 26, alignment: .top)
         }
         .frame(width: 84)
         .opacity(isEnabled ? 1 : 0.48)

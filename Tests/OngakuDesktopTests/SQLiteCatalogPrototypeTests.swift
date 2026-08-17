@@ -36,6 +36,12 @@ struct SQLiteCatalogPrototypeTests {
         #expect(japanese == [document.tracks[1].id])
         let sharedAlbumSearch = try await prototype.search("Album")
         #expect(Set(sharedAlbumSearch) == Set(document.tracks.map(\.id)))
+        let parity = try await prototype.verifyParity(
+            document: document,
+            queries: ["alpha", "LPH", "夜", "album", "ＳＯＮＧ", "missing"]
+        )
+        #expect(parity.isMatch)
+        #expect(parity.mismatchedQueries.isEmpty)
 
         // Replacing an opened WAL catalog must not carry old sidecars into the
         // newly validated database.
@@ -75,7 +81,7 @@ struct SQLiteCatalogPrototypeTests {
         let firstArtistID = UUID()
         let firstAlbumID = UUID()
         let first = Track(
-            id: UUID(), title: "Alpha Song", artist: "First Artist", album: "Shared Album",
+            id: UUID(), title: "Àlpha Ｓong", artist: "First Artist", album: "Shared Album",
             duration: 180, fileSize: 1_000, managedPath: "/Music/Alpha.m4a",
             sha256: "alpha", addedAt: .now, lastVerifiedAt: .now, health: .verified,
             artistID: firstArtistID, albumID: firstAlbumID
