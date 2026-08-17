@@ -1,5 +1,8 @@
 # Ongaku Desktop Roadmap
 
+Music.app機能網羅に向けたマイルストーンと開発スケジュールは
+[`docs/ROADMAP.md`](docs/ROADMAP.md)で管理します。
+
 - [Done] Native macOS three-pane music library and persistent player
 - [Done] Managed-file import with SHA-256 copy verification
 - [Done] Atomic manifest persistence and previous-manifest backup
@@ -12,6 +15,7 @@
 - [Done] English, Japanese, and Simplified Chinese localization
 - [Done] Universal arm64 and x86_64 release packaging with architecture verification
 - [Done] Signed Sparkle software updates with a localized app-menu command
+- [Done] Custom macOS application icon with complete Retina asset sizes
 - [Done] Embedded and automatic online album/artist artwork with local caching
 - [Done] User-registered album artwork from song and album information editors
 - [Done] Catalog metadata editing for songs and whole albums

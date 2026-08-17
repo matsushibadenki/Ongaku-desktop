@@ -2,6 +2,8 @@
 
 Ongaku Desktop is a native macOS music manager and player. It aims to cover the everyday role of Music.app while treating the audio files themselves as durable, inspectable assets.
 
+![Ongaku Desktop album library](docs/images/Ongaku-desktop.png)
+
 ## Current MVP
 
 - Native three-column SwiftUI library with a persistent player
