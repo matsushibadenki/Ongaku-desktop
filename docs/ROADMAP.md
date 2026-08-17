@@ -43,7 +43,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] 埋め込み、オンライン、自動キャッシュ、手動指定によるアルバム／アーティスト画像
 - [Done] 楽曲単位とアルバム単位のカタログ情報編集
 - [Done] 英語、日本語、简体中文のローカライズ基盤
-- [Done] Universal Binary、署名、Sparkle更新、macOS AppIcon
+- [Done] Universal Binary、Developer ID署名・公証済みDMG、Sparkle更新、macOS AppIcon
 
 ### 直近の不足
 

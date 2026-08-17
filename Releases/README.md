@@ -32,30 +32,44 @@ xcrun notarytool store-credentials ongaku-notary
 
 ## Build a release
 
-Set the signing identity and team, then pass a semantic version and increasing
-bundle build number:
+Set the signing identity, team, and the Keychain profile created for
+`notarytool`, then pass a semantic version and increasing bundle build number:
 
 ```sh
-DEVELOPER_ID_APPLICATION="Developer ID Application: Example (TEAMID)" \
-DEVELOPMENT_TEAM="TEAMID" \
+DEVELOPER_ID_APPLICATION="Developer ID Application: Hironori Suzawa (3WH28SSRZC)" \
+DEVELOPMENT_TEAM="3WH28SSRZC" \
 NOTARY_PROFILE="ongaku-notary" \
 ./Releases/build-release.sh 1.0.0 100
 ```
 
 The script archives with `arm64 x86_64`, verifies both Mach-O slices, verifies
-code signing, notarizes and staples the app, creates the ZIP and
-SHA-256 checksum, signs the update with Sparkle, and updates `appcast.xml`.
+code signing, notarizes and staples the app, creates a signed and notarized APFS
+DMG with an Applications shortcut, creates its SHA-256 checksum, signs the DMG
+update with Sparkle, and updates `appcast.xml`.
 
 Before publishing, review the generated appcast and release notes. Upload the
-ZIP and checksum to the GitHub release tagged `v<version>`, then commit the
-updated `Releases/appcast.xml`. The app's **Software Update…** command reads
-that HTTPS feed and Sparkle validates the EdDSA signature before installing.
+DMG and checksum to the GitHub release tagged `v<version>`, then commit the
+updated `Releases/appcast.xml`. The same DMG is used for manual GitHub installs
+and in-app updates. The app's **Software Update…** command reads that HTTPS feed
+and Sparkle validates the EdDSA signature before installing.
 
-For a local architecture-only build without Developer ID or notarization:
+After authenticating GitHub CLI, a release can be created with:
+
+```sh
+gh release create v1.0.0 \
+  Releases/dist/OngakuDesktop-1.0.0-universal.dmg \
+  Releases/dist/OngakuDesktop-1.0.0-universal.dmg.sha256 \
+  --title "Ongaku Desktop 1.0.0" \
+  --notes-file Releases/dist/OngakuDesktop-1.0.0-universal.md
+```
+
+Publish the GitHub release before pushing the updated appcast so clients never
+receive an update URL whose DMG has not been uploaded yet.
+
+For a local Universal Binary DMG without Developer ID or notarization:
 
 ```sh
 ./Releases/build-release.sh --local 1.0.0 100
 ```
 
-Local builds are deliberately not added to the appcast and must not be
-published.
+Local DMGs are deliberately not added to the appcast and must not be published.
