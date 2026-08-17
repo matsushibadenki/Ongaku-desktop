@@ -361,11 +361,10 @@ private struct TrackSortRule: Hashable, Sendable {
 }
 
 private struct AlbumGroup: Identifiable {
+    let id: UUID
     let name: String
     let artist: String
     let tracks: [Track]
-
-    var id: String { "\(name)\u{001F}\(artist)" }
 
     var sortedTracks: [Track] {
         tracks.sorted {
@@ -378,21 +377,25 @@ private struct AlbumGroup: Identifiable {
     }
 
     static func makeGroups(from tracks: [Track]) -> [AlbumGroup] {
-        let groups = Dictionary(grouping: tracks) { "\($0.album)\u{001F}\($0.artist)" }
+        let groups = Dictionary(grouping: tracks, by: \.albumID)
         return groups.values.compactMap { group in
             guard let first = group.first else { return nil }
-            return AlbumGroup(name: first.album, artist: first.artist, tracks: group)
+            return AlbumGroup(
+                id: first.albumID,
+                name: first.album,
+                artist: first.artist,
+                tracks: group
+            )
         }
         .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 }
 
 private struct ArtistGroup: Identifiable {
+    let id: UUID
     let name: String
     let tracks: [Track]
-
-    var id: String { name }
-    var albumCount: Int { Set(tracks.map(\.album)).count }
+    var albumCount: Int { Set(tracks.map(\.albumID)).count }
 
     var sortedTracks: [Track] {
         tracks.sorted {
@@ -407,8 +410,9 @@ private struct ArtistGroup: Identifiable {
     }
 
     static func makeGroups(from tracks: [Track]) -> [ArtistGroup] {
-        Dictionary(grouping: tracks, by: \.artist).map { artist, songs in
-            ArtistGroup(name: artist, tracks: songs)
+        Dictionary(grouping: tracks, by: \.artistID).compactMap { artistID, songs in
+            guard let artist = songs.first?.artist else { return nil }
+            return ArtistGroup(id: artistID, name: artist, tracks: songs)
         }
         .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }

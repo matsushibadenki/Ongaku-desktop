@@ -21,7 +21,8 @@ let package = Package(
         ),
         .testTarget(
             name: "OngakuDesktopTests",
-            dependencies: ["OngakuDesktop"]
+            dependencies: ["OngakuDesktop"],
+            resources: [.copy("Fixtures")]
         )
     ]
 )

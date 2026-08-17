@@ -231,3 +231,7 @@
 "metadataEditor.artwork.remove" = "移除已注册图片";
 "metadataEditor.artwork.invalid" = "请选择小于12 MB的有效图片。";
 "status.metadataSaved" = "目录信息已保存。";
+"status.libraryMigrated" = "资料库目录已安全升级到版本%d。";
+"library.error.unsupportedSchema" = "不支持此资料库的架构版本%d。";
+"library.error.copyVerificationFailed" = "复制的数据与%@不一致，暂存副本已丢弃。";
+"library.error.sourceIsNotRegularFile" = "%@不是常规文件。请选择原始音频文件，而不是链接。";

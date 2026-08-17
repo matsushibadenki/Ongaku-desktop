@@ -231,3 +231,7 @@
 "metadataEditor.artwork.remove" = "登録画像を解除";
 "metadataEditor.artwork.invalid" = "12 MB未満の有効な画像を選択してください。";
 "status.metadataSaved" = "カタログ情報を保存しました。";
+"status.libraryMigrated" = "ライブラリカタログを安全にバージョン%dへ更新しました。";
+"library.error.unsupportedSchema" = "このライブラリのスキーマバージョン%dには対応していません。";
+"library.error.copyVerificationFailed" = "コピーしたデータが%@と一致しませんでした。作業用コピーは破棄しました。";
+"library.error.sourceIsNotRegularFile" = "%@は通常のファイルではありません。リンクではなく元の音声ファイルを選択してください。";

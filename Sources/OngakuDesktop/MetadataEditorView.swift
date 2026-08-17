@@ -4,7 +4,7 @@ import UniformTypeIdentifiers
 
 enum MetadataEditTarget: Identifiable {
     case track(Track)
-    case album(id: String, name: String, artist: String, trackIDs: [Track.ID])
+    case album(id: UUID, name: String, artist: String, trackIDs: [Track.ID])
 
     var id: String {
         switch self {

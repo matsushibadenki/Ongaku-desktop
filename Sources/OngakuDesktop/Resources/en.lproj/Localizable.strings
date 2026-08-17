@@ -231,3 +231,7 @@
 "metadataEditor.artwork.remove" = "Remove Registered Image";
 "metadataEditor.artwork.invalid" = "Choose a valid image smaller than 12 MB.";
 "status.metadataSaved" = "The catalog information was saved.";
+"status.libraryMigrated" = "The library catalog was safely upgraded to version %d.";
+"library.error.unsupportedSchema" = "The library uses unsupported schema version %d.";
+"library.error.copyVerificationFailed" = "The copied data did not match %@. The staged copy was discarded.";
+"library.error.sourceIsNotRegularFile" = "%@ is not a regular file. Choose the original audio file instead of a link.";

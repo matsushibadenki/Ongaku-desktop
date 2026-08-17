@@ -4,6 +4,17 @@ import Testing
 
 @Suite("Library repository integrity")
 struct LibraryRepositoryTests {
+    private func fixtureURL(_ name: String) -> URL {
+        guard let url = Bundle.module.url(
+            forResource: name,
+            withExtension: nil,
+            subdirectory: "Fixtures"
+        ) else {
+            fatalError("Missing test fixture: \(name)")
+        }
+        return url
+    }
+
     @Test("Manifest round-trips atomically")
     func manifestRoundTrip() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -30,6 +41,83 @@ struct LibraryRepositoryTests {
         #expect(loaded.document.tracks[0].sha256 == track.sha256)
         #expect(loaded.document.tracks[0].health == .verified)
         try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test("Schema 1 migrates once with stable library, artist, and album IDs")
+    func migratesSchemaOneCatalog() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data(contentsOf: fixtureURL("library-schema-1.json"))
+            .write(to: root.appendingPathComponent("library-v1.json"))
+
+        let repository = LibraryRepository(rootURL: root)
+        let migrated = try await repository.load()
+
+        #expect(migrated.migratedFromSchemaVersion == 1)
+        #expect(migrated.document.schemaVersion == LibraryDocument.currentSchema)
+        #expect(migrated.document.tracks.count == 3)
+        #expect(migrated.document.createdAt == migrated.document.tracks[0].addedAt)
+        #expect(migrated.document.tracks[0].artistID == migrated.document.tracks[1].artistID)
+        #expect(migrated.document.tracks[1].artistID == migrated.document.tracks[2].artistID)
+        #expect(migrated.document.tracks[0].albumID == migrated.document.tracks[1].albumID)
+        #expect(migrated.document.tracks[1].albumID != migrated.document.tracks[2].albumID)
+        #expect(FileManager.default.fileExists(
+            atPath: root.appendingPathComponent("library-schema-1.migration-backup.json").path
+        ))
+
+        let firstLibraryID = migrated.document.libraryID
+        let firstArtistID = migrated.document.tracks[0].artistID
+        let firstAlbumID = migrated.document.tracks[0].albumID
+        let reloaded = try await repository.load()
+        #expect(reloaded.migratedFromSchemaVersion == nil)
+        #expect(reloaded.document.libraryID == firstLibraryID)
+        #expect(reloaded.document.tracks[0].artistID == firstArtistID)
+        #expect(reloaded.document.tracks[0].albumID == firstAlbumID)
+
+        try Data(contentsOf: fixtureURL("library-corrupt.json")).write(
+            to: root.appendingPathComponent("library-v1.json"),
+            options: .atomic
+        )
+        let savedAgain = try await LibraryRepository(rootURL: root).load()
+        #expect(savedAgain.recoveredFromBackup)
+        #expect(savedAgain.document.libraryID == firstLibraryID)
+        #expect(savedAgain.document.tracks[0].artistID == firstArtistID)
+        #expect(savedAgain.document.tracks[0].albumID == firstAlbumID)
+    }
+
+    @Test("An unversioned track-array fixture migrates to the current schema")
+    func migratesUnversionedCatalog() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data(contentsOf: fixtureURL("library-unversioned.json"))
+            .write(to: root.appendingPathComponent("library-v1.json"))
+
+        let loaded = try await LibraryRepository(rootURL: root).load()
+        #expect(loaded.migratedFromSchemaVersion == 0)
+        #expect(loaded.document.schemaVersion == LibraryDocument.currentSchema)
+        #expect(loaded.document.tracks.map(\.title) == ["Early Track"])
+    }
+
+    @Test("A future schema is never replaced with an older backup")
+    func rejectsFutureSchemaWithoutDowngrade() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(tracks: [])
+        try await repository.save(tracks: [])
+        try Data("{\"schemaVersion\":999,\"tracks\":[]}".utf8)
+            .write(to: root.appendingPathComponent("library-v1.json"), options: .atomic)
+
+        do {
+            _ = try await LibraryRepository(rootURL: root).load()
+            Issue.record("A catalog from a future schema was accepted")
+        } catch LibraryRepository.RepositoryError.unsupportedSchema(let version) {
+            #expect(version == 999)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
     }
 
     @Test("Clearing registrations leaves every audio file untouched")
@@ -70,7 +158,7 @@ struct LibraryRepositoryTests {
         #expect(try Data(contentsOf: audioFile) == originalAudio)
 
         // Backup recovery must preserve the intentionally empty catalog too.
-        try Data("invalid catalog".utf8).write(
+        try Data(contentsOf: fixtureURL("library-corrupt.json")).write(
             to: catalog.appendingPathComponent("library-v1.json")
         )
         let recovered = try await repository.load()
@@ -78,6 +166,11 @@ struct LibraryRepositoryTests {
         #expect(recovered.document.tracks.isEmpty)
         #expect(FileManager.default.fileExists(atPath: audioFile.path))
         #expect(try Data(contentsOf: audioFile) == originalAudio)
+
+        // Recovery rewrites the primary without replacing the known-good backup.
+        let healthyReload = try await repository.load()
+        #expect(!healthyReload.recoveredFromBackup)
+        #expect(healthyReload.document.tracks.isEmpty)
         try? FileManager.default.removeItem(at: root)
     }
 

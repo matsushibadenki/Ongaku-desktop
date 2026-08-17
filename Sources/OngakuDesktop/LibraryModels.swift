@@ -65,16 +65,20 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var addedAt: Date
     var lastVerifiedAt: Date?
     var health: FileHealth
+    var artistID: UUID = UUID()
+    var albumID: UUID = UUID()
 
     var fileURL: URL { URL(fileURLWithPath: managedPath) }
 }
 
 struct LibraryDocument: Codable, Sendable {
-    static let currentSchema = 1
+    static let currentSchema = 2
 
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
     var tracks: [Track] = []
+    var libraryID: UUID = UUID()
+    var createdAt: Date = .now
 }
 
 struct LibraryLoadResult: Sendable {
@@ -82,6 +86,62 @@ struct LibraryLoadResult: Sendable {
     var recoveredFromBackup: Bool
     var recoveredImportCount: Int = 0
     var unresolvedImportCount: Int = 0
+    var migratedFromSchemaVersion: Int?
+}
+
+extension Track {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case artist
+        case album
+        case duration
+        case fileSize
+        case managedPath
+        case sha256
+        case addedAt
+        case lastVerifiedAt
+        case health
+        case artistID
+        case albumID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        artist = try container.decode(String.self, forKey: .artist)
+        album = try container.decode(String.self, forKey: .album)
+        duration = try container.decode(TimeInterval.self, forKey: .duration)
+        fileSize = try container.decode(Int64.self, forKey: .fileSize)
+        managedPath = try container.decode(String.self, forKey: .managedPath)
+        sha256 = try container.decode(String.self, forKey: .sha256)
+        addedAt = try container.decode(Date.self, forKey: .addedAt)
+        lastVerifiedAt = try container.decodeIfPresent(Date.self, forKey: .lastVerifiedAt)
+        health = try container.decode(FileHealth.self, forKey: .health)
+
+        // Schema 1 and interrupted-import journals predate persistent group IDs.
+        // Temporary values are normalized at the document migration boundary.
+        artistID = try container.decodeIfPresent(UUID.self, forKey: .artistID) ?? UUID()
+        albumID = try container.decodeIfPresent(UUID.self, forKey: .albumID) ?? UUID()
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encode(artist, forKey: .artist)
+        try container.encode(album, forKey: .album)
+        try container.encode(duration, forKey: .duration)
+        try container.encode(fileSize, forKey: .fileSize)
+        try container.encode(managedPath, forKey: .managedPath)
+        try container.encode(sha256, forKey: .sha256)
+        try container.encode(addedAt, forKey: .addedAt)
+        try container.encodeIfPresent(lastVerifiedAt, forKey: .lastVerifiedAt)
+        try container.encode(health, forKey: .health)
+        try container.encode(artistID, forKey: .artistID)
+        try container.encode(albumID, forKey: .albumID)
+    }
 }
 
 struct ImportIssue: Identifiable, Sendable {

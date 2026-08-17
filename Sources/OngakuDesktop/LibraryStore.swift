@@ -75,6 +75,10 @@ final class LibraryStore: ObservableObject {
                     L10n.format("status.recoveredImports", result.recoveredImportCount))
             } else if result.recoveredFromBackup {
                 activity = .notice(L10n.text("status.recoveredManifest"))
+            } else if result.migratedFromSchemaVersion != nil {
+                activity = .notice(
+                    L10n.format("status.libraryMigrated", LibraryDocument.currentSchema)
+                )
             } else {
                 activity = .idle
             }
@@ -238,9 +242,23 @@ final class LibraryStore: ObservableObject {
         guard let index = updated.firstIndex(where: { $0.id == id }) else {
             throw MetadataEditError.trackNotFound
         }
+        let original = updated[index]
         updated[index].title = title
         updated[index].artist = artist
         updated[index].album = album
+        if artist != original.artist || album != original.album {
+            if let destination = tracks.first(where: {
+                $0.id != id && $0.artist == artist && $0.album == album
+            }) {
+                updated[index].artistID = destination.artistID
+                updated[index].albumID = destination.albumID
+            } else {
+                updated[index].artistID = tracks.first(where: {
+                    $0.id != id && $0.artist == artist
+                })?.artistID ?? UUID()
+                updated[index].albumID = UUID()
+            }
+        }
         try await persistMetadataUpdate(updated)
     }
 

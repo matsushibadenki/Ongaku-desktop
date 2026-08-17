@@ -1,0 +1,14 @@
+[
+  {
+    "addedAt" : "2024-01-02T03:04:05Z",
+    "album" : "Early Album",
+    "artist" : "Early Artist",
+    "duration" : 120,
+    "fileSize" : 512,
+    "health" : "unchecked",
+    "id" : "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA",
+    "managedPath" : "/Music/Early Artist/Early Album/Early.m4a",
+    "sha256" : "fixture-early",
+    "title" : "Early Track"
+  }
+]

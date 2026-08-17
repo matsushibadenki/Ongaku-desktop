@@ -58,7 +58,7 @@ enum PlaybackQueueNavigator {
 
         case .repeatAlbum:
             let albumTracks = queue.filter {
-                $0.album == current.album && $0.artist == current.artist
+                $0.albumID == current.albumID
             }
             guard !albumTracks.isEmpty else { return current }
             guard let index = albumTracks.firstIndex(where: { $0.id == current.id }) else {

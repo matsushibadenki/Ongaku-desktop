@@ -6,6 +6,7 @@ Music.app機能網羅に向けたマイルストーンと開発スケジュー�
 - [Done] Native macOS three-pane music library and persistent player
 - [Done] Managed-file import with SHA-256 copy verification
 - [Done] Atomic manifest persistence and previous-manifest backup
+- [Done] Versioned catalog migration with persistent library, artist, and album identities
 - [Done] Duplicate detection and whole-library integrity verification
 - [Done] Backup-catalog recovery and symbolic-link rejection
 - [Done] Import recovery journal for interrupted copies and app restarts

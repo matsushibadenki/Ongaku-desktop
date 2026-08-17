@@ -113,9 +113,11 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 
 ### M0 — 基盤固定（4週間）
 
-- [Next] `Track`、`Album`、`Artist`、`Playlist`、`PlaybackEvent`の安定IDとスキーマバージョンを定義
-- [Next] JSONカタログの段階的マイグレーション方式を実装し、将来のSQLite移行ADRを作成
-- [Next] 既存利用者データのfixture、破損fixture、10万曲性能fixtureをテスト資産化
+- [Done] `Library`、`Track`、`Album`、`Artist`の永続IDとカタログスキーマ2を定義
+- [Done] スキーマ1／無バージョン形式からの原子的マイグレーションと安全なバックアップ復旧を実装
+- [Done] 旧形式、無バージョン、破損形式、将来バージョンのfixtureをテスト資産化
+- [Next] `Playlist`、`PlaybackEvent`の安定IDと保存モデルを定義
+- [Next] 10万曲性能fixtureを追加し、SQLite移行条件をADRで確定
 - [Next] MusicKit entitlement、認証、カタログ検索、再生、ライブラリ更新の技術スパイク
 - [Next] 公開API制約表とプライバシーデータフローを確定
 - [Next] UIテスト、VoiceOver、キーボード操作、英日中表示崩れのCIゲートを追加

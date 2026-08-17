@@ -27,6 +27,59 @@ actor LibraryRepository {
         var entries: [ImportJournalEntry] = []
     }
 
+    private struct DecodedLibraryDocument {
+        var document: LibraryDocument
+        var migratedFromSchemaVersion: Int?
+    }
+
+    private struct SchemaHeader: Decodable {
+        var schemaVersion: Int?
+    }
+
+    private struct LegacyLibraryDocument: Decodable {
+        var schemaVersion: Int?
+        var updatedAt: Date?
+        var tracks: [Track]
+    }
+
+    private struct CatalogIdentityIndex {
+        private var artistIDsByName: [String: UUID] = [:]
+        private var albumIDsByArtistAndName: [String: UUID] = [:]
+
+        init(tracks: [Track] = []) {
+            for track in tracks {
+                let artistKey = Self.nameKey(track.artist)
+                artistIDsByName[artistKey] = artistIDsByName[artistKey] ?? track.artistID
+                let albumKey = Self.albumKey(artistID: track.artistID, album: track.album)
+                albumIDsByArtistAndName[albumKey] =
+                    albumIDsByArtistAndName[albumKey] ?? track.albumID
+            }
+        }
+
+        mutating func identities(artist: String, album: String) -> (artistID: UUID, albumID: UUID) {
+            let artistKey = Self.nameKey(artist)
+            let artistID = artistIDsByName[artistKey] ?? UUID()
+            artistIDsByName[artistKey] = artistID
+
+            let albumKey = Self.albumKey(artistID: artistID, album: album)
+            let albumID = albumIDsByArtistAndName[albumKey] ?? UUID()
+            albumIDsByArtistAndName[albumKey] = albumID
+            return (artistID, albumID)
+        }
+
+        private static func nameKey(_ value: String) -> String {
+            value.trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(
+                    options: [.caseInsensitive, .widthInsensitive],
+                    locale: Locale(identifier: "en_US_POSIX")
+                )
+        }
+
+        private static func albumKey(artistID: UUID, album: String) -> String {
+            "\(artistID.uuidString)\u{001F}\(nameKey(album))"
+        }
+    }
+
     enum RepositoryError: LocalizedError {
         case unsupportedSchema(Int)
         case copyVerificationFailed(String)
@@ -35,11 +88,11 @@ actor LibraryRepository {
         var errorDescription: String? {
             switch self {
             case .unsupportedSchema(let version):
-                "The library uses unsupported schema version \(version)."
+                L10n.format("library.error.unsupportedSchema", version)
             case .copyVerificationFailed(let file):
-                "The copied data did not match \(file). The staged copy was discarded."
+                L10n.format("library.error.copyVerificationFailed", file)
             case .sourceIsNotRegularFile(let file):
-                "\(file) is not a regular file. Choose the original audio file instead of a link."
+                L10n.format("library.error.sourceIsNotRegularFile", file)
             }
         }
     }
@@ -47,6 +100,7 @@ actor LibraryRepository {
     let rootURL: URL
     private let fileManager: FileManager
     private var mediaURL: URL
+    private var libraryIdentity: (id: UUID, createdAt: Date)?
 
     init(rootURL: URL? = nil, mediaURL: URL? = nil, fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -64,6 +118,9 @@ actor LibraryRepository {
     private var incomingURL: URL { rootURL.appendingPathComponent("Incoming", isDirectory: true) }
     private var manifestURL: URL { rootURL.appendingPathComponent("library-v1.json") }
     private var backupURL: URL { rootURL.appendingPathComponent("library-v1.backup.json") }
+    private var migrationArchiveURL: URL {
+        rootURL.appendingPathComponent("library-schema-1.migration-backup.json")
+    }
     private var importJournalURL: URL { rootURL.appendingPathComponent("import-journal-v1.json") }
 
     func setMediaDirectory(_ url: URL) throws {
@@ -75,42 +132,62 @@ actor LibraryRepository {
     func load() throws -> LibraryLoadResult {
         try prepareDirectories()
         var recoveredFromBackup = false
-        var document: LibraryDocument
+        var decoded: DecodedLibraryDocument
+        var decodedSourceURL: URL?
 
         if fileManager.fileExists(atPath: manifestURL.path) {
             do {
-                document = try decodeDocument(at: manifestURL)
+                decoded = try decodeDocument(at: manifestURL)
+                decodedSourceURL = manifestURL
+            } catch RepositoryError.unsupportedSchema(let version) {
+                throw RepositoryError.unsupportedSchema(version)
             } catch {
                 guard fileManager.fileExists(atPath: backupURL.path) else { throw error }
-                document = try decodeDocument(at: backupURL)
+                decoded = try decodeDocument(at: backupURL)
+                decodedSourceURL = backupURL
                 recoveredFromBackup = true
             }
         } else {
-            document = LibraryDocument()
+            decoded = DecodedLibraryDocument(
+                document: LibraryDocument(),
+                migratedFromSchemaVersion: nil
+            )
         }
 
+        var document = decoded.document
+        libraryIdentity = (document.libraryID, document.createdAt)
         let recovery = try recoverImports(into: &document)
-        if recovery.recovered > 0 {
-            try save(tracks: document.tracks)
+        if decoded.migratedFromSchemaVersion != nil {
+            if let decodedSourceURL {
+                try archivePreMigrationManifest(at: decodedSourceURL)
+            }
+            document.updatedAt = .now
+            try persistDocument(document, backUpReadablePrimary: false)
+            try encoder.encode(document).write(to: backupURL, options: [.atomic])
+        } else if recovery.recovered > 0 || recoveredFromBackup {
+            document.updatedAt = .now
+            try persistDocument(document, backUpReadablePrimary: !recoveredFromBackup)
         }
         return LibraryLoadResult(
             document: document,
             recoveredFromBackup: recoveredFromBackup,
             recoveredImportCount: recovery.recovered,
-            unresolvedImportCount: recovery.unresolved
+            unresolvedImportCount: recovery.unresolved,
+            migratedFromSchemaVersion: decoded.migratedFromSchemaVersion
         )
     }
 
     func save(tracks: [Track]) throws {
         try prepareDirectories()
-        let document = LibraryDocument(updatedAt: .now, tracks: tracks)
-        let data = try encoder.encode(document)
-
-        // Keep the previous readable manifest before atomically replacing the primary.
-        if let previous = try? Data(contentsOf: manifestURL) {
-            try previous.write(to: backupURL, options: [.atomic])
-        }
-        try data.write(to: manifestURL, options: [.atomic])
+        let identity = libraryIdentity ?? (UUID(), .now)
+        let document = LibraryDocument(
+            updatedAt: .now,
+            tracks: tracks,
+            libraryID: identity.0,
+            createdAt: identity.1
+        )
+        try persistDocument(document, backUpReadablePrimary: true)
+        libraryIdentity = (document.libraryID, document.createdAt)
         try reconcileImportJournal(with: tracks)
     }
 
@@ -118,7 +195,13 @@ actor LibraryRepository {
     /// otherwise touching any referenced or managed audio file.
     func clearAllRegistrations() throws {
         try prepareDirectories()
-        let emptyDocument = LibraryDocument(updatedAt: .now, tracks: [])
+        let identity = libraryIdentity ?? (UUID(), .now)
+        let emptyDocument = LibraryDocument(
+            updatedAt: .now,
+            tracks: [],
+            libraryID: identity.0,
+            createdAt: identity.1
+        )
         let data = try encoder.encode(emptyDocument)
 
         // Clear recovery metadata first. If the operation is interrupted before
@@ -128,6 +211,7 @@ actor LibraryRepository {
         try persistImportJournal(ImportJournal())
         try data.write(to: backupURL, options: [.atomic])
         try data.write(to: manifestURL, options: [.atomic])
+        libraryIdentity = (emptyDocument.libraryID, emptyDocument.createdAt)
     }
 
     func importFiles(
@@ -144,6 +228,7 @@ actor LibraryRepository {
         var imported: [Track] = []
         var issues: [ImportIssue] = []
         var knownHashes = Set(existing.map(\.sha256))
+        var identityIndex = CatalogIdentityIndex(tracks: existing)
 
         for source in sourceURLs {
             let didAccess = source.startAccessingSecurityScopedResource()
@@ -195,6 +280,10 @@ actor LibraryRepository {
                 )
                 try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
                 let values = try staged.resourceValues(forKeys: [.fileSizeKey])
+                let identities = identityIndex.identities(
+                    artist: metadata.artist,
+                    album: metadata.album
+                )
                 let track = Track(
                     id: UUID(),
                     title: metadata.title,
@@ -206,7 +295,9 @@ actor LibraryRepository {
                     sha256: sourceHash,
                     addedAt: .now,
                     lastVerifiedAt: .now,
-                    health: .verified
+                    health: .verified,
+                    artistID: identities.artistID,
+                    albumID: identities.albumID
                 )
                 journalEntry.destinationPath = destination.path
                 journalEntry.track = track
@@ -249,6 +340,7 @@ actor LibraryRepository {
             uniquingKeysWith: { first, _ in first }
         )
         var processedHashes = Set<String>()
+        var identityIndex = CatalogIdentityIndex(tracks: existing)
 
         for source in sourceURLs {
             let didAccess = source.startAccessingSecurityScopedResource()
@@ -275,6 +367,10 @@ actor LibraryRepository {
                     track.health = .verified
                     referenced.append(track)
                 } else {
+                    let identities = identityIndex.identities(
+                        artist: metadata.artist,
+                        album: metadata.album
+                    )
                     referenced.append(Track(
                         id: UUID(),
                         title: metadata.title,
@@ -286,7 +382,9 @@ actor LibraryRepository {
                         sha256: hash,
                         addedAt: .now,
                         lastVerifiedAt: .now,
-                        health: .verified
+                        health: .verified,
+                        artistID: identities.artistID,
+                        albumID: identities.albumID
                     ))
                 }
             } catch {
@@ -343,13 +441,88 @@ actor LibraryRepository {
         try fileManager.createDirectory(at: incomingURL, withIntermediateDirectories: true)
     }
 
-    private func decodeDocument(at url: URL) throws -> LibraryDocument {
+    private func decodeDocument(at url: URL) throws -> DecodedLibraryDocument {
         let data = try Data(contentsOf: url)
-        let document = try decoder.decode(LibraryDocument.self, from: data)
-        guard document.schemaVersion == LibraryDocument.currentSchema else {
-            throw RepositoryError.unsupportedSchema(document.schemaVersion)
+        if let header = try? decoder.decode(SchemaHeader.self, from: data) {
+            switch header.schemaVersion ?? 0 {
+            case LibraryDocument.currentSchema:
+                let document = try decoder.decode(LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: document,
+                    migratedFromSchemaVersion: nil
+                )
+            case 0, 1:
+                let legacy = try decoder.decode(LegacyLibraryDocument.self, from: data)
+                return migrateLegacyDocument(
+                    tracks: legacy.tracks,
+                    updatedAt: legacy.updatedAt,
+                    sourceSchemaVersion: header.schemaVersion ?? 0
+                )
+            default:
+                throw RepositoryError.unsupportedSchema(header.schemaVersion ?? 0)
+            }
         }
-        return document
+
+        // Very early development builds stored the track array without a
+        // document envelope. Supporting it costs little and avoids turning an
+        // otherwise valid catalog into an unrecoverable file.
+        if let tracks = try? decoder.decode([Track].self, from: data) {
+            return migrateLegacyDocument(
+                tracks: tracks,
+                updatedAt: nil,
+                sourceSchemaVersion: 0
+            )
+        }
+
+        // Re-run the current decoder to surface its precise corruption error.
+        _ = try decoder.decode(LibraryDocument.self, from: data)
+        throw CocoaError(.fileReadCorruptFile)
+    }
+
+    private func migrateLegacyDocument(
+        tracks: [Track],
+        updatedAt: Date?,
+        sourceSchemaVersion: Int
+    ) -> DecodedLibraryDocument {
+        var identityIndex = CatalogIdentityIndex()
+        let migratedTracks = tracks.map { track in
+            var migrated = track
+            let identities = identityIndex.identities(
+                artist: track.artist,
+                album: track.album
+            )
+            migrated.artistID = identities.artistID
+            migrated.albumID = identities.albumID
+            return migrated
+        }
+        let createdAt = migratedTracks.map(\.addedAt).min() ?? updatedAt ?? .now
+        return DecodedLibraryDocument(
+            document: LibraryDocument(
+                updatedAt: updatedAt ?? .now,
+                tracks: migratedTracks,
+                libraryID: UUID(),
+                createdAt: createdAt
+            ),
+            migratedFromSchemaVersion: sourceSchemaVersion
+        )
+    }
+
+    private func persistDocument(
+        _ document: LibraryDocument,
+        backUpReadablePrimary: Bool
+    ) throws {
+        let data = try encoder.encode(document)
+        if backUpReadablePrimary,
+           let previous = try? Data(contentsOf: manifestURL),
+           (try? decodeDocument(at: manifestURL)) != nil {
+            try previous.write(to: backupURL, options: [.atomic])
+        }
+        try data.write(to: manifestURL, options: [.atomic])
+    }
+
+    private func archivePreMigrationManifest(at sourceURL: URL) throws {
+        guard !fileManager.fileExists(atPath: migrationArchiveURL.path) else { return }
+        try Data(contentsOf: sourceURL).write(to: migrationArchiveURL, options: [.atomic])
     }
 
     private func recoverImports(into document: inout LibraryDocument) throws -> (recovered: Int, unresolved: Int) {
@@ -357,6 +530,7 @@ actor LibraryRepository {
         var journal = try decodeImportJournal()
         var retained: [ImportJournalEntry] = []
         var knownHashes = Set(document.tracks.map(\.sha256))
+        var identityIndex = CatalogIdentityIndex(tracks: document.tracks)
         var recoveredCount = 0
         var unresolvedCount = 0
 
@@ -416,6 +590,12 @@ actor LibraryRepository {
             }
             if !knownHashes.contains(entry.expectedSHA256) {
                 var recoveredTrack = storedTrack
+                let identities = identityIndex.identities(
+                    artist: recoveredTrack.artist,
+                    album: recoveredTrack.album
+                )
+                recoveredTrack.artistID = identities.artistID
+                recoveredTrack.albumID = identities.albumID
                 recoveredTrack.health = .verified
                 recoveredTrack.lastVerifiedAt = .now
                 document.tracks.append(recoveredTrack)

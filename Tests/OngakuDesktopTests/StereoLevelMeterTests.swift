@@ -91,18 +91,33 @@ struct StereoLevelMeterTests {
 
 @Suite("Playback queue navigation")
 struct PlaybackQueueNavigatorTests {
-    private let albumOneFirst = Track(
-        id: UUID(), title: "One", artist: "Artist", album: "Album One", duration: 1,
-        fileSize: 1, managedPath: "/tmp/one.mp3", sha256: "one", addedAt: .now,
-        health: .verified)
-    private let albumTwo = Track(
-        id: UUID(), title: "Two", artist: "Artist", album: "Album Two", duration: 1,
-        fileSize: 1, managedPath: "/tmp/two.mp3", sha256: "two", addedAt: .now,
-        health: .verified)
-    private let albumOneSecond = Track(
-        id: UUID(), title: "Three", artist: "Artist", album: "Album One", duration: 1,
-        fileSize: 1, managedPath: "/tmp/three.mp3", sha256: "three", addedAt: .now,
-        health: .verified)
+    private let artistID = UUID()
+    private let albumOneID = UUID()
+    private let albumTwoID = UUID()
+    private let trackOneID = UUID()
+    private let trackTwoID = UUID()
+    private let trackThreeID = UUID()
+
+    private var albumOneFirst: Track {
+        Track(
+            id: trackOneID, title: "One", artist: "Artist", album: "Album One", duration: 1,
+            fileSize: 1, managedPath: "/tmp/one.mp3", sha256: "one", addedAt: .now,
+            health: .verified, artistID: artistID, albumID: albumOneID)
+    }
+
+    private var albumTwo: Track {
+        Track(
+            id: trackTwoID, title: "Two", artist: "Artist", album: "Album Two", duration: 1,
+            fileSize: 1, managedPath: "/tmp/two.mp3", sha256: "two", addedAt: .now,
+            health: .verified, artistID: artistID, albumID: albumTwoID)
+    }
+
+    private var albumOneSecond: Track {
+        Track(
+            id: trackThreeID, title: "Three", artist: "Artist", album: "Album One", duration: 1,
+            fileSize: 1, managedPath: "/tmp/three.mp3", sha256: "three", addedAt: .now,
+            health: .verified, artistID: artistID, albumID: albumOneID)
+    }
 
     @Test("Sequential playback stops at the end")
     func sequentialStops() {
