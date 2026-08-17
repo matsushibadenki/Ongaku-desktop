@@ -24,5 +24,8 @@ DerivedData/
 /Releases/*.dSYM
 /Releases/private/
 
+# Maintainer-only documentation. Never publish credentials or private procedures.
+/docs-private/
+
 # Local convenience alias
 /Ongakuのエイリアス

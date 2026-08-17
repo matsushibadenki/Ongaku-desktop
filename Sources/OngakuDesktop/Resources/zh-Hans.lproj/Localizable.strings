@@ -3,6 +3,8 @@
 "command.verify" = "验证资料库";
 "command.playback" = "播放";
 "command.automaticUpsampling" = "自动升频至最高384 kHz";
+"toolbar.importHelp" = "将音乐文件导入资料库";
+"toolbar.verifyHelp" = "验证所有受管理音乐文件是否被更改或损坏";
 "sidebar.library" = "资料库";
 "sidebar.integrity" = "文件完整性";
 "sidebar.processing" = "音频处理";
@@ -22,6 +24,9 @@
 "column.duration" = "时长";
 "column.health" = "文件";
 "status.importing" = "正在复制并验证文件…";
+"status.dropNoAudioFiles" = "拖放的项目中没有找到支持的音乐文件。";
+"dropImport.title" = "拖放以导入音乐";
+"dropImport.subtitle" = "音乐文件和文件夹会经过验证，并按艺人和专辑整理。";
 "status.verifying" = "正在重新计算文件校验和…";
 "status.recoveredManifest" = "主目录无法读取，Ongaku已载入上一份经过验证的目录备份。";
 "status.recoveredImports" = "已恢复%d个中断的导入，并验证了文件。";
@@ -37,6 +42,9 @@
 "health.unreadable" = "无法读取";
 "track.play" = "播放";
 "player.pause" = "暂停";
+"player.previous" = "上一首";
+"player.next" = "下一首";
+"player.outputIdle" = "输出已就绪";
 "player.mode.title" = "播放模式";
 "player.mode.sequential" = "顺序播放";
 "player.mode.repeatOne" = "单曲循环";
@@ -235,3 +243,18 @@
 "library.error.unsupportedSchema" = "不支持此资料库的架构版本%d。";
 "library.error.copyVerificationFailed" = "复制的数据与%@不一致，暂存副本已丢弃。";
 "library.error.sourceIsNotRegularFile" = "%@不是常规文件。请选择原始音频文件，而不是链接。";
+"player.queue.title" = "待播清单";
+"player.queue.empty" = "播放队列为空";
+"player.queue.playNext" = "下一首播放";
+"player.queue.playLater" = "添加到队列末尾";
+"player.queue.clear" = "清除待播歌曲";
+"player.queue.undo" = "撤销";
+"player.queue.moveUp" = "上移";
+"player.queue.moveDown" = "下移";
+"player.queue.remove" = "从队列中移除";
+"player.history.title" = "历史记录";
+"player.history.empty" = "暂无播放历史";
+"player.history.clear" = "清除历史记录";
+"player.history.kind.started" = "正在播放";
+"player.history.kind.completed" = "已播放";
+"player.history.kind.skipped" = "已跳过";

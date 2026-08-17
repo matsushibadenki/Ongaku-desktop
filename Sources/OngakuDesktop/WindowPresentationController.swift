@@ -37,6 +37,10 @@ final class WindowPresentationController: ObservableObject {
         isMiniPlayer = true
         updateMiniaturizeButtonHelp(in: window)
 
+        // Apply the window contract immediately so controls and automation never
+        // observe a mini-player state with the regular window constraints.
+        enforceMiniPlayerSize(in: window)
+
         Task { @MainActor in
             await Task.yield()
             guard self.managedWindow === window, self.isMiniPlayer else { return }

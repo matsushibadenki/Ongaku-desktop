@@ -117,8 +117,10 @@ struct TrackInspector: View {
 }
 
 struct HealthLabel: View {
+    @Environment(\.controlActiveState) private var controlActiveState
     let health: FileHealth
     let compact: Bool
+    var isSelected = false
 
     private var color: Color {
         switch health {
@@ -139,7 +141,9 @@ struct HealthLabel: View {
                     .labelStyle(.titleAndIcon)
             }
         }
-        .foregroundStyle(color)
+        .foregroundStyle(
+            isSelected && controlActiveState == .key ? Color.white : color
+        )
         .accessibilityLabel(L10n.text(health.titleKey))
     }
 }

@@ -68,8 +68,8 @@ enum AppTheme {
     static let spaceLG: CGFloat = 24
     static let spaceXL: CGFloat = 40
 
-    // Keeps the final scroll row clear of the persistent 78 pt player bar.
-    static let effectsRackBottomClearance: CGFloat = 112
+    // Keeps the final scroll row clear of the persistent 92 pt player bar.
+    static let effectsRackBottomClearance: CGFloat = 126
 
     private static func adaptive(light: ThemeRGB, dark: ThemeRGB) -> Color {
         Color(nsColor: NSColor(name: nil) { appearance in

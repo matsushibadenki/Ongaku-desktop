@@ -1,3 +1,7 @@
+/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4
+ * component: compact player transport · genre: atmospheric · theme: Midnight
+ * states: native macOS default · hover · focus · active · disabled · playback feedback
+ */
 import AppKit
 import SwiftUI
 
@@ -7,45 +11,34 @@ struct MiniPlayerView: View {
     @State private var isShowingVolume = false
 
     var body: some View {
-        HStack(spacing: 14) {
-            albumArtwork
+        HStack(spacing: AppTheme.spaceSM) {
+            NowPlayingArtwork(track: player.currentTrack, size: 96)
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(player.currentTrack?.album ?? L10n.text("metadata.unknownAlbum"))
-                    .font(.caption)
-                    .foregroundStyle(AppTheme.secondaryInk)
-                    .lineLimit(1)
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(alignment: .top, spacing: AppTheme.spaceXS) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(player.currentTrack?.title ?? L10n.text("player.idle"))
+                            .font(.headline.weight(.bold))
+                            .foregroundStyle(AppTheme.ink)
+                            .lineLimit(1)
+                            .help(player.currentTrack?.title ?? L10n.text("player.idle"))
 
-                Text(player.currentTrack?.title ?? L10n.text("player.idle"))
-                    .font(.headline.weight(.semibold))
-                    .foregroundStyle(AppTheme.ink)
-                    .lineLimit(1)
-                    .help(player.currentTrack?.title ?? L10n.text("player.idle"))
-
-                Spacer(minLength: 2)
-
-                HStack(spacing: AppTheme.spaceSM) {
-                    StereoLevelMeter(levels: player.stereoLevels)
-                    Color.clear
-                        .frame(width: 22, height: 1)
-                        .accessibilityHidden(true)
-                }
-                .padding(.bottom, 5)
-
-                HStack(spacing: AppTheme.spaceSM) {
-                    Button(action: primaryPlaybackAction) {
-                        Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
-                            .frame(width: 24, height: 24)
-                            .contentShape(Circle())
+                        Text(trackContext)
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.secondaryInk)
+                            .lineLimit(1)
+                            .help(trackContext)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .buttonBorderShape(.circle)
-                    .controlSize(.small)
-                    .disabled(player.currentTrack == nil && library.selectedTrack == nil)
-                    .accessibilityLabel(
-                        L10n.text(player.isPlaying ? "player.pause" : "track.play")
-                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
+                    PlaybackModeMenu()
+                }
+
+                HStack(spacing: 6) {
+                    Text(DurationFormatter.string(player.elapsed))
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .frame(width: 31, alignment: .trailing)
                     Slider(
                         value: Binding(
                             get: { player.elapsed },
@@ -56,7 +49,21 @@ struct MiniPlayerView: View {
                     .disabled(player.currentTrack == nil)
                     .accessibilityLabel(L10n.text("miniPlayer.progress"))
 
-                    PlaybackModeMenu()
+                    Text(remainingTime)
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .frame(width: 38, alignment: .leading)
+                }
+
+                HStack(spacing: AppTheme.spaceXS) {
+                    PlayerTransportControls(compact: true)
+
+                    Spacer(minLength: 4)
+
+                    StereoLevelMeter(levels: player.stereoLevels)
+                        .frame(width: 66)
+
+                    PlaybackQueueButton()
 
                     Button {
                         isShowingVolume.toggle()
@@ -65,51 +72,31 @@ struct MiniPlayerView: View {
                             .frame(width: 22, height: 22)
                             .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(AppTheme.secondaryInk)
+                    .buttonStyle(.borderless)
+                    .help(L10n.text("miniPlayer.volume"))
                     .accessibilityLabel(L10n.text("miniPlayer.volume"))
                     .popover(isPresented: $isShowingVolume, arrowEdge: .bottom) {
                         volumePopover
                     }
                 }
             }
-            .padding(.vertical, 2)
         }
         .padding(14)
-        .frame(width: WindowPresentationController.miniContentSize.width,
-               height: WindowPresentationController.miniContentSize.height)
+        .frame(
+            width: WindowPresentationController.miniContentSize.width,
+            height: WindowPresentationController.miniContentSize.height
+        )
         .background(AppTheme.surface)
-        .task(id: library.contentRevision) {
-            player.updatePlaybackQueue(library.tracks)
-        }
     }
 
-    private func primaryPlaybackAction() {
-        if player.currentTrack != nil {
-            player.togglePlayback()
-        } else if let selectedTrack = library.selectedTrack {
-            player.play(selectedTrack)
-        }
+    private var trackContext: String {
+        guard let track = player.currentTrack else { return L10n.text("player.chooseTrack") }
+        return "\(track.artist) — \(track.album)"
     }
 
-    private var albumArtwork: some View {
-        Group {
-            if let track = player.currentTrack {
-                ArtworkThumbnail(
-                    tracks: [track],
-                    subject: .album(name: track.album, artist: track.artist),
-                    shape: .roundedRectangle,
-                    fallbackSymbol: "waveform",
-                    fallbackLetter: String(track.album.prefix(1)).uppercased()
-                )
-            } else {
-                RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
-                    .fill(AppTheme.raised)
-                    .overlay { Image(systemName: "waveform").foregroundStyle(AppTheme.secondaryInk) }
-            }
-        }
-        .frame(width: 96, height: 96)
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))
+    private var remainingTime: String {
+        guard player.currentTrack != nil else { return "0:00" }
+        return "−\(DurationFormatter.string(max(player.duration - player.elapsed, 0)))"
     }
 
     private var volumePopover: some View {
@@ -118,6 +105,7 @@ struct MiniPlayerView: View {
                 .foregroundStyle(AppTheme.secondaryInk)
             Slider(value: $player.volume, in: 0...1)
                 .frame(width: 150)
+                .accessibilityLabel(L10n.text("miniPlayer.volume"))
             Image(systemName: "speaker.wave.3.fill")
                 .foregroundStyle(AppTheme.secondaryInk)
         }

@@ -57,7 +57,19 @@ struct OngakuDesktopApp: App {
                 .environment(\.locale, language.selectedLanguage.locale ?? .current)
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
-                .task { await library.load() }
+                .task {
+                    await library.load()
+                    player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
+                }
+                .onChange(of: library.contentRevision) {
+                    player.reconcilePlaybackQueue(with: library.tracks)
+                }
+                .onChange(of: player.queueState) {
+                    library.schedulePlaybackQueueSave(player.queueState)
+                }
+                .onReceive(player.playbackEventPublisher) { event in
+                    Task { await library.recordPlaybackEvent(event) }
+                }
         }
         .defaultSize(width: 1_320, height: 780)
         .windowResizability(.contentSize)

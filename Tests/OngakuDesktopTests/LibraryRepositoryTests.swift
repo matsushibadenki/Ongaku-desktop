@@ -161,6 +161,66 @@ struct LibraryRepositoryTests {
         #expect(reloaded.tracks[0].title == "History Edited")
     }
 
+    @Test("Schema 3 migrates to a queue-capable catalog without inventing queue state")
+    func migratesSchemaThreeCatalog() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let manifest = """
+        {
+          "schemaVersion": 3,
+          "updatedAt": "2026-08-17T00:00:00Z",
+          "tracks": [],
+          "libraryID": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+          "createdAt": "2026-08-16T00:00:00Z",
+          "playlists": [],
+          "playbackEvents": []
+        }
+        """
+        try Data(manifest.utf8).write(to: root.appendingPathComponent("library-v1.json"))
+
+        let loaded = try await LibraryRepository(rootURL: root).load()
+        #expect(loaded.migratedFromSchemaVersion == 3)
+        #expect(loaded.document.schemaVersion == LibraryDocument.currentSchema)
+        #expect(loaded.document.playbackQueue == nil)
+        #expect(FileManager.default.fileExists(
+            atPath: root.appendingPathComponent("library-schema-3.migration-backup.json").path
+        ))
+    }
+
+    @Test("Playback queue order, current track, and position survive restart")
+    func persistsPlaybackQueue() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = Track(
+            id: UUID(), title: "First", artist: "Artist", album: "Album", duration: 60,
+            fileSize: 1, managedPath: "/tmp/first.m4a", sha256: "first",
+            addedAt: .now, lastVerifiedAt: nil, health: .unchecked
+        )
+        let second = Track(
+            id: UUID(), title: "Second", artist: "Artist", album: "Album", duration: 90,
+            fileSize: 1, managedPath: "/tmp/second.m4a", sha256: "second",
+            addedAt: .now, lastVerifiedAt: nil, health: .unchecked,
+            artistID: first.artistID, albumID: first.albumID
+        )
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(tracks: [first, second])
+        let state = PlaybackQueueState(
+            trackIDs: [second.id, first.id],
+            currentTrackID: second.id,
+            position: 37.5
+        )
+        try await repository.save(playbackQueue: state)
+
+        var renamed = first
+        renamed.title = "First Edited"
+        try await repository.save(tracks: [renamed, second])
+
+        let reloaded = try await LibraryRepository(rootURL: root).load().document
+        #expect(reloaded.playbackQueue == state)
+        #expect(reloaded.tracks[0].title == "First Edited")
+    }
+
     @Test("A future schema is never replaced with an older backup")
     func rejectsFutureSchemaWithoutDowngrade() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -225,6 +285,7 @@ struct LibraryRepositoryTests {
         #expect(cleared.document.playlists.map(\.id) == [playlist.id])
         #expect(cleared.document.playlists[0].entries.isEmpty)
         #expect(cleared.document.playbackEvents.isEmpty)
+        #expect(cleared.document.playbackQueue == PlaybackQueueState())
         #expect(FileManager.default.fileExists(atPath: audioFile.path))
         #expect(try Data(contentsOf: audioFile) == originalAudio)
 
@@ -237,6 +298,7 @@ struct LibraryRepositoryTests {
         #expect(recovered.document.tracks.isEmpty)
         #expect(recovered.document.playlists[0].entries.isEmpty)
         #expect(recovered.document.playbackEvents.isEmpty)
+        #expect(recovered.document.playbackQueue == PlaybackQueueState())
         #expect(FileManager.default.fileExists(atPath: audioFile.path))
         #expect(try Data(contentsOf: audioFile) == originalAudio)
 
@@ -334,6 +396,44 @@ struct LibraryRepositoryTests {
         #expect(imported.imported[0].fileURL.path.hasPrefix(media.path + "/"))
         #expect(FileManager.default.fileExists(atPath: imported.imported[0].managedPath))
         try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test("Dropping files and folders imports supported audio into artist and album folders")
+    @MainActor
+    func importsDroppedFilesAndFoldersIntoManagedHierarchy() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let droppedFolder = root.appendingPathComponent("Dropped Music", isDirectory: true)
+        let nestedFolder = droppedFolder.appendingPathComponent("Nested", isDirectory: true)
+        let first = droppedFolder.appendingPathComponent("Artist - First.mp3")
+        let second = nestedFolder.appendingPathComponent("Artist - Second.flac")
+        let ignored = nestedFolder.appendingPathComponent("Notes.txt")
+        let media = root.appendingPathComponent("Managed Music", isDirectory: true)
+        try FileManager.default.createDirectory(at: nestedFolder, withIntermediateDirectories: true)
+        try Data([0x49, 0x44, 0x33, 41, 42, 43]).write(to: first)
+        try Data([0x66, 0x4C, 0x61, 0x43, 51, 52, 53]).write(to: second)
+        try Data("not audio".utf8).write(to: ignored)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let repository = LibraryRepository(
+            rootURL: root.appendingPathComponent("Catalog", isDirectory: true),
+            mediaURL: media
+        )
+        let store = LibraryStore(repository: repository)
+
+        // The direct file overlaps with the folder and must still be imported only once.
+        await store.importDroppedItems([droppedFolder, first, ignored])
+
+        #expect(store.tracks.count == 2)
+        #expect(Set(store.tracks.map(\.title)) == Set(["First", "Second"]))
+        for track in store.tracks {
+            #expect(track.fileURL.path.hasPrefix(media.path + "/"))
+            #expect(track.fileURL.deletingLastPathComponent().lastPathComponent == track.album)
+            #expect(
+                track.fileURL.deletingLastPathComponent().deletingLastPathComponent()
+                    .lastPathComponent == track.artist)
+            #expect(FileManager.default.fileExists(atPath: track.managedPath))
+        }
+        #expect(try Data(contentsOf: ignored) == Data("not audio".utf8))
     }
 
     @Test("The automatic Ongaku Media directory is created only by a managed import")

@@ -74,6 +74,80 @@ enum PlaybackQueueNavigator {
             return candidates[index]
         }
     }
+
+    nonisolated static func previousTrack(
+        before current: Track,
+        in queue: [Track],
+        mode: PlaybackMode,
+        randomIndex: (Int) -> Int = { Int.random(in: 0..<$0) }
+    ) -> Track? {
+        switch mode {
+        case .sequential, .repeatOne:
+            guard let index = queue.firstIndex(where: { $0.id == current.id }),
+                  index > queue.startIndex else { return nil }
+            return queue[queue.index(before: index)]
+
+        case .repeatAll:
+            guard !queue.isEmpty else { return nil }
+            guard let index = queue.firstIndex(where: { $0.id == current.id }) else {
+                return queue.last
+            }
+            return index > queue.startIndex ? queue[queue.index(before: index)] : queue.last
+
+        case .repeatAlbum:
+            let albumTracks = queue.filter { $0.albumID == current.albumID }
+            guard !albumTracks.isEmpty else { return current }
+            guard let index = albumTracks.firstIndex(where: { $0.id == current.id }) else {
+                return albumTracks.last
+            }
+            return index > albumTracks.startIndex
+                ? albumTracks[albumTracks.index(before: index)] : albumTracks.last
+
+        case .shuffle:
+            let candidates = queue.filter { $0.id != current.id }
+            guard !candidates.isEmpty else { return queue.first ?? current }
+            let index = min(max(randomIndex(candidates.count), 0), candidates.count - 1)
+            return candidates[index]
+        }
+    }
+}
+
+struct PlaybackSessionTracker: Sendable {
+    private(set) var sessionID: UUID?
+
+    mutating func begin(
+        trackID: Track.ID,
+        position: TimeInterval,
+        occurredAt: Date = .now
+    ) -> PlaybackEvent? {
+        guard sessionID == nil else { return nil }
+        let id = UUID()
+        sessionID = id
+        return PlaybackEvent(
+            trackID: trackID,
+            kind: .started,
+            occurredAt: occurredAt,
+            position: position,
+            playbackSessionID: id
+        )
+    }
+
+    mutating func finish(
+        trackID: Track.ID,
+        kind: PlaybackEvent.Kind,
+        position: TimeInterval,
+        occurredAt: Date = .now
+    ) -> PlaybackEvent? {
+        guard let id = sessionID else { return nil }
+        sessionID = nil
+        return PlaybackEvent(
+            trackID: trackID,
+            kind: kind,
+            occurredAt: occurredAt,
+            position: position,
+            playbackSessionID: id
+        )
+    }
 }
 
 enum StereoLevelMath {
@@ -169,6 +243,7 @@ final class PlaybackController: ObservableObject {
     @Published private(set) var sourceSampleRate: Double = 0
     @Published private(set) var outputSampleRate: Double = 0
     @Published private(set) var stereoLevels = StereoLevels.silent
+    @Published private(set) var queueState = PlaybackQueueState()
     @Published private(set) var effectSettings: [RealtimeAudioEffectSetting]
     @Published private(set) var effectsBypassed: Bool
     @Published var playbackMode: PlaybackMode {
@@ -180,6 +255,8 @@ final class PlaybackController: ObservableObject {
         }
     }
 
+    let playbackEventPublisher = PassthroughSubject<PlaybackEvent, Never>()
+
     private let engine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
     private let effectPipeline: [AudioEffectNode]
@@ -188,6 +265,9 @@ final class PlaybackController: ObservableObject {
     private var scheduledStartFrame: AVAudioFramePosition = 0
     private var playbackGeneration = UUID()
     private var playbackQueue: [Track] = []
+    private var queueUndoStack: [[Track]] = []
+    private var lastPublishedPositionBucket = -1
+    private var playbackSession = PlaybackSessionTracker()
     private var timer: Timer?
     private var isMeterTapInstalled = false
     private let meterThrottle = StereoMeterThrottle()
@@ -216,6 +296,9 @@ final class PlaybackController: ObservableObject {
     var enabledEffectCount: Int {
         effectsBypassed ? 0 : effectSettings.count(where: \.isEnabled)
     }
+
+    var queuedTracks: [Track] { playbackQueue }
+    var canUndoQueueEdit: Bool { !queueUndoStack.isEmpty }
 
     func setEffectsBypassed(_ bypassed: Bool) {
         guard effectsBypassed != bypassed else { return }
@@ -260,9 +343,124 @@ final class PlaybackController: ObservableObject {
     }
 
     func play(_ track: Track) {
+        finishPlaybackSession(kind: .skipped)
         if !playbackQueue.contains(where: { $0.id == track.id }) {
             playbackQueue.append(track)
         }
+        load(track, position: 0, autoplay: true)
+    }
+
+    func restorePlaybackQueue(_ savedState: PlaybackQueueState?, tracks: [Track]) {
+        finishPlaybackSession(kind: .skipped)
+        let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        let requestedIDs = savedState?.trackIDs ?? tracks.map(\.id)
+        var seen = Set<Track.ID>()
+        playbackQueue = requestedIDs.compactMap { id in
+            guard seen.insert(id).inserted else { return nil }
+            return tracksByID[id]
+        }
+        queueUndoStack.removeAll()
+
+        guard let currentID = savedState?.currentTrackID,
+              let current = tracksByID[currentID] else {
+            clearCurrentTrack()
+            publishQueueState(force: true)
+            return
+        }
+        if !playbackQueue.contains(where: { $0.id == currentID }) {
+            playbackQueue.append(current)
+        }
+        load(current, position: savedState?.position ?? 0, autoplay: false)
+    }
+
+    func reconcilePlaybackQueue(with tracks: [Track]) {
+        let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        playbackQueue = playbackQueue.compactMap { tracksByID[$0.id] }
+        if !queueState.trackIDs.isEmpty || currentTrack != nil {
+            let queuedIDs = Set(playbackQueue.map(\.id))
+            playbackQueue.append(contentsOf: tracks.filter { !queuedIDs.contains($0.id) })
+        }
+        if let currentID = currentTrack?.id {
+            if let updated = tracksByID[currentID] {
+                currentTrack = updated
+            } else {
+                finishPlaybackSession(kind: .skipped)
+                stopCurrentPlayback()
+                currentTrack = nil
+            }
+        }
+        publishQueueState(force: true)
+    }
+
+    func enqueueNext(_ tracks: [Track]) {
+        editQueue { queue in
+            let incomingIDs = Set(tracks.map(\.id))
+            queue.removeAll { incomingIDs.contains($0.id) && $0.id != currentTrack?.id }
+            let insertionIndex = currentTrack.flatMap { current in
+                queue.firstIndex(where: { $0.id == current.id }).map { $0 + 1 }
+            } ?? 0
+            queue.insert(contentsOf: tracks.filter { $0.id != currentTrack?.id }, at: insertionIndex)
+        }
+    }
+
+    func appendToQueue(_ tracks: [Track]) {
+        editQueue { queue in
+            let incomingIDs = Set(tracks.map(\.id))
+            queue.removeAll { incomingIDs.contains($0.id) && $0.id != currentTrack?.id }
+            queue.append(contentsOf: tracks.filter { $0.id != currentTrack?.id })
+        }
+    }
+
+    func removeFromQueue(_ track: Track) {
+        guard track.id != currentTrack?.id else { return }
+        editQueue { $0.removeAll { $0.id == track.id } }
+    }
+
+    func moveInQueue(_ track: Track, offset: Int) {
+        editQueue { queue in
+            guard let source = queue.firstIndex(where: { $0.id == track.id }) else { return }
+            let destination = min(max(source + offset, 0), queue.count - 1)
+            guard source != destination else { return }
+            let moved = queue.remove(at: source)
+            queue.insert(moved, at: destination)
+        }
+    }
+
+    func moveInQueue(fromOffsets offsets: IndexSet, toOffset destination: Int) {
+        guard !offsets.isEmpty else { return }
+        editQueue { queue in
+            let validOffsets = offsets.filter { queue.indices.contains($0) }
+            guard !validOffsets.isEmpty else { return }
+            let moving = validOffsets.map { queue[$0] }
+            for index in validOffsets.sorted(by: >) {
+                queue.remove(at: index)
+            }
+            let removedBeforeDestination = validOffsets.count(where: { $0 < destination })
+            let insertionIndex = min(
+                max(destination - removedBeforeDestination, 0),
+                queue.count
+            )
+            queue.insert(contentsOf: moving, at: insertionIndex)
+        }
+    }
+
+    func clearUpcomingQueue() {
+        editQueue { queue in
+            if let currentTrack {
+                queue = [currentTrack]
+            } else {
+                queue.removeAll()
+            }
+        }
+    }
+
+    func undoLastQueueEdit() {
+        guard let previous = queueUndoStack.popLast() else { return }
+        playbackQueue = previous
+        publishQueueState(force: true)
+    }
+
+    private func load(_ track: Track, position: TimeInterval, autoplay: Bool) {
         do {
             stopCurrentPlayback()
             let file = try AVAudioFile(forReading: track.fileURL)
@@ -275,20 +473,27 @@ final class PlaybackController: ObservableObject {
             sourceSampleRate = sourceRate
             outputSampleRate = configuration?.actualRate ?? sourceRate
             currentTrack = track
-            elapsed = 0
+            let fileDuration = Double(file.length) / file.processingFormat.sampleRate
+            elapsed = min(max(position, 0), max(fileDuration - 0.01, 0))
 
             try configureEngine(for: file)
-            schedule(fromFrame: 0)
-            try engine.start()
-            playerNode.play()
-            isPlaying = true
+            let frame = AVAudioFramePosition(elapsed * file.processingFormat.sampleRate)
+            schedule(fromFrame: min(frame, file.length))
+            if autoplay {
+                try engine.start()
+                playerNode.play()
+                isPlaying = true
+                startTimer()
+                beginPlaybackSessionIfNeeded()
+            }
             errorMessage = nil
-            startTimer()
+            publishQueueState(force: true)
         } catch {
             stopCurrentPlayback()
             currentTrack = track
             isPlaying = false
             errorMessage = error.localizedDescription
+            publishQueueState(force: true)
         }
     }
 
@@ -299,6 +504,7 @@ final class PlaybackController: ObservableObject {
            let updatedCurrent = playbackQueue.first(where: { $0.id == currentID }) {
             currentTrack = updatedCurrent
         }
+        publishQueueState(force: true)
     }
 
     func togglePlayback() {
@@ -309,6 +515,7 @@ final class PlaybackController: ObservableObject {
             isPlaying = false
             stereoLevels = .silent
             stopTimer()
+            publishQueueState(force: true)
         } else {
             do {
                 if elapsed >= duration - 0.01 {
@@ -321,6 +528,8 @@ final class PlaybackController: ObservableObject {
                 isPlaying = true
                 errorMessage = nil
                 startTimer()
+                beginPlaybackSessionIfNeeded()
+                publishQueueState(force: true)
             } catch {
                 isPlaying = false
                 errorMessage = error.localizedDescription
@@ -328,10 +537,40 @@ final class PlaybackController: ObservableObject {
         }
     }
 
+    func playPrevious() {
+        guard let currentTrack else { return }
+        if elapsed > 3 {
+            seek(to: 0)
+            return
+        }
+        guard let previous = PlaybackQueueNavigator.previousTrack(
+            before: currentTrack,
+            in: playbackQueue,
+            mode: playbackMode
+        ) else {
+            seek(to: 0)
+            return
+        }
+        play(previous)
+    }
+
+    func playNext() {
+        guard let currentTrack else { return }
+        let navigationMode: PlaybackMode = playbackMode == .repeatOne ? .sequential : playbackMode
+        guard let next = PlaybackQueueNavigator.nextTrack(
+            after: currentTrack,
+            in: playbackQueue,
+            mode: navigationMode
+        ) else { return }
+        play(next)
+    }
+
     func clearCurrentTrack() {
+        finishPlaybackSession(kind: .skipped)
         stopCurrentPlayback()
         currentTrack = nil
         errorMessage = nil
+        publishQueueState(force: true)
     }
 
     func seek(to value: TimeInterval) {
@@ -350,6 +589,7 @@ final class PlaybackController: ObservableObject {
             elapsed = duration
             isPlaying = false
             stopTimer()
+            publishQueueState(force: true)
             return
         }
         schedule(fromFrame: frame)
@@ -364,6 +604,7 @@ final class PlaybackController: ObservableObject {
                 errorMessage = error.localizedDescription
             }
         }
+        publishQueueState(force: true)
     }
 
     private func configureEngine(for file: AVAudioFile) throws {
@@ -462,19 +703,21 @@ final class PlaybackController: ObservableObject {
 
     private func didFinishPlaying(generation: UUID) {
         guard generation == playbackGeneration else { return }
+        finishPlaybackSession(kind: .completed, position: duration)
         if let currentTrack,
            let nextTrack = PlaybackQueueNavigator.nextTrack(
                after: currentTrack,
                in: playbackQueue,
                mode: playbackMode
            ) {
-            play(nextTrack)
+            load(nextTrack, position: 0, autoplay: true)
             return
         }
         isPlaying = false
         elapsed = duration
         stereoLevels = .silent
         stopTimer()
+        publishQueueState(force: true)
     }
 
     private func stopCurrentPlayback() {
@@ -488,6 +731,29 @@ final class PlaybackController: ObservableObject {
         sourceSampleRate = 0
         outputSampleRate = 0
         stereoLevels = .silent
+    }
+
+    private func beginPlaybackSessionIfNeeded() {
+        guard let currentTrack,
+              let event = playbackSession.begin(
+                  trackID: currentTrack.id,
+                  position: elapsed
+              ) else { return }
+        playbackEventPublisher.send(event)
+    }
+
+    private func finishPlaybackSession(
+        kind: PlaybackEvent.Kind,
+        position explicitPosition: TimeInterval? = nil
+    ) {
+        guard let currentTrack else { return }
+        let position = explicitPosition ?? (isPlaying ? currentElapsed() : elapsed)
+        guard let event = playbackSession.finish(
+            trackID: currentTrack.id,
+            kind: kind,
+            position: position
+        ) else { return }
+        playbackEventPublisher.send(event)
     }
 
     private func updateEffect(
@@ -543,6 +809,28 @@ final class PlaybackController: ObservableObject {
 
     @objc private func tick() {
         elapsed = currentElapsed()
+        publishQueueState()
+    }
+
+    private func editQueue(_ mutation: (inout [Track]) -> Void) {
+        let previous = playbackQueue
+        mutation(&playbackQueue)
+        guard previous != playbackQueue else { return }
+        queueUndoStack.append(previous)
+        if queueUndoStack.count > 20 { queueUndoStack.removeFirst() }
+        publishQueueState(force: true)
+    }
+
+    private func publishQueueState(force: Bool = false) {
+        let positionBucket = Int(max(elapsed, 0) / 5)
+        guard force || positionBucket != lastPublishedPositionBucket else { return }
+        lastPublishedPositionBucket = positionBucket
+        let updated = PlaybackQueueState(
+            trackIDs: playbackQueue.map(\.id),
+            currentTrackID: currentTrack?.id,
+            position: currentTrack == nil ? 0 : elapsed
+        )
+        if force || updated != queueState { queueState = updated }
     }
 
     private static func sampleRateString(_ rate: Double) -> String {

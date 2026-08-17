@@ -3,6 +3,8 @@
 "command.verify" = "Verify Library";
 "command.playback" = "Playback";
 "command.automaticUpsampling" = "Automatic Upsampling up to 384 kHz";
+"toolbar.importHelp" = "Import music files into the library";
+"toolbar.verifyHelp" = "Verify the integrity of all managed music files";
 "sidebar.library" = "Library";
 "sidebar.integrity" = "Integrity";
 "sidebar.processing" = "Audio Processing";
@@ -22,6 +24,9 @@
 "column.duration" = "Time";
 "column.health" = "File";
 "status.importing" = "Copying and verifying files…";
+"status.dropNoAudioFiles" = "No supported audio files were found in the dropped items.";
+"dropImport.title" = "Drop to Import Music";
+"dropImport.subtitle" = "Audio files and folders will be verified and organized by artist and album.";
 "status.verifying" = "Recomputing file checksums…";
 "status.recoveredManifest" = "The primary catalog was unreadable. Ongaku loaded the previous verified catalog backup.";
 "status.recoveredImports" = "Recovered %d interrupted imports and verified their files.";
@@ -37,6 +42,9 @@
 "health.unreadable" = "Unreadable";
 "track.play" = "Play";
 "player.pause" = "Pause";
+"player.previous" = "Previous Track";
+"player.next" = "Next Track";
+"player.outputIdle" = "Output ready";
 "player.mode.title" = "Playback Mode";
 "player.mode.sequential" = "Play in Order";
 "player.mode.repeatOne" = "Repeat One";
@@ -235,3 +243,18 @@
 "library.error.unsupportedSchema" = "The library uses unsupported schema version %d.";
 "library.error.copyVerificationFailed" = "The copied data did not match %@. The staged copy was discarded.";
 "library.error.sourceIsNotRegularFile" = "%@ is not a regular file. Choose the original audio file instead of a link.";
+"player.queue.title" = "Up Next";
+"player.queue.empty" = "The queue is empty";
+"player.queue.playNext" = "Play Next";
+"player.queue.playLater" = "Add to End of Queue";
+"player.queue.clear" = "Clear Upcoming";
+"player.queue.undo" = "Undo";
+"player.queue.moveUp" = "Move Up";
+"player.queue.moveDown" = "Move Down";
+"player.queue.remove" = "Remove from Queue";
+"player.history.title" = "History";
+"player.history.empty" = "No playback history";
+"player.history.clear" = "Clear History";
+"player.history.kind.started" = "Playing";
+"player.history.kind.completed" = "Played";
+"player.history.kind.skipped" = "Skipped";

@@ -162,4 +162,110 @@ struct PlaybackQueueNavigatorTests {
         #expect(next?.id == albumTwo.id)
         #expect(next?.id != albumOneFirst.id)
     }
+
+    @Test("Previous navigation follows playback mode boundaries")
+    func previousNavigation() {
+        let queue = [albumOneFirst, albumTwo, albumOneSecond]
+        #expect(PlaybackQueueNavigator.previousTrack(
+            before: albumTwo, in: queue, mode: .sequential)?.id == albumOneFirst.id)
+        #expect(PlaybackQueueNavigator.previousTrack(
+            before: albumOneFirst, in: queue, mode: .sequential) == nil)
+        #expect(PlaybackQueueNavigator.previousTrack(
+            before: albumOneFirst, in: queue, mode: .repeatAll)?.id == albumOneSecond.id)
+        #expect(PlaybackQueueNavigator.previousTrack(
+            before: albumOneFirst, in: queue, mode: .repeatAlbum)?.id == albumOneSecond.id)
+    }
+
+    @Test("Queue edits preserve order and can be undone")
+    @MainActor
+    func queueEditingAndUndo() {
+        let player = PlaybackController()
+        player.updatePlaybackQueue([albumOneFirst, albumTwo, albumOneSecond])
+
+        player.enqueueNext([albumOneSecond])
+        #expect(player.queuedTracks.map(\.id) == [albumOneSecond.id, albumOneFirst.id, albumTwo.id])
+
+        player.appendToQueue([albumOneFirst])
+        #expect(player.queuedTracks.map(\.id) == [albumOneSecond.id, albumTwo.id, albumOneFirst.id])
+
+        player.moveInQueue(albumOneFirst, offset: -1)
+        #expect(player.queuedTracks.map(\.id) == [albumOneSecond.id, albumOneFirst.id, albumTwo.id])
+
+        player.removeFromQueue(albumOneSecond)
+        #expect(player.queuedTracks.map(\.id) == [albumOneFirst.id, albumTwo.id])
+        player.undoLastQueueEdit()
+        #expect(player.queuedTracks.map(\.id) == [albumOneSecond.id, albumOneFirst.id, albumTwo.id])
+
+        player.moveInQueue(fromOffsets: IndexSet(integer: 0), toOffset: 3)
+        #expect(player.queuedTracks.map(\.id) == [albumOneFirst.id, albumTwo.id, albumOneSecond.id])
+        player.undoLastQueueEdit()
+        #expect(player.queuedTracks.map(\.id) == [albumOneSecond.id, albumOneFirst.id, albumTwo.id])
+    }
+}
+
+@Suite("Playback history")
+struct PlaybackHistoryTests {
+    @Test("Pause and resume reuse one playback session")
+    func sessionLifecycle() throws {
+        let trackID = UUID()
+        var tracker = PlaybackSessionTracker()
+        let startedEvent = tracker.begin(trackID: trackID, position: 4)
+        let started = try #require(startedEvent)
+        #expect(tracker.begin(trackID: trackID, position: 8) == nil)
+
+        let skippedEvent = tracker.finish(
+            trackID: trackID,
+            kind: .skipped,
+            position: 12
+        )
+        let skipped = try #require(skippedEvent)
+        #expect(skipped.playbackSessionID == started.playbackSessionID)
+        #expect(skipped.kind == .skipped)
+        #expect(skipped.position == 12)
+        #expect(tracker.finish(
+            trackID: trackID,
+            kind: .completed,
+            position: 90
+        ) == nil)
+
+        let restartedEvent = tracker.begin(trackID: trackID, position: 0)
+        let restarted = try #require(restartedEvent)
+        #expect(restarted.playbackSessionID != started.playbackSessionID)
+    }
+
+    @Test("History keeps the latest state for each session in reverse chronological order")
+    func resolvesSessions() throws {
+        let track = Track(
+            id: UUID(), title: "History", artist: "Artist", album: "Album", duration: 90,
+            fileSize: 1, managedPath: "/tmp/history.m4a", sha256: "history",
+            addedAt: .now, health: .verified
+        )
+        let olderSession = UUID()
+        let newerSession = UUID()
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let events = [
+            PlaybackEvent(
+                trackID: track.id, kind: .started, occurredAt: base,
+                position: 0, playbackSessionID: olderSession
+            ),
+            PlaybackEvent(
+                trackID: track.id, kind: .completed, occurredAt: base.addingTimeInterval(90),
+                position: 90, playbackSessionID: olderSession
+            ),
+            PlaybackEvent(
+                trackID: track.id, kind: .started, occurredAt: base.addingTimeInterval(120),
+                position: 12, playbackSessionID: newerSession
+            ),
+            PlaybackEvent(
+                trackID: UUID(), kind: .skipped, occurredAt: base.addingTimeInterval(150),
+                position: 1, playbackSessionID: UUID()
+            ),
+        ]
+
+        let items = PlaybackHistoryResolver.items(events: events, tracks: [track])
+        #expect(items.map(\.id) == [newerSession, olderSession])
+        #expect(items[0].event.kind == .started)
+        #expect(items[1].event.kind == .completed)
+        #expect(items[1].event.position == 90)
+    }
 }

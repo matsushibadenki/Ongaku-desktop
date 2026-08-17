@@ -2,6 +2,24 @@
 import AppKit
 import SwiftUI
 
+private struct TrackTableForegroundModifier: ViewModifier {
+    @Environment(\.controlActiveState) private var controlActiveState
+    let isSelected: Bool
+    let fallback: Color
+
+    func body(content: Content) -> some View {
+        content.foregroundStyle(
+            isSelected && controlActiveState == .key ? Color.white : fallback
+        )
+    }
+}
+
+private extension View {
+    func trackTableForeground(isSelected: Bool, fallback: Color) -> some View {
+        modifier(TrackTableForegroundModifier(isSelected: isSelected, fallback: fallback))
+    }
+}
+
 struct LibraryContent: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
@@ -127,16 +145,34 @@ struct LibraryContent: View {
             TableColumn(L10n.text("column.title"), value: \.title) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
-                        .foregroundStyle(player.currentTrack?.id == track.id ? AppTheme.accent : AppTheme.secondaryInk)
+                        .trackTableForeground(
+                            isSelected: library.selectedTrackID == track.id,
+                            fallback: player.currentTrack?.id == track.id
+                                ? AppTheme.accent : AppTheme.secondaryInk
+                        )
                         .frame(width: 16)
                     Text(track.title)
-                        .foregroundStyle(AppTheme.ink)
+                        .trackTableForeground(
+                            isSelected: library.selectedTrackID == track.id,
+                            fallback: AppTheme.ink
+                        )
                         .lineLimit(1)
                 }
                 .contentShape(Rectangle())
-                .onTapGesture(count: 2) { player.play(track) }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0).onChanged { _ in
+                        library.selectedTrackID = track.id
+                    }
+                )
+                .simultaneousGesture(
+                    TapGesture(count: 2).onEnded {
+                        library.selectedTrackID = track.id
+                        player.play(track)
+                    }
+                )
                 .contextMenu {
                     Button(L10n.text("track.play")) { player.play(track) }
+                    PlaybackQueueContextActions(tracks: [track])
                     Button(L10n.text("metadataEditor.track.menu")) { editTrack(track) }
                     Divider()
                     Button(L10n.text("track.reveal")) { library.reveal(track) }
@@ -171,7 +207,11 @@ struct LibraryContent: View {
             .width(min: 68, ideal: 76)
 
             TableColumn(L10n.text("column.health")) { track in
-                HealthLabel(health: track.health, compact: true)
+                HealthLabel(
+                    health: track.health,
+                    compact: true,
+                    isSelected: library.selectedTrackID == track.id
+                )
             }
             .width(min: 64, ideal: 72)
         }
@@ -544,6 +584,8 @@ private struct AlbumGrid: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityLabel("\(album.name), \(album.artist)")
         .contextMenu {
+            PlaybackQueueContextActions(tracks: album.sortedTracks)
+            Divider()
             Button(L10n.text("metadataEditor.album.menu")) {
                 onEditAlbum(album)
             }
@@ -625,6 +667,8 @@ private struct AlbumDetail: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contextMenu {
+                    PlaybackQueueContextActions(tracks: album.sortedTracks)
+                    Divider()
                     Button(L10n.text("metadataEditor.album.menu")) {
                         onEditAlbum(album)
                     }
@@ -642,16 +686,34 @@ private struct AlbumDetail: View {
             TableColumn(L10n.text("column.title")) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
-                        .foregroundStyle(player.currentTrack?.id == track.id ? AppTheme.accent : AppTheme.secondaryInk)
+                        .trackTableForeground(
+                            isSelected: library.selectedTrackID == track.id,
+                            fallback: player.currentTrack?.id == track.id
+                                ? AppTheme.accent : AppTheme.secondaryInk
+                        )
                         .frame(width: 16)
                     Text(track.title)
-                        .foregroundStyle(AppTheme.ink)
+                        .trackTableForeground(
+                            isSelected: library.selectedTrackID == track.id,
+                            fallback: AppTheme.ink
+                        )
                         .lineLimit(1)
                 }
                 .contentShape(Rectangle())
-                .onTapGesture(count: 2) { player.play(track) }
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0).onChanged { _ in
+                        library.selectedTrackID = track.id
+                    }
+                )
+                .simultaneousGesture(
+                    TapGesture(count: 2).onEnded {
+                        library.selectedTrackID = track.id
+                        player.play(track)
+                    }
+                )
                 .contextMenu {
                     Button(L10n.text("track.play")) { player.play(track) }
+                    PlaybackQueueContextActions(tracks: [track])
                     Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
                     Divider()
                     Button(L10n.text("track.reveal")) { library.reveal(track) }
@@ -666,7 +728,11 @@ private struct AlbumDetail: View {
             .width(min: 68, ideal: 76)
 
             TableColumn(L10n.text("column.health")) { track in
-                HealthLabel(health: track.health, compact: true)
+                HealthLabel(
+                    health: track.health,
+                    compact: true,
+                    isSelected: library.selectedTrackID == track.id
+                )
             }
             .width(min: 64, ideal: 72)
         }
@@ -935,6 +1001,8 @@ private struct ArtistDetail: View {
                         }
                         .buttonStyle(.plain)
                         .contextMenu {
+                            PlaybackQueueContextActions(tracks: album.sortedTracks)
+                            Divider()
                             Button(L10n.text("metadataEditor.album.menu")) {
                                 onEditAlbum(album)
                             }
@@ -962,16 +1030,34 @@ private struct ArtistDetail: View {
                 TableColumn(L10n.text("column.title")) { track in
                     HStack(spacing: 10) {
                         Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
-                            .foregroundStyle(player.currentTrack?.id == track.id ? AppTheme.accent : AppTheme.secondaryInk)
+                            .trackTableForeground(
+                                isSelected: library.selectedTrackID == track.id,
+                                fallback: player.currentTrack?.id == track.id
+                                    ? AppTheme.accent : AppTheme.secondaryInk
+                            )
                             .frame(width: 16)
                         Text(track.title)
-                            .foregroundStyle(AppTheme.ink)
+                            .trackTableForeground(
+                                isSelected: library.selectedTrackID == track.id,
+                                fallback: AppTheme.ink
+                            )
                             .lineLimit(1)
                     }
                     .contentShape(Rectangle())
-                    .onTapGesture(count: 2) { player.play(track) }
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0).onChanged { _ in
+                            library.selectedTrackID = track.id
+                        }
+                    )
+                    .simultaneousGesture(
+                        TapGesture(count: 2).onEnded {
+                            library.selectedTrackID = track.id
+                            player.play(track)
+                        }
+                    )
                     .contextMenu {
                         Button(L10n.text("track.play")) { player.play(track) }
+                        PlaybackQueueContextActions(tracks: [track])
                         Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
                         Divider()
                         Button(L10n.text("track.reveal")) { library.reveal(track) }
@@ -1001,7 +1087,11 @@ private struct ArtistDetail: View {
                 .width(min: 68, ideal: 76)
 
                 TableColumn(L10n.text("column.health")) { track in
-                    HealthLabel(health: track.health, compact: true)
+                    HealthLabel(
+                        health: track.health,
+                        compact: true,
+                        isSelected: library.selectedTrackID == track.id
+                    )
                 }
                 .width(min: 64, ideal: 72)
             }

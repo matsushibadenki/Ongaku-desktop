@@ -30,6 +30,7 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var tracks: [Track] = []
     @Published private(set) var playlists: [Playlist] = []
     @Published private(set) var playbackEvents: [PlaybackEvent] = []
+    @Published private(set) var playbackQueue: PlaybackQueueState?
     @Published private(set) var contentRevision = 0
     @Published var selectedSection: LibrarySection = .songs
     @Published var selectedTrackID: Track.ID?
@@ -48,6 +49,7 @@ final class LibraryStore: ObservableObject {
     private var libraryCreatedAt = Date.now
     private var searchIndexSynchronizationTask: Task<Void, Never>?
     private var indexedSearchTask: Task<Void, Never>?
+    private var playbackQueueSaveTask: Task<Void, Never>?
 
     init(
         repository: LibraryRepository = LibraryRepository(),
@@ -89,6 +91,7 @@ final class LibraryStore: ObservableObject {
             tracks = result.document.tracks
             playlists = result.document.playlists
             playbackEvents = result.document.playbackEvents
+            playbackQueue = result.document.playbackQueue
             libraryID = result.document.libraryID
             libraryCreatedAt = result.document.createdAt
             contentRevision &+= 1
@@ -134,6 +137,29 @@ final class LibraryStore: ObservableObject {
         } catch {
             activity = .failed(error.localizedDescription)
         }
+    }
+
+    func importDroppedItems(_ urls: [URL]) async {
+        guard !urls.isEmpty else { return }
+        activity = .importing
+        lastIssues = []
+
+        let accessedURLs = urls.filter { $0.startAccessingSecurityScopedResource() }
+        defer {
+            for url in accessedURLs {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let sourceURLs = await Task.detached(priority: .userInitiated) {
+            Self.resolveDroppedAudioFiles(urls)
+        }.value
+        guard !sourceURLs.isEmpty else {
+            activity = .notice(L10n.text("status.dropNoAudioFiles"))
+            return
+        }
+
+        await importFiles(sourceURLs)
     }
 
     func importAppleMusicMediaFolder(
@@ -250,6 +276,7 @@ final class LibraryStore: ObservableObject {
                 return emptied
             }
             playbackEvents.removeAll()
+            playbackQueue = PlaybackQueueState()
             selectedTrackID = nil
             selectedSection = .songs
             searchText = ""
@@ -337,8 +364,46 @@ final class LibraryStore: ObservableObject {
             libraryID: libraryID,
             createdAt: libraryCreatedAt,
             playlists: playlists,
-            playbackEvents: playbackEvents
+            playbackEvents: playbackEvents,
+            playbackQueue: playbackQueue
         )
+    }
+
+    func schedulePlaybackQueueSave(_ state: PlaybackQueueState) {
+        guard playbackQueue != state else { return }
+        playbackQueue = state
+        playbackQueueSaveTask?.cancel()
+        playbackQueueSaveTask = Task { [weak self, repository] in
+            try? await Task.sleep(for: .milliseconds(750))
+            guard !Task.isCancelled, let self, self.playbackQueue == state else { return }
+            do {
+                try await repository.save(playbackQueue: state)
+            } catch {
+                guard !Task.isCancelled else { return }
+                self.activity = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    func recordPlaybackEvent(_ event: PlaybackEvent) async {
+        playbackEvents.append(event)
+        do {
+            try await repository.recordPlaybackEvent(event)
+        } catch {
+            playbackEvents.removeAll { $0.id == event.id }
+            activity = .failed(error.localizedDescription)
+        }
+    }
+
+    func clearPlaybackHistory() async {
+        let previous = playbackEvents
+        playbackEvents.removeAll()
+        do {
+            try await repository.save(playbackEvents: [])
+        } catch {
+            playbackEvents = previous
+            activity = .failed(error.localizedDescription)
+        }
     }
 
     private func scheduleSearchIndexSynchronization(document: LibraryDocument) {
@@ -427,6 +492,31 @@ final class LibraryStore: ObservableObject {
         return queries.sorted()
     }
 
+    nonisolated static func resolveDroppedAudioFiles(_ droppedURLs: [URL]) -> [URL] {
+        var filesByPath: [String: URL] = [:]
+        let resourceKeys: Set<URLResourceKey> = [
+            .isDirectoryKey, .isRegularFileKey, .isSymbolicLinkKey,
+        ]
+
+        for droppedURL in droppedURLs {
+            let standardized = droppedURL.standardizedFileURL
+            guard let values = try? standardized.resourceValues(forKeys: resourceKeys),
+                  values.isSymbolicLink != true else { continue }
+
+            if values.isDirectory == true {
+                for fileURL in discoverAudioFiles(in: standardized, excluding: []) {
+                    filesByPath[fileURL.path] = fileURL
+                }
+            } else if values.isRegularFile == true, isSupportedAudioFile(standardized) {
+                filesByPath[standardized.path] = standardized
+            }
+        }
+
+        return filesByPath.values.sorted {
+            $0.path.localizedStandardCompare($1.path) == .orderedAscending
+        }
+    }
+
     private nonisolated static func discoverAudioFiles(
         in mediaFolderURL: URL,
         excluding excludedDirectories: [URL]
@@ -444,9 +534,6 @@ final class LibraryStore: ObservableObject {
         else { return [] }
 
         let excludedPaths = excludedDirectories.map { $0.standardizedFileURL.path }
-        let supportedExtensions: Set<String> = [
-            "aac", "aif", "aiff", "alac", "caf", "flac", "m4a", "mp3", "wav",
-        ]
         var audioFiles: [URL] = []
         for case let url as URL in enumerator {
             let standardized = url.standardizedFileURL
@@ -459,7 +546,7 @@ final class LibraryStore: ObservableObject {
                 }
                 continue
             }
-            guard supportedExtensions.contains(standardized.pathExtension.lowercased()),
+            guard isSupportedAudioFile(standardized),
                 let values = try? standardized.resourceValues(forKeys: Set(resourceKeys)),
                 values.isRegularFile == true,
                 values.isSymbolicLink != true
@@ -469,5 +556,12 @@ final class LibraryStore: ObservableObject {
         return audioFiles.sorted {
             $0.path.localizedStandardCompare($1.path) == .orderedAscending
         }
+    }
+
+    private nonisolated static func isSupportedAudioFile(_ url: URL) -> Bool {
+        let supportedExtensions: Set<String> = [
+            "aac", "aif", "aiff", "alac", "caf", "flac", "m4a", "mp3", "wav",
+        ]
+        return supportedExtensions.contains(url.pathExtension.lowercased())
     }
 }

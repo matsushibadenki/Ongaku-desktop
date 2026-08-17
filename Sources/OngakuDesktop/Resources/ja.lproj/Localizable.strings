@@ -3,6 +3,8 @@
 "command.verify" = "ライブラリを検証";
 "command.playback" = "再生";
 "command.automaticUpsampling" = "最大384 kHzへ自動アップサンプリング";
+"toolbar.importHelp" = "音楽ファイルをライブラリへ読み込みます";
+"toolbar.verifyHelp" = "管理中の音楽ファイルが変更・破損していないか検証します";
 "sidebar.library" = "ライブラリ";
 "sidebar.integrity" = "ファイル保全";
 "sidebar.processing" = "オーディオ処理";
@@ -22,6 +24,9 @@
 "column.duration" = "時間";
 "column.health" = "ファイル";
 "status.importing" = "ファイルをコピーして照合しています…";
+"status.dropNoAudioFiles" = "ドロップされた項目に対応する音楽ファイルがありません。";
+"dropImport.title" = "ドロップして音楽を登録";
+"dropImport.subtitle" = "音楽ファイルとフォルダを検証し、アーティスト別・アルバム別に整理します。";
 "status.verifying" = "ファイルのチェックサムを再計算しています…";
 "status.recoveredManifest" = "主カタログを読み取れなかったため、直前の検証済みカタログから復旧しました。";
 "status.recoveredImports" = "中断されていた%d件の読み込みを復旧し、ファイルを照合しました。";
@@ -37,6 +42,9 @@
 "health.unreadable" = "読み取れません";
 "track.play" = "再生";
 "player.pause" = "一時停止";
+"player.previous" = "前の曲";
+"player.next" = "次の曲";
+"player.outputIdle" = "出力待機中";
 "player.mode.title" = "再生方法";
 "player.mode.sequential" = "通常再生";
 "player.mode.repeatOne" = "1曲リピート";
@@ -235,3 +243,18 @@
 "library.error.unsupportedSchema" = "このライブラリのスキーマバージョン%dには対応していません。";
 "library.error.copyVerificationFailed" = "コピーしたデータが%@と一致しませんでした。作業用コピーは破棄しました。";
 "library.error.sourceIsNotRegularFile" = "%@は通常のファイルではありません。リンクではなく元の音声ファイルを選択してください。";
+"player.queue.title" = "次はこちら";
+"player.queue.empty" = "キューは空です";
+"player.queue.playNext" = "次に再生";
+"player.queue.playLater" = "キューの最後に追加";
+"player.queue.clear" = "次の曲を消去";
+"player.queue.undo" = "元に戻す";
+"player.queue.moveUp" = "上へ移動";
+"player.queue.moveDown" = "下へ移動";
+"player.queue.remove" = "キューから削除";
+"player.history.title" = "履歴";
+"player.history.empty" = "再生履歴はありません";
+"player.history.clear" = "履歴を消去";
+"player.history.kind.started" = "再生中";
+"player.history.kind.completed" = "再生済み";
+"player.history.kind.skipped" = "スキップ";

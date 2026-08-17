@@ -159,8 +159,65 @@ struct PlaybackEvent: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+extension PlaybackEvent.Kind {
+    var titleKey: String { "player.history.kind.\(rawValue)" }
+}
+
+struct PlaybackHistoryItem: Identifiable, Equatable, Sendable {
+    var id: UUID { event.playbackSessionID }
+    let track: Track
+    let event: PlaybackEvent
+}
+
+enum PlaybackHistoryResolver {
+    nonisolated static func items(
+        events: [PlaybackEvent],
+        tracks: [Track],
+        limit: Int = 100
+    ) -> [PlaybackHistoryItem] {
+        guard limit > 0 else { return [] }
+        let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        var latestBySession: [UUID: PlaybackEvent] = [:]
+        for event in events {
+            guard tracksByID[event.trackID] != nil else { continue }
+            if let existing = latestBySession[event.playbackSessionID] {
+                if event.occurredAt > existing.occurredAt
+                    || (event.occurredAt == existing.occurredAt
+                        && existing.kind == .started && event.kind != .started)
+                {
+                    latestBySession[event.playbackSessionID] = event
+                }
+            } else {
+                latestBySession[event.playbackSessionID] = event
+            }
+        }
+        return latestBySession.values
+            .sorted { $0.occurredAt > $1.occurredAt }
+            .prefix(limit)
+            .compactMap { event in
+                tracksByID[event.trackID].map { PlaybackHistoryItem(track: $0, event: event) }
+            }
+    }
+}
+
+struct PlaybackQueueState: Codable, Equatable, Sendable {
+    var trackIDs: [Track.ID]
+    var currentTrackID: Track.ID?
+    var position: TimeInterval
+
+    init(
+        trackIDs: [Track.ID] = [],
+        currentTrackID: Track.ID? = nil,
+        position: TimeInterval = 0
+    ) {
+        self.trackIDs = trackIDs
+        self.currentTrackID = currentTrackID
+        self.position = position
+    }
+}
+
 struct LibraryDocument: Codable, Sendable {
-    static let currentSchema = 3
+    static let currentSchema = 4
 
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
@@ -169,6 +226,7 @@ struct LibraryDocument: Codable, Sendable {
     var createdAt: Date = .now
     var playlists: [Playlist] = []
     var playbackEvents: [PlaybackEvent] = []
+    var playbackQueue: PlaybackQueueState?
 }
 
 struct LibraryLoadResult: Sendable {

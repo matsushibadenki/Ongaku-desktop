@@ -49,6 +49,15 @@ actor LibraryRepository {
         var createdAt: Date
     }
 
+    private struct Schema3LibraryDocument: Decodable {
+        var updatedAt: Date
+        var tracks: [Track]
+        var libraryID: UUID
+        var createdAt: Date
+        var playlists: [Playlist]
+        var playbackEvents: [PlaybackEvent]
+    }
+
     private struct CatalogIdentityIndex {
         private var artistIDsByName: [String: UUID] = [:]
         private var albumIDsByArtistAndName: [String: UUID] = [:]
@@ -225,6 +234,15 @@ actor LibraryRepository {
         currentDocument = document
     }
 
+    func save(playbackQueue: PlaybackQueueState) throws {
+        try prepareDirectories()
+        var document = try documentForMutation()
+        document.updatedAt = .now
+        document.playbackQueue = playbackQueue
+        try persistDocument(document, backUpReadablePrimary: true)
+        currentDocument = document
+    }
+
     /// Clears Ongaku's catalog records without deleting, moving, renaming, or
     /// otherwise touching any referenced or managed audio file.
     func clearAllRegistrations() throws {
@@ -242,6 +260,7 @@ actor LibraryRepository {
             return emptied
         }
         emptyDocument.playbackEvents.removeAll { removedTrackIDs.contains($0.trackID) }
+        emptyDocument.playbackQueue = PlaybackQueueState()
         let data = try encoder.encode(emptyDocument)
 
         // Clear recovery metadata first. If the operation is interrupted before
@@ -490,6 +509,20 @@ actor LibraryRepository {
                 return DecodedLibraryDocument(
                     document: document,
                     migratedFromSchemaVersion: nil
+                )
+            case 3:
+                let schema3 = try decoder.decode(Schema3LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema3.updatedAt,
+                        tracks: schema3.tracks,
+                        libraryID: schema3.libraryID,
+                        createdAt: schema3.createdAt,
+                        playlists: schema3.playlists,
+                        playbackEvents: schema3.playbackEvents,
+                        playbackQueue: nil
+                    ),
+                    migratedFromSchemaVersion: 3
                 )
             case 2:
                 let schema2 = try decoder.decode(Schema2LibraryDocument.self, from: data)
