@@ -42,6 +42,13 @@ actor LibraryRepository {
         var tracks: [Track]
     }
 
+    private struct Schema2LibraryDocument: Decodable {
+        var updatedAt: Date
+        var tracks: [Track]
+        var libraryID: UUID
+        var createdAt: Date
+    }
+
     private struct CatalogIdentityIndex {
         private var artistIDsByName: [String: UUID] = [:]
         private var albumIDsByArtistAndName: [String: UUID] = [:]
@@ -100,7 +107,7 @@ actor LibraryRepository {
     let rootURL: URL
     private let fileManager: FileManager
     private var mediaURL: URL
-    private var libraryIdentity: (id: UUID, createdAt: Date)?
+    private var currentDocument: LibraryDocument?
 
     init(rootURL: URL? = nil, mediaURL: URL? = nil, fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -118,8 +125,9 @@ actor LibraryRepository {
     private var incomingURL: URL { rootURL.appendingPathComponent("Incoming", isDirectory: true) }
     private var manifestURL: URL { rootURL.appendingPathComponent("library-v1.json") }
     private var backupURL: URL { rootURL.appendingPathComponent("library-v1.backup.json") }
-    private var migrationArchiveURL: URL {
-        rootURL.appendingPathComponent("library-schema-1.migration-backup.json")
+    private func migrationArchiveURL(for schemaVersion: Int) -> URL {
+        let source = schemaVersion == 0 ? "unversioned" : "schema-\(schemaVersion)"
+        return rootURL.appendingPathComponent("library-\(source).migration-backup.json")
     }
     private var importJournalURL: URL { rootURL.appendingPathComponent("import-journal-v1.json") }
 
@@ -155,11 +163,13 @@ actor LibraryRepository {
         }
 
         var document = decoded.document
-        libraryIdentity = (document.libraryID, document.createdAt)
         let recovery = try recoverImports(into: &document)
-        if decoded.migratedFromSchemaVersion != nil {
+        if let sourceSchemaVersion = decoded.migratedFromSchemaVersion {
             if let decodedSourceURL {
-                try archivePreMigrationManifest(at: decodedSourceURL)
+                try archivePreMigrationManifest(
+                    at: decodedSourceURL,
+                    sourceSchemaVersion: sourceSchemaVersion
+                )
             }
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: false)
@@ -168,6 +178,7 @@ actor LibraryRepository {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: !recoveredFromBackup)
         }
+        currentDocument = document
         return LibraryLoadResult(
             document: document,
             recoveredFromBackup: recoveredFromBackup,
@@ -179,29 +190,58 @@ actor LibraryRepository {
 
     func save(tracks: [Track]) throws {
         try prepareDirectories()
-        let identity = libraryIdentity ?? (UUID(), .now)
-        let document = LibraryDocument(
-            updatedAt: .now,
-            tracks: tracks,
-            libraryID: identity.0,
-            createdAt: identity.1
-        )
+        var document = try documentForMutation()
+        document.updatedAt = .now
+        document.tracks = tracks
         try persistDocument(document, backUpReadablePrimary: true)
-        libraryIdentity = (document.libraryID, document.createdAt)
+        currentDocument = document
         try reconcileImportJournal(with: tracks)
+    }
+
+    func save(playlists: [Playlist]) throws {
+        try prepareDirectories()
+        var document = try documentForMutation()
+        document.updatedAt = .now
+        document.playlists = playlists
+        try persistDocument(document, backUpReadablePrimary: true)
+        currentDocument = document
+    }
+
+    func recordPlaybackEvent(_ event: PlaybackEvent) throws {
+        try prepareDirectories()
+        var document = try documentForMutation()
+        document.updatedAt = .now
+        document.playbackEvents.append(event)
+        try persistDocument(document, backUpReadablePrimary: true)
+        currentDocument = document
+    }
+
+    func save(playbackEvents: [PlaybackEvent]) throws {
+        try prepareDirectories()
+        var document = try documentForMutation()
+        document.updatedAt = .now
+        document.playbackEvents = playbackEvents
+        try persistDocument(document, backUpReadablePrimary: true)
+        currentDocument = document
     }
 
     /// Clears Ongaku's catalog records without deleting, moving, renaming, or
     /// otherwise touching any referenced or managed audio file.
     func clearAllRegistrations() throws {
         try prepareDirectories()
-        let identity = libraryIdentity ?? (UUID(), .now)
-        let emptyDocument = LibraryDocument(
-            updatedAt: .now,
-            tracks: [],
-            libraryID: identity.0,
-            createdAt: identity.1
-        )
+        var emptyDocument = try documentForMutation()
+        let removedTrackIDs = Set(emptyDocument.tracks.map(\.id))
+        emptyDocument.updatedAt = .now
+        emptyDocument.tracks = []
+        emptyDocument.playlists = emptyDocument.playlists.map { playlist in
+            var emptied = playlist
+            if !emptied.entries.isEmpty {
+                emptied.entries = []
+                emptied.updatedAt = .now
+            }
+            return emptied
+        }
+        emptyDocument.playbackEvents.removeAll { removedTrackIDs.contains($0.trackID) }
         let data = try encoder.encode(emptyDocument)
 
         // Clear recovery metadata first. If the operation is interrupted before
@@ -211,7 +251,7 @@ actor LibraryRepository {
         try persistImportJournal(ImportJournal())
         try data.write(to: backupURL, options: [.atomic])
         try data.write(to: manifestURL, options: [.atomic])
-        libraryIdentity = (emptyDocument.libraryID, emptyDocument.createdAt)
+        currentDocument = emptyDocument
     }
 
     func importFiles(
@@ -451,6 +491,19 @@ actor LibraryRepository {
                     document: document,
                     migratedFromSchemaVersion: nil
                 )
+            case 2:
+                let schema2 = try decoder.decode(Schema2LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema2.updatedAt,
+                        tracks: schema2.tracks,
+                        libraryID: schema2.libraryID,
+                        createdAt: schema2.createdAt,
+                        playlists: [],
+                        playbackEvents: []
+                    ),
+                    migratedFromSchemaVersion: 2
+                )
             case 0, 1:
                 let legacy = try decoder.decode(LegacyLibraryDocument.self, from: data)
                 return migrateLegacyDocument(
@@ -520,9 +573,25 @@ actor LibraryRepository {
         try data.write(to: manifestURL, options: [.atomic])
     }
 
-    private func archivePreMigrationManifest(at sourceURL: URL) throws {
-        guard !fileManager.fileExists(atPath: migrationArchiveURL.path) else { return }
-        try Data(contentsOf: sourceURL).write(to: migrationArchiveURL, options: [.atomic])
+    private func archivePreMigrationManifest(
+        at sourceURL: URL,
+        sourceSchemaVersion: Int
+    ) throws {
+        let archiveURL = migrationArchiveURL(for: sourceSchemaVersion)
+        guard !fileManager.fileExists(atPath: archiveURL.path) else { return }
+        try Data(contentsOf: sourceURL).write(to: archiveURL, options: [.atomic])
+    }
+
+    private func documentForMutation() throws -> LibraryDocument {
+        if let currentDocument { return currentDocument }
+        if fileManager.fileExists(atPath: manifestURL.path)
+            || fileManager.fileExists(atPath: backupURL.path)
+        {
+            return try load().document
+        }
+        let document = LibraryDocument()
+        currentDocument = document
+        return document
     }
 
     private func recoverImports(into document: inout LibraryDocument) throws -> (recovered: Int, unresolved: Int) {

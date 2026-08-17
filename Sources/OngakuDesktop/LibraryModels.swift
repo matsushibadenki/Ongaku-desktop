@@ -71,14 +71,87 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var fileURL: URL { URL(fileURLWithPath: managedPath) }
 }
 
+struct PlaylistEntry: Identifiable, Codable, Hashable, Sendable {
+    let id: UUID
+    var trackID: Track.ID
+    var addedAt: Date
+
+    init(id: UUID = UUID(), trackID: Track.ID, addedAt: Date = .now) {
+        self.id = id
+        self.trackID = trackID
+        self.addedAt = addedAt
+    }
+}
+
+struct Playlist: Identifiable, Codable, Hashable, Sendable {
+    let id: UUID
+    var name: String
+    var description: String
+    var artworkPath: String?
+    var entries: [PlaylistEntry]
+    var createdAt: Date
+    var updatedAt: Date
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        description: String = "",
+        artworkPath: String? = nil,
+        entries: [PlaylistEntry] = [],
+        createdAt: Date = .now,
+        updatedAt: Date = .now
+    ) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.artworkPath = artworkPath
+        self.entries = entries
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+}
+
+struct PlaybackEvent: Identifiable, Codable, Hashable, Sendable {
+    enum Kind: String, Codable, Sendable {
+        case started
+        case completed
+        case skipped
+    }
+
+    let id: UUID
+    var trackID: Track.ID
+    var kind: Kind
+    var occurredAt: Date
+    var position: TimeInterval
+    var playbackSessionID: UUID
+
+    init(
+        id: UUID = UUID(),
+        trackID: Track.ID,
+        kind: Kind,
+        occurredAt: Date = .now,
+        position: TimeInterval = 0,
+        playbackSessionID: UUID = UUID()
+    ) {
+        self.id = id
+        self.trackID = trackID
+        self.kind = kind
+        self.occurredAt = occurredAt
+        self.position = position
+        self.playbackSessionID = playbackSessionID
+    }
+}
+
 struct LibraryDocument: Codable, Sendable {
-    static let currentSchema = 2
+    static let currentSchema = 3
 
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
     var tracks: [Track] = []
     var libraryID: UUID = UUID()
     var createdAt: Date = .now
+    var playlists: [Playlist] = []
+    var playbackEvents: [PlaybackEvent] = []
 }
 
 struct LibraryLoadResult: Sendable {

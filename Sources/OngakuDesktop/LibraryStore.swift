@@ -22,6 +22,8 @@ final class LibraryStore: ObservableObject {
     }
 
     @Published private(set) var tracks: [Track] = []
+    @Published private(set) var playlists: [Playlist] = []
+    @Published private(set) var playbackEvents: [PlaybackEvent] = []
     @Published private(set) var contentRevision = 0
     @Published var selectedSection: LibrarySection = .songs
     @Published var selectedTrackID: Track.ID?
@@ -65,6 +67,8 @@ final class LibraryStore: ObservableObject {
         do {
             let result = try await repository.load()
             tracks = result.document.tracks
+            playlists = result.document.playlists
+            playbackEvents = result.document.playbackEvents
             contentRevision &+= 1
             selectedTrackID = selectedTrackID ?? tracks.first?.id
             if result.unresolvedImportCount > 0 {
@@ -214,6 +218,12 @@ final class LibraryStore: ObservableObject {
         do {
             try await repository.clearAllRegistrations()
             tracks.removeAll(keepingCapacity: false)
+            playlists = playlists.map { playlist in
+                var emptied = playlist
+                emptied.entries = []
+                return emptied
+            }
+            playbackEvents.removeAll()
             selectedTrackID = nil
             selectedSection = .songs
             searchText = ""

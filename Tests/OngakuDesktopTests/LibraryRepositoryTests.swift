@@ -100,6 +100,67 @@ struct LibraryRepositoryTests {
         #expect(loaded.document.tracks.map(\.title) == ["Early Track"])
     }
 
+    @Test("Schema 2 preserves stable identities while adding playlists and playback events")
+    func migratesSchemaTwoCatalog() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data(contentsOf: fixtureURL("library-schema-2.json"))
+            .write(to: root.appendingPathComponent("library-v1.json"))
+
+        let loaded = try await LibraryRepository(rootURL: root).load()
+
+        #expect(loaded.migratedFromSchemaVersion == 2)
+        #expect(loaded.document.schemaVersion == LibraryDocument.currentSchema)
+        #expect(loaded.document.libraryID.uuidString == "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")
+        #expect(loaded.document.tracks[0].artistID.uuidString == "11111111-1111-1111-1111-111111111111")
+        #expect(loaded.document.tracks[0].albumID.uuidString == "22222222-2222-2222-2222-222222222222")
+        #expect(loaded.document.playlists.isEmpty)
+        #expect(loaded.document.playbackEvents.isEmpty)
+        #expect(FileManager.default.fileExists(
+            atPath: root.appendingPathComponent("library-schema-2.migration-backup.json").path
+        ))
+    }
+
+    @Test("Playlist entries and playback events survive track-only saves and restart")
+    func persistsPlaylistAndPlaybackModels() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let track = Track(
+            id: UUID(), title: "History", artist: "Artist", album: "Album", duration: 30,
+            fileSize: 100, managedPath: "/tmp/history.m4a", sha256: "history",
+            addedAt: .now, lastVerifiedAt: nil, health: .unchecked
+        )
+        try await repository.save(tracks: [track])
+
+        let entry = PlaylistEntry(trackID: track.id)
+        let playlist = Playlist(name: "Road Trip", entries: [entry])
+        let sessionID = UUID()
+        let event = PlaybackEvent(
+            trackID: track.id,
+            kind: .completed,
+            position: track.duration,
+            playbackSessionID: sessionID
+        )
+        try await repository.save(playlists: [playlist])
+        try await repository.recordPlaybackEvent(event)
+
+        var renamed = track
+        renamed.title = "History Edited"
+        try await repository.save(tracks: [renamed])
+
+        let reloaded = try await LibraryRepository(rootURL: root).load().document
+        #expect(reloaded.playlists.map(\.id) == [playlist.id])
+        #expect(reloaded.playlists[0].entries.map(\.id) == [entry.id])
+        #expect(reloaded.playlists[0].entries.map(\.trackID) == [track.id])
+        #expect(reloaded.playbackEvents.map(\.id) == [event.id])
+        #expect(reloaded.playbackEvents[0].trackID == track.id)
+        #expect(reloaded.playbackEvents[0].kind == .completed)
+        #expect(reloaded.playbackEvents[0].playbackSessionID == sessionID)
+        #expect(reloaded.tracks[0].title == "History Edited")
+    }
+
     @Test("A future schema is never replaced with an older backup")
     func rejectsFutureSchemaWithoutDowngrade() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -149,11 +210,21 @@ struct LibraryRepositoryTests {
             mediaURL: root.appendingPathComponent("Media")
         )
         try await repository.save(tracks: [track])
+        let playlist = Playlist(
+            name: "Temporary references",
+            entries: [PlaylistEntry(trackID: track.id)]
+        )
+        let playbackEvent = PlaybackEvent(trackID: track.id, kind: .started)
+        try await repository.save(playlists: [playlist])
+        try await repository.recordPlaybackEvent(playbackEvent)
 
         try await repository.clearAllRegistrations()
 
         let cleared = try await repository.load()
         #expect(cleared.document.tracks.isEmpty)
+        #expect(cleared.document.playlists.map(\.id) == [playlist.id])
+        #expect(cleared.document.playlists[0].entries.isEmpty)
+        #expect(cleared.document.playbackEvents.isEmpty)
         #expect(FileManager.default.fileExists(atPath: audioFile.path))
         #expect(try Data(contentsOf: audioFile) == originalAudio)
 
@@ -164,6 +235,8 @@ struct LibraryRepositoryTests {
         let recovered = try await repository.load()
         #expect(recovered.recoveredFromBackup)
         #expect(recovered.document.tracks.isEmpty)
+        #expect(recovered.document.playlists[0].entries.isEmpty)
+        #expect(recovered.document.playbackEvents.isEmpty)
         #expect(FileManager.default.fileExists(atPath: audioFile.path))
         #expect(try Data(contentsOf: audioFile) == originalAudio)
 
