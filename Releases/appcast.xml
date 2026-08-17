@@ -1,9 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
-  <channel>
-    <title>Ongaku Desktop Updates</title>
-    <link>https://github.com/matsushibadenki/Ongaku-desktop</link>
-    <description>Signed stable releases of Ongaku Desktop.</description>
-    <language>en</language>
-  </channel>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Ongaku Desktop Updates</title>
+        <link>https://github.com/matsushibadenki/Ongaku-desktop</link>
+        <description>Signed stable releases of Ongaku Desktop.</description>
+        <language>en</language>
+        <item>
+            <title>0.1.0</title>
+            <pubDate>Mon, 17 Aug 2026 14:39:16 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.0</link>
+            <sparkle:version>1</sparkle:version>
+            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.0
+
+- Universal macOS build for arm64 and x86_64.
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.0/OngakuDesktop-0.1.0-universal.dmg" length="3524982" type="application/octet-stream" sparkle:edSignature="j/ZWhGDjWXyo96QtEEIOXEn8yT2NIbOXxgAbwSh5B/+r+W/b3Kk/qOPp+b1eP6Xuk9q3IwmWntnb6giq2J8uCA=="/>
+        </item>
+    </channel>
 </rss>
