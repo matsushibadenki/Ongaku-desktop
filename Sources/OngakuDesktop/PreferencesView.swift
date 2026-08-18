@@ -10,6 +10,7 @@ struct PreferencesContentHeightPreferenceKey: PreferenceKey {
 
 private enum PreferencesSection: String, CaseIterable, Identifiable {
     case general
+    case playback
     case storage
 
     var id: String { rawValue }
@@ -17,6 +18,7 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .general: L10n.text("settings.sidebar.general")
+        case .playback: L10n.text("settings.sidebar.playback")
         case .storage: L10n.text("settings.sidebar.storage")
         }
     }
@@ -24,6 +26,7 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .general: "gearshape"
+        case .playback: "play.circle"
         case .storage: "externaldrive"
         }
     }
@@ -55,6 +58,8 @@ struct PreferencesView: View {
                 switch selection {
                 case .general:
                     GeneralSettingsView()
+                case .playback:
+                    PlaybackSettingsView()
                 case .storage:
                     StorageSettingsView()
                 }
@@ -84,6 +89,71 @@ struct PreferencesView: View {
 
     private var maximumHeight: CGFloat {
         max(Self.minimumHeight, measuredContentHeight + Self.verticalContentPadding)
+    }
+}
+
+private struct PlaybackSettingsView: View {
+    @EnvironmentObject private var player: PlaybackController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
+            settingsHeader(
+                title: L10n.text("settings.playback.title"),
+                subtitle: L10n.text("settings.playback.subtitle"),
+                icon: "play.circle.fill"
+            )
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L10n.text("settings.playback.crossfade.title"))
+                            .font(.headline)
+                        Text(L10n.text("settings.playback.crossfade.description"))
+                            .font(.callout)
+                            .foregroundStyle(AppTheme.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: AppTheme.spaceLG)
+                    Text(L10n.format(
+                        "settings.playback.crossfade.value",
+                        player.crossfadeDuration
+                    ))
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(AppTheme.secondaryInk)
+                }
+
+                Slider(value: $player.crossfadeDuration, in: 0...12, step: 0.5)
+                    .accessibilityLabel(L10n.text("settings.playback.crossfade.title"))
+                    .accessibilityValue(L10n.format(
+                        "settings.playback.crossfade.value",
+                        player.crossfadeDuration
+                    ))
+            }
+
+            Divider()
+
+            Toggle(isOn: $player.disableCrossfadeWithinAlbum) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.text("settings.playback.albumGapless.title"))
+                        .font(.headline)
+                    Text(L10n.text("settings.playback.albumGapless.description"))
+                        .font(.callout)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .toggleStyle(.switch)
+        }
+        .background {
+            GeometryReader { proxy in
+                Color.clear.preference(
+                    key: PreferencesContentHeightPreferenceKey.self,
+                    value: proxy.size.height
+                )
+            }
+        }
     }
 }
 

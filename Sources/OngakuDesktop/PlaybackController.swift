@@ -245,6 +245,225 @@ struct PlaybackRecoveryState: Equatable, Sendable {
     }
 }
 
+struct GaplessAudioFormat: Equatable, Sendable {
+    let sampleRate: Double
+    let channelCount: UInt32
+    let commonFormat: UInt
+    let isInterleaved: Bool
+
+    init(_ format: AVAudioFormat) {
+        sampleRate = format.sampleRate
+        channelCount = format.channelCount
+        commonFormat = UInt(format.commonFormat.rawValue)
+        isInterleaved = format.isInterleaved
+    }
+
+    init(
+        sampleRate: Double,
+        channelCount: UInt32,
+        commonFormat: UInt,
+        isInterleaved: Bool
+    ) {
+        self.sampleRate = sampleRate
+        self.channelCount = channelCount
+        self.commonFormat = commonFormat
+        self.isInterleaved = isInterleaved
+    }
+
+    func canSharePlayerNode(with other: Self) -> Bool {
+        abs(sampleRate - other.sampleRate) < 0.5
+            && channelCount == other.channelCount
+            && commonFormat == other.commonFormat
+            && isInterleaved == other.isInterleaved
+    }
+}
+
+enum GaplessPrerollPolicy {
+    static let leadTime: TimeInterval = 5
+
+    static func shouldPrepare(
+        remaining: TimeInterval,
+        alreadyPrepared: Bool,
+        leadTime: TimeInterval = leadTime
+    ) -> Bool {
+        !alreadyPrepared && remaining > 0 && remaining <= leadTime
+    }
+}
+
+enum CrossfadePolicy {
+    static let maximumDuration: TimeInterval = 12
+
+    static func effectiveDuration(
+        requestedDuration: TimeInterval,
+        currentRemaining: TimeInterval,
+        nextDuration: TimeInterval,
+        isSameAlbum: Bool,
+        disablesWithinAlbum: Bool,
+        formatsAreCompatible: Bool
+    ) -> TimeInterval {
+        guard formatsAreCompatible,
+              requestedDuration > 0,
+              !(disablesWithinAlbum && isSameAlbum) else {
+            return 0
+        }
+        return min(
+            max(requestedDuration, 0),
+            maximumDuration,
+            max(currentRemaining - 0.05, 0),
+            max(nextDuration - 0.05, 0)
+        )
+    }
+
+    static func gains(progress: Double) -> (outgoing: Float, incoming: Float) {
+        let clamped = min(max(progress, 0), 1)
+        return (
+            outgoing: Float(cos(clamped * .pi / 2)),
+            incoming: Float(sin(clamped * .pi / 2))
+        )
+    }
+}
+
+struct AudioSilenceAnalysis: Equatable, Sendable {
+    let leadingSilence: TimeInterval
+    let trailingSilence: TimeInterval
+
+    static let none = AudioSilenceAnalysis(leadingSilence: 0, trailingSilence: 0)
+}
+
+enum SilenceAnalysisPolicy {
+    static let maximumScanDuration: TimeInterval = 12
+    static let blockDuration: TimeInterval = 0.01
+    static let thresholdAmplitude = pow(10.0, -50.0 / 20.0)
+    static let safetyPadding: TimeInterval = 0.02
+
+    nonisolated static func silenceDuration(
+        rmsBlocks: [Double],
+        scannedDuration: TimeInterval,
+        direction: ScanDirection
+    ) -> TimeInterval {
+        guard scannedDuration > 0, !rmsBlocks.isEmpty else { return 0 }
+        let silentBlockCount: Int
+        switch direction {
+        case .leading:
+            silentBlockCount = rmsBlocks.firstIndex(where: { $0 > thresholdAmplitude })
+                ?? rmsBlocks.count
+        case .trailing:
+            if let lastAudible = rmsBlocks.lastIndex(where: { $0 > thresholdAmplitude }) {
+                silentBlockCount = rmsBlocks.count - lastAudible - 1
+            } else {
+                silentBlockCount = rmsBlocks.count
+            }
+        }
+        let detected = min(Double(silentBlockCount) * blockDuration, scannedDuration)
+        return max(detected - safetyPadding, 0)
+    }
+
+    enum ScanDirection: Sendable {
+        case leading
+        case trailing
+    }
+}
+
+enum AudioSilenceAnalyzer {
+    nonisolated static func analyze(url: URL) throws -> AudioSilenceAnalysis {
+        let file = try AVAudioFile(forReading: url)
+        let sampleRate = file.processingFormat.sampleRate
+        guard sampleRate > 0, file.length > 0 else { return .none }
+
+        let maximumFrames = AVAudioFramePosition(
+            SilenceAnalysisPolicy.maximumScanDuration * sampleRate
+        )
+        let scanFrames = min(file.length, maximumFrames)
+        let blockFrames = max(
+            AVAudioFrameCount(SilenceAnalysisPolicy.blockDuration * sampleRate),
+            1
+        )
+
+        let leadingBlocks = try rmsBlocks(
+            file: file,
+            startFrame: 0,
+            frameCount: scanFrames,
+            blockFrames: blockFrames
+        )
+        let trailingBlocks = try rmsBlocks(
+            file: file,
+            startFrame: max(file.length - scanFrames, 0),
+            frameCount: scanFrames,
+            blockFrames: blockFrames
+        )
+        let scannedDuration = Double(scanFrames) / sampleRate
+        return AudioSilenceAnalysis(
+            leadingSilence: SilenceAnalysisPolicy.silenceDuration(
+                rmsBlocks: leadingBlocks,
+                scannedDuration: scannedDuration,
+                direction: .leading
+            ),
+            trailingSilence: SilenceAnalysisPolicy.silenceDuration(
+                rmsBlocks: trailingBlocks,
+                scannedDuration: scannedDuration,
+                direction: .trailing
+            )
+        )
+    }
+
+    private nonisolated static func rmsBlocks(
+        file: AVAudioFile,
+        startFrame: AVAudioFramePosition,
+        frameCount: AVAudioFramePosition,
+        blockFrames: AVAudioFrameCount
+    ) throws -> [Double] {
+        file.framePosition = startFrame
+        var remaining = frameCount
+        var blocks: [Double] = []
+        var squareSum = 0.0
+        var samplesInBlock = 0
+        let channelCount = Int(file.processingFormat.channelCount)
+        let chunkCapacity: AVAudioFrameCount = 8_192
+
+        while remaining > 0 {
+            let requested = AVAudioFrameCount(
+                min(remaining, AVAudioFramePosition(chunkCapacity))
+            )
+            guard let buffer = AVAudioPCMBuffer(
+                pcmFormat: file.processingFormat,
+                frameCapacity: requested
+            ) else { break }
+            try file.read(into: buffer, frameCount: requested)
+            let framesRead = Int(buffer.frameLength)
+            guard framesRead > 0, channelCount > 0,
+                  let channels = buffer.floatChannelData else { break }
+
+            for frame in 0..<framesRead {
+                if buffer.format.isInterleaved {
+                    for channel in 0..<channelCount {
+                        let sample = Double(channels[0][frame * channelCount + channel])
+                        squareSum += sample * sample
+                        samplesInBlock += 1
+                    }
+                } else {
+                    for channel in 0..<channelCount {
+                        let sample = Double(channels[channel][frame])
+                        squareSum += sample * sample
+                        samplesInBlock += 1
+                    }
+                }
+
+                if samplesInBlock >= Int(blockFrames) * channelCount {
+                    blocks.append(sqrt(squareSum / Double(samplesInBlock)))
+                    squareSum = 0
+                    samplesInBlock = 0
+                }
+            }
+            remaining -= AVAudioFramePosition(framesRead)
+        }
+
+        if samplesInBlock > 0 {
+            blocks.append(sqrt(squareSum / Double(samplesInBlock)))
+        }
+        return blocks
+    }
+}
+
 // AVAudioEngine invokes tap blocks on its realtime messenger queue. Creating this
 // block outside PlaybackController prevents it from inheriting MainActor isolation.
 func makeStereoMeterTapBlock(
@@ -263,12 +482,14 @@ final class PlaybackController: ObservableObject {
     private static let effectSettingsKey = "audio.effectSettings.v1"
     private static let effectsBypassedKey = "audio.effectsBypassed"
     private static let playbackModeKey = "audio.playbackMode.v1"
+    private static let crossfadeDurationKey = "audio.crossfadeDuration.v1"
+    private static let disableCrossfadeWithinAlbumKey = "audio.disableCrossfadeWithinAlbum.v1"
 
     @Published private(set) var currentTrack: Track?
     @Published private(set) var isPlaying = false
     @Published private(set) var elapsed: TimeInterval = 0
     @Published var volume: Double = 0.8 {
-        didSet { playerNode.volume = Float(volume) }
+        didSet { sourceMixerNode.outputVolume = Float(volume) }
     }
     @Published private(set) var errorMessage: String?
     @Published private(set) var sourceSampleRate: Double = 0
@@ -285,11 +506,38 @@ final class PlaybackController: ObservableObject {
             UserDefaults.standard.set(automaticUpsampling, forKey: Self.automaticUpsamplingKey)
         }
     }
+    @Published var crossfadeDuration: Double {
+        didSet {
+            let clamped = min(max(crossfadeDuration, 0), CrossfadePolicy.maximumDuration)
+            if crossfadeDuration != clamped {
+                crossfadeDuration = clamped
+                return
+            }
+            UserDefaults.standard.set(clamped, forKey: Self.crossfadeDurationKey)
+        }
+    }
+    @Published var disableCrossfadeWithinAlbum: Bool {
+        didSet {
+            UserDefaults.standard.set(
+                disableCrossfadeWithinAlbum,
+                forKey: Self.disableCrossfadeWithinAlbumKey
+            )
+        }
+    }
 
     let playbackEventPublisher = PassthroughSubject<PlaybackEvent, Never>()
 
     private let engine = AVAudioEngine()
-    private let playerNode = AVAudioPlayerNode()
+    private let primaryPlayerNode = AVAudioPlayerNode()
+    private let secondaryPlayerNode = AVAudioPlayerNode()
+    private let sourceMixerNode = AVAudioMixerNode()
+    private var activePlayerIndex = 0
+    private var playerNode: AVAudioPlayerNode {
+        activePlayerIndex == 0 ? primaryPlayerNode : secondaryPlayerNode
+    }
+    private var standbyPlayerNode: AVAudioPlayerNode {
+        activePlayerIndex == 0 ? secondaryPlayerNode : primaryPlayerNode
+    }
     private let effectPipeline: [AudioEffectNode]
     private let outputManager = AudioOutputManager()
     private var audioFile: AVAudioFile?
@@ -300,12 +548,29 @@ final class PlaybackController: ObservableObject {
     private var lastPublishedPositionBucket = -1
     private var playbackSession = PlaybackSessionTracker()
     private var timer: Timer?
+    private var crossfadeTimer: Timer?
     private var isMeterTapInstalled = false
     private let meterThrottle = StereoMeterThrottle()
     private var recoveryObservations = Set<AnyCancellable>()
     private var recoveryTask: Task<Void, Never>?
     private var recoveryState = PlaybackRecoveryState()
     private var suppressConfigurationRecoveryUntil: TimeInterval = 0
+    private var activeTrackNodeStartSampleTime: AVAudioFramePosition = 0
+    private var prerolledTrack: PrerolledTrack?
+    private var silenceAnalyses: [URL: AudioSilenceAnalysis] = [:]
+    private var silenceAnalysisTasks: [URL: Task<Void, Never>] = [:]
+
+    private struct PrerolledTrack {
+        let track: Track
+        let file: AVAudioFile
+        let generation: UUID
+        let nodeStartSampleTime: AVAudioFramePosition
+        let playbackNode: AVAudioPlayerNode
+        let crossfadeDuration: TimeInterval
+        let crossfadeStartHostTime: UInt64?
+        let scheduledStartFrame: AVAudioFramePosition
+        let outgoingTransitionPosition: TimeInterval
+    }
 
     init() {
         let defaultSettings = AudioEffectModuleRegistry.makeDefaultSettings()
@@ -315,10 +580,21 @@ final class PlaybackController: ObservableObject {
         playbackMode = UserDefaults.standard.string(forKey: Self.playbackModeKey)
             .flatMap(PlaybackMode.init(rawValue:)) ?? .sequential
         automaticUpsampling = UserDefaults.standard.object(forKey: Self.automaticUpsamplingKey) as? Bool ?? true
-        engine.attach(playerNode)
+        crossfadeDuration = min(
+            max(UserDefaults.standard.double(forKey: Self.crossfadeDurationKey), 0),
+            CrossfadePolicy.maximumDuration
+        )
+        disableCrossfadeWithinAlbum = UserDefaults.standard.object(
+            forKey: Self.disableCrossfadeWithinAlbumKey
+        ) as? Bool ?? true
+        engine.attach(primaryPlayerNode)
+        engine.attach(secondaryPlayerNode)
+        engine.attach(sourceMixerNode)
         effectPipeline.forEach { $0.attach(to: engine) }
         effectSettings.forEach(applyEffectSetting)
-        playerNode.volume = Float(volume)
+        primaryPlayerNode.volume = 1
+        secondaryPlayerNode.volume = 1
+        sourceMixerNode.outputVolume = Float(volume)
         observeSystemAudioEvents()
     }
 
@@ -510,6 +786,7 @@ final class PlaybackController: ObservableObject {
             sourceSampleRate = sourceRate
             outputSampleRate = configuration?.actualRate ?? sourceRate
             currentTrack = track
+            primeTransitionAnalyses(startingWith: track)
             let fileDuration = Double(file.length) / file.processingFormat.sampleRate
             elapsed = min(max(position, 0), max(fileDuration - 0.01, 0))
 
@@ -522,6 +799,7 @@ final class PlaybackController: ObservableObject {
                 isPlaying = true
                 startTimer()
                 beginPlaybackSessionIfNeeded()
+                prepareNextTrackIfNeeded()
             }
             errorMessage = nil
             publishQueueState(force: true)
@@ -540,15 +818,23 @@ final class PlaybackController: ObservableObject {
         if let currentID = currentTrack?.id,
            let updatedCurrent = playbackQueue.first(where: { $0.id == currentID }) {
             currentTrack = updatedCurrent
+            primeTransitionAnalyses(startingWith: updatedCurrent)
         }
         publishQueueState(force: true)
     }
 
     func togglePlayback() {
         guard audioFile != nil else { return }
-        if playerNode.isPlaying {
+        if isPlaying {
             elapsed = currentElapsed()
-            playerNode.pause()
+            stopPlayerNodes()
+            if let audioFile {
+                let frame = min(
+                    AVAudioFramePosition(elapsed * audioFile.processingFormat.sampleRate),
+                    audioFile.length
+                )
+                schedule(fromFrame: frame)
+            }
             isPlaying = false
             stereoLevels = .silent
             stopTimer()
@@ -556,7 +842,7 @@ final class PlaybackController: ObservableObject {
         } else {
             do {
                 if elapsed >= duration - 0.01 {
-                    playerNode.stop()
+                    stopPlayerNodes()
                     schedule(fromFrame: 0)
                     elapsed = 0
                 }
@@ -566,6 +852,7 @@ final class PlaybackController: ObservableObject {
                 errorMessage = nil
                 startTimer()
                 beginPlaybackSessionIfNeeded()
+                prepareNextTrackIfNeeded()
                 publishQueueState(force: true)
             } catch {
                 isPlaying = false
@@ -619,7 +906,7 @@ final class PlaybackController: ObservableObject {
             audioFile.length
         )
 
-        playerNode.stop()
+        stopPlayerNodes()
         stereoLevels = .silent
         if frame >= audioFile.length {
             playbackGeneration = UUID()
@@ -636,6 +923,7 @@ final class PlaybackController: ObservableObject {
                 if !engine.isRunning { try engine.start() }
                 playerNode.play()
                 startTimer()
+                prepareNextTrackIfNeeded()
             } catch {
                 isPlaying = false
                 errorMessage = error.localizedDescription
@@ -647,15 +935,31 @@ final class PlaybackController: ObservableObject {
     private func configureEngine(for file: AVAudioFile) throws {
         engine.stop()
         removeMeterTapIfNeeded()
-        engine.disconnectNodeOutput(playerNode)
+        engine.disconnectNodeOutput(primaryPlayerNode)
+        engine.disconnectNodeOutput(secondaryPlayerNode)
+        engine.disconnectNodeOutput(sourceMixerNode)
         for effect in effectPipeline {
             effect.nodes.forEach { engine.disconnectNodeOutput($0) }
         }
         engine.disconnectNodeOutput(engine.mainMixerNode)
 
-        // Keep the player at the file's native rate. The mixer performs the single
-        // sample-rate conversion into the actual hardware output format.
-        var upstream: AVAudioNode = playerNode
+        // Both player nodes share a source mixer so compatible tracks can overlap
+        // without rebuilding the DSP graph at the song boundary.
+        engine.connect(
+            primaryPlayerNode,
+            to: sourceMixerNode,
+            fromBus: 0,
+            toBus: 0,
+            format: file.processingFormat
+        )
+        engine.connect(
+            secondaryPlayerNode,
+            to: sourceMixerNode,
+            fromBus: 0,
+            toBus: 1,
+            format: file.processingFormat
+        )
+        var upstream: AVAudioNode = sourceMixerNode
         for effect in effectPipeline {
             engine.connect(upstream, to: effect.inputNode, format: file.processingFormat)
             effect.connectInternalNodes(engine: engine, format: file.processingFormat)
@@ -704,7 +1008,7 @@ final class PlaybackController: ObservableObject {
         let position = isPlaying ? currentElapsed() : elapsed
         recoveryState.prepareForSleep(position: position, isPlaying: isPlaying)
         elapsed = position
-        playerNode.pause()
+        stopPlayerNodes()
         isPlaying = false
         stereoLevels = .silent
         stopTimer()
@@ -744,7 +1048,7 @@ final class PlaybackController: ObservableObject {
         guard let audioFile else { return }
         do {
             suppressConfigurationRecovery()
-            playerNode.stop()
+            stopPlayerNodes()
             engine.stop()
             stopTimer()
             isPlaying = false
@@ -769,6 +1073,7 @@ final class PlaybackController: ObservableObject {
                 isPlaying = true
                 startTimer()
                 beginPlaybackSessionIfNeeded()
+                prepareNextTrackIfNeeded()
             }
             errorMessage = nil
             publishQueueState(force: true)
@@ -819,13 +1124,16 @@ final class PlaybackController: ObservableObject {
     }
 
     private func schedule(fromFrame frame: AVAudioFramePosition) {
-        guard let audioFile else { return }
+        guard let audioFile, let currentTrack else { return }
+        stopPlayerNodes()
         playbackGeneration = UUID()
         let generation = playbackGeneration
         scheduledStartFrame = frame
+        activeTrackNodeStartSampleTime = 0
+        prerolledTrack = nil
         let remaining = max(0, audioFile.length - frame)
         guard remaining > 0 else {
-            didFinishPlaying(generation: generation)
+            didFinishPlaying(generation: generation, finishedTrackID: currentTrack.id)
             return
         }
         let frameCount = AVAudioFrameCount(min(remaining, AVAudioFramePosition(UInt32.max)))
@@ -837,7 +1145,10 @@ final class PlaybackController: ObservableObject {
             completionCallbackType: .dataPlayedBack
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.didFinishPlaying(generation: generation)
+                self?.didFinishPlaying(
+                    generation: generation,
+                    finishedTrackID: currentTrack.id
+                )
             }
         }
     }
@@ -849,13 +1160,22 @@ final class PlaybackController: ObservableObject {
             return elapsed
         }
         let renderedFrames = max(0, playerTime.sampleTime)
-        let totalFrames = scheduledStartFrame + renderedFrames
+        let framesInCurrentTrack = max(0, renderedFrames - activeTrackNodeStartSampleTime)
+        let totalFrames = scheduledStartFrame + framesInCurrentTrack
         return min(Double(totalFrames) / audioFile.processingFormat.sampleRate, duration)
     }
 
-    private func didFinishPlaying(generation: UUID) {
-        guard generation == playbackGeneration else { return }
+    private func didFinishPlaying(generation: UUID, finishedTrackID: Track.ID) {
+        guard generation == playbackGeneration,
+              currentTrack?.id == finishedTrackID else { return }
         finishPlaybackSession(kind: .completed, position: duration)
+
+        if let prepared = prerolledTrack,
+           prepared.generation == generation {
+            advanceToPrerolledTrack(prepared)
+            return
+        }
+
         if let currentTrack,
            let nextTrack = PlaybackQueueNavigator.nextTrack(
                after: currentTrack,
@@ -872,11 +1192,188 @@ final class PlaybackController: ObservableObject {
         publishQueueState(force: true)
     }
 
+    private func analysisKey(for url: URL) -> URL {
+        url.standardizedFileURL
+    }
+
+    private func primeTransitionAnalyses(startingWith track: Track) {
+        primeSilenceAnalysis(for: track)
+        if let nextTrack = PlaybackQueueNavigator.nextTrack(
+            after: track,
+            in: playbackQueue,
+            mode: playbackMode
+        ) {
+            primeSilenceAnalysis(for: nextTrack)
+        }
+    }
+
+    private func primeSilenceAnalysis(for track: Track) {
+        let key = analysisKey(for: track.fileURL)
+        guard silenceAnalyses[key] == nil, silenceAnalysisTasks[key] == nil else { return }
+        silenceAnalysisTasks[key] = Task { [weak self] in
+            let analysis = await Task.detached(priority: .utility) {
+                (try? AudioSilenceAnalyzer.analyze(url: key)) ?? .none
+            }.value
+            guard !Task.isCancelled, let self else { return }
+            silenceAnalyses[key] = analysis
+            silenceAnalysisTasks[key] = nil
+            prepareNextTrackIfNeeded()
+        }
+    }
+
+    private func prepareNextTrackIfNeeded() {
+        guard isPlaying, let currentTrack, let audioFile else { return }
+        let remaining = duration - currentElapsed()
+        let preparationLeadTime = max(
+            GaplessPrerollPolicy.leadTime,
+            min(crossfadeDuration, CrossfadePolicy.maximumDuration)
+                + SilenceAnalysisPolicy.maximumScanDuration + 1
+        )
+        guard GaplessPrerollPolicy.shouldPrepare(
+                  remaining: remaining,
+                  alreadyPrepared: prerolledTrack != nil,
+                  leadTime: preparationLeadTime
+              ),
+              let nextTrack = PlaybackQueueNavigator.nextTrack(
+                  after: currentTrack,
+                  in: playbackQueue,
+                  mode: playbackMode
+              ),
+              let nextFile = try? AVAudioFile(forReading: nextTrack.fileURL) else {
+            return
+        }
+
+        let formatsAreCompatible = GaplessAudioFormat(audioFile.processingFormat)
+            .canSharePlayerNode(with: GaplessAudioFormat(nextFile.processingFormat))
+        guard formatsAreCompatible else { return }
+        let usesSilenceAwareCrossfade = crossfadeDuration > 0
+            && !(disableCrossfadeWithinAlbum && currentTrack.albumID == nextTrack.albumID)
+        let currentAnalysis: AudioSilenceAnalysis
+        let nextAnalysis: AudioSilenceAnalysis
+        if usesSilenceAwareCrossfade {
+            guard let cachedCurrent = silenceAnalyses[analysisKey(for: currentTrack.fileURL)],
+                  let cachedNext = silenceAnalyses[analysisKey(for: nextTrack.fileURL)] else {
+                primeSilenceAnalysis(for: currentTrack)
+                primeSilenceAnalysis(for: nextTrack)
+                return
+            }
+            currentAnalysis = cachedCurrent
+            nextAnalysis = cachedNext
+        } else {
+            currentAnalysis = .none
+            nextAnalysis = .none
+        }
+        let nextDuration = Double(nextFile.length) / nextFile.processingFormat.sampleRate
+        let audibleCurrentRemaining = max(remaining - currentAnalysis.trailingSilence, 0)
+        let audibleNextDuration = max(
+            nextDuration - nextAnalysis.leadingSilence - nextAnalysis.trailingSilence,
+            0
+        )
+        let effectiveCrossfadeDuration = CrossfadePolicy.effectiveDuration(
+            requestedDuration: crossfadeDuration,
+            currentRemaining: audibleCurrentRemaining,
+            nextDuration: audibleNextDuration,
+            isSameAlbum: currentTrack.albumID == nextTrack.albumID,
+            disablesWithinAlbum: disableCrossfadeWithinAlbum,
+            formatsAreCompatible: formatsAreCompatible
+        )
+
+        let generation = playbackGeneration
+        let nodeStartSampleTime = activeTrackNodeStartSampleTime
+            + max(0, audioFile.length - scheduledStartFrame)
+        let nextStartFrame = effectiveCrossfadeDuration > 0
+            ? min(
+                AVAudioFramePosition(
+                    nextAnalysis.leadingSilence * nextFile.processingFormat.sampleRate
+                ),
+                nextFile.length
+            )
+            : 0
+        let frameCount = AVAudioFrameCount(
+            min(
+                max(nextFile.length - nextStartFrame, 0),
+                AVAudioFramePosition(UInt32.max)
+            )
+        )
+        guard frameCount > 0 else { return }
+
+        let targetNode: AVAudioPlayerNode
+        let crossfadeStartHostTime: UInt64?
+        if effectiveCrossfadeDuration > 0 {
+            targetNode = standbyPlayerNode
+            targetNode.stop()
+            targetNode.volume = 0
+            crossfadeStartHostTime = mach_absolute_time()
+                + AVAudioTime.hostTime(
+                    forSeconds: max(audibleCurrentRemaining - effectiveCrossfadeDuration, 0)
+                )
+        } else {
+            targetNode = playerNode
+            crossfadeStartHostTime = nil
+        }
+
+        prerolledTrack = PrerolledTrack(
+            track: nextTrack,
+            file: nextFile,
+            generation: generation,
+            nodeStartSampleTime: effectiveCrossfadeDuration > 0 ? 0 : nodeStartSampleTime,
+            playbackNode: targetNode,
+            crossfadeDuration: effectiveCrossfadeDuration,
+            crossfadeStartHostTime: crossfadeStartHostTime,
+            scheduledStartFrame: nextStartFrame,
+            outgoingTransitionPosition: max(duration - currentAnalysis.trailingSilence, 0)
+        )
+        targetNode.scheduleSegment(
+            nextFile,
+            startingFrame: nextStartFrame,
+            frameCount: frameCount,
+            at: nil,
+            completionCallbackType: .dataPlayedBack
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.didFinishPlaying(
+                    generation: generation,
+                    finishedTrackID: nextTrack.id
+                )
+            }
+        }
+        if let crossfadeStartHostTime {
+            targetNode.play(at: AVAudioTime(hostTime: crossfadeStartHostTime))
+            startCrossfadeTimer()
+        }
+    }
+
+    private func advanceToPrerolledTrack(_ prepared: PrerolledTrack) {
+        stopCrossfadeTimer()
+        let outgoingNode = playerNode
+        let changesPlayerNode = prepared.playbackNode !== outgoingNode
+        prerolledTrack = nil
+        if changesPlayerNode {
+            outgoingNode.stop()
+            activePlayerIndex = activePlayerIndex == 0 ? 1 : 0
+        }
+        primaryPlayerNode.volume = 1
+        secondaryPlayerNode.volume = 1
+        audioFile = prepared.file
+        currentTrack = prepared.track
+        primeTransitionAnalyses(startingWith: prepared.track)
+        sourceSampleRate = prepared.file.processingFormat.sampleRate
+        scheduledStartFrame = prepared.scheduledStartFrame
+        activeTrackNodeStartSampleTime = changesPlayerNode ? 0 : prepared.nodeStartSampleTime
+        elapsed = currentElapsed()
+        errorMessage = nil
+        beginPlaybackSessionIfNeeded()
+        publishQueueState(force: true)
+        prepareNextTrackIfNeeded()
+    }
+
     private func stopCurrentPlayback() {
         recoveryTask?.cancel()
         recoveryTask = nil
         playbackGeneration = UUID()
-        playerNode.stop()
+        prerolledTrack = nil
+        activeTrackNodeStartSampleTime = 0
+        stopPlayerNodes(resetActivePlayer: true)
         engine.stop()
         stopTimer()
         audioFile = nil
@@ -885,6 +1382,60 @@ final class PlaybackController: ObservableObject {
         sourceSampleRate = 0
         outputSampleRate = 0
         stereoLevels = .silent
+    }
+
+    private func stopPlayerNodes(resetActivePlayer: Bool = false) {
+        stopCrossfadeTimer()
+        primaryPlayerNode.stop()
+        secondaryPlayerNode.stop()
+        primaryPlayerNode.volume = 1
+        secondaryPlayerNode.volume = 1
+        if resetActivePlayer { activePlayerIndex = 0 }
+        prerolledTrack = nil
+    }
+
+    private func updateCrossfadeVolumes() {
+        guard let prepared = prerolledTrack,
+              prepared.crossfadeDuration > 0,
+              let startHostTime = prepared.crossfadeStartHostTime else { return }
+        let now = mach_absolute_time()
+        guard now >= startHostTime else { return }
+        let elapsedHostTime = now - startHostTime
+        let progress = AVAudioTime.seconds(forHostTime: elapsedHostTime)
+            / prepared.crossfadeDuration
+        let gains = CrossfadePolicy.gains(progress: progress)
+        playerNode.volume = gains.outgoing
+        prepared.playbackNode.volume = gains.incoming
+        if progress >= 1 {
+            finishPlaybackSession(
+                kind: .completed,
+                position: prepared.outgoingTransitionPosition
+            )
+            advanceToPrerolledTrack(prepared)
+        }
+    }
+
+    private func startCrossfadeTimer() {
+        stopCrossfadeTimer()
+        crossfadeTimer = Timer.scheduledTimer(
+            timeInterval: 1.0 / 60.0,
+            target: self,
+            selector: #selector(crossfadeTick),
+            userInfo: nil,
+            repeats: true
+        )
+        if let crossfadeTimer {
+            RunLoop.main.add(crossfadeTimer, forMode: .common)
+        }
+    }
+
+    private func stopCrossfadeTimer() {
+        crossfadeTimer?.invalidate()
+        crossfadeTimer = nil
+    }
+
+    @objc private func crossfadeTick() {
+        updateCrossfadeVolumes()
     }
 
     private func beginPlaybackSessionIfNeeded() {
@@ -964,6 +1515,7 @@ final class PlaybackController: ObservableObject {
     @objc private func tick() {
         elapsed = currentElapsed()
         publishQueueState()
+        prepareNextTrackIfNeeded()
     }
 
     private func editQueue(_ mutation: (inout [Track]) -> Void) {

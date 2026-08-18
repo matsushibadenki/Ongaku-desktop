@@ -201,7 +201,15 @@
 "status.folderNoFiles" = "選択したフォルダに対応音声ファイルが見つかりませんでした。";
 "status.folderRegistered" = "%d曲を登録し、%d曲の参照先を選択したフォルダへ更新しました。";
 "settings.sidebar.general" = "一般";
+"settings.sidebar.playback" = "再生";
 "settings.sidebar.storage" = "ストレージ";
+"settings.playback.title" = "再生";
+"settings.playback.subtitle" = "曲間の切り替え方法を設定します。";
+"settings.playback.crossfade.title" = "クロスフェード";
+"settings.playback.crossfade.description" = "異なるアルバムの曲を重ねながら滑らかに切り替えます。0秒ではギャップレス再生を使用します。";
+"settings.playback.crossfade.value" = "%.1f秒";
+"settings.playback.albumGapless.title" = "アルバム内はギャップレスを優先";
+"settings.playback.albumGapless.description" = "同じアルバムの連続曲ではクロスフェードせず、収録順の曲間を保ちます。";
 "settings.general.title" = "一般";
 "settings.general.subtitle" = "Ongakuの表示と動作を設定します。";
 "settings.language.title" = "表示言語";

@@ -201,7 +201,15 @@
 "status.folderNoFiles" = "所选文件夹中未找到支持的音频文件。";
 "status.folderRegistered" = "已注册%d首歌曲，并将%d首的引用更新到所选文件夹。";
 "settings.sidebar.general" = "通用";
+"settings.sidebar.playback" = "播放";
 "settings.sidebar.storage" = "存储";
+"settings.playback.title" = "播放";
+"settings.playback.subtitle" = "设置歌曲之间的过渡方式。";
+"settings.playback.crossfade.title" = "交叉淡化";
+"settings.playback.crossfade.description" = "重叠播放不同专辑的歌曲，以实现平滑过渡。设为0秒时使用无缝播放。";
+"settings.playback.crossfade.value" = "%.1f秒";
+"settings.playback.albumGapless.title" = "专辑内优先无缝播放";
+"settings.playback.albumGapless.description" = "同一专辑的连续歌曲不使用交叉淡化，以保留原有曲目衔接。";
 "settings.general.title" = "通用";
 "settings.general.subtitle" = "设置Ongaku的显示方式和行为。";
 "settings.language.title" = "显示语言";

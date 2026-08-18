@@ -201,7 +201,15 @@
 "status.folderNoFiles" = "No supported audio files were found in the selected folder.";
 "status.folderRegistered" = "Indexed %d tracks and updated %d references to the selected folder.";
 "settings.sidebar.general" = "General";
+"settings.sidebar.playback" = "Playback";
 "settings.sidebar.storage" = "Storage";
+"settings.playback.title" = "Playback";
+"settings.playback.subtitle" = "Choose how Ongaku transitions between songs.";
+"settings.playback.crossfade.title" = "Crossfade";
+"settings.playback.crossfade.description" = "Overlap songs from different albums for a smooth transition. At zero seconds, Ongaku uses gapless playback.";
+"settings.playback.crossfade.value" = "%.1f sec";
+"settings.playback.albumGapless.title" = "Prefer gapless within albums";
+"settings.playback.albumGapless.description" = "Do not crossfade consecutive songs from the same album, preserving the intended track boundaries.";
 "settings.general.title" = "General";
 "settings.general.subtitle" = "Choose how Ongaku appears and behaves.";
 "settings.language.title" = "Display language";
