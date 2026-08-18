@@ -25,6 +25,25 @@ struct ApplicationSettingsTests {
         #expect(settings.selectedAppearance.colorScheme == nil)
     }
 
+    @Test("Player meter style and backlight persist")
+    @MainActor
+    func playerMeterPersistence() {
+        let suiteName = "OngakuDesktopTests.PlayerMeter.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = PlayerMeterSettings(defaults: defaults)
+        #expect(settings.style == .spectrum)
+        #expect(settings.backlight == .cyan)
+
+        settings.style = .vu
+        settings.backlight = .orange
+
+        let restored = PlayerMeterSettings(defaults: defaults)
+        #expect(restored.style == .vu)
+        #expect(restored.backlight == .orange)
+    }
+
     @Test("Mini Player restores the original window frame")
     @MainActor
     func miniPlayerWindowRestoration() async throws {

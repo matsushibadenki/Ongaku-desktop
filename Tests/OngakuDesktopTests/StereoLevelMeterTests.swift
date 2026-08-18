@@ -1,19 +1,20 @@
 @preconcurrency import AVFoundation
 @testable import OngakuDesktop
 import Foundation
+import SwiftUI
 import Testing
 
-private final class CapturedStereoLevels: @unchecked Sendable {
+private final class CapturedAudioVisualization: @unchecked Sendable {
     private let lock = NSLock()
-    private var stored: StereoLevels?
+    private var stored: AudioVisualizationSnapshot?
 
-    func store(_ levels: StereoLevels) {
+    func store(_ snapshot: AudioVisualizationSnapshot) {
         lock.lock()
-        stored = levels
+        stored = snapshot
         lock.unlock()
     }
 
-    func load() -> StereoLevels? {
+    func load() -> AudioVisualizationSnapshot? {
         lock.lock()
         defer { lock.unlock() }
         return stored
@@ -38,6 +39,23 @@ private final class StereoTapInvocation: @unchecked Sendable {
 
 @Suite("Stereo level meter")
 struct StereoLevelMeterTests {
+    @Test("VU meter renders at the player-slot size")
+    @MainActor
+    func vuMeterRendering() throws {
+        let renderer = ImageRenderer(
+            content: ChannelVUMeterView(
+                channel: "L",
+                level: 0.76,
+                backlight: .cyan
+            )
+            .frame(width: 280, height: 80)
+        )
+        renderer.scale = 2
+
+        let image = try #require(renderer.nsImage)
+        #expect(image.size == NSSize(width: 280, height: 80))
+    }
+
     @Test("Silence stays at the bottom of the meter")
     func silence() {
         #expect(StereoLevelMath.normalizedRMS([Float](repeating: 0, count: 128)) == 0)
@@ -57,6 +75,45 @@ struct StereoLevelMeterTests {
         #expect(loud < 1)
     }
 
+    @Test("Left and right spectra resolve different frequency bands")
+    func stereoSpectrum() throws {
+        let sampleRate = 48_000.0
+        let format = try #require(
+            AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)
+        )
+        let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 2_048))
+        buffer.frameLength = 2_048
+        let channels = try #require(buffer.floatChannelData)
+        for frame in 0..<Int(buffer.frameLength) {
+            let time = Double(frame) / sampleRate
+            channels[0][frame] = Float(sin(2 * .pi * 220 * time) * 0.8)
+            channels[1][frame] = Float(sin(2 * .pi * 6_000 * time) * 0.8)
+        }
+
+        let spectrum = SpectrumMath.measure(buffer)
+        let leftPeak = try #require(spectrum.left.indices.max(by: {
+            spectrum.left[$0] < spectrum.left[$1]
+        }))
+        let rightPeak = try #require(spectrum.right.indices.max(by: {
+            spectrum.right[$0] < spectrum.right[$1]
+        }))
+
+        #expect(spectrum.left.count == StereoSpectrum.bandCount)
+        #expect(spectrum.right.count == StereoSpectrum.bandCount)
+        #expect(leftPeak < rightPeak)
+        #expect(spectrum.left[leftPeak] > 0.5)
+        #expect(spectrum.right[rightPeak] > 0.5)
+    }
+
+    @Test("Spectrum smoothing attacks faster than it releases")
+    func spectrumSmoothing() {
+        let attack = SpectrumMath.smoothed(current: [0], target: [1])[0]
+        let release = SpectrumMath.smoothed(current: [1], target: [0])[0]
+
+        #expect(attack == 0.72)
+        #expect(release == 0.8)
+    }
+
     @Test("The audio tap runs without inheriting MainActor isolation")
     func tapIsNonisolated() throws {
         let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2))
@@ -68,9 +125,9 @@ struct StereoLevelMeterTests {
             channels[1][frame] = 0.25
         }
 
-        let captured = CapturedStereoLevels()
-        let tap = makeStereoMeterTapBlock(throttle: StereoMeterThrottle()) { levels in
-            captured.store(levels)
+        let captured = CapturedAudioVisualization()
+        let tap = makeStereoMeterTapBlock(throttle: StereoMeterThrottle()) { snapshot in
+            captured.store(snapshot)
         }
         let invocation = StereoTapInvocation(
             tap: tap,
@@ -84,8 +141,9 @@ struct StereoLevelMeterTests {
         }
 
         #expect(finished.wait(timeout: .now() + 2) == .success)
-        let levels = try #require(captured.load())
-        #expect(levels.left > levels.right)
+        let snapshot = try #require(captured.load())
+        #expect(snapshot.levels.left > snapshot.levels.right)
+        #expect(snapshot.spectrum.left.count == StereoSpectrum.bandCount)
     }
 }
 

@@ -210,6 +210,16 @@
 "settings.playback.crossfade.value" = "%.1f秒";
 "settings.playback.albumGapless.title" = "アルバム内はギャップレスを優先";
 "settings.playback.albumGapless.description" = "同じアルバムの連続曲ではクロスフェードせず、収録順の曲間を保ちます。";
+"settings.meter.title" = "プレーヤーメーター";
+"settings.meter.description" = "メインプレーヤーの左右に表示するメーターを選択します。";
+"settings.meter.style.spectrum" = "スペクトラム";
+"settings.meter.style.vu" = "VUメーター";
+"settings.meter.backlight.title" = "VUバックライト";
+"settings.meter.backlight.cyan" = "水色";
+"settings.meter.backlight.green" = "グリーン";
+"settings.meter.backlight.orange" = "オレンジ";
+"settings.meter.backlight.yellow" = "黄色";
+"meter.vu" = "VUメーター";
 "settings.general.title" = "一般";
 "settings.general.subtitle" = "Ongakuの表示と動作を設定します。";
 "settings.language.title" = "表示言語";

@@ -1,4 +1,5 @@
 @preconcurrency import AVFoundation
+import Accelerate
 import AppKit
 import Combine
 import Foundation
@@ -8,6 +9,23 @@ struct StereoLevels: Equatable, Sendable {
     var right: Double
 
     static let silent = StereoLevels(left: 0, right: 0)
+}
+
+struct StereoSpectrum: Equatable, Sendable {
+    static let bandCount = 48
+
+    var left: [Double]
+    var right: [Double]
+
+    static let silent = StereoSpectrum(
+        left: Array(repeating: 0, count: bandCount),
+        right: Array(repeating: 0, count: bandCount)
+    )
+}
+
+struct AudioVisualizationSnapshot: Equatable, Sendable {
+    let levels: StereoLevels
+    let spectrum: StereoSpectrum
 }
 
 enum PlaybackMode: String, CaseIterable, Identifiable, Sendable {
@@ -199,6 +217,153 @@ enum StereoLevelMath {
             ? normalizedRMS(channels[1], count: frameCount, stride: 1)
             : left
         return StereoLevels(left: left, right: right)
+    }
+}
+
+enum SpectrumMath {
+    private static let floorDecibels = -72.0
+
+    nonisolated static func normalizedBands(
+        samples: [Float],
+        sampleRate: Double,
+        bandCount: Int = StereoSpectrum.bandCount
+    ) -> [Double] {
+        guard samples.count >= 64, sampleRate > 0, bandCount > 0 else {
+            return Array(repeating: 0, count: max(bandCount, 0))
+        }
+        let transformSize = 1 << Int(floor(log2(Double(min(samples.count, 4_096)))))
+        let halfSize = transformSize / 2
+        let log2Size = vDSP_Length(log2(Double(transformSize)))
+        guard let setup = vDSP_create_fftsetup(log2Size, FFTRadix(kFFTRadix2)) else {
+            return Array(repeating: 0, count: bandCount)
+        }
+        defer { vDSP_destroy_fftsetup(setup) }
+
+        var window = [Float](repeating: 0, count: transformSize)
+        var windowed = [Float](repeating: 0, count: transformSize)
+        var real = [Float](repeating: 0, count: halfSize)
+        var imaginary = [Float](repeating: 0, count: halfSize)
+        var magnitudes = [Float](repeating: 0, count: halfSize)
+        let input = Array(samples.suffix(transformSize))
+        vDSP_hann_window(&window, vDSP_Length(transformSize), Int32(vDSP_HANN_NORM))
+        vDSP_vmul(input, 1, window, 1, &windowed, 1, vDSP_Length(transformSize))
+
+        windowed.withUnsafeBufferPointer { inputPointer in
+            real.withUnsafeMutableBufferPointer { realPointer in
+                imaginary.withUnsafeMutableBufferPointer { imaginaryPointer in
+                    guard let inputBase = inputPointer.baseAddress,
+                          let realBase = realPointer.baseAddress,
+                          let imaginaryBase = imaginaryPointer.baseAddress else { return }
+                    inputBase.withMemoryRebound(to: DSPComplex.self, capacity: halfSize) {
+                        complexPointer in
+                        var split = DSPSplitComplex(
+                            realp: realBase,
+                            imagp: imaginaryBase
+                        )
+                        vDSP_ctoz(
+                            complexPointer,
+                            2,
+                            &split,
+                            1,
+                            vDSP_Length(halfSize)
+                        )
+                        vDSP_fft_zrip(
+                            setup,
+                            &split,
+                            1,
+                            log2Size,
+                            FFTDirection(kFFTDirection_Forward)
+                        )
+                        vDSP_zvmags(
+                            &split,
+                            1,
+                            &magnitudes,
+                            1,
+                            vDSP_Length(halfSize)
+                        )
+                    }
+                }
+            }
+        }
+
+        let lowestFrequency = 50.0
+        let highestFrequency = min(18_000, sampleRate * 0.46)
+        guard highestFrequency > lowestFrequency else {
+            return Array(repeating: 0, count: bandCount)
+        }
+        let frequencyRatio = bandCount > 1
+            ? pow(highestFrequency / lowestFrequency, 1 / Double(bandCount - 1))
+            : 1
+        let frequencyResolution = sampleRate / Double(transformSize)
+        let scale = 2 / Double(transformSize)
+
+        return (0..<bandCount).map { band in
+            let center = lowestFrequency * pow(frequencyRatio, Double(band))
+            let edgeRatio = sqrt(frequencyRatio)
+            let lowerIndex = max(Int(floor(center / edgeRatio / frequencyResolution)), 1)
+            let upperIndex = min(
+                Int(ceil(center * edgeRatio / frequencyResolution)),
+                halfSize - 1
+            )
+            let peakPower = lowerIndex <= upperIndex
+                ? magnitudes[lowerIndex...upperIndex].max() ?? 0
+                : 0
+            let magnitude = max(sqrt(Double(peakPower)) * scale, 0.000_000_1)
+            let decibels = 20 * log10(magnitude)
+            return min(max((decibels - floorDecibels) / -floorDecibels, 0), 1)
+        }
+    }
+
+    nonisolated static func measure(_ buffer: AVAudioPCMBuffer) -> StereoSpectrum {
+        let frameCount = Int(buffer.frameLength)
+        let channelCount = Int(buffer.format.channelCount)
+        guard frameCount > 1, channelCount > 0,
+              let channels = buffer.floatChannelData else { return .silent }
+
+        let left = samples(
+            channels: channels,
+            frameCount: frameCount,
+            channelCount: channelCount,
+            channel: 0,
+            isInterleaved: buffer.format.isInterleaved
+        )
+        let right = channelCount > 1
+            ? samples(
+                channels: channels,
+                frameCount: frameCount,
+                channelCount: channelCount,
+                channel: 1,
+                isInterleaved: buffer.format.isInterleaved
+            )
+            : left
+        return StereoSpectrum(
+            left: normalizedBands(samples: left, sampleRate: buffer.format.sampleRate),
+            right: normalizedBands(samples: right, sampleRate: buffer.format.sampleRate)
+        )
+    }
+
+    nonisolated static func smoothed(
+        current: [Double],
+        target: [Double]
+    ) -> [Double] {
+        target.enumerated().map { index, value in
+            let existing = current.indices.contains(index) ? current[index] : 0
+            let response = value > existing ? 0.72 : 0.20
+            return existing + ((value - existing) * response)
+        }
+    }
+
+    private nonisolated static func samples(
+        channels: UnsafePointer<UnsafeMutablePointer<Float>>,
+        frameCount: Int,
+        channelCount: Int,
+        channel: Int,
+        isInterleaved: Bool
+    ) -> [Float] {
+        if isInterleaved {
+            return (0..<frameCount).map { channels[0][$0 * channelCount + channel] }
+        }
+        return Array(UnsafeBufferPointer(start: channels[channel], count: frameCount))
     }
 }
 
@@ -468,11 +633,14 @@ enum AudioSilenceAnalyzer {
 // block outside PlaybackController prevents it from inheriting MainActor isolation.
 func makeStereoMeterTapBlock(
     throttle: StereoMeterThrottle,
-    deliver: @escaping @Sendable (StereoLevels) -> Void
+    deliver: @escaping @Sendable (AudioVisualizationSnapshot) -> Void
 ) -> AVAudioNodeTapBlock {
     { buffer, _ in
         guard throttle.shouldEmit() else { return }
-        deliver(StereoLevelMath.measure(buffer))
+        deliver(AudioVisualizationSnapshot(
+            levels: StereoLevelMath.measure(buffer),
+            spectrum: SpectrumMath.measure(buffer)
+        ))
     }
 }
 
@@ -495,6 +663,7 @@ final class PlaybackController: ObservableObject {
     @Published private(set) var sourceSampleRate: Double = 0
     @Published private(set) var outputSampleRate: Double = 0
     @Published private(set) var stereoLevels = StereoLevels.silent
+    @Published private(set) var stereoSpectrum = StereoSpectrum.silent
     @Published private(set) var queueState = PlaybackQueueState()
     @Published private(set) var effectSettings: [RealtimeAudioEffectSetting]
     @Published private(set) var effectsBypassed: Bool
@@ -836,7 +1005,7 @@ final class PlaybackController: ObservableObject {
                 schedule(fromFrame: frame)
             }
             isPlaying = false
-            stereoLevels = .silent
+            clearAudioVisualization()
             stopTimer()
             publishQueueState(force: true)
         } else {
@@ -907,7 +1076,7 @@ final class PlaybackController: ObservableObject {
         )
 
         stopPlayerNodes()
-        stereoLevels = .silent
+        clearAudioVisualization()
         if frame >= audioFile.length {
             playbackGeneration = UUID()
             elapsed = duration
@@ -1010,7 +1179,7 @@ final class PlaybackController: ObservableObject {
         elapsed = position
         stopPlayerNodes()
         isPlaying = false
-        stereoLevels = .silent
+        clearAudioVisualization()
         stopTimer()
         publishQueueState(force: true)
     }
@@ -1052,7 +1221,7 @@ final class PlaybackController: ObservableObject {
             engine.stop()
             stopTimer()
             isPlaying = false
-            stereoLevels = .silent
+            clearAudioVisualization()
 
             let sourceRate = audioFile.processingFormat.sampleRate
             let configuration = automaticUpsampling
@@ -1090,9 +1259,9 @@ final class PlaybackController: ObservableObject {
     }
 
     private func installMeterTap() {
-        let deliver: @Sendable (StereoLevels) -> Void = { [weak self] levels in
+        let deliver: @Sendable (AudioVisualizationSnapshot) -> Void = { [weak self] snapshot in
             Task { @MainActor [weak self] in
-                self?.applyMeterLevels(levels)
+                self?.applyAudioVisualization(snapshot)
             }
         }
         let tapBlock = makeStereoMeterTapBlock(throttle: meterThrottle, deliver: deliver)
@@ -1111,16 +1280,31 @@ final class PlaybackController: ObservableObject {
         isMeterTapInstalled = false
     }
 
-    private func applyMeterLevels(_ incoming: StereoLevels) {
+    private func applyAudioVisualization(_ incoming: AudioVisualizationSnapshot) {
         stereoLevels = StereoLevels(
-            left: smoothedMeterLevel(current: stereoLevels.left, target: incoming.left),
-            right: smoothedMeterLevel(current: stereoLevels.right, target: incoming.right)
+            left: smoothedMeterLevel(current: stereoLevels.left, target: incoming.levels.left),
+            right: smoothedMeterLevel(current: stereoLevels.right, target: incoming.levels.right)
+        )
+        stereoSpectrum = StereoSpectrum(
+            left: SpectrumMath.smoothed(
+                current: stereoSpectrum.left,
+                target: incoming.spectrum.left
+            ),
+            right: SpectrumMath.smoothed(
+                current: stereoSpectrum.right,
+                target: incoming.spectrum.right
+            )
         )
     }
 
     private func smoothedMeterLevel(current: Double, target: Double) -> Double {
         let response = target > current ? 0.72 : 0.24
         return current + ((target - current) * response)
+    }
+
+    private func clearAudioVisualization() {
+        stereoLevels = .silent
+        stereoSpectrum = .silent
     }
 
     private func schedule(fromFrame frame: AVAudioFramePosition) {
@@ -1187,7 +1371,7 @@ final class PlaybackController: ObservableObject {
         }
         isPlaying = false
         elapsed = duration
-        stereoLevels = .silent
+        clearAudioVisualization()
         stopTimer()
         publishQueueState(force: true)
     }
@@ -1381,7 +1565,7 @@ final class PlaybackController: ObservableObject {
         elapsed = 0
         sourceSampleRate = 0
         outputSampleRate = 0
-        stereoLevels = .silent
+        clearAudioVisualization()
     }
 
     private func stopPlayerNodes(resetActivePlayer: Bool = false) {

@@ -24,6 +24,7 @@ struct OngakuDesktopApp: App {
     @StateObject private var library: LibraryStore
     @StateObject private var language: AppLanguageSettings
     @StateObject private var appearance: AppAppearanceSettings
+    @StateObject private var meterSettings: PlayerMeterSettings
     @StateObject private var windowPresentation = WindowPresentationController()
     @StateObject private var player: PlaybackController
     @StateObject private var systemNowPlaying: SystemNowPlayingController
@@ -34,6 +35,7 @@ struct OngakuDesktopApp: App {
         _storage = StateObject(wrappedValue: storage)
         _language = StateObject(wrappedValue: AppLanguageSettings())
         _appearance = StateObject(wrappedValue: AppAppearanceSettings())
+        _meterSettings = StateObject(wrappedValue: PlayerMeterSettings())
         let player = PlaybackController()
         _player = StateObject(wrappedValue: player)
         _systemNowPlaying = StateObject(
@@ -60,6 +62,7 @@ struct OngakuDesktopApp: App {
                 .environmentObject(storage)
                 .environmentObject(language)
                 .environmentObject(appearance)
+                .environmentObject(meterSettings)
                 .environment(\.locale, language.selectedLanguage.locale ?? .current)
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
@@ -124,6 +127,7 @@ struct OngakuDesktopApp: App {
                 .environmentObject(storage)
                 .environmentObject(language)
                 .environmentObject(appearance)
+                .environmentObject(meterSettings)
                 .id(language.selectedLanguage.rawValue)
         }
         .defaultSize(width: 761, height: 440)

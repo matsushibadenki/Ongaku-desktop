@@ -210,6 +210,16 @@
 "settings.playback.crossfade.value" = "%.1f sec";
 "settings.playback.albumGapless.title" = "Prefer gapless within albums";
 "settings.playback.albumGapless.description" = "Do not crossfade consecutive songs from the same album, preserving the intended track boundaries.";
+"settings.meter.title" = "Player meters";
+"settings.meter.description" = "Choose the meters shown on the left and right sides of the main player.";
+"settings.meter.style.spectrum" = "Spectrum";
+"settings.meter.style.vu" = "VU meters";
+"settings.meter.backlight.title" = "VU backlight";
+"settings.meter.backlight.cyan" = "Cyan";
+"settings.meter.backlight.green" = "Green";
+"settings.meter.backlight.orange" = "Orange";
+"settings.meter.backlight.yellow" = "Yellow";
+"meter.vu" = "VU meter";
 "settings.general.title" = "General";
 "settings.general.subtitle" = "Choose how Ongaku appears and behaves.";
 "settings.language.title" = "Display language";

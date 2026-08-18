@@ -94,66 +94,135 @@ struct PreferencesView: View {
 
 private struct PlaybackSettingsView: View {
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var meterSettings: PlayerMeterSettings
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
-            settingsHeader(
-                title: L10n.text("settings.playback.title"),
-                subtitle: L10n.text("settings.playback.subtitle"),
-                icon: "play.circle.fill"
-            )
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
+                settingsHeader(
+                    title: L10n.text("settings.playback.title"),
+                    subtitle: L10n.text("settings.playback.subtitle"),
+                    icon: "play.circle.fill"
+                )
 
-            Divider()
+                Divider()
 
-            VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
-                HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                    HStack(alignment: .firstTextBaseline) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L10n.text("settings.playback.crossfade.title"))
+                                .font(.headline)
+                            Text(L10n.text("settings.playback.crossfade.description"))
+                                .font(.callout)
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: AppTheme.spaceLG)
+                        Text(L10n.format(
+                            "settings.playback.crossfade.value",
+                            player.crossfadeDuration
+                        ))
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+                    }
+
+                    Slider(value: $player.crossfadeDuration, in: 0...12, step: 0.5)
+                        .accessibilityLabel(L10n.text("settings.playback.crossfade.title"))
+                        .accessibilityValue(L10n.format(
+                            "settings.playback.crossfade.value",
+                            player.crossfadeDuration
+                        ))
+                }
+
+                Divider()
+
+                Toggle(isOn: $player.disableCrossfadeWithinAlbum) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(L10n.text("settings.playback.crossfade.title"))
+                        Text(L10n.text("settings.playback.albumGapless.title"))
                             .font(.headline)
-                        Text(L10n.text("settings.playback.crossfade.description"))
+                        Text(L10n.text("settings.playback.albumGapless.description"))
                             .font(.callout)
                             .foregroundStyle(AppTheme.secondaryInk)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Spacer(minLength: AppTheme.spaceLG)
-                    Text(L10n.format(
-                        "settings.playback.crossfade.value",
-                        player.crossfadeDuration
-                    ))
-                    .font(.callout.monospacedDigit())
-                    .foregroundStyle(AppTheme.secondaryInk)
                 }
+                .toggleStyle(.switch)
 
-                Slider(value: $player.crossfadeDuration, in: 0...12, step: 0.5)
-                    .accessibilityLabel(L10n.text("settings.playback.crossfade.title"))
-                    .accessibilityValue(L10n.format(
-                        "settings.playback.crossfade.value",
-                        player.crossfadeDuration
-                    ))
-            }
+                Divider()
 
-            Divider()
+                VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
+                    HStack(alignment: .firstTextBaseline, spacing: AppTheme.spaceLG) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L10n.text("settings.meter.title"))
+                                .font(.headline)
+                            Text(L10n.text("settings.meter.description"))
+                                .font(.callout)
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(width: 290, alignment: .leading)
 
-            Toggle(isOn: $player.disableCrossfadeWithinAlbum) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.text("settings.playback.albumGapless.title"))
-                        .font(.headline)
-                    Text(L10n.text("settings.playback.albumGapless.description"))
-                        .font(.callout)
-                        .foregroundStyle(AppTheme.secondaryInk)
-                        .fixedSize(horizontal: false, vertical: true)
+                        Picker("", selection: $meterSettings.style) {
+                            ForEach(PlayerMeterStyle.allCases) { style in
+                                Text(L10n.text(style.localizationKey)).tag(style)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.segmented)
+                        .frame(width: 180)
+                    }
+
+                    HStack(alignment: .center, spacing: AppTheme.spaceLG) {
+                        Text(L10n.text("settings.meter.backlight.title"))
+                            .font(.callout.weight(.medium))
+                            .frame(width: 290, alignment: .leading)
+
+                        HStack(spacing: AppTheme.spaceSM) {
+                            ForEach(VUMeterBacklight.allCases) { backlight in
+                                Button {
+                                    meterSettings.backlight = backlight
+                                } label: {
+                                    Circle()
+                                        .fill(backlight.color)
+                                        .frame(width: 22, height: 22)
+                                        .overlay {
+                                            Circle()
+                                                .strokeBorder(
+                                                    meterSettings.backlight == backlight
+                                                        ? AppTheme.ink : Color.clear,
+                                                    lineWidth: 2
+                                                )
+                                                .padding(-3)
+                                        }
+                                        .shadow(color: backlight.color.opacity(0.7), radius: 5)
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(.plain)
+                                .help(L10n.text(backlight.localizationKey))
+                                .accessibilityLabel(L10n.text(backlight.localizationKey))
+                                .accessibilityAddTraits(
+                                    meterSettings.backlight == backlight ? .isSelected : []
+                                )
+                            }
+                        }
+                        .frame(width: 180, alignment: .leading)
+                    }
+                    .disabled(meterSettings.style != .vu)
+                    .opacity(meterSettings.style == .vu ? 1 : 0.42)
                 }
             }
-            .toggleStyle(.switch)
-        }
-        .background {
-            GeometryReader { proxy in
-                Color.clear.preference(
-                    key: PreferencesContentHeightPreferenceKey.self,
-                    value: proxy.size.height
-                )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, AppTheme.spaceMD)
+            .background {
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: PreferencesContentHeightPreferenceKey.self,
+                        value: proxy.size.height
+                    )
+                }
             }
         }
+        .scrollIndicators(.automatic)
     }
 }
 
@@ -182,14 +251,44 @@ private struct GeneralSettingsView: View {
                 }
                 .frame(width: 290, alignment: .leading)
 
-                Picker("", selection: $language.selectedLanguage) {
+                Menu {
                     ForEach(AppLanguage.allCases) { option in
-                        Text(option.displayName).tag(option)
+                        Button {
+                            language.selectedLanguage = option
+                        } label: {
+                            if language.selectedLanguage == option {
+                                Label(option.displayName, systemImage: "checkmark")
+                            } else {
+                                Text(option.displayName)
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: AppTheme.spaceXS) {
+                        Text(language.selectedLanguage.displayName)
+                            .foregroundStyle(AppTheme.ink)
+                            .lineLimit(1)
+
+                        Spacer(minLength: AppTheme.spaceXS)
+
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(AppTheme.secondaryInk)
+                    }
+                    .padding(.horizontal, 10)
+                    .frame(width: 180, height: 30)
+                    .background(AppTheme.raised)
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(AppTheme.rule.opacity(0.8), lineWidth: 1)
                     }
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(width: 180)
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .help(L10n.text("settings.language.description"))
+                .accessibilityLabel(L10n.text("settings.language.title"))
+                .accessibilityValue(language.selectedLanguage.displayName)
             }
 
             Divider()

@@ -1,63 +1,75 @@
-/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5
  * component: persistent player transport · genre: atmospheric · theme: Midnight
  * states: native macOS default · hover · focus · active · disabled · playback feedback
  */
 import SwiftUI
 
 struct PlayerBar: View {
-    @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var meterSettings: PlayerMeterSettings
+    @State private var isShowingVolume = false
 
     var body: some View {
         VStack(spacing: 0) {
             Divider().overlay(AppTheme.rule)
-            HStack(spacing: AppTheme.spaceLG) {
-                nowPlaying
-                    .frame(width: 310, alignment: .leading)
-                playbackCenter
-                    .frame(maxWidth: .infinity)
-                volume
-                    .frame(width: 220, alignment: .trailing)
+            GeometryReader { proxy in
+                let blockWidth = proxy.size.width / 4
+                HStack(spacing: 0) {
+                    meterCell(
+                        channel: "L",
+                        level: player.stereoLevels.left,
+                        bands: player.stereoSpectrum.left
+                    )
+                        .frame(width: blockWidth)
+                    centerPlayerArea
+                        .frame(width: blockWidth * 2)
+                    meterCell(
+                        channel: "R",
+                        level: player.stereoLevels.right,
+                        bands: player.stereoSpectrum.right
+                    )
+                        .frame(width: blockWidth)
+                }
             }
-            .padding(.horizontal, AppTheme.spaceLG)
-            .frame(height: 92)
+            .frame(height: 104)
             .background(AppTheme.surface)
         }
     }
 
-    private var nowPlaying: some View {
-        HStack(spacing: AppTheme.spaceSM) {
-            NowPlayingArtwork(track: player.currentTrack, size: 58)
-            VStack(alignment: .leading, spacing: 3) {
-                Text(player.currentTrack?.title ?? L10n.text("player.idle"))
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(AppTheme.ink)
-                    .lineLimit(1)
-                    .help(player.currentTrack?.title ?? L10n.text("player.idle"))
-                Text(player.currentTrack?.artist ?? L10n.text("player.chooseTrack"))
-                    .font(.callout)
-                    .foregroundStyle(AppTheme.secondaryInk)
-                    .lineLimit(1)
-                if let album = player.currentTrack?.album {
-                    Text(album)
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.secondaryInk.opacity(0.82))
-                        .lineLimit(1)
-                }
+    @ViewBuilder
+    private func meterCell(channel: String, level: Double, bands: [Double]) -> some View {
+        Group {
+            switch meterSettings.style {
+            case .spectrum:
+                ChannelSpectrumView(channel: channel, bands: bands)
+            case .vu:
+                ChannelVUMeterView(
+                    channel: channel,
+                    level: level,
+                    backlight: meterSettings.backlight.color
+                )
             }
+        }
+        .padding(.horizontal, AppTheme.spaceMD)
+        .padding(.vertical, AppTheme.spaceSM)
+        .overlay(alignment: channel == "L" ? .trailing : .leading) {
+            Rectangle()
+                .fill(AppTheme.rule.opacity(0.42))
+                .frame(width: 1)
         }
     }
 
-    private var playbackCenter: some View {
-        VStack(spacing: 7) {
+    private var centerPlayerArea: some View {
+        VStack(spacing: AppTheme.spaceSM) {
             HStack(spacing: AppTheme.spaceSM) {
-                PlaybackModeMenu()
-                    .frame(width: 104, alignment: .leading)
-                Spacer(minLength: AppTheme.spaceSM)
+                playerMetadata
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
                 PlayerTransportControls()
-                Spacer(minLength: AppTheme.spaceSM)
-                StereoLevelMeter(levels: player.stereoLevels)
-                    .frame(width: 104)
+                    .fixedSize()
+
+                playerUtilities
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
 
             HStack(spacing: AppTheme.spaceSM) {
@@ -80,31 +92,63 @@ struct PlayerBar: View {
                     .frame(width: 42, alignment: .leading)
             }
         }
+        .padding(.horizontal, AppTheme.spaceMD)
+        .padding(.vertical, AppTheme.spaceSM)
     }
 
-    private var volume: some View {
-        VStack(alignment: .trailing, spacing: 7) {
-            if let signalPath = player.signalPathDescription {
-                Text(signalPath)
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(player.isUpsampling ? AppTheme.good : AppTheme.secondaryInk)
-                    .lineLimit(1)
-                    .help(L10n.text("player.upsamplingHelp"))
-            } else {
-                Text(L10n.text("player.outputIdle"))
-                    .font(.caption2)
-                    .foregroundStyle(AppTheme.secondaryInk.opacity(0.78))
-            }
-            HStack(spacing: AppTheme.spaceXS) {
-                PlaybackQueueButton()
+    private var playerMetadata: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(player.currentTrack?.album ?? L10n.text("player.chooseTrack"))
+                .font(.caption2)
+                .foregroundStyle(AppTheme.secondaryInk)
+                .lineLimit(1)
+            Text(player.currentTrack?.title ?? L10n.text("player.idle"))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppTheme.ink)
+                .lineLimit(1)
+        }
+        .help(metadataHelp)
+    }
+
+    private var playerUtilities: some View {
+        HStack(spacing: AppTheme.spaceXS) {
+            PlaybackModeMenu()
+            PlaybackQueueButton()
+            Button {
+                isShowingVolume.toggle()
+            } label: {
                 Image(systemName: volumeSymbol)
-                    .foregroundStyle(AppTheme.secondaryInk)
-                    .frame(width: 18)
-                Slider(value: $player.volume, in: 0...1)
-                    .frame(width: 150)
-                    .accessibilityLabel(L10n.text("miniPlayer.volume"))
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .help(L10n.text("miniPlayer.volume"))
+            .accessibilityLabel(L10n.text("miniPlayer.volume"))
+            .accessibilityValue("\(Int((player.volume * 100).rounded()))%")
+            .popover(isPresented: $isShowingVolume, arrowEdge: .bottom) {
+                volumePopover
             }
         }
+        .fixedSize()
+    }
+
+    private var volumePopover: some View {
+        HStack(spacing: AppTheme.spaceSM) {
+            Image(systemName: "speaker.fill")
+                .foregroundStyle(AppTheme.secondaryInk)
+            Slider(value: $player.volume, in: 0...1)
+                .frame(width: 160)
+                .accessibilityLabel(L10n.text("miniPlayer.volume"))
+            Image(systemName: "speaker.wave.3.fill")
+                .foregroundStyle(AppTheme.secondaryInk)
+        }
+        .padding(AppTheme.spaceMD)
+        .background(AppTheme.surface)
+    }
+
+    private var metadataHelp: String {
+        guard let track = player.currentTrack else { return L10n.text("player.chooseTrack") }
+        return "\(track.album) — \(track.title)"
     }
 
     private var volumeSymbol: String {
@@ -114,6 +158,183 @@ struct PlayerBar: View {
         case ..<0.67: "speaker.wave.2.fill"
         default: "speaker.wave.3.fill"
         }
+    }
+}
+
+struct ChannelVUMeterView: View {
+    let channel: String
+    let level: Double
+    let backlight: Color
+
+    private let scaleValues = [-40, -20, -10, -7, -5, -3, 0, 3]
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = proxy.size
+            ZStack {
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(Color(red: 0.018, green: 0.025, blue: 0.032))
+
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                backlight.opacity(0.50),
+                                backlight.opacity(0.19),
+                                Color.black.opacity(0.82)
+                            ],
+                            center: .bottom,
+                            startRadius: 2,
+                            endRadius: max(size.width * 0.56, 60)
+                        )
+                    )
+                    .padding(3)
+                    .shadow(color: backlight.opacity(0.44), radius: 10)
+
+                dial(size: size)
+
+                LinearGradient(
+                    colors: [Color.white.opacity(0.18), .clear, Color.black.opacity(0.20)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .padding(3)
+                .allowsHitTesting(false)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(channel) \(L10n.text("meter.vu"))")
+        .accessibilityValue("\(Int((clampedLevel * 100).rounded()))%")
+    }
+
+    private func dial(size: CGSize) -> some View {
+        Canvas { context, canvasSize in
+            let pivot = CGPoint(x: canvasSize.width / 2, y: canvasSize.height * 1.04)
+            let radius = min(canvasSize.width * 0.43, canvasSize.height * 1.03)
+
+            for (index, decibels) in scaleValues.enumerated() {
+                let position = Double(index) / Double(scaleValues.count - 1)
+                let angle = meterAngle(position: position)
+                let outer = point(from: pivot, radius: radius, angle: angle)
+                let inner = point(
+                    from: pivot,
+                    radius: radius - (decibels >= 0 ? 10 : 7),
+                    angle: angle
+                )
+                var tick = Path()
+                tick.move(to: inner)
+                tick.addLine(to: outer)
+                context.stroke(
+                    tick,
+                    with: .color(decibels > 0 ? .red.opacity(0.90) : .white.opacity(0.74)),
+                    lineWidth: decibels == 0 ? 1.8 : 1
+                )
+
+                let labelPoint = point(from: pivot, radius: radius - 18, angle: angle)
+                let label = context.resolve(
+                    Text(decibels > 0 ? "+\(decibels)" : "\(decibels)")
+                        .font(.system(size: 7, weight: .semibold, design: .rounded))
+                        .foregroundStyle(decibels > 0 ? Color.red.opacity(0.95) : .white.opacity(0.78))
+                )
+                context.draw(label, at: labelPoint, anchor: .center)
+            }
+
+            let vuLabel = context.resolve(
+                Text("VU")
+                    .font(.system(size: 10, weight: .black, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.72))
+            )
+            context.draw(vuLabel, at: CGPoint(x: pivot.x, y: canvasSize.height * 0.45))
+
+            let channelLabel = context.resolve(
+                Text(channel)
+                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .foregroundStyle(Color.white.opacity(0.68))
+            )
+            context.draw(
+                channelLabel,
+                at: CGPoint(x: canvasSize.width - 14, y: 12),
+                anchor: .center
+            )
+
+            let needleAngle = meterAngle(position: needlePosition)
+            let needleEnd = point(from: pivot, radius: radius - 3, angle: needleAngle)
+            var needle = Path()
+            needle.move(to: pivot)
+            needle.addLine(to: needleEnd)
+            context.stroke(needle, with: .color(.black.opacity(0.72)), lineWidth: 4)
+            context.stroke(needle, with: .color(.white.opacity(0.96)), lineWidth: 1.35)
+
+            let hubRect = CGRect(x: pivot.x - 7, y: pivot.y - 7, width: 14, height: 14)
+            context.fill(Path(ellipseIn: hubRect), with: .color(.black.opacity(0.92)))
+            context.stroke(Path(ellipseIn: hubRect), with: .color(.white.opacity(0.35)), lineWidth: 1)
+        }
+        .animation(.spring(response: 0.20, dampingFraction: 0.62), value: needlePosition)
+    }
+
+    private var clampedLevel: Double {
+        min(max(level, 0), 1)
+    }
+
+    private var needlePosition: Double {
+        let decibels = (clampedLevel * 60) - 60
+        return min(max((decibels + 40) / 43, 0), 1)
+    }
+
+    private func meterAngle(position: Double) -> Double {
+        (-53 + (106 * position)) * .pi / 180
+    }
+
+    private func point(from pivot: CGPoint, radius: CGFloat, angle: Double) -> CGPoint {
+        CGPoint(
+            x: pivot.x + (sin(angle) * radius),
+            y: pivot.y - (cos(angle) * radius)
+        )
+    }
+}
+
+private struct ChannelSpectrumView: View {
+    let channel: String
+    let bands: [Double]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(channel)
+                .font(.caption2.weight(.bold).monospaced())
+                .foregroundStyle(AppTheme.secondaryInk)
+
+            GeometryReader { proxy in
+                HStack(alignment: .bottom, spacing: 2) {
+                    ForEach(Array(bands.enumerated()), id: \.offset) { _, value in
+                        SpectrumBar(value: value, availableHeight: proxy.size.height)
+                    }
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(channel) \(L10n.text("miniPlayer.stereoMeter"))")
+        .accessibilityValue(averageLevel)
+    }
+
+    private var averageLevel: String {
+        guard !bands.isEmpty else { return "0%" }
+        let average = bands.reduce(0, +) / Double(bands.count)
+        return "\(Int((average * 100).rounded()))%"
+    }
+}
+
+private struct SpectrumBar: View {
+    let value: Double
+    let availableHeight: CGFloat
+
+    var body: some View {
+        Capsule()
+            .fill(AppTheme.accent)
+            .frame(maxWidth: .infinity)
+            .frame(height: max(2, availableHeight * min(max(value, 0), 1)))
+            .opacity(value > 0.015 ? 1 : 0.24)
+            .animation(.linear(duration: 0.08), value: value)
     }
 }
 

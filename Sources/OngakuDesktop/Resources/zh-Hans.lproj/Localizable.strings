@@ -210,6 +210,16 @@
 "settings.playback.crossfade.value" = "%.1f秒";
 "settings.playback.albumGapless.title" = "专辑内优先无缝播放";
 "settings.playback.albumGapless.description" = "同一专辑的连续歌曲不使用交叉淡化，以保留原有曲目衔接。";
+"settings.meter.title" = "播放器仪表";
+"settings.meter.description" = "选择主播放器左右两侧显示的仪表。";
+"settings.meter.style.spectrum" = "频谱";
+"settings.meter.style.vu" = "VU表";
+"settings.meter.backlight.title" = "VU背光";
+"settings.meter.backlight.cyan" = "浅蓝色";
+"settings.meter.backlight.green" = "绿色";
+"settings.meter.backlight.orange" = "橙色";
+"settings.meter.backlight.yellow" = "黄色";
+"meter.vu" = "VU表";
 "settings.general.title" = "通用";
 "settings.general.subtitle" = "设置Ongaku的显示方式和行为。";
 "settings.language.title" = "显示语言";

@@ -73,7 +73,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 | 表示 | 曲、アルバム、アーティスト、作曲者、ジャンル、コンピレーション、最近追加、ミニプレイヤー、フルスクリーン | 保存可能な表示設定、列、並べ替え、ピン留めを追加 | [Later] M3, M9 |
 | プレイリスト | 作成、編集、削除、画像、説明、並べ替え、フォルダ、スマート、読み書き、曲から逆引き | 安定IDとルールエンジンをデータモデルへ追加 | [Next] M2 |
 | Genius | Geniusプレイリスト、Genius Shuffle相当 | Appleの非公開アルゴリズムではなく、ローカル音響特徴と履歴による「Ongaku Mix」として提供 | [Later] M7 |
-| ライブラリ管理 | 歌詞、情報、アート、評価、お気に入り、重複、削除、ピン、複数ライブラリ | 非破壊編集を維持。歌詞は埋め込み／LRCに加えてLRCLIBから取得し、候補確認後にローカル保存 | [Next] M2–M3 |
+| ライブラリ管理 | 歌詞、情報、アート、評価、お気に入り、重複、削除、ピン、複数ライブラリ | 非破壊編集を維持。歌詞はLRCLIB、書誌情報はMusicBrainz、ジャケットはCover Art Archiveから候補を取得し、出典と信頼度を確認後にローカル保存 | [Next] M2–M3 |
 | ファイル管理 | Mediaフォルダ、整理、統合、場所変更、変換、ファイル参照切れ修復 | トランザクション、チェックサム、dry-run、ロールバックを必須化 | [Later] M3–M5 |
 | 共有 | 共有シート、リンク、書き出し、Home Sharing相当、CD/DVD作成 | 標準共有シート、標準LAN共有、M3U/XML、DiscRecording可否調査 | [Later] M5, M8 |
 | ソーシャル | プロフィール、友達、視聴履歴共有、共同プレイリスト、絵文字リアクション | Apple Music APIで可能な範囲を優先し、不足分は同意制の独自バックエンド | [Later] M7 |
@@ -166,6 +166,10 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Later] 自動一致は再生時間の差を含む信頼度を表示し、曖昧な結果は利用者が候補を確認してから保存。埋め込み歌詞と手動編集を優先し、オフライン時はキャッシュへ縮退
 - [Later] Ongaku Desktopの名前・バージョン・GitHub URLを含む`User-Agent`を送信し、リクエストを直列化して200〜500 ms間隔を確保。HTTP 429では`Retry-After`を厳守
 - [Later] 初期対応は読み取り専用とし、実験的な`/api/publish`とproof-of-work challengeによる投稿は、権利・同意・誤投稿防止の設計を別途確定するまで対象外
+- [Later] [MusicBrainz Web Service](https://musicbrainz.org/doc/MusicBrainz_API)から録音、リリース、リリースグループ、アーティストを検索し、MusicBrainz ID、ISRC、曲名、アルバム名、アーティスト名、日付、トラック／ディスク番号、国、媒体を編集候補として取得
+- [Later] 既存タグ、再生時間、ISRC、トラック数、既存MusicBrainz IDを段階的に照合して信頼度と差分を表示し、曖昧な候補は自動確定せず、利用者の承認後に非破壊保存
+- [Later] [Cover Art Archive](https://coverartarchive.org/)からMusicBrainzのリリース／リリースグループIDに紐づくfront／back画像とサムネイルを取得し、画像種別、解像度、出典、取得日時を保存。埋め込み画像と手動設定を優先し、オフライン時はキャッシュへ縮退
+- [Later] MusicBrainzとCover Art Archiveの利用規約、識別可能な`User-Agent`、レート制限、HTTPキャッシュを遵守し、再試行と同一IDへの重複取得防止をサービス層で共通化
 - [Later] 作曲者、ジャンル、年、ディスク番号、トラック番号、コンピレーション、参加者クレジット等の項目追加
 - [Later] 完全重複／候補重複の比較、保持対象選択、安全な登録解除とファイル削除
 - [Later] ピン留め、列カスタマイズ、保存済み並べ替え、フィルタ、全メタデータ全文検索
@@ -295,6 +299,9 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 
 - LRCLIB連携は歌詞プロバイダープロトコルの一実装として分離し、URLSession、応答デコード、レート制限、再試行、キャッシュをUIから切り離す。
 - LRCLIBの完全一致が404の場合だけ候補検索へ進み、ネットワーク障害、429、該当なし、インストゥルメンタルを異なる状態として扱う。
+- MusicBrainz連携はメタデータプロバイダー、Cover Art Archive連携はアートワークプロバイダーとして分離し、検索候補、信頼度、出典、キャッシュ状態を共通モデルでUIへ渡す。
+- MusicBrainzのrecording、release、release-group、artist IDは種類別namespaceで保持し、文字列だけの類似一致からリリースやジャケットを自動確定しない。
+- メタデータと画像は「手動設定／埋め込み」「承認済み外部候補」「未確認の外部候補」の優先順を維持し、更新前の値へUndoできるようにする。
 
 - MusicKitは利用者の明示許可後だけ利用し、`NSAppleMusicUsageDescription`を三言語で提供する。
 - Apple Music未加入、未認証、オフラインでもローカルライブラリの全機能を維持する。
@@ -375,3 +382,5 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [MPNowPlayingInfoCenter](https://developer.apple.com/documentation/mediaplayer/mpnowplayinginfocenter)
 - [Group Activities / SharePlay](https://developer.apple.com/documentation/groupactivities)
 - [LRCLIB API Documentation](https://lrclib.net/docs)
+- [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API)
+- [Cover Art Archive API](https://musicbrainz.org/doc/Cover_Art_Archive/API)
