@@ -1,4 +1,5 @@
 @preconcurrency import AVFoundation
+import AppKit
 import Combine
 import Foundation
 
@@ -214,6 +215,36 @@ final class StereoMeterThrottle: @unchecked Sendable {
     }
 }
 
+struct PlaybackRecoveryRequest: Equatable, Sendable {
+    let position: TimeInterval
+    let shouldResume: Bool
+}
+
+struct PlaybackRecoveryState: Equatable, Sendable {
+    private(set) var isSleeping = false
+    private var positionBeforeSleep: TimeInterval = 0
+    private var wasPlayingBeforeSleep = false
+
+    mutating func prepareForSleep(position: TimeInterval, isPlaying: Bool) {
+        isSleeping = true
+        positionBeforeSleep = max(position, 0)
+        wasPlayingBeforeSleep = isPlaying
+    }
+
+    mutating func requestAfterWake() -> PlaybackRecoveryRequest? {
+        guard isSleeping else { return nil }
+        isSleeping = false
+        defer {
+            positionBeforeSleep = 0
+            wasPlayingBeforeSleep = false
+        }
+        return PlaybackRecoveryRequest(
+            position: positionBeforeSleep,
+            shouldResume: wasPlayingBeforeSleep
+        )
+    }
+}
+
 // AVAudioEngine invokes tap blocks on its realtime messenger queue. Creating this
 // block outside PlaybackController prevents it from inheriting MainActor isolation.
 func makeStereoMeterTapBlock(
@@ -271,6 +302,10 @@ final class PlaybackController: ObservableObject {
     private var timer: Timer?
     private var isMeterTapInstalled = false
     private let meterThrottle = StereoMeterThrottle()
+    private var recoveryObservations = Set<AnyCancellable>()
+    private var recoveryTask: Task<Void, Never>?
+    private var recoveryState = PlaybackRecoveryState()
+    private var suppressConfigurationRecoveryUntil: TimeInterval = 0
 
     init() {
         let defaultSettings = AudioEffectModuleRegistry.makeDefaultSettings()
@@ -284,6 +319,7 @@ final class PlaybackController: ObservableObject {
         effectPipeline.forEach { $0.attach(to: engine) }
         effectSettings.forEach(applyEffectSetting)
         playerNode.volume = Float(volume)
+        observeSystemAudioEvents()
     }
 
     var duration: TimeInterval {
@@ -464,6 +500,7 @@ final class PlaybackController: ObservableObject {
         do {
             stopCurrentPlayback()
             let file = try AVAudioFile(forReading: track.fileURL)
+            suppressConfigurationRecovery()
             let sourceRate = file.processingFormat.sampleRate
             let configuration = automaticUpsampling
                 ? outputManager.configureDefaultOutput(sourceRate: sourceRate)
@@ -632,6 +669,121 @@ final class PlaybackController: ObservableObject {
         engine.prepare()
     }
 
+    private func observeSystemAudioEvents() {
+        NotificationCenter.default.publisher(
+            for: .AVAudioEngineConfigurationChange,
+            object: engine
+        )
+        .sink { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.scheduleAudioEngineRecovery()
+            }
+        }
+        .store(in: &recoveryObservations)
+
+        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.willSleepNotification)
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.prepareForSystemSleep()
+                }
+            }
+            .store(in: &recoveryObservations)
+
+        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification)
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    self?.recoverAfterSystemWake()
+                }
+            }
+            .store(in: &recoveryObservations)
+    }
+
+    private func prepareForSystemSleep() {
+        recoveryTask?.cancel()
+        recoveryTask = nil
+        let position = isPlaying ? currentElapsed() : elapsed
+        recoveryState.prepareForSleep(position: position, isPlaying: isPlaying)
+        elapsed = position
+        playerNode.pause()
+        isPlaying = false
+        stereoLevels = .silent
+        stopTimer()
+        publishQueueState(force: true)
+    }
+
+    private func recoverAfterSystemWake() {
+        guard let request = recoveryState.requestAfterWake() else { return }
+        recoverAudioEngine(
+            position: request.position,
+            shouldResume: request.shouldResume
+        )
+    }
+
+    private func scheduleAudioEngineRecovery() {
+        guard !recoveryState.isSleeping,
+              audioFile != nil,
+              ProcessInfo.processInfo.systemUptime >= suppressConfigurationRecoveryUntil else {
+            return
+        }
+        let request = PlaybackRecoveryRequest(
+            position: isPlaying ? currentElapsed() : elapsed,
+            shouldResume: isPlaying
+        )
+        recoveryTask?.cancel()
+        recoveryTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            self?.recoverAudioEngine(
+                position: request.position,
+                shouldResume: request.shouldResume
+            )
+        }
+    }
+
+    private func recoverAudioEngine(position: TimeInterval, shouldResume: Bool) {
+        guard let audioFile else { return }
+        do {
+            suppressConfigurationRecovery()
+            playerNode.stop()
+            engine.stop()
+            stopTimer()
+            isPlaying = false
+            stereoLevels = .silent
+
+            let sourceRate = audioFile.processingFormat.sampleRate
+            let configuration = automaticUpsampling
+                ? outputManager.configureDefaultOutput(sourceRate: sourceRate)
+                : nil
+            sourceSampleRate = sourceRate
+            outputSampleRate = configuration?.actualRate ?? sourceRate
+
+            try configureEngine(for: audioFile)
+            let fileDuration = Double(audioFile.length) / sourceRate
+            elapsed = min(max(position, 0), max(fileDuration - 0.01, 0))
+            let frame = AVAudioFramePosition(elapsed * sourceRate)
+            schedule(fromFrame: min(frame, audioFile.length))
+
+            if shouldResume {
+                try engine.start()
+                playerNode.play()
+                isPlaying = true
+                startTimer()
+                beginPlaybackSessionIfNeeded()
+            }
+            errorMessage = nil
+            publishQueueState(force: true)
+        } catch {
+            isPlaying = false
+            stopTimer()
+            errorMessage = error.localizedDescription
+            publishQueueState(force: true)
+        }
+    }
+
+    private func suppressConfigurationRecovery() {
+        suppressConfigurationRecoveryUntil = ProcessInfo.processInfo.systemUptime + 1
+    }
+
     private func installMeterTap() {
         let deliver: @Sendable (StereoLevels) -> Void = { [weak self] levels in
             Task { @MainActor [weak self] in
@@ -721,6 +873,8 @@ final class PlaybackController: ObservableObject {
     }
 
     private func stopCurrentPlayback() {
+        recoveryTask?.cancel()
+        recoveryTask = nil
         playbackGeneration = UUID()
         playerNode.stop()
         engine.stop()

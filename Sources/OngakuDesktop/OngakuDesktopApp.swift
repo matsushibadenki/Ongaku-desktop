@@ -25,7 +25,8 @@ struct OngakuDesktopApp: App {
     @StateObject private var language: AppLanguageSettings
     @StateObject private var appearance: AppAppearanceSettings
     @StateObject private var windowPresentation = WindowPresentationController()
-    @StateObject private var player = PlaybackController()
+    @StateObject private var player: PlaybackController
+    @StateObject private var systemNowPlaying: SystemNowPlayingController
     @StateObject private var softwareUpdater = SoftwareUpdateController()
 
     init() {
@@ -33,6 +34,11 @@ struct OngakuDesktopApp: App {
         _storage = StateObject(wrappedValue: storage)
         _language = StateObject(wrappedValue: AppLanguageSettings())
         _appearance = StateObject(wrappedValue: AppAppearanceSettings())
+        let player = PlaybackController()
+        _player = StateObject(wrappedValue: player)
+        _systemNowPlaying = StateObject(
+            wrappedValue: SystemNowPlayingController(player: player)
+        )
         _library = StateObject(wrappedValue: LibraryStore(
             repository: LibraryRepository(mediaURL: storage.mediaDirectoryURL)
         ))
@@ -69,6 +75,9 @@ struct OngakuDesktopApp: App {
                 }
                 .onReceive(player.playbackEventPublisher) { event in
                     Task { await library.recordPlaybackEvent(event) }
+                }
+                .onAppear {
+                    systemNowPlaying.activate()
                 }
         }
         .defaultSize(width: 1_320, height: 780)
