@@ -34,7 +34,7 @@ struct EffectsRackView: View {
                 }
             }
             .padding(.horizontal, AppTheme.spaceLG)
-            .padding(.bottom, AppTheme.effectsRackBottomClearance)
+            .padding(.bottom, AppTheme.spaceLG)
         }
         .onAppear {
             selectedTab = player.effectsBypassed ? .off : .basic

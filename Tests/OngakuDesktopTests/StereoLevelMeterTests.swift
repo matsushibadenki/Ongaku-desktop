@@ -114,6 +114,15 @@ struct StereoLevelMeterTests {
         #expect(release == 0.8)
     }
 
+    @Test("Spectrum presentation uses the full meter height for musical peaks")
+    func spectrumPresentationHeight() {
+        #expect(SpectrumPresentation.height(for: -1) == 0)
+        #expect(SpectrumPresentation.height(for: 0) == 0)
+        #expect(SpectrumPresentation.height(for: 0.5) > 0.8)
+        #expect(SpectrumPresentation.height(for: 0.7) == 1)
+        #expect(SpectrumPresentation.height(for: 2) == 1)
+    }
+
     @Test("The audio tap runs without inheriting MainActor isolation")
     func tapIsNonisolated() throws {
         let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2))
@@ -184,6 +193,18 @@ struct PlaybackQueueNavigatorTests {
             after: albumOneFirst, in: queue, mode: .sequential)?.id == albumTwo.id)
         #expect(PlaybackQueueNavigator.nextTrack(
             after: albumOneSecond, in: queue, mode: .sequential) == nil)
+    }
+
+    @Test("Automatic navigation skips excluded tracks")
+    func skipsExcludedTracks() {
+        var excluded = albumTwo
+        excluded.isExcludedFromPlayback = true
+        let queue = [albumOneFirst, excluded, albumOneSecond]
+
+        #expect(PlaybackQueueNavigator.nextTrack(
+            after: albumOneFirst, in: queue, mode: .sequential)?.id == albumOneSecond.id)
+        #expect(PlaybackQueueNavigator.previousTrack(
+            before: albumOneSecond, in: queue, mode: .sequential)?.id == albumOneFirst.id)
     }
 
     @Test("Repeat one returns the current track")
@@ -325,5 +346,36 @@ struct PlaybackHistoryTests {
         #expect(items[0].event.kind == .started)
         #expect(items[1].event.kind == .completed)
         #expect(items[1].event.position == 90)
+    }
+
+    @Test("Playback statistics count completions and skips and keep the latest activity")
+    func resolvesPlaybackStatistics() throws {
+        let trackID = UUID()
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let events = [
+            PlaybackEvent(trackID: trackID, kind: .started, occurredAt: base),
+            PlaybackEvent(
+                trackID: trackID,
+                kind: .completed,
+                occurredAt: base.addingTimeInterval(60)
+            ),
+            PlaybackEvent(
+                trackID: trackID,
+                kind: .started,
+                occurredAt: base.addingTimeInterval(120)
+            ),
+            PlaybackEvent(
+                trackID: trackID,
+                kind: .skipped,
+                occurredAt: base.addingTimeInterval(135)
+            ),
+        ]
+
+        let statistics = try #require(
+            PlaybackStatisticsResolver.statistics(events: events)[trackID]
+        )
+        #expect(statistics.playCount == 1)
+        #expect(statistics.skipCount == 1)
+        #expect(statistics.lastPlayedAt == base.addingTimeInterval(135))
     }
 }

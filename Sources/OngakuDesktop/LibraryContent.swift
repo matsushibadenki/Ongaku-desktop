@@ -20,6 +20,123 @@ private extension View {
     }
 }
 
+private struct TrackPlaybackAttributeActions: View {
+    @EnvironmentObject private var library: LibraryStore
+    let track: Track
+
+    var body: some View {
+        Button {
+            Task { await library.setFavorite(!track.isFavorite, for: track.id) }
+        } label: {
+            Label(
+                L10n.text(track.isFavorite ? "track.favorite.remove" : "track.favorite.add"),
+                systemImage: track.isFavorite ? "heart.slash" : "heart"
+            )
+        }
+
+        Menu {
+            Button {
+                Task { await library.setRating(0, for: track.id) }
+            } label: {
+                if track.rating == 0 {
+                    Label(L10n.text("track.rating.none"), systemImage: "checkmark")
+                } else {
+                    Text(L10n.text("track.rating.none"))
+                }
+            }
+            Divider()
+            ForEach(1...5, id: \.self) { rating in
+                Button {
+                    Task { await library.setRating(rating, for: track.id) }
+                } label: {
+                    let stars = String(repeating: "★", count: rating)
+                    if track.rating == rating {
+                        Label(stars, systemImage: "checkmark")
+                    } else {
+                        Text(stars)
+                    }
+                }
+            }
+        } label: {
+            Label(L10n.text("track.rating.title"), systemImage: "star")
+        }
+
+        Button {
+            Task {
+                await library.setExcludedFromPlayback(
+                    !track.isExcludedFromPlayback,
+                    for: track.id
+                )
+            }
+        } label: {
+            Label(
+                L10n.text(
+                    track.isExcludedFromPlayback
+                        ? "track.playback.include" : "track.playback.exclude"
+                ),
+                systemImage: track.isExcludedFromPlayback ? "checkmark.circle" : "minus.circle"
+            )
+        }
+    }
+}
+
+private struct TrackPlaylistContextActions: View {
+    @EnvironmentObject private var library: LibraryStore
+    let trackIDs: Set<Track.ID>
+
+    var body: some View {
+        Menu {
+            if library.playlists.isEmpty {
+                Text(L10n.text("playlist.none"))
+            } else {
+                ForEach(library.playlists.filter { $0.smartDefinition == nil }) { playlist in
+                    let containsAll = trackIDs.isSubset(
+                        of: Set(playlist.entries.map(\.trackID))
+                    )
+                    Button {
+                        Task { try? await library.addTracks(Array(trackIDs), to: playlist.id) }
+                    } label: {
+                        Label(
+                            playlist.name,
+                            systemImage: containsAll ? "checkmark" : "music.note.list"
+                        )
+                    }
+                    .disabled(containsAll)
+                }
+            }
+        } label: {
+            Label(L10n.text("playlist.addTo"), systemImage: "text.badge.plus")
+        }
+
+        Menu {
+            let memberships = library.playlistsContaining(trackIDs: trackIDs)
+            if memberships.isEmpty {
+                Text(L10n.text("playlist.membership.none"))
+            } else {
+                ForEach(memberships) { playlist in
+                    Button {
+                        library.selectedPlaylistID = playlist.id
+                        library.selectedTrackID = trackIDs.first
+                    } label: {
+                        Label(playlist.name, systemImage: "checkmark")
+                    }
+                }
+            }
+        } label: {
+            Label(L10n.text("playlist.membership"), systemImage: "music.note.list")
+        }
+
+        if let playlistID = library.selectedPlaylistID,
+           library.selectedPlaylist?.smartDefinition == nil {
+            Button(role: .destructive) {
+                Task { try? await library.removeTracks(trackIDs, from: playlistID) }
+            } label: {
+                Label(L10n.text("playlist.removeSelected"), systemImage: "minus")
+            }
+        }
+    }
+}
+
 struct LibraryContent: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
@@ -36,7 +153,12 @@ struct LibraryContent: View {
         VStack(spacing: 0) {
             header
 
-            if library.selectedSection == .effects {
+            if library.selectedPlaylist?.smartDefinition != nil
+                && library.filteredTracks.isEmpty {
+                smartPlaylistEmptyView
+            } else if library.selectedPlaylist != nil && library.filteredTracks.isEmpty {
+                playlistEmptyView
+            } else if library.selectedPlaylist == nil && library.selectedSection == .effects {
                 sectionContent
             } else if library.filteredTracks.isEmpty {
                 EmptyLibraryView(hasTracks: !library.tracks.isEmpty)
@@ -46,8 +168,9 @@ struct LibraryContent: View {
 
             activityBar
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(AppTheme.canvas)
-        .navigationTitle(L10n.text(library.selectedSection.titleKey))
+        .navigationTitle(contentTitle)
         .searchable(text: $library.searchText, placement: .toolbar, prompt: L10n.text("library.search"))
         .sheet(item: $metadataEditTarget) { target in
             MetadataEditorView(target: target)
@@ -57,6 +180,15 @@ struct LibraryContent: View {
 
     @ViewBuilder
     private var sectionContent: some View {
+        if library.selectedPlaylist != nil {
+            trackTable
+        } else {
+            sectionContentForLibrary
+        }
+    }
+
+    @ViewBuilder
+    private var sectionContentForLibrary: some View {
         switch library.selectedSection {
         case .albums:
             if let album = selectedAlbum {
@@ -83,12 +215,14 @@ struct LibraryContent: View {
                         library.selectedSection = .albums
                     },
                     onEditTrack: editTrack,
-                    onEditAlbum: editAlbum
+                    onEditAlbum: editAlbum,
+                    onEditArtist: editArtist
                 )
             } else {
                 ArtistBrowser(
                     artists: artists,
-                    selectedArtistID: $selectedArtistID
+                    selectedArtistID: $selectedArtistID,
+                    onEditArtist: editArtist
                 )
             }
         case .songs, .recentlyAdded, .needsAttention:
@@ -99,14 +233,35 @@ struct LibraryContent: View {
     }
 
     private var header: some View {
-        HStack(alignment: .firstTextBaseline) {
+        HStack(alignment: .center, spacing: AppTheme.spaceMD) {
+            if let playlist = library.selectedPlaylist,
+               let path = playlist.artworkPath,
+               let image = NSImage(contentsOfFile: path) {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 48, height: 48)
+                    .clipShape(RoundedRectangle(
+                        cornerRadius: AppTheme.radiusSmall,
+                        style: .continuous
+                    ))
+                    .accessibilityHidden(true)
+            }
             VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.text(library.selectedSection.titleKey))
+                Text(contentTitle)
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundStyle(AppTheme.ink)
-                Text(headerSubtitle)
-                    .font(.callout.monospacedDigit())
-                    .foregroundStyle(AppTheme.secondaryInk)
+                if let playlist = library.selectedPlaylist,
+                   !playlist.description.isEmpty {
+                    Text(playlist.description)
+                        .font(.callout)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .lineLimit(2)
+                } else {
+                    Text(headerSubtitle)
+                        .font(.callout.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
             }
             Spacer()
         }
@@ -116,10 +271,79 @@ struct LibraryContent: View {
     }
 
     private var headerSubtitle: String {
-        if library.selectedSection == .effects {
+        if library.selectedPlaylist == nil && library.selectedSection == .effects {
             return L10n.format("effects.enabledCount", player.enabledEffectCount, player.effectSettings.count)
         }
         return L10n.format("library.visibleCount", library.filteredTracks.count)
+    }
+
+    private var contentTitle: String {
+        library.selectedPlaylist?.name ?? L10n.text(library.selectedSection.titleKey)
+    }
+
+    private var playlistEmptyView: some View {
+        VStack(spacing: AppTheme.spaceLG) {
+            Image(systemName: "music.note.list")
+                .font(.system(size: 30, weight: .medium))
+                .foregroundStyle(AppTheme.accent)
+                .frame(width: 68, height: 68)
+                .background(AppTheme.accent.opacity(0.1))
+                .clipShape(RoundedRectangle(
+                    cornerRadius: AppTheme.radiusMedium,
+                    style: .continuous
+                ))
+
+            VStack(spacing: AppTheme.spaceXS) {
+                Text(L10n.text("playlist.empty.title"))
+                    .font(.title2.bold())
+                    .foregroundStyle(AppTheme.ink)
+                Text(L10n.text("playlist.empty.description"))
+                    .font(.callout)
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Button {
+                library.selectedPlaylistID = nil
+                library.selectedSection = .songs
+            } label: {
+                Label(L10n.text("playlist.empty.chooseSongs"), systemImage: "music.note")
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+
+            Text(L10n.text("playlist.empty.dropHint"))
+                .font(.caption)
+                .foregroundStyle(AppTheme.secondaryInk)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, AppTheme.spaceLG)
+        .padding(.vertical, 32)
+        .frame(maxWidth: 440)
+        .background(AppTheme.raised)
+        .clipShape(RoundedRectangle(
+            cornerRadius: AppTheme.radiusLarge,
+            style: .continuous
+        ))
+        .overlay {
+            RoundedRectangle(cornerRadius: AppTheme.radiusLarge, style: .continuous)
+                .strokeBorder(AppTheme.ink.opacity(0.07))
+        }
+        .shadow(color: .black.opacity(0.05), radius: 18, y: 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .padding(.horizontal, AppTheme.spaceLG)
+        .padding(.top, 56)
+        .padding(.bottom, AppTheme.spaceLG)
+    }
+
+    private var smartPlaylistEmptyView: some View {
+        ContentUnavailableView(
+            L10n.text("smartPlaylist.empty.title"),
+            systemImage: "gearshape.2",
+            description: Text(L10n.text("smartPlaylist.empty.description"))
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var albums: [AlbumGroup] {
@@ -141,29 +365,33 @@ struct LibraryContent: View {
     }
 
     private var trackTable: some View {
-        Table(sortedTracks, selection: $library.selectedTrackID, sortOrder: $sortOrder) {
+        Table(sortedTracks, selection: trackSelection, sortOrder: $sortOrder) {
             TableColumn(L10n.text("column.title"), value: \.title) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
                         .trackTableForeground(
-                            isSelected: library.selectedTrackID == track.id,
+                            isSelected: library.selectedTrackIDs.contains(track.id),
                             fallback: player.currentTrack?.id == track.id
                                 ? AppTheme.accent : AppTheme.secondaryInk
                         )
                         .frame(width: 16)
                     Text(track.title)
                         .trackTableForeground(
-                            isSelected: library.selectedTrackID == track.id,
+                            isSelected: library.selectedTrackIDs.contains(track.id),
                             fallback: AppTheme.ink
                         )
                         .lineLimit(1)
+                    if track.isFavorite {
+                        Image(systemName: "heart.fill")
+                            .font(.caption)
+                            .trackTableForeground(
+                                isSelected: library.selectedTrackIDs.contains(track.id),
+                                fallback: AppTheme.accent
+                            )
+                            .accessibilityLabel(L10n.text("track.favorite"))
+                    }
                 }
                 .contentShape(Rectangle())
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 0).onChanged { _ in
-                        library.selectedTrackID = track.id
-                    }
-                )
                 .simultaneousGesture(
                     TapGesture(count: 2).onEnded {
                         library.selectedTrackID = track.id
@@ -172,11 +400,29 @@ struct LibraryContent: View {
                 )
                 .contextMenu {
                     Button(L10n.text("track.play")) { player.play(track) }
-                    PlaybackQueueContextActions(tracks: [track])
+                    PlaybackQueueContextActions(tracks: contextTracks(for: track))
+                    TrackPlaylistContextActions(trackIDs: contextTrackIDs(for: track))
+                    TrackPlaybackAttributeActions(track: track)
                     Button(L10n.text("metadataEditor.track.menu")) { editTrack(track) }
                     Divider()
                     Button(L10n.text("track.reveal")) { library.reveal(track) }
                 }
+                .draggable(dragPayload(for: track))
+                .dropDestination(for: String.self) { payloads, location in
+                    guard let playlistID = library.selectedPlaylistID,
+                          library.selectedPlaylist?.smartDefinition == nil else { return false }
+                    let trackIDs = orderedUniqueTrackIDs(payloads.flatMap(parseTrackIDs))
+                    guard !trackIDs.isEmpty, !trackIDs.contains(track.id) else { return false }
+                    let targetTrackID = location.y > 14 ? trackID(after: track.id) : track.id
+                    Task {
+                        try? await library.moveTracks(
+                            trackIDs,
+                            before: targetTrackID,
+                            in: playlistID
+                        )
+                    }
+                    return true
+                } isTargeted: { _ in }
             }
             .width(min: 240, ideal: 300)
 
@@ -210,7 +456,7 @@ struct LibraryContent: View {
                 HealthLabel(
                     health: track.health,
                     compact: true,
-                    isSelected: library.selectedTrackID == track.id
+                    isSelected: library.selectedTrackIDs.contains(track.id)
                 )
             }
             .width(min: 64, ideal: 72)
@@ -239,6 +485,62 @@ struct LibraryContent: View {
             trackSortTask?.cancel()
             trackSortTask = nil
         }
+        .onChange(of: library.selectedTrackID) { _, selectedTrackID in
+            guard let selectedTrackID else {
+                library.selectedTrackIDs = []
+                return
+            }
+            if !library.selectedTrackIDs.contains(selectedTrackID) {
+                library.selectedTrackIDs = [selectedTrackID]
+            }
+        }
+    }
+
+    private var trackSelection: Binding<Set<Track.ID>> {
+        Binding(
+            get: { library.selectedTrackIDs },
+            set: { selection in
+                library.selectedTrackIDs = selection
+                if selection.isEmpty {
+                    library.selectedTrackID = nil
+                } else if let selectedTrackID = library.selectedTrackID,
+                          selection.contains(selectedTrackID) {
+                    // Keep the inspector anchored while extending a selection.
+                } else {
+                    library.selectedTrackID = selection.first
+                }
+            }
+        )
+    }
+
+    private func contextTrackIDs(for track: Track) -> Set<Track.ID> {
+        library.selectedTrackIDs.contains(track.id) ? library.selectedTrackIDs : [track.id]
+    }
+
+    private func contextTracks(for track: Track) -> [Track] {
+        let ids = contextTrackIDs(for: track)
+        return sortedTracks.filter { ids.contains($0.id) }
+    }
+
+    private func dragPayload(for track: Track) -> String {
+        contextTracks(for: track).map(\.id.uuidString).joined(separator: "\n")
+    }
+
+    private func parseTrackIDs(_ payload: String) -> [Track.ID] {
+        payload.split(whereSeparator: \.isNewline).compactMap { UUID(uuidString: String($0)) }
+    }
+
+    private func orderedUniqueTrackIDs(_ trackIDs: [Track.ID]) -> [Track.ID] {
+        var seen: Set<Track.ID> = []
+        return trackIDs.filter { seen.insert($0).inserted }
+    }
+
+    private func trackID(after trackID: Track.ID) -> Track.ID? {
+        guard let index = sortedTracks.firstIndex(where: { $0.id == trackID }) else {
+            return nil
+        }
+        let nextIndex = sortedTracks.index(after: index)
+        return nextIndex < sortedTracks.endIndex ? sortedTracks[nextIndex].id : nil
     }
 
     private func editTrack(_ track: Track) {
@@ -254,10 +556,19 @@ struct LibraryContent: View {
         )
     }
 
+    private func editArtist(_ artist: ArtistGroup) {
+        metadataEditTarget = .artist(
+            id: artist.id,
+            name: artist.name,
+            trackIDs: artist.tracks.map(\.id)
+        )
+    }
+
     private var trackSortRequest: TrackSortRequest {
         TrackSortRequest(
             contentRevision: library.contentRevision,
             section: library.selectedSection,
+            playlistID: library.selectedPlaylistID,
             searchText: library.searchText,
             rules: sortOrder.compactMap(TrackSortRule.init)
         )
@@ -274,9 +585,14 @@ struct LibraryContent: View {
         isSortingTracks = true
 
         trackSortTask = Task.detached(priority: .userInitiated) {
-            let result = sourceTracks.sorted { lhs, rhs in
-                guard !Task.isCancelled else { return false }
-                return TrackSortRule.areInIncreasingOrder(lhs, rhs, using: rules)
+            let result: [Track]
+            if request.playlistID != nil {
+                result = sourceTracks
+            } else {
+                result = sourceTracks.sorted { lhs, rhs in
+                    guard !Task.isCancelled else { return false }
+                    return TrackSortRule.areInIncreasingOrder(lhs, rhs, using: rules)
+                }
             }
             guard !Task.isCancelled else { return }
 
@@ -332,6 +648,7 @@ struct LibraryContent: View {
 private struct TrackSortRequest: Hashable, Sendable {
     let contentRevision: Int
     let section: LibrarySection
+    let playlistID: Playlist.ID?
     let searchText: String
     let rules: [TrackSortRule]
 }
@@ -714,6 +1031,7 @@ private struct AlbumDetail: View {
                 .contextMenu {
                     Button(L10n.text("track.play")) { player.play(track) }
                     PlaybackQueueContextActions(tracks: [track])
+                    TrackPlaybackAttributeActions(track: track)
                     Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
                     Divider()
                     Button(L10n.text("track.reveal")) { library.reveal(track) }
@@ -744,6 +1062,7 @@ private struct AlbumDetail: View {
 private struct ArtistBrowser: View {
     let artists: [ArtistGroup]
     @Binding var selectedArtistID: ArtistGroup.ID?
+    let onEditArtist: (ArtistGroup) -> Void
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -771,7 +1090,8 @@ private struct ArtistBrowser: View {
                                     subject: .artist(name: artist.name),
                                     shape: .circle,
                                     fallbackSymbol: "person.crop.circle.fill",
-                                    fallbackLetter: String(artist.name.prefix(1)).uppercased()
+                                    fallbackLetter: String(artist.name.prefix(1)).uppercased(),
+                                    onEditArtist: { onEditArtist(artist) }
                                 )
                                 .frame(width: 52, height: 52)
                                 VStack(alignment: .leading, spacing: 3) {
@@ -792,6 +1112,11 @@ private struct ArtistBrowser: View {
                         .buttonStyle(.plain)
                         .padding(.vertical, 6)
                         .id(artist.id)
+                        .contextMenu {
+                            Button(L10n.text("metadataEditor.artist.menu")) {
+                                onEditArtist(artist)
+                            }
+                        }
                     }
                 }
                 .listStyle(.inset)
@@ -900,6 +1225,7 @@ private struct ArtistDetail: View {
     let onSelectAlbum: (AlbumGroup) -> Void
     let onEditTrack: (Track) -> Void
     let onEditAlbum: (AlbumGroup) -> Void
+    let onEditArtist: (ArtistGroup) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -932,7 +1258,8 @@ private struct ArtistDetail: View {
                     subject: .artist(name: artist.name),
                     shape: .circle,
                     fallbackSymbol: "person.crop.circle.fill",
-                    fallbackLetter: String(artist.name.prefix(1)).uppercased()
+                    fallbackLetter: String(artist.name.prefix(1)).uppercased(),
+                    onEditArtist: { onEditArtist(artist) }
                 )
                 .frame(width: 112, height: 112)
                 .shadow(color: .black.opacity(0.14), radius: 12, y: 6)
@@ -1058,6 +1385,7 @@ private struct ArtistDetail: View {
                     .contextMenu {
                         Button(L10n.text("track.play")) { player.play(track) }
                         PlaybackQueueContextActions(tracks: [track])
+                        TrackPlaybackAttributeActions(track: track)
                         Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
                         Divider()
                         Button(L10n.text("track.reveal")) { library.reveal(track) }

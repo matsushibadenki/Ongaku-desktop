@@ -107,6 +107,30 @@ private struct PlaybackSettingsView: View {
 
                 Divider()
 
+                HStack(alignment: .firstTextBaseline, spacing: AppTheme.spaceLG) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L10n.text("settings.playerPosition.title"))
+                            .font(.headline)
+                        Text(L10n.text("settings.playerPosition.description"))
+                            .font(.callout)
+                            .foregroundStyle(AppTheme.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(width: 290, alignment: .leading)
+
+                    Picker("", selection: $meterSettings.barPosition) {
+                        ForEach(PlayerBarPosition.allCases) { position in
+                            Text(L10n.text(position.localizationKey)).tag(position)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .frame(width: 180)
+                    .accessibilityLabel(L10n.text("settings.playerPosition.title"))
+                }
+
+                Divider()
+
                 VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
                     HStack(alignment: .firstTextBaseline) {
                         VStack(alignment: .leading, spacing: 4) {

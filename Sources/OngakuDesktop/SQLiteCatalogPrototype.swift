@@ -284,11 +284,21 @@ actor SQLiteCatalogPrototype {
                 CREATE INDEX track_artist_id_idx ON track(artist_id);
                 CREATE INDEX track_album_id_idx ON track(album_id);
                 CREATE INDEX track_added_at_idx ON track(added_at DESC);
+                CREATE TABLE playlist_folder (
+                    id TEXT PRIMARY KEY NOT NULL,
+                    name TEXT NOT NULL,
+                    sort_order INTEGER NOT NULL,
+                    created_at REAL NOT NULL,
+                    updated_at REAL NOT NULL
+                );
                 CREATE TABLE playlist (
                     id TEXT PRIMARY KEY NOT NULL,
                     name TEXT NOT NULL,
                     description TEXT NOT NULL,
                     artwork_path TEXT,
+                    folder_id TEXT REFERENCES playlist_folder(id) ON DELETE SET NULL,
+                    sort_order INTEGER NOT NULL,
+                    smart_definition TEXT,
                     created_at REAL NOT NULL,
                     updated_at REAL NOT NULL
                 );
@@ -409,7 +419,22 @@ actor SQLiteCatalogPrototype {
 
         try withStatement(
             database,
-            sql: "INSERT INTO playlist VALUES (?, ?, ?, ?, ?, ?)"
+            sql: "INSERT INTO playlist_folder VALUES (?, ?, ?, ?, ?)"
+        ) { statement in
+            for folder in document.playlistFolders {
+                try reset(statement, database: database)
+                try bind(folder.id.uuidString, to: 1, in: statement, database: database)
+                try bind(folder.name, to: 2, in: statement, database: database)
+                try bind(Int64(folder.sortOrder), to: 3, in: statement, database: database)
+                try bind(folder.createdAt.timeIntervalSince1970, to: 4, in: statement, database: database)
+                try bind(folder.updatedAt.timeIntervalSince1970, to: 5, in: statement, database: database)
+                try stepDone(statement, database: database)
+            }
+        }
+
+        try withStatement(
+            database,
+            sql: "INSERT INTO playlist VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         ) { playlistStatement in
             try withStatement(
                 database,
@@ -425,8 +450,20 @@ actor SQLiteCatalogPrototype {
                     } else {
                         try bindNull(to: 4, in: playlistStatement, database: database)
                     }
-                    try bind(playlist.createdAt.timeIntervalSince1970, to: 5, in: playlistStatement, database: database)
-                    try bind(playlist.updatedAt.timeIntervalSince1970, to: 6, in: playlistStatement, database: database)
+                    if let folderID = playlist.folderID {
+                        try bind(folderID.uuidString, to: 5, in: playlistStatement, database: database)
+                    } else {
+                        try bindNull(to: 5, in: playlistStatement, database: database)
+                    }
+                    try bind(Int64(playlist.sortOrder), to: 6, in: playlistStatement, database: database)
+                    if let definition = playlist.smartDefinition {
+                        let data = try JSONEncoder().encode(definition)
+                        try bind(String(decoding: data, as: UTF8.self), to: 7, in: playlistStatement, database: database)
+                    } else {
+                        try bindNull(to: 7, in: playlistStatement, database: database)
+                    }
+                    try bind(playlist.createdAt.timeIntervalSince1970, to: 8, in: playlistStatement, database: database)
+                    try bind(playlist.updatedAt.timeIntervalSince1970, to: 9, in: playlistStatement, database: database)
                     try stepDone(playlistStatement, database: database)
 
                     for (position, entry) in playlist.entries.enumerated() {
@@ -470,6 +507,7 @@ actor SQLiteCatalogPrototype {
             "album": identities.albums.count,
             "track": document.tracks.count,
             "track_search": document.tracks.count,
+            "playlist_folder": document.playlistFolders.count,
             "playlist": document.playlists.count,
             "playlist_entry": document.playlists.reduce(0) { $0 + $1.entries.count },
             "playback_event": document.playbackEvents.count,
@@ -487,6 +525,7 @@ actor SQLiteCatalogPrototype {
             ("artist", Set(identities.artists.keys.map(\.uuidString))),
             ("album", Set(identities.albums.keys.map(\.uuidString))),
             ("track", Set(document.tracks.map { $0.id.uuidString })),
+            ("playlist_folder", Set(document.playlistFolders.map { $0.id.uuidString })),
             ("playlist", Set(document.playlists.map { $0.id.uuidString })),
             ("playlist_entry", Set(document.playlists.flatMap { $0.entries }.map { $0.id.uuidString })),
             ("playback_event", Set(document.playbackEvents.map { $0.id.uuidString })),
@@ -553,18 +592,21 @@ actor SQLiteCatalogPrototype {
         }
         let snapshotReferences = (
             tracks: Set(snapshot.tracks.map(\.id)),
+            folders: Set(snapshot.playlistFolders.map(\.id)),
             playlists: Set(snapshot.playlists.map(\.id)),
             entries: Set(snapshot.playlists.flatMap(\.entries).map(\.id)),
             events: Set(snapshot.playbackEvents.map(\.id))
         )
         let documentReferences = (
             tracks: Set(document.tracks.map(\.id)),
+            folders: Set(document.playlistFolders.map(\.id)),
             playlists: Set(document.playlists.map(\.id)),
             entries: Set(document.playlists.flatMap(\.entries).map(\.id)),
             events: Set(document.playbackEvents.map(\.id))
         )
         guard snapshot.libraryID == document.libraryID,
               snapshotReferences.tracks == documentReferences.tracks,
+              snapshotReferences.folders == documentReferences.folders,
               snapshotReferences.playlists == documentReferences.playlists,
               snapshotReferences.entries == documentReferences.entries,
               snapshotReferences.events == documentReferences.events else {

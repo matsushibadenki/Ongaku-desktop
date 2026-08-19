@@ -24,7 +24,7 @@ struct SQLiteCatalogPrototypeTests {
         #expect(report.trackCount == 2)
         #expect(report.artistCount == 2)
         #expect(report.albumCount == 2)
-        #expect(report.playlistCount == 1)
+        #expect(report.playlistCount == 2)
         #expect(report.playlistEntryCount == 2)
         #expect(report.playbackEventCount == 1)
         #expect(await prototype.hasInstalledDatabase())
@@ -52,6 +52,7 @@ struct SQLiteCatalogPrototypeTests {
         let restored = try await prototype.rollbackJSON(to: manifestURL)
         #expect(restored.libraryID == document.libraryID)
         #expect(restored.tracks.map(\.id) == document.tracks.map(\.id))
+        #expect(restored.playlistFolders.map(\.id) == document.playlistFolders.map(\.id))
         #expect(restored.playlists.map(\.id) == document.playlists.map(\.id))
         #expect(restored.playbackEvents.map(\.id) == document.playbackEvents.map(\.id))
         #expect(!(await prototype.hasInstalledDatabase()))
@@ -92,14 +93,27 @@ struct SQLiteCatalogPrototypeTests {
             sha256: "night", addedAt: .now, lastVerifiedAt: nil, health: .unchecked,
             artistID: UUID(), albumID: UUID()
         )
+        let folder = PlaylistFolder(name: "Collections", sortOrder: 0)
         let playlist = Playlist(
             name: "Mixed",
+            folderID: folder.id,
+            sortOrder: 0,
             entries: [PlaylistEntry(trackID: first.id), PlaylistEntry(trackID: second.id)]
+        )
+        let smartPlaylist = Playlist(
+            name: "Favorites",
+            sortOrder: 1,
+            smartDefinition: SmartPlaylistDefinition(
+                root: SmartPlaylistRuleGroup(
+                    rules: [SmartPlaylistRule(field: .favorite, comparison: .isTrue)]
+                )
+            )
         )
         let event = PlaybackEvent(trackID: first.id, kind: .completed, position: first.duration)
         return LibraryDocument(
             tracks: [first, second],
-            playlists: [playlist],
+            playlists: [playlist, smartPlaylist],
+            playlistFolders: [folder],
             playbackEvents: [event]
         )
     }

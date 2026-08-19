@@ -11,6 +11,7 @@ struct TrackInspector: View {
                     VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
                         artwork(for: track)
                         identity(track)
+                        playbackDetails(track)
                         integrity(track)
                         fileDetails(track)
 
@@ -38,6 +39,7 @@ struct TrackInspector: View {
                 )
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppTheme.sidebar)
         .navigationTitle(L10n.text("inspector.title"))
     }
@@ -88,6 +90,78 @@ struct TrackInspector: View {
         .padding(AppTheme.spaceMD)
         .frame(maxWidth: .infinity, alignment: .leading)
         .ongakuPanel()
+    }
+
+    private func playbackDetails(_ track: Track) -> some View {
+        let statistics = library.playbackStatistics(for: track.id)
+        return VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+            Text(L10n.text("inspector.playback"))
+                .font(.headline)
+
+            HStack(spacing: AppTheme.spaceSM) {
+                Button {
+                    Task { await library.setFavorite(!track.isFavorite, for: track.id) }
+                } label: {
+                    Label(
+                        L10n.text(track.isFavorite ? "track.favorite.remove" : "track.favorite.add"),
+                        systemImage: track.isFavorite ? "heart.fill" : "heart"
+                    )
+                }
+
+                Menu {
+                    Button(L10n.text("track.rating.none")) {
+                        Task { await library.setRating(0, for: track.id) }
+                    }
+                    Divider()
+                    ForEach(1...5, id: \.self) { rating in
+                        Button(String(repeating: "★", count: rating)) {
+                            Task { await library.setRating(rating, for: track.id) }
+                        }
+                    }
+                } label: {
+                    Label(ratingLabel(track.rating), systemImage: "star.fill")
+                }
+            }
+            .buttonStyle(.bordered)
+
+            Toggle(
+                L10n.text("track.playback.exclude"),
+                isOn: Binding(
+                    get: { track.isExcludedFromPlayback },
+                    set: { isExcluded in
+                        Task {
+                            await library.setExcludedFromPlayback(isExcluded, for: track.id)
+                        }
+                    }
+                )
+            )
+
+            Divider()
+            detailRow(
+                L10n.text("inspector.playCount"),
+                value: statistics.playCount.formatted()
+            )
+            detailRow(
+                L10n.text("inspector.skipCount"),
+                value: statistics.skipCount.formatted()
+            )
+            detailRow(
+                L10n.text("inspector.lastPlayed"),
+                value: statistics.lastPlayedAt?.formatted(
+                    date: .abbreviated,
+                    time: .shortened
+                ) ?? "—"
+            )
+        }
+        .padding(AppTheme.spaceMD)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .ongakuPanel()
+    }
+
+    private func ratingLabel(_ rating: Int) -> String {
+        rating == 0
+            ? L10n.text("track.rating.none")
+            : String(repeating: "★", count: rating)
     }
 
     private func fileDetails(_ track: Track) -> some View {

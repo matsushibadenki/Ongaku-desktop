@@ -34,6 +34,7 @@ struct ArtworkThumbnail: View {
     let fallbackSymbol: String
     let fallbackLetter: String
     var onEditAlbum: (() -> Void)? = nil
+    var onEditArtist: (() -> Void)? = nil
 
     @State private var artwork: NSImage?
     @State private var isRefreshing = false
@@ -78,7 +79,8 @@ struct ArtworkThumbnail: View {
         .contentShape(thumbnailShape)
         .accessibilityHidden(true)
         .contextMenu {
-            if case .album = subject {
+            switch subject {
+            case .album:
                 if let onEditAlbum {
                     Button {
                         onEditAlbum()
@@ -96,6 +98,14 @@ struct ArtworkThumbnail: View {
                     )
                 }
                 .disabled(isRefreshing)
+            case .artist:
+                if let onEditArtist {
+                    Button {
+                        onEditArtist()
+                    } label: {
+                        Label(L10n.text("metadataEditor.artist.menu"), systemImage: "pencil")
+                    }
+                }
             }
         }
         .alert(
@@ -192,6 +202,17 @@ actor EmbeddedArtworkCache {
             missingPaths.insert(key)
         }
         return nil
+    }
+
+    func invalidate(_ urls: [URL]) {
+        let keys = Set(urls.map { $0.standardizedFileURL.path })
+        for key in keys {
+            if let removed = dataByPath.removeValue(forKey: key) {
+                totalCost -= removed.count
+            }
+            missingPaths.remove(key)
+        }
+        insertionOrder.removeAll { keys.contains($0) }
     }
 
     private func loadArtworkData(from url: URL) async -> Data? {

@@ -56,6 +56,9 @@ enum PlaybackQueueNavigator {
         mode: PlaybackMode,
         randomIndex: (Int) -> Int = { Int.random(in: 0..<$0) }
     ) -> Track? {
+        let queue = queue.filter {
+            !$0.isExcludedFromPlayback || $0.id == current.id
+        }
         switch mode {
         case .sequential:
             guard let index = queue.firstIndex(where: { $0.id == current.id }) else {
@@ -100,6 +103,9 @@ enum PlaybackQueueNavigator {
         mode: PlaybackMode,
         randomIndex: (Int) -> Int = { Int.random(in: 0..<$0) }
     ) -> Track? {
+        let queue = queue.filter {
+            !$0.isExcludedFromPlayback || $0.id == current.id
+        }
         switch mode {
         case .sequential, .repeatOne:
             guard let index = queue.firstIndex(where: { $0.id == current.id }),

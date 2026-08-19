@@ -25,7 +25,7 @@ struct ApplicationSettingsTests {
         #expect(settings.selectedAppearance.colorScheme == nil)
     }
 
-    @Test("Player meter style and backlight persist")
+    @Test("Player presentation settings persist and the player defaults to the bottom")
     @MainActor
     func playerMeterPersistence() {
         let suiteName = "OngakuDesktopTests.PlayerMeter.\(UUID().uuidString)"
@@ -35,13 +35,16 @@ struct ApplicationSettingsTests {
         let settings = PlayerMeterSettings(defaults: defaults)
         #expect(settings.style == .spectrum)
         #expect(settings.backlight == .cyan)
+        #expect(settings.barPosition == .bottom)
 
         settings.style = .vu
         settings.backlight = .orange
+        settings.barPosition = .top
 
         let restored = PlayerMeterSettings(defaults: defaults)
         #expect(restored.style == .vu)
         #expect(restored.backlight == .orange)
+        #expect(restored.barPosition == .top)
     }
 
     @Test("Mini Player restores the original window frame")

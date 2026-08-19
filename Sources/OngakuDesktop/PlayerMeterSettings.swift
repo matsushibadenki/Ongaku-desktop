@@ -15,6 +15,17 @@ enum PlayerMeterStyle: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum PlayerBarPosition: String, CaseIterable, Identifiable, Sendable {
+    case bottom
+    case top
+
+    var id: String { rawValue }
+
+    var localizationKey: String {
+        "settings.playerPosition.\(rawValue)"
+    }
+}
+
 enum VUMeterBacklight: String, CaseIterable, Identifiable, Sendable {
     case cyan
     case green
@@ -41,6 +52,7 @@ enum VUMeterBacklight: String, CaseIterable, Identifiable, Sendable {
 final class PlayerMeterSettings: ObservableObject {
     nonisolated static let styleDefaultsKey = "player.meter.style.v1"
     nonisolated static let backlightDefaultsKey = "player.meter.backlight.v1"
+    nonisolated static let barPositionDefaultsKey = "player.bar.position.v1"
 
     @Published var style: PlayerMeterStyle {
         didSet { defaults.set(style.rawValue, forKey: Self.styleDefaultsKey) }
@@ -48,6 +60,10 @@ final class PlayerMeterSettings: ObservableObject {
 
     @Published var backlight: VUMeterBacklight {
         didSet { defaults.set(backlight.rawValue, forKey: Self.backlightDefaultsKey) }
+    }
+
+    @Published var barPosition: PlayerBarPosition {
+        didSet { defaults.set(barPosition.rawValue, forKey: Self.barPositionDefaultsKey) }
     }
 
     private let defaults: UserDefaults
@@ -58,5 +74,7 @@ final class PlayerMeterSettings: ObservableObject {
             .flatMap(PlayerMeterStyle.init(rawValue:)) ?? .spectrum
         backlight = defaults.string(forKey: Self.backlightDefaultsKey)
             .flatMap(VUMeterBacklight.init(rawValue:)) ?? .cyan
+        barPosition = defaults.string(forKey: Self.barPositionDefaultsKey)
+            .flatMap(PlayerBarPosition.init(rawValue:)) ?? .bottom
     }
 }

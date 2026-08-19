@@ -33,6 +33,7 @@ struct PlayerBar: View {
             }
             .frame(height: 104)
             .background(AppTheme.surface)
+            Divider().overlay(AppTheme.rule)
         }
     }
 
@@ -305,11 +306,22 @@ private struct ChannelSpectrumView: View {
                 .foregroundStyle(AppTheme.secondaryInk)
 
             GeometryReader { proxy in
-                HStack(alignment: .bottom, spacing: 2) {
-                    ForEach(Array(bands.enumerated()), id: \.offset) { _, value in
-                        SpectrumBar(value: value, availableHeight: proxy.size.height)
+                ZStack(alignment: .bottom) {
+                    Rectangle()
+                        .fill(AppTheme.rule.opacity(0.72))
+                        .frame(height: 1)
+
+                    HStack(alignment: .bottom, spacing: 2) {
+                        ForEach(Array(bands.enumerated()), id: \.offset) { _, value in
+                            SpectrumBar(value: value, availableHeight: proxy.size.height)
+                        }
                     }
                 }
+                .frame(
+                    width: proxy.size.width,
+                    height: proxy.size.height,
+                    alignment: .bottom
+                )
             }
         }
         .accessibilityElement(children: .ignore)
@@ -332,9 +344,19 @@ private struct SpectrumBar: View {
         Capsule()
             .fill(AppTheme.accent)
             .frame(maxWidth: .infinity)
-            .frame(height: max(2, availableHeight * min(max(value, 0), 1)))
+            .frame(height: max(2, availableHeight * SpectrumPresentation.height(for: value)))
             .opacity(value > 0.015 ? 1 : 0.24)
             .animation(.linear(duration: 0.08), value: value)
+    }
+}
+
+enum SpectrumPresentation {
+    private static let displayGain = 1.65
+    private static let responseCurve = 0.82
+
+    nonisolated static func height(for value: Double) -> Double {
+        let amplified = min(max(value, 0) * displayGain, 1)
+        return pow(amplified, responseCurve)
     }
 }
 

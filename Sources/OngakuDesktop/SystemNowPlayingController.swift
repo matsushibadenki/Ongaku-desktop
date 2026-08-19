@@ -2,6 +2,23 @@ import AppKit
 import Combine
 import MediaPlayer
 
+private final class NowPlayingArtworkImageBox: @unchecked Sendable {
+    let image: NSImage
+
+    init(_ image: NSImage) {
+        self.image = image
+    }
+}
+
+// MediaPlayer invokes this request handler on MPNowPlayingInfoCenter/accessQueue.
+// Creating it outside the MainActor controller avoids attaching a main-queue
+// executor precondition to the callback.
+private func makeNowPlayingArtwork(
+    from box: NowPlayingArtworkImageBox
+) -> MPMediaItemArtwork {
+    MPMediaItemArtwork(boundsSize: box.image.size) { _ in box.image }
+}
+
 struct SystemNowPlayingSnapshot: Equatable, Sendable {
     let trackID: Track.ID
     let title: String
@@ -145,7 +162,9 @@ final class SystemNowPlayingController: ObservableObject {
                   let data,
                   let image = NSImage(data: data),
                   self?.artworkTrackID == track.id else { return }
-            self?.artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+            self?.artwork = makeNowPlayingArtwork(
+                from: NowPlayingArtworkImageBox(image)
+            )
             self?.synchronize()
         }
     }

@@ -2,25 +2,26 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @Environment(\.undoManager) private var undoManager
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var isImporting = false
     @State private var isDropTargeted = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
-            LibrarySidebar()
-                .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 300)
-        } content: {
-            LibraryContent()
-                .navigationSplitViewColumnWidth(min: 660, ideal: 760)
-        } detail: {
-            TrackInspector()
-                .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            PlayerBar()
+        VStack(spacing: 0) {
+            if meterSettings.barPosition == .top {
+                persistentPlayer
+            }
+
+            navigationContent
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            if meterSettings.barPosition == .bottom {
+                persistentPlayer
+            }
         }
         .background(AppTheme.canvas)
         .tint(AppTheme.accent)
@@ -54,6 +55,9 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .requestVerification)) { _ in
             Task { await library.verifyLibrary() }
         }
+        .onAppear {
+            library.undoManager = undoManager
+        }
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -71,6 +75,26 @@ struct ContentView: View {
                 .help(L10n.text("toolbar.verifyHelp"))
                 .disabled(library.tracks.isEmpty || library.activity == .verifying)
             }
+        }
+        .toolbarBackground(AppTheme.windowBar, for: .windowToolbar)
+        .toolbarBackground(.visible, for: .windowToolbar)
+    }
+
+    private var persistentPlayer: some View {
+        PlayerBar()
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var navigationContent: some View {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            LibrarySidebar()
+                .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 300)
+        } content: {
+            LibraryContent()
+                .navigationSplitViewColumnWidth(min: 660, ideal: 760)
+        } detail: {
+            TrackInspector()
+                .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
         }
     }
 
@@ -106,5 +130,6 @@ struct ContentView: View {
     ContentView()
         .environmentObject(LibraryStore())
         .environmentObject(PlaybackController())
+        .environmentObject(PlayerMeterSettings())
         .frame(width: 1240, height: 780)
 }

@@ -17,6 +17,9 @@ final class WindowPresentationController: ObservableObject {
 
     func attach(to window: NSWindow) {
         managedWindow = window
+        window.titlebarAppearsTransparent = true
+        window.backgroundColor = AppTheme.windowBackground
+        window.titlebarSeparatorStyle = .none
         updateMiniaturizeButtonHelp(in: window)
         if isMiniPlayer {
             enforceMiniPlayerSize(in: window)

@@ -5,11 +5,13 @@ import UniformTypeIdentifiers
 enum MetadataEditTarget: Identifiable {
     case track(Track)
     case album(id: UUID, name: String, artist: String, trackIDs: [Track.ID])
+    case artist(id: UUID, name: String, trackIDs: [Track.ID])
 
     var id: String {
         switch self {
         case .track(let track): "track:\(track.id.uuidString)"
         case .album(let id, _, _, _): "album:\(id)"
+        case .artist(let id, _, _): "artist:\(id)"
         }
     }
 }
@@ -45,15 +47,19 @@ struct MetadataEditorView: View {
             _title = State(initialValue: "")
             _artist = State(initialValue: artist)
             _album = State(initialValue: name)
+        case .artist(_, let name, _):
+            _title = State(initialValue: "")
+            _artist = State(initialValue: name)
+            _album = State(initialValue: "")
         }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
             VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
-                Text(L10n.text(isTrack ? "metadataEditor.track.title" : "metadataEditor.album.title"))
+                Text(L10n.text(titleKey))
                     .font(.title2.bold())
-                Text(L10n.text(isTrack ? "metadataEditor.track.description" : "metadataEditor.album.description"))
+                Text(L10n.text(descriptionKey))
                     .font(.callout)
                     .foregroundStyle(AppTheme.secondaryInk)
                     .fixedSize(horizontal: false, vertical: true)
@@ -75,11 +81,13 @@ struct MetadataEditorView: View {
                         text: $artist,
                         field: .artist
                     )
-                    field(
-                        L10n.text("metadataEditor.field.album"),
-                        text: $album,
-                        field: .album
-                    )
+                    if !isArtist {
+                        field(
+                            L10n.text("metadataEditor.field.album"),
+                            text: $album,
+                            field: .album
+                        )
+                    }
                 }
             }
             .padding(AppTheme.spaceMD)
@@ -94,6 +102,11 @@ struct MetadataEditorView: View {
             HStack {
                 if case .album(_, _, _, let trackIDs) = target {
                     Text(L10n.format("metadataEditor.album.songCount", trackIDs.count))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
+                if case .artist(_, _, let trackIDs) = target {
+                    Text(L10n.format("metadataEditor.artist.songCount", trackIDs.count))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(AppTheme.secondaryInk)
                 }
@@ -119,7 +132,7 @@ struct MetadataEditorView: View {
         .background(AppTheme.canvas)
         .interactiveDismissDisabled(isSaving)
         .onAppear {
-            focusedField = isTrack ? .title : .album
+            focusedField = isTrack ? .title : (isArtist ? .artist : .album)
             Task {
                 hasCustomArtwork = await ArtworkResolver.shared
                     .customArtworkData(for: sourceArtworkSubject) != nil
@@ -138,9 +151,26 @@ struct MetadataEditorView: View {
         return false
     }
 
+    private var isArtist: Bool {
+        if case .artist = target { return true }
+        return false
+    }
+
+    private var titleKey: String {
+        if isTrack { return "metadataEditor.track.title" }
+        if isArtist { return "metadataEditor.artist.title" }
+        return "metadataEditor.album.title"
+    }
+
+    private var descriptionKey: String {
+        if isTrack { return "metadataEditor.track.description" }
+        if isArtist { return "metadataEditor.artist.description" }
+        return "metadataEditor.album.description"
+    }
+
     private var canSave: Bool {
         !artist.trimmedForMetadata.isEmpty
-            && !album.trimmedForMetadata.isEmpty
+            && (isArtist || !album.trimmedForMetadata.isEmpty)
             && (!isTrack || !title.trimmedForMetadata.isEmpty)
     }
 
@@ -155,7 +185,9 @@ struct MetadataEditorView: View {
 
     private var artworkEditor: some View {
         VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
-            Text(L10n.text("metadataEditor.artwork.title"))
+            Text(L10n.text(
+                isArtist ? "metadataEditor.artist.photo.title" : "metadataEditor.artwork.title"
+            ))
                 .font(.headline)
 
             Group {
@@ -167,14 +199,21 @@ struct MetadataEditorView: View {
                     ArtworkThumbnail(
                         tracks: targetTracks,
                         subject: sourceArtworkSubject,
-                        shape: .roundedRectangle,
-                        fallbackSymbol: "photo",
-                        fallbackLetter: String(album.prefix(1)).uppercased()
+                        shape: isArtist ? .circle : .roundedRectangle,
+                        fallbackSymbol: isArtist ? "person.crop.circle.fill" : "photo",
+                        fallbackLetter: String((isArtist ? artist : album).prefix(1)).uppercased()
                     )
                 }
             }
             .frame(width: 144, height: 144)
-            .clipShape(RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))
+            .clipShape(
+                isArtist
+                    ? AnyShape(Circle())
+                    : AnyShape(RoundedRectangle(
+                        cornerRadius: AppTheme.radiusMedium,
+                        style: .continuous
+                    ))
+            )
 
             Button(L10n.text("metadataEditor.artwork.choose")) {
                 isSelectingArtwork = true
@@ -199,6 +238,9 @@ struct MetadataEditorView: View {
         case .album(_, _, _, let trackIDs):
             let ids = Set(trackIDs)
             return library.tracks.filter { ids.contains($0.id) }
+        case .artist(_, _, let trackIDs):
+            let ids = Set(trackIDs)
+            return library.tracks.filter { ids.contains($0.id) }
         }
     }
 
@@ -206,11 +248,14 @@ struct MetadataEditorView: View {
         switch target {
         case .track(let track): .album(name: track.album, artist: track.artist)
         case .album(_, let name, let artist, _): .album(name: name, artist: artist)
+        case .artist(_, let name, _): .artist(name: name)
         }
     }
 
     private var destinationArtworkSubject: ArtworkSubject {
-        .album(name: album.trimmedForMetadata, artist: artist.trimmedForMetadata)
+        isArtist
+            ? .artist(name: artist.trimmedForMetadata)
+            : .album(name: album.trimmedForMetadata, artist: artist.trimmedForMetadata)
     }
 
     private func importArtwork(_ result: Result<[URL], Error>) {
@@ -239,23 +284,30 @@ struct MetadataEditorView: View {
         isSaving = true
         errorMessage = nil
         do {
-            try await persistArtworkChange()
-
             switch target {
             case .track(let track):
                 try await library.updateTrackMetadata(
                     id: track.id,
                     title: title.trimmedForMetadata,
                     artist: artist.trimmedForMetadata,
-                    album: album.trimmedForMetadata
+                    album: album.trimmedForMetadata,
+                    artwork: selectedArtworkData.map(AudioArtworkChange.set) ?? .unchanged
                 )
             case .album(_, _, _, let trackIDs):
                 try await library.updateAlbumMetadata(
                     trackIDs: trackIDs,
                     artist: artist.trimmedForMetadata,
-                    album: album.trimmedForMetadata
+                    album: album.trimmedForMetadata,
+                    artwork: selectedArtworkData.map(AudioArtworkChange.set) ?? .unchanged
+                )
+            case .artist(_, _, let trackIDs):
+                try await library.updateArtistMetadata(
+                    trackIDs: trackIDs,
+                    artist: artist.trimmedForMetadata
                 )
             }
+            try await persistArtworkChange()
+            library.noteArtworkChanged()
             dismiss()
         } catch {
             errorMessage = error.localizedDescription

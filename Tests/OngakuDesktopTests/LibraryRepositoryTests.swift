@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 @testable import OngakuDesktop
@@ -15,11 +16,216 @@ struct LibraryRepositoryTests {
         return url
     }
 
+    @Test("Playlist create, edit, artwork, duplicate, delete, and restart are transactional")
+    @MainActor
+    func managesPlaylists() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        let image = NSImage(size: NSSize(width: 4, height: 4))
+        image.lockFocus()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(rect: NSRect(x: 0, y: 0, width: 4, height: 4)).fill()
+        image.unlockFocus()
+        let artworkData = try #require(image.tiffRepresentation)
+
+        let originalID = try await store.createPlaylist(
+            name: "Road Trip",
+            description: "Long drives",
+            artworkData: artworkData
+        )
+        let original = try #require(store.playlists.first { $0.id == originalID })
+        let originalArtworkPath = try #require(original.artworkPath)
+        #expect(FileManager.default.fileExists(atPath: originalArtworkPath))
+        #expect(store.selectedPlaylistID == originalID)
+
+        let duplicatedID = try await store.duplicatePlaylist(originalID)
+        let duplicateID = try #require(duplicatedID)
+        let duplicate = try #require(store.playlists.first { $0.id == duplicateID })
+        let duplicateArtworkPath = try #require(duplicate.artworkPath)
+        #expect(duplicate.name == L10n.format("playlist.copyName", original.name))
+        #expect(duplicateArtworkPath != originalArtworkPath)
+        #expect(FileManager.default.fileExists(atPath: duplicateArtworkPath))
+
+        try await store.updatePlaylist(
+            id: originalID,
+            name: "Highway",
+            description: "Night driving",
+            artworkData: nil,
+            removesArtwork: true
+        )
+        let updated = try #require(store.playlists.first { $0.id == originalID })
+        #expect(updated.name == "Highway")
+        #expect(updated.description == "Night driving")
+        #expect(updated.artworkPath == nil)
+        #expect(!FileManager.default.fileExists(atPath: originalArtworkPath))
+
+        try await store.deletePlaylist(duplicateID)
+        #expect(!FileManager.default.fileExists(atPath: duplicateArtworkPath))
+        #expect(store.playlists.map(\.id) == [originalID])
+
+        let restored = try await LibraryRepository(rootURL: root).load().document
+        #expect(restored.playlists.map(\.id) == [originalID])
+        #expect(restored.playlists[0].name == "Highway")
+
+        try await store.deletePlaylist(originalID)
+        #expect(store.playlists.isEmpty)
+        #expect(store.selectedPlaylistID == nil)
+    }
+
+    @Test("Playlist membership preserves order, ignores duplicates, removes, and persists")
+    @MainActor
+    func managesPlaylistMembership() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let first = Track(
+            id: UUID(), title: "First", artist: "Artist", album: "Album",
+            duration: 10, fileSize: 1, managedPath: root.appendingPathComponent("1.wav").path,
+            sha256: "1", addedAt: .now, lastVerifiedAt: .now, health: .verified
+        )
+        let second = Track(
+            id: UUID(), title: "Second", artist: "Artist", album: "Album",
+            duration: 20, fileSize: 1, managedPath: root.appendingPathComponent("2.wav").path,
+            sha256: "2", addedAt: .now, lastVerifiedAt: .now, health: .verified
+        )
+        try await repository.save(tracks: [first, second])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let playlistID = try await store.createPlaylist(
+            name: "Selection", description: "", artworkData: nil
+        )
+
+        let added = try await store.addTracks(
+            [second.id, first.id, second.id], to: playlistID
+        )
+        #expect(added == 2)
+        #expect(store.selectedPlaylist?.entries.map(\.trackID) == [second.id, first.id])
+        #expect(store.playlistsContaining(trackIDs: [first.id]).map(\.id) == [playlistID])
+
+        let duplicateCount = try await store.addTracks([first.id], to: playlistID)
+        #expect(duplicateCount == 0)
+        #expect(store.selectedPlaylist?.entries.count == 2)
+
+        let removed = try await store.removeTracks([second.id], from: playlistID)
+        #expect(removed == 1)
+        #expect(store.selectedPlaylist?.entries.map(\.trackID) == [first.id])
+
+        let restored = try await LibraryRepository(rootURL: root).load().document
+        #expect(restored.playlists.first?.entries.map(\.trackID) == [first.id])
+    }
+
+    @Test("Playlist order can be changed and restored with Undo and Redo")
+    @MainActor
+    func reordersPlaylistWithUndo() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let tracks = (1...3).map { index in
+            Track(
+                id: UUID(), title: "Track \(index)", artist: "Artist", album: "Album",
+                duration: 10, fileSize: 1,
+                managedPath: root.appendingPathComponent("\(index).wav").path,
+                sha256: "\(index)", addedAt: .now, lastVerifiedAt: .now,
+                health: .verified
+            )
+        }
+        try await repository.save(tracks: tracks)
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let playlistID = try await store.createPlaylist(
+            name: "Ordered", description: "", artworkData: nil
+        )
+        _ = try await store.addTracks(tracks.map(\.id), to: playlistID)
+
+        let undoManager = UndoManager()
+        store.undoManager = undoManager
+        let moved = try await store.moveTracks(
+            [tracks[2].id], before: tracks[0].id, in: playlistID
+        )
+        #expect(moved)
+        #expect(store.selectedPlaylist?.entries.map(\.trackID) == [
+            tracks[2].id, tracks[0].id, tracks[1].id
+        ])
+
+        undoManager.undo()
+        try await waitUntil {
+            store.selectedPlaylist?.entries.map(\.trackID) == tracks.map(\.id)
+        }
+        #expect(undoManager.canRedo)
+
+        undoManager.redo()
+        try await waitUntil {
+            store.selectedPlaylist?.entries.map(\.trackID) == [
+                tracks[2].id, tracks[0].id, tracks[1].id
+            ]
+        }
+        let restored = try await LibraryRepository(rootURL: root).load().document
+        #expect(restored.playlists.first?.entries.map(\.trackID) == [
+            tracks[2].id, tracks[0].id, tracks[1].id
+        ])
+    }
+
+    @Test("Playlist folders preserve membership and sidebar order")
+    @MainActor
+    func managesPlaylistFolders() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = LibraryStore(repository: LibraryRepository(rootURL: root))
+        await store.load()
+        let first = try await store.createPlaylist(name: "First", description: "", artworkData: nil)
+        let second = try await store.createPlaylist(name: "Second", description: "", artworkData: nil)
+        let third = try await store.createPlaylist(name: "Third", description: "", artworkData: nil)
+        let favorites = try await store.createPlaylistFolder(name: "Favorites")
+        let seasons = try await store.createPlaylistFolder(name: "Seasons")
+
+        try await store.movePlaylist(first, to: favorites)
+        try await store.movePlaylist(second, to: favorites, before: first)
+        try await store.movePlaylist(third, to: seasons)
+        #expect(store.playlists(in: favorites).map(\.id) == [second, first])
+
+        try await store.movePlaylistFolder(seasons, before: favorites)
+        #expect(store.sortedPlaylistFolders.map(\.id) == [seasons, favorites])
+
+        let undoManager = UndoManager()
+        store.undoManager = undoManager
+        try await store.deletePlaylistFolder(favorites)
+        #expect(store.playlistFolders.map(\.id) == [seasons])
+        #expect(Set(store.playlists(in: nil).map(\.id)) == [first, second])
+
+        undoManager.undo()
+        try await waitUntil {
+            store.playlistFolders.contains(where: { $0.id == favorites })
+        }
+        #expect(store.playlists(in: favorites).map(\.id) == [second, first])
+
+        let restored = try await LibraryRepository(rootURL: root).load().document
+        #expect(restored.playlistFolders.sorted { $0.sortOrder < $1.sortOrder }.map(\.id) == [
+            seasons, favorites
+        ])
+        #expect(restored.playlists.filter { $0.folderID == favorites }
+            .sorted { $0.sortOrder < $1.sortOrder }.map(\.id) == [second, first])
+    }
+
+    @MainActor
+    private func waitUntil(
+        _ condition: @escaping @MainActor () -> Bool
+    ) async throws {
+        for _ in 0..<100 {
+            if condition() { return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        Issue.record("Timed out waiting for the asynchronous playlist operation")
+    }
+
     @Test("Manifest round-trips atomically")
     func manifestRoundTrip() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let repository = LibraryRepository(rootURL: root)
-        let track = Track(
+        var track = Track(
             id: UUID(),
             title: "Test",
             artist: "Artist",
@@ -32,6 +238,9 @@ struct LibraryRepositoryTests {
             lastVerifiedAt: .now,
             health: .verified
         )
+        track.isFavorite = true
+        track.rating = 4
+        track.isExcludedFromPlayback = true
 
         try await repository.save(tracks: [track])
         let loaded = try await repository.load()
@@ -40,6 +249,9 @@ struct LibraryRepositoryTests {
         #expect(loaded.document.tracks[0].title == track.title)
         #expect(loaded.document.tracks[0].sha256 == track.sha256)
         #expect(loaded.document.tracks[0].health == .verified)
+        #expect(loaded.document.tracks[0].isFavorite)
+        #expect(loaded.document.tracks[0].rating == 4)
+        #expect(loaded.document.tracks[0].isExcludedFromPlayback)
         try? FileManager.default.removeItem(at: root)
     }
 
@@ -186,6 +398,66 @@ struct LibraryRepositoryTests {
         #expect(FileManager.default.fileExists(
             atPath: root.appendingPathComponent("library-schema-3.migration-backup.json").path
         ))
+    }
+
+    @Test("Schema 4 migrates playback attributes with safe defaults and preserves the queue")
+    func migratesSchemaFourCatalog() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let manifest = """
+        {
+          "schemaVersion": 4,
+          "updatedAt": "2026-08-18T00:00:00Z",
+          "tracks": [],
+          "libraryID": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+          "createdAt": "2026-08-16T00:00:00Z",
+          "playlists": [],
+          "playbackEvents": [],
+          "playbackQueue": { "trackIDs": [], "position": 12.5 }
+        }
+        """
+        try Data(manifest.utf8).write(to: root.appendingPathComponent("library-v1.json"))
+
+        let loaded = try await LibraryRepository(rootURL: root).load()
+        #expect(loaded.migratedFromSchemaVersion == 4)
+        #expect(loaded.document.schemaVersion == LibraryDocument.currentSchema)
+        #expect(loaded.document.playbackQueue?.position == 12.5)
+        #expect(FileManager.default.fileExists(
+            atPath: root.appendingPathComponent("library-schema-4.migration-backup.json").path
+        ))
+    }
+
+    @Test("Schema 5 preserves playlist order while adding folders")
+    func migratesSchemaFivePlaylistOrganization() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let firstID = UUID()
+        let secondID = UUID()
+        let libraryID = UUID()
+        let json = """
+        {
+          "schemaVersion": 5,
+          "updatedAt": "2026-08-19T00:00:00Z",
+          "tracks": [],
+          "libraryID": "\(libraryID.uuidString)",
+          "createdAt": "2026-08-19T00:00:00Z",
+          "playlists": [
+            {"id":"\(firstID.uuidString)","name":"First","description":"","entries":[],"createdAt":"2026-08-19T00:00:00Z","updatedAt":"2026-08-19T00:00:00Z"},
+            {"id":"\(secondID.uuidString)","name":"Second","description":"","entries":[],"createdAt":"2026-08-19T00:00:00Z","updatedAt":"2026-08-19T00:00:00Z"}
+          ],
+          "playbackEvents": []
+        }
+        """
+        try Data(json.utf8).write(to: root.appendingPathComponent("library-v1.json"))
+
+        let loaded = try await LibraryRepository(rootURL: root).load()
+        #expect(loaded.migratedFromSchemaVersion == 5)
+        #expect(loaded.document.schemaVersion == LibraryDocument.currentSchema)
+        #expect(loaded.document.playlistFolders.isEmpty)
+        #expect(loaded.document.playlists.map(\.id) == [firstID, secondID])
+        #expect(loaded.document.playlists.map(\.sortOrder) == [0, 1])
     }
 
     @Test("Playback queue order, current track, and position survive restart")

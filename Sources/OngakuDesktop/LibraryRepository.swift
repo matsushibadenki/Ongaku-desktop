@@ -1,4 +1,5 @@
 import AVFoundation
+import AppKit
 import CryptoKit
 import Foundation
 
@@ -56,6 +57,37 @@ actor LibraryRepository {
         var createdAt: Date
         var playlists: [Playlist]
         var playbackEvents: [PlaybackEvent]
+    }
+
+    private struct Schema4LibraryDocument: Decodable {
+        var updatedAt: Date
+        var tracks: [Track]
+        var libraryID: UUID
+        var createdAt: Date
+        var playlists: [Playlist]
+        var playbackEvents: [PlaybackEvent]
+        var playbackQueue: PlaybackQueueState?
+    }
+
+    private struct Schema5LibraryDocument: Decodable {
+        var updatedAt: Date
+        var tracks: [Track]
+        var libraryID: UUID
+        var createdAt: Date
+        var playlists: [Playlist]
+        var playbackEvents: [PlaybackEvent]
+        var playbackQueue: PlaybackQueueState?
+    }
+
+    private struct Schema6LibraryDocument: Decodable {
+        var updatedAt: Date
+        var tracks: [Track]
+        var libraryID: UUID
+        var createdAt: Date
+        var playlists: [Playlist]
+        var playlistFolders: [PlaylistFolder]
+        var playbackEvents: [PlaybackEvent]
+        var playbackQueue: PlaybackQueueState?
     }
 
     private struct CatalogIdentityIndex {
@@ -139,6 +171,9 @@ actor LibraryRepository {
         return rootURL.appendingPathComponent("library-\(source).migration-backup.json")
     }
     private var importJournalURL: URL { rootURL.appendingPathComponent("import-journal-v1.json") }
+    private var playlistArtworkDirectoryURL: URL {
+        rootURL.appendingPathComponent("Playlist Artwork", isDirectory: true)
+    }
 
     func setMediaDirectory(_ url: URL) throws {
         let standardized = url.standardizedFileURL
@@ -214,6 +249,48 @@ actor LibraryRepository {
         document.playlists = playlists
         try persistDocument(document, backUpReadablePrimary: true)
         currentDocument = document
+    }
+
+    func save(playlists: [Playlist], folders: [PlaylistFolder]) throws {
+        try prepareDirectories()
+        var document = try documentForMutation()
+        document.playlists = playlists
+        document.playlistFolders = folders
+        document.updatedAt = .now
+        try persistDocument(document, backUpReadablePrimary: true)
+        currentDocument = document
+    }
+
+    func savePlaylistArtwork(_ data: Data, playlistID: Playlist.ID) throws -> String {
+        guard data.count <= 12 * 1_024 * 1_024, NSImage(data: data) != nil else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        try fileManager.createDirectory(
+            at: playlistArtworkDirectoryURL,
+            withIntermediateDirectories: true
+        )
+        let url = playlistArtworkDirectoryURL.appendingPathComponent(
+            "\(playlistID.uuidString)-\(UUID().uuidString).artwork"
+        )
+        try data.write(to: url, options: .atomic)
+        return url.path
+    }
+
+    func playlistArtworkData(at path: String) -> Data? {
+        let url = URL(fileURLWithPath: path).standardizedFileURL
+        guard isInside(url, directory: playlistArtworkDirectoryURL),
+              let data = try? Data(contentsOf: url),
+              data.count <= 12 * 1_024 * 1_024,
+              NSImage(data: data) != nil else { return nil }
+        return data
+    }
+
+    func removePlaylistArtwork(at path: String?) throws {
+        guard let path else { return }
+        let url = URL(fileURLWithPath: path).standardizedFileURL
+        guard isInside(url, directory: playlistArtworkDirectoryURL),
+              fileManager.fileExists(atPath: url.path) else { return }
+        try fileManager.removeItem(at: url)
     }
 
     func recordPlaybackEvent(_ event: PlaybackEvent) throws {
@@ -510,15 +587,67 @@ actor LibraryRepository {
                     document: document,
                     migratedFromSchemaVersion: nil
                 )
+            case 6:
+                let schema6 = try decoder.decode(Schema6LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema6.updatedAt,
+                        tracks: schema6.tracks,
+                        libraryID: schema6.libraryID,
+                        createdAt: schema6.createdAt,
+                        playlists: schema6.playlists,
+                        playlistFolders: schema6.playlistFolders,
+                        playbackEvents: schema6.playbackEvents,
+                        playbackQueue: schema6.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 6
+                )
+            case 5:
+                let schema5 = try decoder.decode(Schema5LibraryDocument.self, from: data)
+                var playlists = schema5.playlists
+                for index in playlists.indices { playlists[index].sortOrder = index }
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema5.updatedAt,
+                        tracks: schema5.tracks,
+                        libraryID: schema5.libraryID,
+                        createdAt: schema5.createdAt,
+                        playlists: playlists,
+                        playlistFolders: [],
+                        playbackEvents: schema5.playbackEvents,
+                        playbackQueue: schema5.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 5
+                )
+            case 4:
+                let schema4 = try decoder.decode(Schema4LibraryDocument.self, from: data)
+                var playlists = schema4.playlists
+                for index in playlists.indices { playlists[index].sortOrder = index }
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema4.updatedAt,
+                        tracks: schema4.tracks,
+                        libraryID: schema4.libraryID,
+                        createdAt: schema4.createdAt,
+                        playlists: playlists,
+                        playlistFolders: [],
+                        playbackEvents: schema4.playbackEvents,
+                        playbackQueue: schema4.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 4
+                )
             case 3:
                 let schema3 = try decoder.decode(Schema3LibraryDocument.self, from: data)
+                var playlists = schema3.playlists
+                for index in playlists.indices { playlists[index].sortOrder = index }
                 return DecodedLibraryDocument(
                     document: LibraryDocument(
                         updatedAt: schema3.updatedAt,
                         tracks: schema3.tracks,
                         libraryID: schema3.libraryID,
                         createdAt: schema3.createdAt,
-                        playlists: schema3.playlists,
+                        playlists: playlists,
+                        playlistFolders: [],
                         playbackEvents: schema3.playbackEvents,
                         playbackQueue: nil
                     ),

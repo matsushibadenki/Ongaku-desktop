@@ -1,6 +1,6 @@
 /* Hallmark · pre-emit critique: P5 H4 E4 S5 R5 V4
  * Hallmark · genre: atmospheric · macrostructure: Workbench · theme: Midnight
- * enrichment: none · navigation: native macOS sidebar · footer: persistent player
+ * enrichment: none · navigation: native macOS sidebar · header: persistent player
  */
 import AppKit
 import SwiftUI
@@ -24,6 +24,14 @@ enum AppTheme {
     static let surface = adaptive(
         light: ThemeRGB(red: 0.985, green: 0.985, blue: 0.985),
         dark: ThemeRGB(red: 0.095, green: 0.090, blue: 0.084)
+    )
+    static let windowBackground = adaptiveNSColor(
+        light: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000),
+        dark: ThemeRGB(red: 0.000, green: 0.000, blue: 0.000)
+    )
+    static let windowBar = adaptive(
+        light: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000),
+        dark: ThemeRGB(red: 0.000, green: 0.000, blue: 0.000)
     )
     static let raised = adaptive(
         light: ThemeRGB(red: 0.875, green: 0.875, blue: 0.875),
@@ -68,15 +76,16 @@ enum AppTheme {
     static let spaceLG: CGFloat = 24
     static let spaceXL: CGFloat = 40
 
-    // Keeps the final scroll row clear of the persistent 92 pt player bar.
-    static let effectsRackBottomClearance: CGFloat = 126
-
     private static func adaptive(light: ThemeRGB, dark: ThemeRGB) -> Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
+        Color(nsColor: adaptiveNSColor(light: light, dark: dark))
+    }
+
+    private static func adaptiveNSColor(light: ThemeRGB, dark: ThemeRGB) -> NSColor {
+        NSColor(name: nil) { appearance in
             let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
             let value = isDark ? dark : light
             return NSColor(red: value.red, green: value.green, blue: value.blue, alpha: 1)
-        })
+        }
     }
 }
 

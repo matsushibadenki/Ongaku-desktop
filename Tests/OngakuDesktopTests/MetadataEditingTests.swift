@@ -4,7 +4,7 @@ import Testing
 
 @Suite("Catalog metadata editing")
 struct MetadataEditingTests {
-    @Test("Song and album edits persist without changing file identity")
+    @Test("Song, album, and artist edits persist without changing unsupported files")
     @MainActor
     func editsPersistAtomically() async throws {
         let root = FileManager.default.temporaryDirectory
@@ -29,13 +29,26 @@ struct MetadataEditingTests {
             artist: "Album Artist",
             album: "After"
         )
+        try await store.updateArtistMetadata(
+            trackIDs: [first.id, second.id],
+            artist: "Renamed Artist"
+        )
 
         let loaded = try await repository.load().document.tracks
         #expect(loaded.count == 2)
         #expect(loaded.first(where: { $0.id == first.id })?.title == "One Edited")
-        #expect(loaded.allSatisfy { $0.artist == "Album Artist" && $0.album == "After" })
+        #expect(loaded.allSatisfy { $0.artist == "Renamed Artist" && $0.album == "After" })
         #expect(loaded.first(where: { $0.id == first.id })?.managedPath == first.managedPath)
         #expect(loaded.first(where: { $0.id == first.id })?.sha256 == first.sha256)
+    }
+
+    @Test("Only lossless passthrough containers are selected for embedding")
+    func embeddingSupportPolicy() {
+        #expect(AudioFileMetadataWriter.supportsEmbedding(at: URL(fileURLWithPath: "/tmp/song.m4a")))
+        #expect(AudioFileMetadataWriter.supportsEmbedding(at: URL(fileURLWithPath: "/tmp/song.M4B")))
+        #expect(AudioFileMetadataWriter.supportsEmbedding(at: URL(fileURLWithPath: "/tmp/song.mp4")))
+        #expect(!AudioFileMetadataWriter.supportsEmbedding(at: URL(fileURLWithPath: "/tmp/song.mp3")))
+        #expect(!AudioFileMetadataWriter.supportsEmbedding(at: URL(fileURLWithPath: "/tmp/song.flac")))
     }
 
     private func makeTrack(title: String, album: String) -> Track {

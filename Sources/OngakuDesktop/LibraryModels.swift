@@ -67,6 +67,9 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var health: FileHealth
     var artistID: UUID = UUID()
     var albumID: UUID = UUID()
+    var isFavorite: Bool = false
+    var rating: Int = 0
+    var isExcludedFromPlayback: Bool = false
 
     var fileURL: URL { URL(fileURLWithPath: managedPath) }
 }
@@ -100,11 +103,64 @@ struct PlaylistEntry: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+enum SmartPlaylistMatchMode: String, Codable, CaseIterable, Identifiable, Sendable {
+    case all
+    case any
+    var id: String { rawValue }
+}
+
+enum SmartPlaylistField: String, Codable, CaseIterable, Identifiable, Sendable {
+    case title
+    case artist
+    case album
+    case favorite
+    case rating
+    case playCount
+    case skipCount
+    var id: String { rawValue }
+
+    var isBoolean: Bool { self == .favorite }
+    var isNumeric: Bool { [.rating, .playCount, .skipCount].contains(self) }
+}
+
+enum SmartPlaylistComparison: String, Codable, CaseIterable, Identifiable, Sendable {
+    case contains
+    case equals
+    case notEquals
+    case atLeast
+    case atMost
+    case isTrue
+    case isFalse
+    var id: String { rawValue }
+}
+
+struct SmartPlaylistRule: Identifiable, Codable, Hashable, Sendable {
+    var id: UUID = UUID()
+    var field: SmartPlaylistField = .title
+    var comparison: SmartPlaylistComparison = .contains
+    var value: String = ""
+}
+
+struct SmartPlaylistRuleGroup: Identifiable, Codable, Hashable, Sendable {
+    var id: UUID = UUID()
+    var mode: SmartPlaylistMatchMode = .all
+    var rules: [SmartPlaylistRule] = [SmartPlaylistRule()]
+    var groups: [SmartPlaylistRuleGroup] = []
+}
+
+struct SmartPlaylistDefinition: Codable, Hashable, Sendable {
+    var root: SmartPlaylistRuleGroup = SmartPlaylistRuleGroup()
+    var limit: Int?
+}
+
 struct Playlist: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     var name: String
     var description: String
     var artworkPath: String?
+    var folderID: PlaylistFolder.ID?
+    var sortOrder: Int
+    var smartDefinition: SmartPlaylistDefinition?
     var entries: [PlaylistEntry]
     var createdAt: Date
     var updatedAt: Date
@@ -114,6 +170,9 @@ struct Playlist: Identifiable, Codable, Hashable, Sendable {
         name: String,
         description: String = "",
         artworkPath: String? = nil,
+        folderID: PlaylistFolder.ID? = nil,
+        sortOrder: Int = 0,
+        smartDefinition: SmartPlaylistDefinition? = nil,
         entries: [PlaylistEntry] = [],
         createdAt: Date = .now,
         updatedAt: Date = .now
@@ -122,7 +181,123 @@ struct Playlist: Identifiable, Codable, Hashable, Sendable {
         self.name = name
         self.description = description
         self.artworkPath = artworkPath
+        self.folderID = folderID
+        self.sortOrder = sortOrder
+        self.smartDefinition = smartDefinition
         self.entries = entries
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, description, artworkPath, folderID, sortOrder, smartDefinition
+        case entries, createdAt, updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        name = try values.decode(String.self, forKey: .name)
+        description = try values.decodeIfPresent(String.self, forKey: .description) ?? ""
+        artworkPath = try values.decodeIfPresent(String.self, forKey: .artworkPath)
+        folderID = try values.decodeIfPresent(PlaylistFolder.ID.self, forKey: .folderID)
+        sortOrder = try values.decodeIfPresent(Int.self, forKey: .sortOrder) ?? 0
+        smartDefinition = try values.decodeIfPresent(
+            SmartPlaylistDefinition.self,
+            forKey: .smartDefinition
+        )
+        entries = try values.decodeIfPresent([PlaylistEntry].self, forKey: .entries) ?? []
+        createdAt = try values.decode(Date.self, forKey: .createdAt)
+        updatedAt = try values.decode(Date.self, forKey: .updatedAt)
+    }
+}
+
+enum SmartPlaylistResolver {
+    static func tracks(
+        matching definition: SmartPlaylistDefinition,
+        tracks: [Track],
+        statistics: [Track.ID: TrackPlaybackStatistics]
+    ) -> [Track] {
+        let matchedTracks = tracks.filter {
+            matches(definition.root, track: $0, statistics: statistics[$0.id] ?? .init())
+        }
+        guard let limit = definition.limit, limit > 0 else { return matchedTracks }
+        return Array(matchedTracks.prefix(limit))
+    }
+
+    private static func matches(
+        _ group: SmartPlaylistRuleGroup,
+        track: Track,
+        statistics: TrackPlaybackStatistics
+    ) -> Bool {
+        let results = group.rules.map {
+            matches($0, track: track, statistics: statistics)
+        } + group.groups.map {
+            matches($0, track: track, statistics: statistics)
+        }
+        guard !results.isEmpty else { return true }
+        return group.mode == .all ? results.allSatisfy { $0 } : results.contains(true)
+    }
+
+    private static func matches(
+        _ rule: SmartPlaylistRule,
+        track: Track,
+        statistics: TrackPlaybackStatistics
+    ) -> Bool {
+        if rule.field.isBoolean {
+            let value = track.isFavorite
+            return rule.comparison == .isTrue ? value : !value
+        }
+        if rule.field.isNumeric {
+            let actual: Int = switch rule.field {
+            case .rating: track.rating
+            case .playCount: statistics.playCount
+            case .skipCount: statistics.skipCount
+            default: 0
+            }
+            let expected = Int(rule.value) ?? 0
+            return switch rule.comparison {
+            case .equals: actual == expected
+            case .notEquals: actual != expected
+            case .atLeast: actual >= expected
+            case .atMost: actual <= expected
+            default: false
+            }
+        }
+        let actual: String = switch rule.field {
+        case .title: track.title
+        case .artist: track.artist
+        case .album: track.album
+        default: ""
+        }
+        let normalizedActual = CatalogSearch.normalize(actual)
+        let normalizedExpected = CatalogSearch.normalize(rule.value)
+        return switch rule.comparison {
+        case .contains: normalizedActual.contains(normalizedExpected)
+        case .equals: normalizedActual == normalizedExpected
+        case .notEquals: normalizedActual != normalizedExpected
+        default: false
+        }
+    }
+}
+
+struct PlaylistFolder: Identifiable, Codable, Hashable, Sendable {
+    let id: UUID
+    var name: String
+    var sortOrder: Int
+    var createdAt: Date
+    var updatedAt: Date
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        sortOrder: Int = 0,
+        createdAt: Date = .now,
+        updatedAt: Date = .now
+    ) {
+        self.id = id
+        self.name = name
+        self.sortOrder = sortOrder
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -167,6 +342,36 @@ struct PlaybackHistoryItem: Identifiable, Equatable, Sendable {
     var id: UUID { event.playbackSessionID }
     let track: Track
     let event: PlaybackEvent
+}
+
+struct TrackPlaybackStatistics: Equatable, Sendable {
+    var playCount = 0
+    var skipCount = 0
+    var lastPlayedAt: Date?
+}
+
+enum PlaybackStatisticsResolver {
+    nonisolated static func statistics(
+        events: [PlaybackEvent]
+    ) -> [Track.ID: TrackPlaybackStatistics] {
+        var result: [Track.ID: TrackPlaybackStatistics] = [:]
+        for event in events {
+            var statistics = result[event.trackID] ?? TrackPlaybackStatistics()
+            switch event.kind {
+            case .started:
+                break
+            case .completed:
+                statistics.playCount += 1
+            case .skipped:
+                statistics.skipCount += 1
+            }
+            if statistics.lastPlayedAt.map({ event.occurredAt > $0 }) ?? true {
+                statistics.lastPlayedAt = event.occurredAt
+            }
+            result[event.trackID] = statistics
+        }
+        return result
+    }
 }
 
 enum PlaybackHistoryResolver {
@@ -217,7 +422,7 @@ struct PlaybackQueueState: Codable, Equatable, Sendable {
 }
 
 struct LibraryDocument: Codable, Sendable {
-    static let currentSchema = 4
+    static let currentSchema = 7
 
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
@@ -225,6 +430,7 @@ struct LibraryDocument: Codable, Sendable {
     var libraryID: UUID = UUID()
     var createdAt: Date = .now
     var playlists: [Playlist] = []
+    var playlistFolders: [PlaylistFolder] = []
     var playbackEvents: [PlaybackEvent] = []
     var playbackQueue: PlaybackQueueState?
 }
@@ -252,6 +458,9 @@ extension Track {
         case health
         case artistID
         case albumID
+        case isFavorite
+        case rating
+        case isExcludedFromPlayback
     }
 
     init(from decoder: Decoder) throws {
@@ -272,6 +481,12 @@ extension Track {
         // Temporary values are normalized at the document migration boundary.
         artistID = try container.decodeIfPresent(UUID.self, forKey: .artistID) ?? UUID()
         albumID = try container.decodeIfPresent(UUID.self, forKey: .albumID) ?? UUID()
+        isFavorite = try container.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
+        rating = min(max(try container.decodeIfPresent(Int.self, forKey: .rating) ?? 0, 0), 5)
+        isExcludedFromPlayback = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .isExcludedFromPlayback
+        ) ?? false
     }
 
     func encode(to encoder: Encoder) throws {
@@ -289,6 +504,9 @@ extension Track {
         try container.encode(health, forKey: .health)
         try container.encode(artistID, forKey: .artistID)
         try container.encode(albumID, forKey: .albumID)
+        try container.encode(isFavorite, forKey: .isFavorite)
+        try container.encode(rating, forKey: .rating)
+        try container.encode(isExcludedFromPlayback, forKey: .isExcludedFromPlayback)
     }
 }
 
