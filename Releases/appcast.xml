@@ -6,6 +6,34 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.1</title>
+            <pubDate>Wed, 19 Aug 2026 14:31:51 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.1</link>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>0.1.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.1
+
+## 主な変更
+
+- 楽曲・アルバム情報の編集項目をMusic.appに近い構成へ拡張しました。読みがな、アルバムアーティスト、作曲者、グループ、ジャンル、発売年、トラック／ディスク番号、コンピレーション、評価、再生回数、コメントに対応しています。
+- M4A、M4B、MP4では対応するメタデータとアートワークを音楽ファイルへ優先して埋め込むようにしました。
+- M3U、M3U8、Ongaku JSON形式によるプレイリストの読み込み・書き出しへ対応しました。
+- プレーヤーの位置、メーター、表示形式を「環境設定 > アピアランス」へ整理しました。
+- プレイリスト、楽曲選択、プレーヤーレイアウト、ライト／ダーク表示の安定性と視認性を改善しました。
+
+## 配布情報
+
+- macOS 14.0以降
+- Apple silicon（arm64）／Intel（x86_64）Universal Binary
+- Developer ID署名・Apple公証済み
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.1/OngakuDesktop-0.1.1-universal.dmg" length="4603878" type="application/octet-stream" sparkle:edSignature="GVrFlxDbAQeyv1JniDOsndDGsMM41BzgOFpFysGNHUTewNbVoIFkPdAWsGkVwsDvl89km1mR/F68erSeBVvYDA=="/>
+            <sparkle:deltas>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.1/OngakuDesktop2-1.delta" sparkle:deltaFrom="1" length="1582598" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="8/ghbK+teKciRIxiMSy4zYumTVGM6pea7OzA8v1dSeJen8+QspjmRVqVQj5VHzNuJrCyacNrzoILKVqUw4wPDQ=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.1.0</title>
             <pubDate>Mon, 17 Aug 2026 14:39:16 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.0</link>
