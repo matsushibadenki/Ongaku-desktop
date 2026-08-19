@@ -90,6 +90,8 @@ actor LibraryRepository {
         var playbackQueue: PlaybackQueueState?
     }
 
+    private typealias Schema7LibraryDocument = Schema6LibraryDocument
+
     private struct CatalogIdentityIndex {
         private var artistIDsByName: [String: UUID] = [:]
         private var albumIDsByArtistAndName: [String: UUID] = [:]
@@ -425,6 +427,19 @@ actor LibraryRepository {
                     title: metadata.title,
                     artist: metadata.artist,
                     album: metadata.album,
+                    artistSortName: metadata.artistSortName,
+                    albumSortName: metadata.albumSortName,
+                    albumArtist: metadata.albumArtist,
+                    composer: metadata.composer,
+                    grouping: metadata.grouping,
+                    genre: metadata.genre,
+                    releaseYear: metadata.releaseYear,
+                    trackNumber: metadata.trackNumber,
+                    trackCount: metadata.trackCount,
+                    discNumber: metadata.discNumber,
+                    discCount: metadata.discCount,
+                    isCompilation: metadata.isCompilation,
+                    comments: metadata.comments,
                     duration: metadata.duration,
                     fileSize: Int64(values.fileSize ?? 0),
                     managedPath: destination.path,
@@ -512,6 +527,19 @@ actor LibraryRepository {
                         title: metadata.title,
                         artist: metadata.artist,
                         album: metadata.album,
+                        artistSortName: metadata.artistSortName,
+                        albumSortName: metadata.albumSortName,
+                        albumArtist: metadata.albumArtist,
+                        composer: metadata.composer,
+                        grouping: metadata.grouping,
+                        genre: metadata.genre,
+                        releaseYear: metadata.releaseYear,
+                        trackNumber: metadata.trackNumber,
+                        trackCount: metadata.trackCount,
+                        discNumber: metadata.discNumber,
+                        discCount: metadata.discCount,
+                        isCompilation: metadata.isCompilation,
+                        comments: metadata.comments,
                         duration: metadata.duration,
                         fileSize: Int64(values.fileSize ?? 0),
                         managedPath: source.standardizedFileURL.path,
@@ -586,6 +614,21 @@ actor LibraryRepository {
                 return DecodedLibraryDocument(
                     document: document,
                     migratedFromSchemaVersion: nil
+                )
+            case 7:
+                let schema7 = try decoder.decode(Schema7LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema7.updatedAt,
+                        tracks: schema7.tracks,
+                        libraryID: schema7.libraryID,
+                        createdAt: schema7.createdAt,
+                        playlists: schema7.playlists,
+                        playlistFolders: schema7.playlistFolders,
+                        playbackEvents: schema7.playbackEvents,
+                        playbackQueue: schema7.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 7
                 )
             case 6:
                 let schema6 = try decoder.decode(Schema6LibraryDocument.self, from: data)
@@ -947,11 +990,26 @@ actor LibraryRepository {
         title: String,
         artist: String,
         album: String,
+        artistSortName: String,
+        albumSortName: String,
+        albumArtist: String,
+        composer: String,
+        grouping: String,
+        genre: String,
+        releaseYear: Int?,
+        trackNumber: Int?,
+        trackCount: Int?,
+        discNumber: Int?,
+        discCount: Int?,
+        isCompilation: Bool,
+        comments: String,
         duration: TimeInterval
     ) {
         let asset = AVURLAsset(url: url)
         let duration = (try? await asset.load(.duration)).map { CMTimeGetSeconds($0) } ?? 0
-        let metadata = (try? await asset.load(.commonMetadata)) ?? []
+        let commonMetadata = (try? await asset.load(.commonMetadata)) ?? []
+        let formatMetadata = (try? await asset.load(.metadata)) ?? []
+        let metadata = commonMetadata + formatMetadata
 
         func string(for identifier: AVMetadataIdentifier) async -> String? {
             guard let item = AVMetadataItem.metadataItems(from: metadata, filteredByIdentifier: identifier).first else {
@@ -960,11 +1018,36 @@ actor LibraryRepository {
             return try? await item.load(.stringValue)
         }
 
+        func numberedValue(
+            for identifier: AVMetadataIdentifier
+        ) async -> (number: Int?, total: Int?) {
+            guard let value = await string(for: identifier) else { return (nil, nil) }
+            let parts = value.split(separator: "/", maxSplits: 1).map(String.init)
+            return (Int(parts[0]), parts.count > 1 ? Int(parts[1]) : nil)
+        }
+
         let parsed = parseFileName(fallbackName)
+        let track = await numberedValue(for: .iTunesMetadataTrackNumber)
+        let disc = await numberedValue(for: .iTunesMetadataDiscNumber)
+        let releaseDate = await string(for: .iTunesMetadataReleaseDate) ?? ""
+        let compilation = await string(for: .iTunesMetadataDiscCompilation) ?? ""
         return (
             await string(for: .commonIdentifierTitle) ?? parsed.title,
             await string(for: .commonIdentifierArtist) ?? parsed.artist,
             await string(for: .commonIdentifierAlbumName) ?? L10n.text("metadata.unknownAlbum"),
+            await string(for: .id3MetadataPerformerSortOrder) ?? "",
+            await string(for: .id3MetadataAlbumSortOrder) ?? "",
+            await string(for: .iTunesMetadataAlbumArtist) ?? "",
+            await string(for: .iTunesMetadataComposer) ?? "",
+            await string(for: .iTunesMetadataGrouping) ?? "",
+            await string(for: .iTunesMetadataUserGenre) ?? "",
+            Int(releaseDate.prefix(4)),
+            track.number,
+            track.total,
+            disc.number,
+            disc.total,
+            compilation == "1" || compilation.lowercased() == "true",
+            await string(for: .iTunesMetadataUserComment) ?? "",
             duration.isFinite ? max(0, duration) : 0
         )
     }

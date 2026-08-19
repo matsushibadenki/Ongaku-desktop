@@ -79,7 +79,10 @@ final class LibraryStore: ObservableObject {
                 result = SmartPlaylistResolver.tracks(
                     matching: definition,
                     tracks: tracks,
-                    statistics: PlaybackStatisticsResolver.statistics(events: playbackEvents)
+                    statistics: PlaybackStatisticsResolver.statistics(
+                        events: playbackEvents,
+                        tracks: tracks
+                    )
                 )
             } else {
                 let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
@@ -108,7 +111,7 @@ final class LibraryStore: ObservableObject {
     var attentionCount: Int { tracks.filter { $0.health != .verified }.count }
 
     func playbackStatistics(for trackID: Track.ID) -> TrackPlaybackStatistics {
-        PlaybackStatisticsResolver.statistics(events: playbackEvents)[trackID]
+        PlaybackStatisticsResolver.statistics(events: playbackEvents, tracks: tracks)[trackID]
             ?? TrackPlaybackStatistics()
     }
 
@@ -362,7 +365,7 @@ final class LibraryStore: ObservableObject {
 
     func playlistsContaining(trackIDs: Set<Track.ID>) -> [Playlist] {
         guard !trackIDs.isEmpty else { return [] }
-        let statistics = PlaybackStatisticsResolver.statistics(events: playbackEvents)
+        let statistics = PlaybackStatisticsResolver.statistics(events: playbackEvents, tracks: tracks)
         return playlists.filter { playlist in
             let memberIDs: Set<Track.ID>
             if let definition = playlist.smartDefinition {
@@ -376,6 +379,50 @@ final class LibraryStore: ObservableObject {
             }
             return trackIDs.isSubset(of: memberIDs)
         }
+    }
+
+    func tracks(in playlist: Playlist) -> [Track] {
+        if let definition = playlist.smartDefinition {
+            return SmartPlaylistResolver.tracks(
+                matching: definition,
+                tracks: tracks,
+                statistics: PlaybackStatisticsResolver.statistics(
+                    events: playbackEvents,
+                    tracks: tracks
+                )
+            )
+        }
+        let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        return playlist.entries.compactMap { tracksByID[$0.trackID] }
+    }
+
+    @discardableResult
+    func importPlaylist(
+        name: String,
+        description: String,
+        trackIDs: [Track.ID]
+    ) async throws -> Playlist.ID {
+        let knownTrackIDs = Set(tracks.map(\.id))
+        var seen: Set<Track.ID> = []
+        let entries = trackIDs
+            .filter { knownTrackIDs.contains($0) && seen.insert($0).inserted }
+            .map { PlaylistEntry(trackID: $0) }
+        let nextOrder = playlists.filter { $0.folderID == nil }
+            .map(\.sortOrder).max().map { $0 + 1 } ?? 0
+        let playlist = Playlist(
+            name: name,
+            description: description,
+            sortOrder: nextOrder,
+            entries: entries
+        )
+        try await persistPlaylists(
+            playlists + [playlist],
+            undoActionName: L10n.text("undo.playlist.import")
+        )
+        selectedPlaylistID = playlist.id
+        selectedTrackID = entries.first?.trackID
+        selectedTrackIDs = Set(entries.prefix(1).map(\.trackID))
+        return playlist.id
     }
 
     var sortedPlaylistFolders: [PlaylistFolder] {
@@ -852,23 +899,36 @@ final class LibraryStore: ObservableObject {
         album: String,
         artwork: AudioArtworkChange = .unchanged
     ) async throws {
+        guard let track = tracks.first(where: { $0.id == id }) else {
+            throw MetadataEditError.trackNotFound
+        }
+        var metadata = TrackMetadataValues(track: track)
+        metadata.title = title
+        metadata.artist = artist
+        metadata.album = album
+        try await updateTrackMetadata(id: id, metadata: metadata, artwork: artwork)
+    }
+
+    func updateTrackMetadata(
+        id: Track.ID,
+        metadata: TrackMetadataValues,
+        artwork: AudioArtworkChange = .unchanged
+    ) async throws {
         var updated = tracks
         guard let index = updated.firstIndex(where: { $0.id == id }) else {
             throw MetadataEditError.trackNotFound
         }
         let original = updated[index]
-        updated[index].title = title
-        updated[index].artist = artist
-        updated[index].album = album
-        if artist != original.artist || album != original.album {
+        updated[index].apply(metadata, includesTrackSpecificValues: true)
+        if metadata.artist != original.artist || metadata.album != original.album {
             if let destination = tracks.first(where: {
-                $0.id != id && $0.artist == artist && $0.album == album
+                $0.id != id && $0.artist == metadata.artist && $0.album == metadata.album
             }) {
                 updated[index].artistID = destination.artistID
                 updated[index].albumID = destination.albumID
             } else {
                 updated[index].artistID = tracks.first(where: {
-                    $0.id != id && $0.artist == artist
+                    $0.id != id && $0.artist == metadata.artist
                 })?.artistID ?? UUID()
                 updated[index].albumID = UUID()
             }
@@ -882,15 +942,39 @@ final class LibraryStore: ObservableObject {
         album: String,
         artwork: AudioArtworkChange = .unchanged
     ) async throws {
+        guard let track = tracks.first(where: { trackIDs.contains($0.id) }) else {
+            throw MetadataEditError.trackNotFound
+        }
+        var metadata = TrackMetadataValues(track: track)
+        metadata.artist = artist
+        metadata.album = album
+        try await updateAlbumMetadata(
+            trackIDs: trackIDs,
+            metadata: metadata,
+            artwork: artwork
+        )
+    }
+
+    func updateAlbumMetadata(
+        trackIDs: [Track.ID],
+        metadata: TrackMetadataValues,
+        artwork: AudioArtworkChange = .unchanged
+    ) async throws {
         let ids = Set(trackIDs)
         var updated = tracks
         let indices = updated.indices.filter { ids.contains(updated[$0].id) }
         guard !indices.isEmpty, indices.count == ids.count else {
             throw MetadataEditError.trackNotFound
         }
+        let originalArtist = updated[indices[0]].artist
+        let destinationArtistID = tracks.first(where: {
+            !ids.contains($0.id) && $0.artist == metadata.artist
+        })?.artistID ?? UUID()
         for index in indices {
-            updated[index].artist = artist
-            updated[index].album = album
+            updated[index].apply(metadata, includesTrackSpecificValues: false)
+            if metadata.artist != originalArtist {
+                updated[index].artistID = destinationArtistID
+            }
         }
         try await persistMetadataUpdate(updated, changedTrackIDs: ids, artwork: artwork)
     }
@@ -921,9 +1005,7 @@ final class LibraryStore: ObservableObject {
             let track = updated[index]
             let fingerprint = await AudioFileMetadataWriter.shared.embed(
                 AudioMetadataUpdate(
-                    title: track.title,
-                    artist: track.artist,
-                    album: track.album,
+                    metadata: TrackMetadataValues(track: track),
                     artwork: artwork
                 ),
                 in: track.fileURL
@@ -1157,5 +1239,35 @@ final class LibraryStore: ObservableObject {
             "aac", "aif", "aiff", "alac", "caf", "flac", "m4a", "mp3", "wav",
         ]
         return supportedExtensions.contains(url.pathExtension.lowercased())
+    }
+}
+
+private extension Track {
+    mutating func apply(
+        _ metadata: TrackMetadataValues,
+        includesTrackSpecificValues: Bool
+    ) {
+        if includesTrackSpecificValues {
+            title = metadata.title
+            trackNumber = metadata.trackNumber
+            trackCount = metadata.trackCount
+        }
+        artist = metadata.artist
+        artistSortName = metadata.artistSortName
+        album = metadata.album
+        albumSortName = metadata.albumSortName
+        albumArtist = metadata.albumArtist
+        albumArtistSortName = metadata.albumArtistSortName
+        composer = metadata.composer
+        composerSortName = metadata.composerSortName
+        grouping = metadata.grouping
+        genre = metadata.genre
+        releaseYear = metadata.releaseYear
+        discNumber = metadata.discNumber
+        discCount = metadata.discCount
+        isCompilation = metadata.isCompilation
+        rating = min(max(metadata.rating, 0), 5)
+        playCount = max(0, metadata.playCount)
+        comments = metadata.comments
     }
 }

@@ -7,9 +7,7 @@ enum AudioArtworkChange: Sendable {
 }
 
 struct AudioMetadataUpdate: Sendable {
-    let title: String
-    let artist: String
-    let album: String
+    let metadata: TrackMetadataValues
     var artwork: AudioArtworkChange = .unchanged
 }
 
@@ -115,7 +113,16 @@ actor AudioFileMetadataWriter {
             .commonIdentifierAlbumName,
             .iTunesMetadataSongName,
             .iTunesMetadataArtist,
-            .iTunesMetadataAlbum
+            .iTunesMetadataAlbum,
+            .iTunesMetadataAlbumArtist,
+            .iTunesMetadataComposer,
+            .iTunesMetadataGrouping,
+            .iTunesMetadataUserGenre,
+            .iTunesMetadataReleaseDate,
+            .iTunesMetadataTrackNumber,
+            .iTunesMetadataDiscNumber,
+            .iTunesMetadataDiscCompilation,
+            .iTunesMetadataUserComment
         ]
         if case .set = update.artwork {
             replacedIdentifiers.formUnion([
@@ -131,9 +138,34 @@ actor AudioFileMetadataWriter {
             result.append(item)
         }
 
-        result.append(stringItem(identifier: .iTunesMetadataSongName, value: update.title))
-        result.append(stringItem(identifier: .iTunesMetadataArtist, value: update.artist))
-        result.append(stringItem(identifier: .iTunesMetadataAlbum, value: update.album))
+        let metadata = update.metadata
+        appendString(.iTunesMetadataSongName, metadata.title, to: &result)
+        appendString(.iTunesMetadataArtist, metadata.artist, to: &result)
+        appendString(.iTunesMetadataAlbum, metadata.album, to: &result)
+        appendString(.iTunesMetadataAlbumArtist, metadata.albumArtist, to: &result)
+        appendString(.iTunesMetadataComposer, metadata.composer, to: &result)
+        appendString(.iTunesMetadataGrouping, metadata.grouping, to: &result)
+        appendString(.iTunesMetadataUserGenre, metadata.genre, to: &result)
+        appendString(
+            .iTunesMetadataReleaseDate,
+            metadata.releaseYear.map(String.init) ?? "",
+            to: &result
+        )
+        appendString(
+            .iTunesMetadataTrackNumber,
+            numberedValue(metadata.trackNumber, total: metadata.trackCount),
+            to: &result
+        )
+        appendString(
+            .iTunesMetadataDiscNumber,
+            numberedValue(metadata.discNumber, total: metadata.discCount),
+            to: &result
+        )
+        result.append(numberItem(
+            identifier: .iTunesMetadataDiscCompilation,
+            value: metadata.isCompilation ? 1 : 0
+        ))
+        appendString(.iTunesMetadataUserComment, metadata.comments, to: &result)
         if case .set(let data) = update.artwork {
             let item = AVMutableMetadataItem()
             item.identifier = .iTunesMetadataCoverArt
@@ -152,6 +184,30 @@ actor AudioFileMetadataWriter {
         item.value = value as NSString
         item.extendedLanguageTag = "und"
         return item
+    }
+
+    private func appendString(
+        _ identifier: AVMetadataIdentifier,
+        _ value: String,
+        to result: inout [AVMetadataItem]
+    ) {
+        guard !value.isEmpty else { return }
+        result.append(stringItem(identifier: identifier, value: value))
+    }
+
+    private func numberItem(
+        identifier: AVMetadataIdentifier,
+        value: Int
+    ) -> AVMutableMetadataItem {
+        let item = AVMutableMetadataItem()
+        item.identifier = identifier
+        item.value = NSNumber(value: value)
+        return item
+    }
+
+    private func numberedValue(_ number: Int?, total: Int?) -> String {
+        guard let number else { return "" }
+        return total.map { "\(number)/\($0)" } ?? String(number)
     }
 
 }

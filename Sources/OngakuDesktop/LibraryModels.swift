@@ -58,6 +58,22 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var title: String
     var artist: String
     var album: String
+    var artistSortName: String = ""
+    var albumSortName: String = ""
+    var albumArtist: String = ""
+    var albumArtistSortName: String = ""
+    var composer: String = ""
+    var composerSortName: String = ""
+    var grouping: String = ""
+    var genre: String = ""
+    var releaseYear: Int?
+    var trackNumber: Int?
+    var trackCount: Int?
+    var discNumber: Int?
+    var discCount: Int?
+    var isCompilation: Bool = false
+    var playCount: Int = 0
+    var comments: String = ""
     var duration: TimeInterval
     var fileSize: Int64
     var managedPath: String
@@ -72,6 +88,96 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var isExcludedFromPlayback: Bool = false
 
     var fileURL: URL { URL(fileURLWithPath: managedPath) }
+}
+
+struct TrackMetadataValues: Equatable, Sendable {
+    var title: String
+    var artist: String
+    var artistSortName: String
+    var album: String
+    var albumSortName: String
+    var albumArtist: String
+    var albumArtistSortName: String
+    var composer: String
+    var composerSortName: String
+    var grouping: String
+    var genre: String
+    var releaseYear: Int?
+    var trackNumber: Int?
+    var trackCount: Int?
+    var discNumber: Int?
+    var discCount: Int?
+    var isCompilation: Bool
+    var rating: Int
+    var playCount: Int
+    var comments: String
+
+    init(
+        title: String,
+        artist: String,
+        artistSortName: String,
+        album: String,
+        albumSortName: String,
+        albumArtist: String,
+        albumArtistSortName: String,
+        composer: String,
+        composerSortName: String,
+        grouping: String,
+        genre: String,
+        releaseYear: Int?,
+        trackNumber: Int?,
+        trackCount: Int?,
+        discNumber: Int?,
+        discCount: Int?,
+        isCompilation: Bool,
+        rating: Int,
+        playCount: Int,
+        comments: String
+    ) {
+        self.title = title
+        self.artist = artist
+        self.artistSortName = artistSortName
+        self.album = album
+        self.albumSortName = albumSortName
+        self.albumArtist = albumArtist
+        self.albumArtistSortName = albumArtistSortName
+        self.composer = composer
+        self.composerSortName = composerSortName
+        self.grouping = grouping
+        self.genre = genre
+        self.releaseYear = releaseYear
+        self.trackNumber = trackNumber
+        self.trackCount = trackCount
+        self.discNumber = discNumber
+        self.discCount = discCount
+        self.isCompilation = isCompilation
+        self.rating = rating
+        self.playCount = playCount
+        self.comments = comments
+    }
+
+    init(track: Track) {
+        title = track.title
+        artist = track.artist
+        artistSortName = track.artistSortName
+        album = track.album
+        albumSortName = track.albumSortName
+        albumArtist = track.albumArtist
+        albumArtistSortName = track.albumArtistSortName
+        composer = track.composer
+        composerSortName = track.composerSortName
+        grouping = track.grouping
+        genre = track.genre
+        releaseYear = track.releaseYear
+        trackNumber = track.trackNumber
+        trackCount = track.trackCount
+        discNumber = track.discNumber
+        discCount = track.discCount
+        isCompilation = track.isCompilation
+        rating = track.rating
+        playCount = track.playCount
+        comments = track.comments
+    }
 }
 
 enum CatalogSearch {
@@ -352,9 +458,12 @@ struct TrackPlaybackStatistics: Equatable, Sendable {
 
 enum PlaybackStatisticsResolver {
     nonisolated static func statistics(
-        events: [PlaybackEvent]
+        events: [PlaybackEvent],
+        tracks: [Track] = []
     ) -> [Track.ID: TrackPlaybackStatistics] {
-        var result: [Track.ID: TrackPlaybackStatistics] = [:]
+        var result = Dictionary(uniqueKeysWithValues: tracks.map {
+            ($0.id, TrackPlaybackStatistics(playCount: $0.playCount))
+        })
         for event in events {
             var statistics = result[event.trackID] ?? TrackPlaybackStatistics()
             switch event.kind {
@@ -422,7 +531,7 @@ struct PlaybackQueueState: Codable, Equatable, Sendable {
 }
 
 struct LibraryDocument: Codable, Sendable {
-    static let currentSchema = 7
+    static let currentSchema = 8
 
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
@@ -449,6 +558,22 @@ extension Track {
         case title
         case artist
         case album
+        case artistSortName
+        case albumSortName
+        case albumArtist
+        case albumArtistSortName
+        case composer
+        case composerSortName
+        case grouping
+        case genre
+        case releaseYear
+        case trackNumber
+        case trackCount
+        case discNumber
+        case discCount
+        case isCompilation
+        case playCount
+        case comments
         case duration
         case fileSize
         case managedPath
@@ -469,6 +594,25 @@ extension Track {
         title = try container.decode(String.self, forKey: .title)
         artist = try container.decode(String.self, forKey: .artist)
         album = try container.decode(String.self, forKey: .album)
+        artistSortName = try container.decodeIfPresent(String.self, forKey: .artistSortName) ?? ""
+        albumSortName = try container.decodeIfPresent(String.self, forKey: .albumSortName) ?? ""
+        albumArtist = try container.decodeIfPresent(String.self, forKey: .albumArtist) ?? ""
+        albumArtistSortName = try container.decodeIfPresent(
+            String.self,
+            forKey: .albumArtistSortName
+        ) ?? ""
+        composer = try container.decodeIfPresent(String.self, forKey: .composer) ?? ""
+        composerSortName = try container.decodeIfPresent(String.self, forKey: .composerSortName) ?? ""
+        grouping = try container.decodeIfPresent(String.self, forKey: .grouping) ?? ""
+        genre = try container.decodeIfPresent(String.self, forKey: .genre) ?? ""
+        releaseYear = try container.decodeIfPresent(Int.self, forKey: .releaseYear)
+        trackNumber = try container.decodeIfPresent(Int.self, forKey: .trackNumber)
+        trackCount = try container.decodeIfPresent(Int.self, forKey: .trackCount)
+        discNumber = try container.decodeIfPresent(Int.self, forKey: .discNumber)
+        discCount = try container.decodeIfPresent(Int.self, forKey: .discCount)
+        isCompilation = try container.decodeIfPresent(Bool.self, forKey: .isCompilation) ?? false
+        playCount = max(0, try container.decodeIfPresent(Int.self, forKey: .playCount) ?? 0)
+        comments = try container.decodeIfPresent(String.self, forKey: .comments) ?? ""
         duration = try container.decode(TimeInterval.self, forKey: .duration)
         fileSize = try container.decode(Int64.self, forKey: .fileSize)
         managedPath = try container.decode(String.self, forKey: .managedPath)
@@ -495,6 +639,22 @@ extension Track {
         try container.encode(title, forKey: .title)
         try container.encode(artist, forKey: .artist)
         try container.encode(album, forKey: .album)
+        try container.encode(artistSortName, forKey: .artistSortName)
+        try container.encode(albumSortName, forKey: .albumSortName)
+        try container.encode(albumArtist, forKey: .albumArtist)
+        try container.encode(albumArtistSortName, forKey: .albumArtistSortName)
+        try container.encode(composer, forKey: .composer)
+        try container.encode(composerSortName, forKey: .composerSortName)
+        try container.encode(grouping, forKey: .grouping)
+        try container.encode(genre, forKey: .genre)
+        try container.encodeIfPresent(releaseYear, forKey: .releaseYear)
+        try container.encodeIfPresent(trackNumber, forKey: .trackNumber)
+        try container.encodeIfPresent(trackCount, forKey: .trackCount)
+        try container.encodeIfPresent(discNumber, forKey: .discNumber)
+        try container.encodeIfPresent(discCount, forKey: .discCount)
+        try container.encode(isCompilation, forKey: .isCompilation)
+        try container.encode(playCount, forKey: .playCount)
+        try container.encode(comments, forKey: .comments)
         try container.encode(duration, forKey: .duration)
         try container.encode(fileSize, forKey: .fileSize)
         try container.encode(managedPath, forKey: .managedPath)

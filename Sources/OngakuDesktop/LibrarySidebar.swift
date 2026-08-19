@@ -50,6 +50,7 @@ struct LibrarySidebar: View {
     @State private var folderEditorTarget: PlaylistFolderEditorTarget?
     @State private var folderPendingDeletion: PlaylistFolder?
     @State private var smartPlaylistEditorTarget: SmartPlaylistEditorTarget?
+    @State private var importPreview: PlaylistImportPreview?
     @State private var expandedFolderIDs: Set<PlaylistFolder.ID> = []
     @State private var errorMessage: String?
 
@@ -130,6 +131,13 @@ struct LibrarySidebar: View {
                         } label: {
                             Label(L10n.text("playlistFolder.create"), systemImage: "folder.badge.plus")
                         }
+                        Divider()
+                        Button(action: startPlaylistImport) {
+                            Label(
+                                L10n.text("playlist.transfer.import"),
+                                systemImage: "square.and.arrow.down"
+                            )
+                        }
                     } label: {
                         Image(systemName: "plus").contentShape(Rectangle())
                     }
@@ -181,6 +189,10 @@ struct LibrarySidebar: View {
         }
         .sheet(item: $smartPlaylistEditorTarget) { target in
             SmartPlaylistEditorView(target: target)
+                .environmentObject(library)
+        }
+        .sheet(item: $importPreview) { preview in
+            PlaylistImportPreviewView(preview: preview)
                 .environmentObject(library)
         }
         .confirmationDialog(
@@ -279,6 +291,13 @@ struct LibrarySidebar: View {
                     systemImage: "plus.square.on.square"
                 )
             }
+            Menu(L10n.text("playlist.transfer.export")) {
+                ForEach(PlaylistTransferFormat.allCases) { format in
+                    Button(format.rawValue.uppercased()) {
+                        export(playlist, as: format)
+                    }
+                }
+            }
             Menu(L10n.text("playlist.moveToFolder")) {
                 Button(L10n.text("playlistFolder.none")) {
                     Task { try? await library.movePlaylist(playlist.id, to: nil) }
@@ -355,6 +374,48 @@ struct LibrarySidebar: View {
         return trackIDs.filter { seen.insert($0).inserted }
     }
 
+    private func startPlaylistImport() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = PlaylistTransferFormat.allCases.compactMap {
+            UTType(filenameExtension: $0.fileExtension)
+        }
+        panel.prompt = L10n.text("playlist.transfer.import.action")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            importPreview = try PlaylistTransferService.preview(from: url, tracks: library.tracks)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func export(_ playlist: Playlist, as format: PlaylistTransferFormat) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "\(safeFilename(playlist.name)).\(format.fileExtension)"
+        panel.allowedContentTypes = [
+            UTType(filenameExtension: format.fileExtension) ?? .data
+        ]
+        panel.canCreateDirectories = true
+        panel.prompt = L10n.text("playlist.transfer.export.action")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        do {
+            let data = try PlaylistTransferService.exportData(
+                playlist: playlist,
+                tracks: library.tracks(in: playlist),
+                format: format
+            )
+            try data.write(to: url, options: .atomic)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func safeFilename(_ value: String) -> String {
+        let invalid = CharacterSet(charactersIn: "/:")
+        return value.components(separatedBy: invalid).joined(separator: "-")
+    }
+
     private var sidebarSelection: Binding<SidebarDestination?> {
         Binding(
             get: {
@@ -417,6 +478,122 @@ struct LibrarySidebar: View {
             try await library.deletePlaylistFolder(folder.id)
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+}
+
+private struct PlaylistImportPreviewView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var library: LibraryStore
+    let preview: PlaylistImportPreview
+    @State private var name: String
+    @State private var isImporting = false
+    @State private var errorMessage: String?
+
+    init(preview: PlaylistImportPreview) {
+        self.preview = preview
+        _name = State(initialValue: preview.name)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
+            VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                Text(L10n.text("playlist.transfer.preview.title"))
+                    .font(.title2.bold())
+                Text(L10n.text("playlist.transfer.preview.description"))
+                    .font(.callout)
+                    .foregroundStyle(AppTheme.secondaryInk)
+            }
+
+            TextField(L10n.text("playlist.field.name"), text: $name)
+                .textFieldStyle(.roundedBorder)
+
+            HStack(spacing: AppTheme.spaceLG) {
+                summary(L10n.text("playlist.transfer.matched"), preview.matchedCount, AppTheme.good)
+                summary(L10n.text("playlist.transfer.duplicate"), preview.duplicateCount, AppTheme.warning)
+                summary(L10n.text("playlist.transfer.missing"), preview.missingCount, AppTheme.danger)
+                Spacer()
+            }
+
+            Table(preview.rows) {
+                TableColumn(L10n.text("playlist.transfer.column.status")) { row in
+                    Label(
+                        L10n.text("playlist.transfer.status.\(row.status.rawValue)"),
+                        systemImage: statusSymbol(row.status)
+                    )
+                    .foregroundStyle(statusColor(row.status))
+                }
+                .width(min: 110, ideal: 130)
+                TableColumn(L10n.text("playlist.transfer.column.song"), value: \.displayName)
+                TableColumn(L10n.text("playlist.transfer.column.source")) { row in
+                    Text(row.sourcePath ?? "—")
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
+            }
+
+            if let errorMessage {
+                Text(errorMessage).font(.caption).foregroundStyle(AppTheme.danger)
+            }
+
+            HStack {
+                Text(L10n.format("playlist.transfer.preview.importCount", preview.matchedCount))
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.secondaryInk)
+                Spacer()
+                Button(L10n.text("common.cancel")) { dismiss() }
+                Button(L10n.text("playlist.transfer.import.action"), action: performImport)
+                    .buttonStyle(.borderedProminent)
+                    .disabled(trimmedName.isEmpty || preview.matchedCount == 0 || isImporting)
+            }
+        }
+        .padding(AppTheme.spaceLG)
+        .frame(minWidth: 760, minHeight: 560)
+    }
+
+    private var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func summary(_ label: String, _ count: Int, _ color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("\(count)").font(.title3.bold().monospacedDigit()).foregroundStyle(color)
+            Text(label).font(.caption).foregroundStyle(AppTheme.secondaryInk)
+        }
+    }
+
+    private func statusSymbol(_ status: PlaylistImportRowStatus) -> String {
+        switch status {
+        case .matched: "checkmark.circle.fill"
+        case .duplicate: "arrow.trianglehead.2.clockwise.rotate.90.circle.fill"
+        case .missing: "questionmark.circle.fill"
+        }
+    }
+
+    private func statusColor(_ status: PlaylistImportRowStatus) -> Color {
+        switch status {
+        case .matched: AppTheme.good
+        case .duplicate: AppTheme.warning
+        case .missing: AppTheme.danger
+        }
+    }
+
+    private func performImport() {
+        guard !trimmedName.isEmpty, !isImporting else { return }
+        isImporting = true
+        Task { @MainActor in
+            do {
+                _ = try await library.importPlaylist(
+                    name: trimmedName,
+                    description: preview.description,
+                    trackIDs: preview.matchedTrackIDs
+                )
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+                isImporting = false
+            }
         }
     }
 }

@@ -277,6 +277,23 @@ actor SQLiteCatalogPrototype {
                     added_at REAL NOT NULL,
                     last_verified_at REAL,
                     health TEXT NOT NULL,
+                    artist_sort_name TEXT NOT NULL,
+                    album_sort_name TEXT NOT NULL,
+                    album_artist TEXT NOT NULL,
+                    album_artist_sort_name TEXT NOT NULL,
+                    composer TEXT NOT NULL,
+                    composer_sort_name TEXT NOT NULL,
+                    grouping_name TEXT NOT NULL,
+                    genre TEXT NOT NULL,
+                    release_year INTEGER,
+                    track_number INTEGER,
+                    track_count INTEGER,
+                    disc_number INTEGER,
+                    disc_count INTEGER,
+                    is_compilation INTEGER NOT NULL,
+                    rating INTEGER NOT NULL,
+                    play_count INTEGER NOT NULL,
+                    comments TEXT NOT NULL,
                     title_search TEXT NOT NULL,
                     artist_search TEXT NOT NULL,
                     album_search TEXT NOT NULL
@@ -373,8 +390,15 @@ actor SQLiteCatalogPrototype {
                 INSERT INTO track(
                     id, title, artist_id, album_id, duration, file_size, managed_path,
                     sha256, added_at, last_verified_at, health,
+                    artist_sort_name, album_sort_name, album_artist,
+                    album_artist_sort_name, composer, composer_sort_name,
+                    grouping_name, genre, release_year, track_number, track_count,
+                    disc_number, disc_count, is_compilation, rating, play_count, comments,
                     title_search, artist_search, album_search
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                )
                 """
         ) { trackStatement in
             try withStatement(
@@ -402,9 +426,26 @@ actor SQLiteCatalogPrototype {
                         try bindNull(to: 10, in: trackStatement, database: database)
                     }
                     try bind(track.health.rawValue, to: 11, in: trackStatement, database: database)
-                    try bind(CatalogSearch.normalize(track.title), to: 12, in: trackStatement, database: database)
-                    try bind(CatalogSearch.normalize(track.artist), to: 13, in: trackStatement, database: database)
-                    try bind(CatalogSearch.normalize(track.album), to: 14, in: trackStatement, database: database)
+                    try bind(track.artistSortName, to: 12, in: trackStatement, database: database)
+                    try bind(track.albumSortName, to: 13, in: trackStatement, database: database)
+                    try bind(track.albumArtist, to: 14, in: trackStatement, database: database)
+                    try bind(track.albumArtistSortName, to: 15, in: trackStatement, database: database)
+                    try bind(track.composer, to: 16, in: trackStatement, database: database)
+                    try bind(track.composerSortName, to: 17, in: trackStatement, database: database)
+                    try bind(track.grouping, to: 18, in: trackStatement, database: database)
+                    try bind(track.genre, to: 19, in: trackStatement, database: database)
+                    try bindOptional(track.releaseYear, to: 20, in: trackStatement, database: database)
+                    try bindOptional(track.trackNumber, to: 21, in: trackStatement, database: database)
+                    try bindOptional(track.trackCount, to: 22, in: trackStatement, database: database)
+                    try bindOptional(track.discNumber, to: 23, in: trackStatement, database: database)
+                    try bindOptional(track.discCount, to: 24, in: trackStatement, database: database)
+                    try bind(Int64(track.isCompilation ? 1 : 0), to: 25, in: trackStatement, database: database)
+                    try bind(Int64(track.rating), to: 26, in: trackStatement, database: database)
+                    try bind(Int64(track.playCount), to: 27, in: trackStatement, database: database)
+                    try bind(track.comments, to: 28, in: trackStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.title), to: 29, in: trackStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.artist), to: 30, in: trackStatement, database: database)
+                    try bind(CatalogSearch.normalize(track.album), to: 31, in: trackStatement, database: database)
                     try stepDone(trackStatement, database: database)
 
                     try reset(searchStatement, database: database)
@@ -743,6 +784,19 @@ actor SQLiteCatalogPrototype {
     ) throws {
         guard sqlite3_bind_int64(statement, index, value) == SQLITE_OK else {
             throw sqliteError(database)
+        }
+    }
+
+    private func bindOptional(
+        _ value: Int?,
+        to index: Int32,
+        in statement: OpaquePointer,
+        database: OpaquePointer
+    ) throws {
+        if let value {
+            try bind(Int64(value), to: index, in: statement, database: database)
+        } else {
+            try bindNull(to: index, in: statement, database: database)
         }
     }
 

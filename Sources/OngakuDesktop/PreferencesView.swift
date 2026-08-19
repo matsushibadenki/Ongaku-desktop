@@ -10,6 +10,7 @@ struct PreferencesContentHeightPreferenceKey: PreferenceKey {
 
 private enum PreferencesSection: String, CaseIterable, Identifiable {
     case general
+    case appearance
     case playback
     case storage
 
@@ -18,6 +19,7 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .general: L10n.text("settings.sidebar.general")
+        case .appearance: L10n.text("settings.sidebar.appearance")
         case .playback: L10n.text("settings.sidebar.playback")
         case .storage: L10n.text("settings.sidebar.storage")
         }
@@ -26,6 +28,7 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .general: "gearshape"
+        case .appearance: "circle.lefthalf.filled"
         case .playback: "play.circle"
         case .storage: "externaldrive"
         }
@@ -58,6 +61,8 @@ struct PreferencesView: View {
                 switch selection {
                 case .general:
                     GeneralSettingsView()
+                case .appearance:
+                    AppearanceSettingsView()
                 case .playback:
                     PlaybackSettingsView()
                 case .storage:
@@ -94,7 +99,6 @@ struct PreferencesView: View {
 
 private struct PlaybackSettingsView: View {
     @EnvironmentObject private var player: PlaybackController
-    @EnvironmentObject private var meterSettings: PlayerMeterSettings
 
     var body: some View {
         ScrollView {
@@ -104,30 +108,6 @@ private struct PlaybackSettingsView: View {
                     subtitle: L10n.text("settings.playback.subtitle"),
                     icon: "play.circle.fill"
                 )
-
-                Divider()
-
-                HStack(alignment: .firstTextBaseline, spacing: AppTheme.spaceLG) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(L10n.text("settings.playerPosition.title"))
-                            .font(.headline)
-                        Text(L10n.text("settings.playerPosition.description"))
-                            .font(.callout)
-                            .foregroundStyle(AppTheme.secondaryInk)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(width: 290, alignment: .leading)
-
-                    Picker("", selection: $meterSettings.barPosition) {
-                        ForEach(PlayerBarPosition.allCases) { position in
-                            Text(L10n.text(position.localizationKey)).tag(position)
-                        }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
-                    .frame(width: 180)
-                    .accessibilityLabel(L10n.text("settings.playerPosition.title"))
-                }
 
                 Divider()
 
@@ -172,20 +152,75 @@ private struct PlaybackSettingsView: View {
                 }
                 .toggleStyle(.switch)
 
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, AppTheme.spaceMD)
+            .background {
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: PreferencesContentHeightPreferenceKey.self,
+                        value: proxy.size.height
+                    )
+                }
+            }
+        }
+        .scrollIndicators(.automatic)
+    }
+}
+
+private struct AppearanceSettingsView: View {
+    @EnvironmentObject private var appearance: AppAppearanceSettings
+    @EnvironmentObject private var meterSettings: PlayerMeterSettings
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
+                settingsHeader(
+                    title: L10n.text("settings.appearanceSection.title"),
+                    subtitle: L10n.text("settings.appearanceSection.subtitle"),
+                    icon: "circle.lefthalf.filled"
+                )
+
+                Divider()
+
+                settingsRow(
+                    title: L10n.text("settings.appearance.title"),
+                    description: L10n.text("settings.appearance.description")
+                ) {
+                    Picker("", selection: $appearance.selectedAppearance) {
+                        ForEach(AppAppearance.allCases) { option in
+                            Text(L10n.text(option.localizationKey)).tag(option)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .frame(width: 180)
+                }
+
+                Divider()
+
+                settingsRow(
+                    title: L10n.text("settings.playerPosition.title"),
+                    description: L10n.text("settings.playerPosition.description")
+                ) {
+                    Picker("", selection: $meterSettings.barPosition) {
+                        ForEach(PlayerBarPosition.allCases) { position in
+                            Text(L10n.text(position.localizationKey)).tag(position)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .frame(width: 180)
+                    .accessibilityLabel(L10n.text("settings.playerPosition.title"))
+                }
+
                 Divider()
 
                 VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
-                    HStack(alignment: .firstTextBaseline, spacing: AppTheme.spaceLG) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(L10n.text("settings.meter.title"))
-                                .font(.headline)
-                            Text(L10n.text("settings.meter.description"))
-                                .font(.callout)
-                                .foregroundStyle(AppTheme.secondaryInk)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .frame(width: 290, alignment: .leading)
-
+                    settingsRow(
+                        title: L10n.text("settings.meter.title"),
+                        description: L10n.text("settings.meter.description")
+                    ) {
                         Picker("", selection: $meterSettings.style) {
                             ForEach(PlayerMeterStyle.allCases) { style in
                                 Text(L10n.text(style.localizationKey)).tag(style)
@@ -252,7 +287,6 @@ private struct PlaybackSettingsView: View {
 
 private struct GeneralSettingsView: View {
     @EnvironmentObject private var language: AppLanguageSettings
-    @EnvironmentObject private var appearance: AppAppearanceSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
@@ -314,29 +348,6 @@ private struct GeneralSettingsView: View {
                 .accessibilityLabel(L10n.text("settings.language.title"))
                 .accessibilityValue(language.selectedLanguage.displayName)
             }
-
-            Divider()
-
-            HStack(alignment: .firstTextBaseline, spacing: AppTheme.spaceLG) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.text("settings.appearance.title"))
-                        .font(.headline)
-                    Text(L10n.text("settings.appearance.description"))
-                        .font(.callout)
-                        .foregroundStyle(AppTheme.secondaryInk)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(width: 290, alignment: .leading)
-
-                Picker("", selection: $appearance.selectedAppearance) {
-                    ForEach(AppAppearance.allCases) { option in
-                        Text(L10n.text(option.localizationKey)).tag(option)
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.segmented)
-                .frame(width: 180)
-            }
         }
         .background {
             GeometryReader { proxy in
@@ -346,6 +357,26 @@ private struct GeneralSettingsView: View {
                 )
             }
         }
+    }
+}
+
+@ViewBuilder
+private func settingsRow<Control: View>(
+    title: String,
+    description: String,
+    @ViewBuilder control: () -> Control
+) -> some View {
+    HStack(alignment: .firstTextBaseline, spacing: AppTheme.spaceLG) {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title).font(.headline)
+            Text(description)
+                .font(.callout)
+                .foregroundStyle(AppTheme.secondaryInk)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(width: 290, alignment: .leading)
+
+        control()
     }
 }
 

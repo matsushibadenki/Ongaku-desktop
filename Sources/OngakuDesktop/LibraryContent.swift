@@ -552,7 +552,7 @@ struct LibraryContent: View {
             id: album.id,
             name: album.name,
             artist: album.artist,
-            trackIDs: album.tracks.map(\.id)
+            tracks: album.tracks
         )
     }
 
