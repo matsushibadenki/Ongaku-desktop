@@ -57,7 +57,16 @@ struct LibrarySidebar: View {
     var body: some View {
         List(selection: sidebarSelection) {
             Section(L10n.text("sidebar.library")) {
-                ForEach([LibrarySection.songs, .albums, .artists, .recentlyAdded]) { section in
+                ForEach([
+                    LibrarySection.songs,
+                    .albums,
+                    .artists,
+                    .pinned,
+                    .recentlyAdded,
+                    .frequentlyPlayed,
+                    .recentlyPlayed,
+                    .favorites,
+                ]) { section in
                     Label(L10n.text(section.titleKey), systemImage: section.systemImage)
                         .fixedSize(horizontal: true, vertical: false)
                         .tag(SidebarDestination.section(section))

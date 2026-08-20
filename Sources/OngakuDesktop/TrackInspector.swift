@@ -100,6 +100,15 @@ struct TrackInspector: View {
 
             HStack(spacing: AppTheme.spaceSM) {
                 Button {
+                    Task { await library.setPinned(!track.isPinned, for: track.id) }
+                } label: {
+                    Label(
+                        L10n.text(track.isPinned ? "track.pin.remove" : "track.pin.add"),
+                        systemImage: track.isPinned ? "pin.fill" : "pin"
+                    )
+                }
+
+                Button {
                     Task { await library.setFavorite(!track.isFavorite, for: track.id) }
                 } label: {
                     Label(
@@ -107,20 +116,21 @@ struct TrackInspector: View {
                         systemImage: track.isFavorite ? "heart.fill" : "heart"
                     )
                 }
+            }
+            .buttonStyle(.bordered)
 
-                Menu {
-                    Button(L10n.text("track.rating.none")) {
-                        Task { await library.setRating(0, for: track.id) }
-                    }
-                    Divider()
-                    ForEach(1...5, id: \.self) { rating in
-                        Button(String(repeating: "★", count: rating)) {
-                            Task { await library.setRating(rating, for: track.id) }
-                        }
-                    }
-                } label: {
-                    Label(ratingLabel(track.rating), systemImage: "star.fill")
+            Menu {
+                Button(L10n.text("track.rating.none")) {
+                    Task { await library.setRating(0, for: track.id) }
                 }
+                Divider()
+                ForEach(1...5, id: \.self) { rating in
+                    Button(String(repeating: "★", count: rating)) {
+                        Task { await library.setRating(rating, for: track.id) }
+                    }
+                }
+            } label: {
+                Label(ratingLabel(track.rating), systemImage: "star.fill")
             }
             .buttonStyle(.bordered)
 

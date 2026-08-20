@@ -177,6 +177,28 @@ struct MetadataEditingTests {
         #expect(result.document.tracks.first?.playCount == 0)
     }
 
+    @Test("Schema 8 catalogs migrate to unpinned standard-view defaults")
+    func migratesSchemaEightPinDefaults() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        var document = LibraryDocument(tracks: [makeTrack(title: "Legacy", album: "Album")])
+        document.schemaVersion = 8
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(document).write(
+            to: root.appendingPathComponent("library-v1.json"),
+            options: .atomic
+        )
+
+        let result = try await LibraryRepository(rootURL: root).load()
+
+        #expect(result.migratedFromSchemaVersion == 8)
+        #expect(result.document.schemaVersion == LibraryDocument.currentSchema)
+        #expect(result.document.tracks.first?.isPinned == false)
+    }
+
     private func makeTrack(title: String, album: String) -> Track {
         Track(
             id: UUID(),

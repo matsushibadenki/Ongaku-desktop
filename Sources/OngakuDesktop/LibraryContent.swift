@@ -26,6 +26,15 @@ private struct TrackPlaybackAttributeActions: View {
 
     var body: some View {
         Button {
+            Task { await library.setPinned(!track.isPinned, for: track.id) }
+        } label: {
+            Label(
+                L10n.text(track.isPinned ? "track.pin.remove" : "track.pin.add"),
+                systemImage: track.isPinned ? "pin.slash" : "pin"
+            )
+        }
+
+        Button {
             Task { await library.setFavorite(!track.isFavorite, for: track.id) }
         } label: {
             Label(
@@ -161,7 +170,11 @@ struct LibraryContent: View {
             } else if library.selectedPlaylist == nil && library.selectedSection == .effects {
                 sectionContent
             } else if library.filteredTracks.isEmpty {
-                EmptyLibraryView(hasTracks: !library.tracks.isEmpty)
+                if library.tracks.isEmpty || !library.searchText.isEmpty {
+                    EmptyLibraryView(hasTracks: !library.tracks.isEmpty)
+                } else {
+                    standardSectionEmptyView
+                }
             } else {
                 sectionContent
             }
@@ -175,6 +188,11 @@ struct LibraryContent: View {
         .sheet(item: $metadataEditTarget) { target in
             MetadataEditorView(target: target)
                 .environmentObject(library)
+        }
+        .onChange(of: library.selectedSection) { _, section in
+            sortOrder = section.preservesResolvedOrder
+                ? []
+                : [KeyPathComparator(\Track.title)]
         }
     }
 
@@ -225,7 +243,8 @@ struct LibraryContent: View {
                     onEditArtist: editArtist
                 )
             }
-        case .songs, .recentlyAdded, .needsAttention:
+        case .songs, .pinned, .recentlyAdded, .frequentlyPlayed, .recentlyPlayed,
+             .favorites, .needsAttention:
             trackTable
         case .effects:
             EffectsRackView()
@@ -346,6 +365,18 @@ struct LibraryContent: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var standardSectionEmptyView: some View {
+        ContentUnavailableView(
+            L10n.text("empty.standard.\(library.selectedSection.rawValue).title"),
+            systemImage: library.selectedSection.systemImage,
+            description: Text(
+                L10n.text("empty.standard.\(library.selectedSection.rawValue).body")
+            )
+        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, AppTheme.spaceMD)
+    }
+
     private var albums: [AlbumGroup] {
         AlbumGroup.makeGroups(from: library.filteredTracks)
     }
@@ -381,6 +412,15 @@ struct LibraryContent: View {
                             fallback: AppTheme.ink
                         )
                         .lineLimit(1)
+                    if track.isPinned {
+                        Image(systemName: "pin.fill")
+                            .font(.caption)
+                            .trackTableForeground(
+                                isSelected: library.selectedTrackIDs.contains(track.id),
+                                fallback: AppTheme.secondaryInk
+                            )
+                            .accessibilityLabel(L10n.text("sidebar.pinned"))
+                    }
                     if track.isFavorite {
                         Image(systemName: "heart.fill")
                             .font(.caption)
@@ -586,7 +626,8 @@ struct LibraryContent: View {
 
         trackSortTask = Task.detached(priority: .userInitiated) {
             let result: [Track]
-            if request.playlistID != nil {
+            if request.playlistID != nil
+                || (request.section.preservesResolvedOrder && request.rules.isEmpty) {
                 result = sourceTracks
             } else {
                 result = sourceTracks.sorted { lhs, rhs in

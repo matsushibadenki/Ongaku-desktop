@@ -238,6 +238,7 @@ struct LibraryRepositoryTests {
             lastVerifiedAt: .now,
             health: .verified
         )
+        track.isPinned = true
         track.isFavorite = true
         track.rating = 4
         track.isExcludedFromPlayback = true
@@ -249,6 +250,7 @@ struct LibraryRepositoryTests {
         #expect(loaded.document.tracks[0].title == track.title)
         #expect(loaded.document.tracks[0].sha256 == track.sha256)
         #expect(loaded.document.tracks[0].health == .verified)
+        #expect(loaded.document.tracks[0].isPinned)
         #expect(loaded.document.tracks[0].isFavorite)
         #expect(loaded.document.tracks[0].rating == 4)
         #expect(loaded.document.tracks[0].isExcludedFromPlayback)

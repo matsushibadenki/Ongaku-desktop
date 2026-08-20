@@ -89,14 +89,11 @@ final class LibraryStore: ObservableObject {
                 result = selectedPlaylist.entries.compactMap { tracksByID[$0.trackID] }
             }
         } else {
-            switch selectedSection {
-            case .songs, .albums, .artists, .effects:
-                result = tracks
-            case .recentlyAdded:
-                result = tracks.sorted { $0.addedAt > $1.addedAt }
-            case .needsAttention:
-                result = tracks.filter { $0.health != .verified }
-            }
+            result = StandardLibraryResolver.tracks(
+                for: selectedSection,
+                tracks: tracks,
+                events: playbackEvents
+            )
         }
 
         guard !searchText.isEmpty else { return result }
@@ -117,6 +114,10 @@ final class LibraryStore: ObservableObject {
 
     func setFavorite(_ isFavorite: Bool, for trackID: Track.ID) async {
         await updatePlaybackAttributes(for: trackID) { $0.isFavorite = isFavorite }
+    }
+
+    func setPinned(_ isPinned: Bool, for trackID: Track.ID) async {
+        await updatePlaybackAttributes(for: trackID) { $0.isPinned = isPinned }
     }
 
     func setRating(_ rating: Int, for trackID: Track.ID) async {

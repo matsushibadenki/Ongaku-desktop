@@ -91,6 +91,7 @@ actor LibraryRepository {
     }
 
     private typealias Schema7LibraryDocument = Schema6LibraryDocument
+    private typealias Schema8LibraryDocument = Schema6LibraryDocument
 
     private struct CatalogIdentityIndex {
         private var artistIDsByName: [String: UUID] = [:]
@@ -614,6 +615,21 @@ actor LibraryRepository {
                 return DecodedLibraryDocument(
                     document: document,
                     migratedFromSchemaVersion: nil
+                )
+            case 8:
+                let schema8 = try decoder.decode(Schema8LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema8.updatedAt,
+                        tracks: schema8.tracks,
+                        libraryID: schema8.libraryID,
+                        createdAt: schema8.createdAt,
+                        playlists: schema8.playlists,
+                        playlistFolders: schema8.playlistFolders,
+                        playbackEvents: schema8.playbackEvents,
+                        playbackQueue: schema8.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 8
                 )
             case 7:
                 let schema7 = try decoder.decode(Schema7LibraryDocument.self, from: data)

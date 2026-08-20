@@ -4,7 +4,11 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
     case songs
     case albums
     case artists
+    case pinned
     case recentlyAdded
+    case frequentlyPlayed
+    case recentlyPlayed
+    case favorites
     case needsAttention
     case effects
 
@@ -15,7 +19,11 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .songs: "sidebar.songs"
         case .albums: "sidebar.albums"
         case .artists: "sidebar.artists"
+        case .pinned: "sidebar.pinned"
         case .recentlyAdded: "sidebar.recent"
+        case .frequentlyPlayed: "sidebar.frequentlyPlayed"
+        case .recentlyPlayed: "sidebar.recentlyPlayed"
+        case .favorites: "sidebar.favorites"
         case .needsAttention: "sidebar.attention"
         case .effects: "sidebar.effects"
         }
@@ -26,9 +34,20 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .songs: "music.note.list"
         case .albums: "square.stack"
         case .artists: "music.mic"
+        case .pinned: "pin.fill"
         case .recentlyAdded: "clock"
+        case .frequentlyPlayed: "chart.bar.fill"
+        case .recentlyPlayed: "clock.arrow.circlepath"
+        case .favorites: "heart.fill"
         case .needsAttention: "exclamationmark.shield"
         case .effects: "dial.medium"
+        }
+    }
+
+    var preservesResolvedOrder: Bool {
+        switch self {
+        case .recentlyAdded, .frequentlyPlayed, .recentlyPlayed: true
+        default: false
         }
     }
 }
@@ -83,6 +102,7 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var health: FileHealth
     var artistID: UUID = UUID()
     var albumID: UUID = UUID()
+    var isPinned: Bool = false
     var isFavorite: Bool = false
     var rating: Int = 0
     var isExcludedFromPlayback: Bool = false
@@ -483,6 +503,55 @@ enum PlaybackStatisticsResolver {
     }
 }
 
+enum StandardLibraryResolver {
+    nonisolated static func tracks(
+        for section: LibrarySection,
+        tracks: [Track],
+        events: [PlaybackEvent]
+    ) -> [Track] {
+        switch section {
+        case .pinned:
+            return tracks.filter(\.isPinned).sorted(by: titleOrder)
+        case .recentlyAdded:
+            return tracks.sorted {
+                if $0.addedAt != $1.addedAt { return $0.addedAt > $1.addedAt }
+                return titleOrder($0, $1)
+            }
+        case .frequentlyPlayed:
+            let statistics = PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
+            return tracks.filter { (statistics[$0.id]?.playCount ?? 0) > 0 }.sorted {
+                let lhs = statistics[$0.id] ?? TrackPlaybackStatistics()
+                let rhs = statistics[$1.id] ?? TrackPlaybackStatistics()
+                if lhs.playCount != rhs.playCount { return lhs.playCount > rhs.playCount }
+                if lhs.lastPlayedAt != rhs.lastPlayedAt {
+                    return (lhs.lastPlayedAt ?? .distantPast) > (rhs.lastPlayedAt ?? .distantPast)
+                }
+                return titleOrder($0, $1)
+            }
+        case .recentlyPlayed:
+            let statistics = PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
+            return tracks.filter { statistics[$0.id]?.lastPlayedAt != nil }.sorted {
+                let lhs = statistics[$0.id]?.lastPlayedAt ?? .distantPast
+                let rhs = statistics[$1.id]?.lastPlayedAt ?? .distantPast
+                if lhs != rhs { return lhs > rhs }
+                return titleOrder($0, $1)
+            }
+        case .favorites:
+            return tracks.filter(\.isFavorite).sorted(by: titleOrder)
+        case .needsAttention:
+            return tracks.filter { $0.health != .verified }
+        case .songs, .albums, .artists, .effects:
+            return tracks
+        }
+    }
+
+    private nonisolated static func titleOrder(_ lhs: Track, _ rhs: Track) -> Bool {
+        let comparison = lhs.title.localizedStandardCompare(rhs.title)
+        if comparison != .orderedSame { return comparison == .orderedAscending }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+}
+
 enum PlaybackHistoryResolver {
     nonisolated static func items(
         events: [PlaybackEvent],
@@ -531,7 +600,7 @@ struct PlaybackQueueState: Codable, Equatable, Sendable {
 }
 
 struct LibraryDocument: Codable, Sendable {
-    static let currentSchema = 8
+    static let currentSchema = 9
 
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
@@ -583,6 +652,7 @@ extension Track {
         case health
         case artistID
         case albumID
+        case isPinned
         case isFavorite
         case rating
         case isExcludedFromPlayback
@@ -625,6 +695,7 @@ extension Track {
         // Temporary values are normalized at the document migration boundary.
         artistID = try container.decodeIfPresent(UUID.self, forKey: .artistID) ?? UUID()
         albumID = try container.decodeIfPresent(UUID.self, forKey: .albumID) ?? UUID()
+        isPinned = try container.decodeIfPresent(Bool.self, forKey: .isPinned) ?? false
         isFavorite = try container.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
         rating = min(max(try container.decodeIfPresent(Int.self, forKey: .rating) ?? 0, 0), 5)
         isExcludedFromPlayback = try container.decodeIfPresent(
@@ -664,6 +735,7 @@ extension Track {
         try container.encode(health, forKey: .health)
         try container.encode(artistID, forKey: .artistID)
         try container.encode(albumID, forKey: .albumID)
+        try container.encode(isPinned, forKey: .isPinned)
         try container.encode(isFavorite, forKey: .isFavorite)
         try container.encode(rating, forKey: .rating)
         try container.encode(isExcludedFromPlayback, forKey: .isExcludedFromPlayback)
