@@ -153,6 +153,99 @@ struct MetadataEditingTests {
         })
     }
 
+    @Test("Bulk edits change only checked metadata fields")
+    @MainActor
+    func bulkMetadataPatchPreservesUncheckedValues() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        var first = makeTrack(title: "First", album: "One")
+        first.genre = "Jazz"
+        first.comments = "Keep first"
+        var second = makeTrack(title: "Second", album: "Two")
+        second.genre = "Rock"
+        second.comments = "Keep second"
+        try await repository.save(tracks: [first, second])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        var values = TrackMetadataValues(track: first)
+        values.genre = "Ambient"
+        values.comments = "Must not be applied"
+        values.title = "Must not replace titles"
+        try await store.updateTracksMetadata(
+            trackIDs: [first.id, second.id],
+            patch: TrackMetadataPatch(fields: [.genre], values: values)
+        )
+
+        let loaded = try await repository.load().document.tracks
+        let loadedFirst = try #require(loaded.first(where: { $0.id == first.id }))
+        let loadedSecond = try #require(loaded.first(where: { $0.id == second.id }))
+        #expect(loadedFirst.genre == "Ambient" && loadedSecond.genre == "Ambient")
+        #expect(loadedFirst.title == "First" && loadedSecond.title == "Second")
+        #expect(loadedFirst.comments == "Keep first")
+        #expect(loadedSecond.comments == "Keep second")
+        #expect(loadedFirst.album == "One" && loadedSecond.album == "Two")
+    }
+
+    @Test("Bulk artist and album edits reconcile shared catalog identities")
+    @MainActor
+    func bulkMetadataPatchReconcilesIdentities() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let first = makeTrack(title: "First", album: "One")
+        let second = makeTrack(title: "Second", album: "Two")
+        try await repository.save(tracks: [first, second])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        var values = TrackMetadataValues(track: first)
+        values.artist = "Shared Artist"
+        values.album = "Shared Album"
+        try await store.updateTracksMetadata(
+            trackIDs: [first.id, second.id],
+            patch: TrackMetadataPatch(fields: [.artist, .album], values: values)
+        )
+
+        let loaded = try await repository.load().document.tracks
+        #expect(loaded.allSatisfy {
+            $0.artist == "Shared Artist" && $0.album == "Shared Album"
+        })
+        #expect(Set(loaded.map(\.artistID)).count == 1)
+        #expect(Set(loaded.map(\.albumID)).count == 1)
+    }
+
+    @Test("Bulk artist edits preserve distinct album identities")
+    @MainActor
+    func bulkArtistPatchDoesNotMergeSameNamedAlbums() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        var first = makeTrack(title: "First", album: "Greatest Hits")
+        var second = makeTrack(title: "Second", album: "Greatest Hits")
+        first.albumID = UUID()
+        second.albumID = UUID()
+        try await repository.save(tracks: [first, second])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        var values = TrackMetadataValues(track: first)
+        values.artist = "Corrected Artist"
+        try await store.updateTracksMetadata(
+            trackIDs: [first.id, second.id],
+            patch: TrackMetadataPatch(fields: [.artist], values: values)
+        )
+
+        let loaded = try await repository.load().document.tracks
+        #expect(loaded.allSatisfy { $0.artist == "Corrected Artist" })
+        #expect(Set(loaded.map(\.artistID)).count == 1)
+        #expect(Set(loaded.map(\.albumID)).count == 2)
+    }
+
     @Test("Schema 7 catalogs migrate to Music-style metadata defaults")
     func migratesSchemaSevenMetadata() async throws {
         let root = FileManager.default.temporaryDirectory

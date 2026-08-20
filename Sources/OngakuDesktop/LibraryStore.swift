@@ -980,6 +980,29 @@ final class LibraryStore: ObservableObject {
         try await persistMetadataUpdate(updated, changedTrackIDs: ids, artwork: artwork)
     }
 
+    func updateTracksMetadata(
+        trackIDs: [Track.ID],
+        patch: TrackMetadataPatch
+    ) async throws {
+        guard !patch.isEmpty else { return }
+        let ids = Set(trackIDs)
+        var updated = tracks
+        let indices = updated.indices.filter { ids.contains(updated[$0].id) }
+        guard !indices.isEmpty, indices.count == ids.count else {
+            throw MetadataEditError.trackNotFound
+        }
+
+        for index in indices {
+            updated[index].apply(patch)
+        }
+        reconcileMetadataIdentity(
+            in: &updated,
+            changedTrackIDs: ids,
+            fields: patch.fields
+        )
+        try await persistMetadataUpdate(updated, changedTrackIDs: ids)
+    }
+
     func updateArtistMetadata(
         trackIDs: [Track.ID],
         artist: String
@@ -1031,6 +1054,94 @@ final class LibraryStore: ObservableObject {
             activity = .failed(error.localizedDescription)
             throw error
         }
+    }
+
+    private func reconcileMetadataIdentity(
+        in proposed: inout [Track],
+        changedTrackIDs: Set<Track.ID>,
+        fields: Set<TrackMetadataField>
+    ) {
+        let changesArtist = fields.contains(.artist)
+        let changesAlbum = fields.contains(.album)
+        guard changesArtist || changesAlbum else { return }
+
+        var artistIDs: [String: UUID] = [:]
+        let originalsByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        for track in proposed where !changedTrackIDs.contains(track.id) {
+            let artistKey = metadataIdentityKey(track.artist)
+            artistIDs[artistKey, default: track.artistID] = track.artistID
+        }
+        for track in proposed where changedTrackIDs.contains(track.id) {
+            guard let original = originalsByID[track.id],
+                  metadataIdentityKey(track.artist) == metadataIdentityKey(original.artist)
+            else { continue }
+            artistIDs[metadataIdentityKey(track.artist), default: original.artistID] = original.artistID
+        }
+
+        for index in proposed.indices where changedTrackIDs.contains(proposed[index].id) {
+            if changesArtist {
+                let key = metadataIdentityKey(proposed[index].artist)
+                let artistID = artistIDs[key] ?? UUID()
+                artistIDs[key] = artistID
+                proposed[index].artistID = artistID
+            }
+        }
+
+        if !changesAlbum {
+            var remappedAlbumIDs: [String: UUID] = [:]
+            for index in proposed.indices where changedTrackIDs.contains(proposed[index].id) {
+                guard let original = originalsByID[proposed[index].id] else { continue }
+                if proposed[index].artistID == original.artistID {
+                    proposed[index].albumID = original.albumID
+                    continue
+                }
+                let movesEntireAlbum = tracks
+                    .filter { $0.albumID == original.albumID }
+                    .allSatisfy { changedTrackIDs.contains($0.id) }
+                let key = "\(original.albumID.uuidString):\(proposed[index].artistID.uuidString)"
+                let albumID = remappedAlbumIDs[key]
+                    ?? (movesEntireAlbum ? original.albumID : UUID())
+                remappedAlbumIDs[key] = albumID
+                proposed[index].albumID = albumID
+            }
+            return
+        }
+
+        var albumIDs: [String: UUID] = [:]
+        for track in proposed where !changedTrackIDs.contains(track.id) {
+            albumIDs[metadataAlbumIdentityKey(artistID: track.artistID, album: track.album),
+                     default: track.albumID] = track.albumID
+        }
+        for track in proposed where changedTrackIDs.contains(track.id) {
+            guard let original = originalsByID[track.id],
+                  track.artistID == original.artistID,
+                  metadataIdentityKey(track.album) == metadataIdentityKey(original.album)
+            else { continue }
+            let key = metadataAlbumIdentityKey(artistID: track.artistID, album: track.album)
+            albumIDs[key, default: original.albumID] = original.albumID
+        }
+
+        for index in proposed.indices where changedTrackIDs.contains(proposed[index].id) {
+            let albumKey = metadataAlbumIdentityKey(
+                artistID: proposed[index].artistID,
+                album: proposed[index].album
+            )
+            let albumID = albumIDs[albumKey] ?? UUID()
+            albumIDs[albumKey] = albumID
+            proposed[index].albumID = albumID
+        }
+    }
+
+    private func metadataIdentityKey(_ value: String) -> String {
+        value.folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: .current
+        )
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func metadataAlbumIdentityKey(artistID: UUID, album: String) -> String {
+        "\(artistID.uuidString):\(metadataIdentityKey(album))"
     }
 
     private func currentDocument() -> LibraryDocument {
@@ -1270,5 +1381,32 @@ private extension Track {
         rating = min(max(metadata.rating, 0), 5)
         playCount = max(0, metadata.playCount)
         comments = metadata.comments
+    }
+
+    mutating func apply(_ patch: TrackMetadataPatch) {
+        let fields = patch.fields
+        let metadata = patch.values
+        if fields.contains(.title) { title = metadata.title }
+        if fields.contains(.artist) { artist = metadata.artist }
+        if fields.contains(.artistSortName) { artistSortName = metadata.artistSortName }
+        if fields.contains(.album) { album = metadata.album }
+        if fields.contains(.albumSortName) { albumSortName = metadata.albumSortName }
+        if fields.contains(.albumArtist) { albumArtist = metadata.albumArtist }
+        if fields.contains(.albumArtistSortName) {
+            albumArtistSortName = metadata.albumArtistSortName
+        }
+        if fields.contains(.composer) { composer = metadata.composer }
+        if fields.contains(.composerSortName) { composerSortName = metadata.composerSortName }
+        if fields.contains(.grouping) { grouping = metadata.grouping }
+        if fields.contains(.genre) { genre = metadata.genre }
+        if fields.contains(.releaseYear) { releaseYear = metadata.releaseYear }
+        if fields.contains(.trackNumber) { trackNumber = metadata.trackNumber }
+        if fields.contains(.trackCount) { trackCount = metadata.trackCount }
+        if fields.contains(.discNumber) { discNumber = metadata.discNumber }
+        if fields.contains(.discCount) { discCount = metadata.discCount }
+        if fields.contains(.isCompilation) { isCompilation = metadata.isCompilation }
+        if fields.contains(.rating) { rating = min(max(metadata.rating, 0), 5) }
+        if fields.contains(.playCount) { playCount = max(0, metadata.playCount) }
+        if fields.contains(.comments) { comments = metadata.comments }
     }
 }

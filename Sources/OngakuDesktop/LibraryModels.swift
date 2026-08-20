@@ -200,6 +200,36 @@ struct TrackMetadataValues: Equatable, Sendable {
     }
 }
 
+enum TrackMetadataField: String, CaseIterable, Hashable, Sendable {
+    case title
+    case artist
+    case artistSortName
+    case album
+    case albumSortName
+    case albumArtist
+    case albumArtistSortName
+    case composer
+    case composerSortName
+    case grouping
+    case genre
+    case releaseYear
+    case trackNumber
+    case trackCount
+    case discNumber
+    case discCount
+    case isCompilation
+    case rating
+    case playCount
+    case comments
+}
+
+struct TrackMetadataPatch: Equatable, Sendable {
+    var fields: Set<TrackMetadataField>
+    var values: TrackMetadataValues
+
+    var isEmpty: Bool { fields.isEmpty }
+}
+
 enum CatalogSearch {
     static func normalize(_ value: String) -> String {
         value.folding(

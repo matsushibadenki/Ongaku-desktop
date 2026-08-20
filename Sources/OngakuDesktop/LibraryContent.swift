@@ -443,7 +443,16 @@ struct LibraryContent: View {
                     PlaybackQueueContextActions(tracks: contextTracks(for: track))
                     TrackPlaylistContextActions(trackIDs: contextTrackIDs(for: track))
                     TrackPlaybackAttributeActions(track: track)
-                    Button(L10n.text("metadataEditor.track.menu")) { editTrack(track) }
+                    let selectedTracks = contextTracks(for: track)
+                    if selectedTracks.count > 1 {
+                        Button(
+                            L10n.format("metadataEditor.bulk.menu", selectedTracks.count)
+                        ) {
+                            editTracks(selectedTracks)
+                        }
+                    } else {
+                        Button(L10n.text("metadataEditor.track.menu")) { editTrack(track) }
+                    }
                     Divider()
                     Button(L10n.text("track.reveal")) { library.reveal(track) }
                 }
@@ -585,6 +594,10 @@ struct LibraryContent: View {
 
     private func editTrack(_ track: Track) {
         metadataEditTarget = .track(track)
+    }
+
+    private func editTracks(_ tracks: [Track]) {
+        metadataEditTarget = .tracks(tracks)
     }
 
     private func editAlbum(_ album: AlbumGroup) {
