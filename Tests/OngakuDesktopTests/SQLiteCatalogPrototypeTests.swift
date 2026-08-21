@@ -36,9 +36,16 @@ struct SQLiteCatalogPrototypeTests {
         #expect(japanese == [document.tracks[1].id])
         let sharedAlbumSearch = try await prototype.search("Album")
         #expect(Set(sharedAlbumSearch) == Set(document.tracks.map(\.id)))
+        let composerSearch = try await prototype.search("Debussy")
+        #expect(composerSearch == [document.tracks[0].id])
+        let lyricsSearch = try await prototype.search("hidden lyric")
+        #expect(lyricsSearch == [document.tracks[0].id])
         let parity = try await prototype.verifyParity(
             document: document,
-            queries: ["alpha", "LPH", "夜", "album", "ＳＯＮＧ", "missing"]
+            queries: [
+                "alpha", "LPH", "夜", "album", "ＳＯＮＧ", "Debussy",
+                "hidden lyric", "missing",
+            ]
         )
         #expect(parity.isMatch)
         #expect(parity.mismatchedQueries.isEmpty)
@@ -81,12 +88,15 @@ struct SQLiteCatalogPrototypeTests {
     private func makeDocument() -> LibraryDocument {
         let firstArtistID = UUID()
         let firstAlbumID = UUID()
-        let first = Track(
+        var first = Track(
             id: UUID(), title: "Àlpha Ｓong", artist: "First Artist", album: "Shared Album",
             duration: 180, fileSize: 1_000, managedPath: "/Music/Alpha.m4a",
             sha256: "alpha", addedAt: .now, lastVerifiedAt: .now, health: .verified,
             artistID: firstArtistID, albumID: firstAlbumID
         )
+        first.composer = "Claude Debussy"
+        first.participantCredits = "Piano: Alice Example"
+        first.lyrics = TrackLyrics(plainText: "a hidden lyric phrase", source: .manual)
         let second = Track(
             id: UUID(), title: "夜の歌", artist: "第二歌手", album: "Second Album",
             duration: 200, fileSize: 2_000, managedPath: "/Music/Night.m4a",

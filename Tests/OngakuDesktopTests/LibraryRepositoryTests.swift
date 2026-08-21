@@ -16,6 +16,62 @@ struct LibraryRepositoryTests {
         return url
     }
 
+    @Test("Resolving duplicates transfers catalog references without deleting files")
+    @MainActor
+    func resolvesDuplicateRegistrations() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let keep = Track(
+            id: UUID(), title: "Song", artist: "Artist", album: "Album",
+            duration: 120, fileSize: 10, managedPath: root.appendingPathComponent("keep.wav").path,
+            sha256: "identical", addedAt: .distantPast, health: .verified
+        )
+        let remove = Track(
+            id: UUID(), title: "Song Copy", artist: "Artist", album: "Album",
+            duration: 120, fileSize: 10, managedPath: root.appendingPathComponent("remove.wav").path,
+            sha256: "identical", addedAt: .now, health: .verified
+        )
+        let playlist = Playlist(
+            name: "Both",
+            entries: [PlaylistEntry(trackID: remove.id), PlaylistEntry(trackID: keep.id)]
+        )
+        let event = PlaybackEvent(trackID: remove.id, kind: .completed)
+        let queue = PlaybackQueueState(
+            trackIDs: [remove.id, keep.id],
+            currentTrackID: remove.id,
+            position: 42
+        )
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(document: LibraryDocument(
+            tracks: [keep, remove],
+            playlists: [playlist],
+            playbackEvents: [event],
+            playbackQueue: queue
+        ))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let group = try #require(store.duplicateGroups.first)
+
+        let result = try await store.resolveDuplicateGroup(
+            group.id,
+            keeping: keep.id,
+            moveManagedFilesToTrash: false
+        )
+
+        #expect(result.removedCount == 1)
+        #expect(result.trashedFileCount == 0)
+        #expect(store.tracks.map(\.id) == [keep.id])
+        #expect(store.playlists[0].entries.map(\.trackID) == [keep.id])
+        #expect(store.playbackEvents.map(\.trackID) == [keep.id])
+        #expect(store.playbackQueue?.trackIDs == [keep.id])
+        #expect(store.playbackQueue?.currentTrackID == keep.id)
+
+        let restored = try await LibraryRepository(rootURL: root).load().document
+        #expect(restored.tracks.map(\.id) == [keep.id])
+        #expect(restored.playlists[0].entries.map(\.trackID) == [keep.id])
+        #expect(restored.playbackEvents.map(\.trackID) == [keep.id])
+    }
+
     @Test("Playlist create, edit, artwork, duplicate, delete, and restart are transactional")
     @MainActor
     func managesPlaylists() async throws {
@@ -604,6 +660,47 @@ struct LibraryRepositoryTests {
         let second = await repository.verify([track])
         #expect(second[0].health == .changed)
         try? FileManager.default.removeItem(at: root)
+    }
+
+    @Test("Missing files are automatically and manually relinked only by checksum")
+    func safelyRelinksMissingFiles() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let searchRoot = root.appendingPathComponent("Search", isDirectory: true)
+        let nested = searchRoot.appendingPathComponent("Artist/Album", isDirectory: true)
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        let recovered = nested.appendingPathComponent("Recovered.mp3")
+        let originalData = Data([0x49, 0x44, 0x33, 1, 2, 3, 4, 5])
+        try originalData.write(to: recovered)
+        let hash = try LibraryRepository.sha256(of: recovered)
+        let track = Track(
+            id: UUID(), title: "Missing", artist: "Artist", album: "Album", duration: 1,
+            fileSize: Int64(originalData.count),
+            managedPath: root.appendingPathComponent("Old/Missing.mp3").path,
+            sha256: hash, addedAt: .now, lastVerifiedAt: .now, health: .missing
+        )
+        let repository = LibraryRepository(rootURL: root.appendingPathComponent("Catalog"))
+
+        let automatic = await repository.relinkMissingFiles(
+            in: [track],
+            searching: [searchRoot]
+        )
+        #expect(automatic.relinkedTrackCount == 1)
+        #expect(automatic.scannedFileCount == 1)
+        #expect(automatic.tracks[0].managedPath == recovered.standardizedFileURL.path)
+        #expect(automatic.tracks[0].health == .verified)
+
+        let wrong = root.appendingPathComponent("Wrong.mp3")
+        try Data(repeating: 0xFF, count: originalData.count).write(to: wrong)
+        do {
+            _ = try await repository.relink(track, to: wrong)
+            Issue.record("A mismatching checksum must not be relinked")
+        } catch LibraryRepository.RepositoryError.relinkFingerprintMismatch {
+            // Expected: the catalog path remains unchanged.
+        }
+        let manual = try await repository.relink(track, to: recovered)
+        #expect(manual.managedPath == recovered.standardizedFileURL.path)
+        #expect(manual.health == .verified)
     }
 
     @Test("Import copies data and rejects duplicate content")

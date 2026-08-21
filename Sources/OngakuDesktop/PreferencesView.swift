@@ -171,6 +171,7 @@ private struct PlaybackSettingsView: View {
 private struct AppearanceSettingsView: View {
     @EnvironmentObject private var appearance: AppAppearanceSettings
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
+    @EnvironmentObject private var trackTableSettings: TrackTableSettings
 
     var body: some View {
         ScrollView {
@@ -180,6 +181,35 @@ private struct AppearanceSettingsView: View {
                     subtitle: L10n.text("settings.appearanceSection.subtitle"),
                     icon: "circle.lefthalf.filled"
                 )
+
+                Divider()
+
+                settingsRow(
+                    title: L10n.text("settings.tableColumns.title"),
+                    description: L10n.text("settings.tableColumns.description")
+                ) {
+                    Menu {
+                        Label(L10n.text("column.title"), systemImage: "checkmark")
+                            .disabled(true)
+                        Divider()
+                        ForEach(TrackTableColumn.allCases) { column in
+                            Toggle(
+                                L10n.text(column.localizationKey),
+                                isOn: trackTableSettings.binding(for: column)
+                            )
+                        }
+                    } label: {
+                        Label(
+                            L10n.format(
+                                "settings.tableColumns.visibleCount",
+                                trackTableSettings.visibleColumns.count + 1
+                            ),
+                            systemImage: "tablecells"
+                        )
+                        .frame(width: 180)
+                    }
+                    .menuStyle(.borderlessButton)
+                }
 
                 Divider()
 

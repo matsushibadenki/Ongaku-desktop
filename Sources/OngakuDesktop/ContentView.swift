@@ -7,6 +7,7 @@ struct ContentView: View {
     @EnvironmentObject private var player: PlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var isImporting = false
+    @State private var isRelinkSearching = false
     @State private var isDropTargeted = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
@@ -49,6 +50,14 @@ struct ContentView: View {
             guard case .success(let urls) = result else { return }
             Task { await library.importFiles(urls) }
         }
+        .fileImporter(
+            isPresented: $isRelinkSearching,
+            allowedContentTypes: [.folder],
+            allowsMultipleSelection: false
+        ) { result in
+            guard case .success(let urls) = result else { return }
+            Task { await library.relinkMissingFiles(searching: urls) }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .requestImport)) { _ in
             isImporting = true
         }
@@ -73,7 +82,23 @@ struct ContentView: View {
                     Label(L10n.text("command.verify"), systemImage: "checkmark.shield")
                 }
                 .help(L10n.text("toolbar.verifyHelp"))
-                .disabled(library.tracks.isEmpty || library.activity == .verifying)
+                .disabled(
+                    library.tracks.isEmpty
+                        || library.activity == .verifying
+                        || library.activity == .relinking
+                )
+
+                Button {
+                    isRelinkSearching = true
+                } label: {
+                    Label(L10n.text("relink.searchFolder"), systemImage: "folder.badge.questionmark")
+                }
+                .help(L10n.text("relink.searchFolderHelp"))
+                .disabled(
+                    !library.tracks.contains(where: { $0.health == .missing })
+                        || library.activity == .relinking
+                        || library.activity == .verifying
+                )
             }
         }
         .toolbarBackground(AppTheme.windowBar, for: .windowToolbar)
@@ -127,9 +152,12 @@ struct ContentView: View {
 }
 
 #Preview("Desktop") {
+    let storage = LibraryStorageSettings()
     ContentView()
         .environmentObject(LibraryStore())
         .environmentObject(PlaybackController())
         .environmentObject(PlayerMeterSettings())
+        .environmentObject(TrackTableSettings())
+        .environmentObject(LibraryProfileSettings(defaultMediaURL: storage.mediaDirectoryURL))
         .frame(width: 1240, height: 780)
 }

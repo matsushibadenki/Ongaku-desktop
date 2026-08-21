@@ -1,6 +1,140 @@
 import Combine
 import Foundation
 
+struct LibraryProfile: Codable, Identifiable, Hashable, Sendable {
+    let id: UUID
+    var name: String
+    var catalogPath: String
+    var mediaPath: String
+    var isArchived: Bool
+    var createdAt: Date
+
+    var catalogURL: URL { URL(fileURLWithPath: catalogPath, isDirectory: true) }
+    var mediaURL: URL { URL(fileURLWithPath: mediaPath, isDirectory: true) }
+}
+
+@MainActor
+final class LibraryProfileSettings: ObservableObject {
+    nonisolated static let profilesKey = "library.profiles.v1"
+    nonisolated static let activeProfileKey = "library.profiles.active.v1"
+
+    @Published private(set) var profiles: [LibraryProfile] {
+        didSet { persistProfiles() }
+    }
+    @Published private(set) var activeLibraryID: LibraryProfile.ID {
+        didSet { defaults.set(activeLibraryID.uuidString, forKey: Self.activeProfileKey) }
+    }
+
+    private let defaults: UserDefaults
+    private let fileManager: FileManager
+    private let librariesRootURL: URL
+
+    init(
+        defaultMediaURL: URL,
+        defaults: UserDefaults = .standard,
+        fileManager: FileManager = .default,
+        applicationSupportURL: URL? = nil
+    ) {
+        self.defaults = defaults
+        self.fileManager = fileManager
+        let support = applicationSupportURL
+            ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let legacyRoot = support.appendingPathComponent("Ongaku Desktop", isDirectory: true)
+        librariesRootURL = legacyRoot.appendingPathComponent("Libraries", isDirectory: true)
+
+        let initialProfiles: [LibraryProfile]
+        if let data = defaults.data(forKey: Self.profilesKey),
+           let decoded = try? JSONDecoder().decode([LibraryProfile].self, from: data),
+           !decoded.isEmpty {
+            initialProfiles = decoded
+        } else {
+            initialProfiles = [LibraryProfile(
+                id: UUID(),
+                name: L10n.text("libraryProfile.defaultName"),
+                catalogPath: legacyRoot.path,
+                mediaPath: defaultMediaURL.standardizedFileURL.path,
+                isArchived: false,
+                createdAt: .now
+            )]
+        }
+        let savedID = defaults.string(forKey: Self.activeProfileKey).flatMap(UUID.init(uuidString:))
+        profiles = initialProfiles
+        activeLibraryID = initialProfiles.first(where: { $0.id == savedID && !$0.isArchived })?.id
+            ?? initialProfiles.first(where: { !$0.isArchived })?.id
+            ?? initialProfiles[0].id
+        persistProfiles()
+    }
+
+    var activeProfile: LibraryProfile {
+        profiles.first(where: { $0.id == activeLibraryID }) ?? profiles[0]
+    }
+
+    var availableProfiles: [LibraryProfile] {
+        profiles.filter { !$0.isArchived }.sorted { $0.createdAt < $1.createdAt }
+    }
+
+    var archivedProfiles: [LibraryProfile] {
+        profiles.filter(\.isArchived).sorted { $0.createdAt < $1.createdAt }
+    }
+
+    @discardableResult
+    func createLibrary(named proposedName: String) throws -> LibraryProfile.ID {
+        let name = normalizedName(proposedName)
+        let id = UUID()
+        let root = librariesRootURL.appendingPathComponent(id.uuidString, isDirectory: true)
+        let media = root.appendingPathComponent("Ongaku Media", isDirectory: true)
+        try fileManager.createDirectory(at: media, withIntermediateDirectories: true)
+        profiles.append(LibraryProfile(
+            id: id,
+            name: name,
+            catalogPath: root.path,
+            mediaPath: media.path,
+            isArchived: false,
+            createdAt: .now
+        ))
+        activeLibraryID = id
+        return id
+    }
+
+    func activate(_ id: LibraryProfile.ID) {
+        guard profiles.contains(where: { $0.id == id && !$0.isArchived }) else { return }
+        activeLibraryID = id
+    }
+
+    func rename(_ id: LibraryProfile.ID, to proposedName: String) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[index].name = normalizedName(proposedName)
+    }
+
+    func archive(_ id: LibraryProfile.ID) {
+        guard id != activeLibraryID,
+              availableProfiles.count > 1,
+              let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[index].isArchived = true
+    }
+
+    func unarchive(_ id: LibraryProfile.ID) {
+        guard let index = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[index].isArchived = false
+    }
+
+    func updateActiveMediaURL(_ url: URL) {
+        guard let index = profiles.firstIndex(where: { $0.id == activeLibraryID }) else { return }
+        profiles[index].mediaPath = url.standardizedFileURL.path
+    }
+
+    private func normalizedName(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? L10n.text("libraryProfile.untitled") : String(trimmed.prefix(80))
+    }
+
+    private func persistProfiles() {
+        if let data = try? JSONEncoder().encode(profiles) {
+            defaults.set(data, forKey: Self.profilesKey)
+        }
+    }
+}
+
 enum LibraryStorageSource: String {
     case automaticAppleMusic
     case selectedAppleMusicLibrary
@@ -245,6 +379,11 @@ final class LibraryStorageSettings: ObservableObject {
             mediaDirectoryURL = Self.defaultMediaDirectory(fileManager: fileManager)
             source = .applicationSupport
         }
+    }
+
+    func activateProfileMediaDirectory(_ url: URL) {
+        mediaDirectoryURL = url.standardizedFileURL
+        source = .applicationSupport
     }
 
     private static func managedDirectory(in parent: URL) -> URL {

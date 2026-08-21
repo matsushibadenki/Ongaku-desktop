@@ -149,6 +149,7 @@ private struct TrackPlaylistContextActions: View {
 struct LibraryContent: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var trackTableSettings: TrackTableSettings
     @State private var sortOrder = [KeyPathComparator(\Track.title)]
     @State private var sortedTracks: [Track] = []
     @State private var isSortingTracks = false
@@ -157,6 +158,7 @@ struct LibraryContent: View {
     @State private var selectedAlbumID: AlbumGroup.ID?
     @State private var selectedArtistID: ArtistGroup.ID?
     @State private var metadataEditTarget: MetadataEditTarget?
+    @State private var isShowingFilters = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -170,7 +172,8 @@ struct LibraryContent: View {
             } else if library.selectedPlaylist == nil && library.selectedSection == .effects {
                 sectionContent
             } else if library.filteredTracks.isEmpty {
-                if library.tracks.isEmpty || !library.searchText.isEmpty {
+                if library.tracks.isEmpty || !library.searchText.isEmpty
+                    || library.filterCriteria.activeCount > 0 {
                     EmptyLibraryView(hasTracks: !library.tracks.isEmpty)
                 } else {
                     standardSectionEmptyView
@@ -190,9 +193,13 @@ struct LibraryContent: View {
                 .environmentObject(library)
         }
         .onChange(of: library.selectedSection) { _, section in
-            sortOrder = section.preservesResolvedOrder
-                ? []
-                : [KeyPathComparator(\Track.title)]
+            restoreSavedSortOrder(for: section)
+        }
+        .onChange(of: sortOrder) { _, updatedSortOrder in
+            persistSortOrder(updatedSortOrder)
+        }
+        .onAppear {
+            restoreSavedSortOrder(for: library.selectedSection)
         }
     }
 
@@ -246,6 +253,8 @@ struct LibraryContent: View {
         case .songs, .pinned, .recentlyAdded, .frequentlyPlayed, .recentlyPlayed,
              .favorites, .needsAttention:
             trackTable
+        case .duplicates:
+            DuplicateLibraryView(groups: library.filteredDuplicateGroups)
         case .effects:
             EffectsRackView()
         }
@@ -283,6 +292,28 @@ struct LibraryContent: View {
                 }
             }
             Spacer()
+            if library.selectedSection != .effects {
+                Button {
+                    isShowingFilters.toggle()
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: library.filterCriteria.activeCount > 0
+                            ? "line.3.horizontal.decrease.circle.fill"
+                            : "line.3.horizontal.decrease.circle")
+                        if library.filterCriteria.activeCount > 0 {
+                            Text("\(library.filterCriteria.activeCount)")
+                                .font(.caption.monospacedDigit())
+                        }
+                    }
+                }
+                .buttonStyle(.bordered)
+                .help(L10n.text("filters.button.help"))
+                .accessibilityLabel(L10n.text("filters.button"))
+                .popover(isPresented: $isShowingFilters, arrowEdge: .bottom) {
+                    LibraryFilterView()
+                        .environmentObject(library)
+                }
+            }
         }
         .padding(.horizontal, AppTheme.spaceLG)
         .padding(.top, AppTheme.spaceMD)
@@ -396,7 +427,7 @@ struct LibraryContent: View {
     }
 
     private var trackTable: some View {
-        Table(sortedTracks, selection: trackSelection, sortOrder: $sortOrder) {
+        Table(sortedTracks, selection: $library.selectedTrackIDs, sortOrder: $sortOrder) {
             TableColumn(L10n.text("column.title"), value: \.title) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
@@ -431,31 +462,6 @@ struct LibraryContent: View {
                             .accessibilityLabel(L10n.text("track.favorite"))
                     }
                 }
-                .contentShape(Rectangle())
-                .simultaneousGesture(
-                    TapGesture(count: 2).onEnded {
-                        library.selectedTrackID = track.id
-                        player.play(track)
-                    }
-                )
-                .contextMenu {
-                    Button(L10n.text("track.play")) { player.play(track) }
-                    PlaybackQueueContextActions(tracks: contextTracks(for: track))
-                    TrackPlaylistContextActions(trackIDs: contextTrackIDs(for: track))
-                    TrackPlaybackAttributeActions(track: track)
-                    let selectedTracks = contextTracks(for: track)
-                    if selectedTracks.count > 1 {
-                        Button(
-                            L10n.format("metadataEditor.bulk.menu", selectedTracks.count)
-                        ) {
-                            editTracks(selectedTracks)
-                        }
-                    } else {
-                        Button(L10n.text("metadataEditor.track.menu")) { editTrack(track) }
-                    }
-                    Divider()
-                    Button(L10n.text("track.reveal")) { library.reveal(track) }
-                }
                 .draggable(dragPayload(for: track))
                 .dropDestination(for: String.self) { payloads, location in
                     guard let playlistID = library.selectedPlaylistID,
@@ -475,40 +481,61 @@ struct LibraryContent: View {
             }
             .width(min: 240, ideal: 300)
 
-            TableColumn(L10n.text("column.artist"), value: \.artist) { track in
-                Text(track.artist).lineLimit(1)
+            TableColumn(columnTitle(.artist), value: \.artist) { track in
+                Text(track.artist)
+                    .lineLimit(1)
+                    .opacity(columnOpacity(.artist))
             }
-            .width(min: 130, ideal: 180)
+            .width(
+                min: collapsedWidth(.artist, visible: 130),
+                ideal: collapsedWidth(.artist, visible: 180),
+                max: collapsedMaximumWidth(.artist)
+            )
 
-            TableColumn(L10n.text("column.album"), value: \.album) { track in
+            TableColumn(columnTitle(.album), value: \.album) { track in
                 Text(track.album)
                     .lineLimit(1)
-                    .contextMenu {
-                        if let album = albums.first(where: {
-                            $0.name == track.album && $0.artist == track.artist
-                        }) {
-                            Button(L10n.text("metadataEditor.album.menu")) {
-                                editAlbum(album)
-                            }
-                        }
-                    }
+                    .opacity(columnOpacity(.album))
             }
-            .width(min: 150, ideal: 200)
+            .width(
+                min: collapsedWidth(.album, visible: 150),
+                ideal: collapsedWidth(.album, visible: 200),
+                max: collapsedMaximumWidth(.album)
+            )
 
-            TableColumn(L10n.text("column.duration")) { track in
+            TableColumn(columnTitle(.duration)) { track in
                 Text(DurationFormatter.string(track.duration))
                     .font(.callout.monospacedDigit())
+                    .opacity(columnOpacity(.duration))
             }
-            .width(min: 68, ideal: 76)
+            .width(
+                min: collapsedWidth(.duration, visible: 68),
+                ideal: collapsedWidth(.duration, visible: 76),
+                max: collapsedMaximumWidth(.duration)
+            )
 
-            TableColumn(L10n.text("column.health")) { track in
+            TableColumn(columnTitle(.health)) { track in
                 HealthLabel(
                     health: track.health,
                     compact: true,
                     isSelected: library.selectedTrackIDs.contains(track.id)
                 )
+                .opacity(columnOpacity(.health))
             }
-            .width(min: 64, ideal: 72)
+            .width(
+                min: collapsedWidth(.health, visible: 64),
+                ideal: collapsedWidth(.health, visible: 72),
+                max: collapsedMaximumWidth(.health)
+            )
+        }
+        .contextMenu(forSelectionType: Track.ID.self) { selection in
+            trackRowContextMenu(for: selection)
+        } primaryAction: { selection in
+            guard let track = sortedTracks.first(where: { selection.contains($0.id) }) else {
+                return
+            }
+            library.selectedTrackID = track.id
+            player.play(track)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
         .overlay(alignment: .topTrailing) {
@@ -543,23 +570,21 @@ struct LibraryContent: View {
                 library.selectedTrackIDs = [selectedTrackID]
             }
         }
-    }
-
-    private var trackSelection: Binding<Set<Track.ID>> {
-        Binding(
-            get: { library.selectedTrackIDs },
-            set: { selection in
-                library.selectedTrackIDs = selection
-                if selection.isEmpty {
-                    library.selectedTrackID = nil
-                } else if let selectedTrackID = library.selectedTrackID,
-                          selection.contains(selectedTrackID) {
-                    // Keep the inspector anchored while extending a selection.
-                } else {
-                    library.selectedTrackID = selection.first
-                }
+        .onChange(of: library.selectedTrackIDs) { previousSelection, selection in
+            if selection.isEmpty {
+                library.selectedTrackID = nil
+                return
             }
-        )
+            let newlySelected = selection.subtracting(previousSelection)
+            if let focusedID = newlySelected.first {
+                library.selectedTrackID = focusedID
+            } else if let selectedTrackID = library.selectedTrackID,
+                      selection.contains(selectedTrackID) {
+                // Keep the inspector focused while another selected row is removed.
+            } else {
+                library.selectedTrackID = selection.first
+            }
+        }
     }
 
     private func contextTrackIDs(for track: Track) -> Set<Track.ID> {
@@ -569,6 +594,34 @@ struct LibraryContent: View {
     private func contextTracks(for track: Track) -> [Track] {
         let ids = contextTrackIDs(for: track)
         return sortedTracks.filter { ids.contains($0.id) }
+    }
+
+    @ViewBuilder
+    private func trackRowContextMenu(for selection: Set<Track.ID>) -> some View {
+        let selectedTracks = sortedTracks.filter { selection.contains($0.id) }
+        if let track = selectedTracks.first {
+            Button(L10n.text("track.play")) { player.play(track) }
+            PlaybackQueueContextActions(tracks: selectedTracks)
+            TrackPlaylistContextActions(trackIDs: selection)
+            TrackPlaybackAttributeActions(track: track)
+            if selectedTracks.count > 1 {
+                Button(L10n.format("metadataEditor.bulk.menu", selectedTracks.count)) {
+                    editTracks(selectedTracks)
+                }
+            } else {
+                Button(L10n.text("metadataEditor.track.menu")) { editTrack(track) }
+                if let album = albums.first(where: {
+                    $0.name == track.album && $0.artist == track.artist
+                }) {
+                    Button(L10n.text("metadataEditor.album.menu")) { editAlbum(album) }
+                }
+                if let artist = artists.first(where: { $0.name == track.artist }) {
+                    Button(L10n.text("metadataEditor.artist.menu")) { editArtist(artist) }
+                }
+            }
+            Divider()
+            Button(L10n.text("track.reveal")) { library.reveal(track) }
+        }
     }
 
     private func dragPayload(for track: Track) -> String {
@@ -623,8 +676,50 @@ struct LibraryContent: View {
             section: library.selectedSection,
             playlistID: library.selectedPlaylistID,
             searchText: library.searchText,
+            filterCriteria: library.filterCriteria,
             rules: sortOrder.compactMap(TrackSortRule.init)
         )
+    }
+
+    private func restoreSavedSortOrder(for section: LibrarySection) {
+        guard !section.preservesResolvedOrder else {
+            sortOrder = []
+            return
+        }
+        let order: SortOrder = trackTableSettings.sortAscending ? .forward : .reverse
+        switch trackTableSettings.sortField {
+        case .title: sortOrder = [KeyPathComparator(\Track.title, order: order)]
+        case .artist: sortOrder = [KeyPathComparator(\Track.artist, order: order)]
+        case .album: sortOrder = [KeyPathComparator(\Track.album, order: order)]
+        }
+    }
+
+    private func persistSortOrder(_ comparators: [KeyPathComparator<Track>]) {
+        guard !library.selectedSection.preservesResolvedOrder,
+              let comparator = comparators.first,
+              let rule = TrackSortRule(comparator) else { return }
+        switch rule.field {
+        case .title: trackTableSettings.sortField = .title
+        case .artist: trackTableSettings.sortField = .artist
+        case .album: trackTableSettings.sortField = .album
+        }
+        trackTableSettings.sortAscending = rule.isAscending
+    }
+
+    private func columnTitle(_ column: TrackTableColumn) -> String {
+        trackTableSettings.isVisible(column) ? L10n.text(column.localizationKey) : ""
+    }
+
+    private func columnOpacity(_ column: TrackTableColumn) -> Double {
+        trackTableSettings.isVisible(column) ? 1 : 0
+    }
+
+    private func collapsedWidth(_ column: TrackTableColumn, visible: CGFloat) -> CGFloat {
+        trackTableSettings.isVisible(column) ? visible : 0
+    }
+
+    private func collapsedMaximumWidth(_ column: TrackTableColumn) -> CGFloat? {
+        trackTableSettings.isVisible(column) ? nil : 0
     }
 
     private func startTrackSort() {
@@ -669,6 +764,8 @@ struct LibraryContent: View {
             statusBar(text: L10n.text("status.importing"), progress: true, color: AppTheme.accent)
         case .verifying:
             statusBar(text: L10n.text("status.verifying"), progress: true, color: AppTheme.accent)
+        case .relinking:
+            statusBar(text: L10n.text("status.relinking"), progress: true, color: AppTheme.accent)
         case .notice(let message):
             statusBar(text: message, progress: false, color: AppTheme.good, symbol: "checkmark.shield")
         case .failed(let message):
@@ -699,11 +796,294 @@ struct LibraryContent: View {
     }
 }
 
+private struct LibraryFilterView: View {
+    @EnvironmentObject private var library: LibraryStore
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
+            HStack {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.text("filters.title"))
+                        .font(.headline)
+                    Text(L10n.text("filters.description"))
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
+                Spacer()
+                Button(L10n.text("filters.clear")) {
+                    library.filterCriteria = LibraryFilterCriteria()
+                }
+                .disabled(library.filterCriteria.activeCount == 0)
+            }
+
+            Grid(alignment: .leading, horizontalSpacing: AppTheme.spaceMD, verticalSpacing: 10) {
+                filterTextRow("filters.artist", text: $library.filterCriteria.artist)
+                filterTextRow("filters.album", text: $library.filterCriteria.album)
+                filterTextRow("filters.composer", text: $library.filterCriteria.composer)
+                filterTextRow("filters.genre", text: $library.filterCriteria.genre)
+
+                GridRow {
+                    filterLabel("filters.year")
+                    HStack(spacing: AppTheme.spaceXS) {
+                        TextField(
+                            L10n.text("filters.year.minimum"),
+                            text: optionalIntegerBinding(\.minimumYear)
+                        )
+                        .frame(width: 80)
+                        Text("–").foregroundStyle(AppTheme.secondaryInk)
+                        TextField(
+                            L10n.text("filters.year.maximum"),
+                            text: optionalIntegerBinding(\.maximumYear)
+                        )
+                        .frame(width: 80)
+                    }
+                    .textFieldStyle(.roundedBorder)
+                }
+
+                GridRow {
+                    filterLabel("filters.rating")
+                    Picker("", selection: $library.filterCriteria.minimumRating) {
+                        Text(L10n.text("filters.any")).tag(0)
+                        ForEach(1...5, id: \.self) { rating in
+                            Text(String(repeating: "★", count: rating)).tag(rating)
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                }
+
+                GridRow {
+                    filterLabel("filters.health")
+                    Picker("", selection: $library.filterCriteria.health) {
+                        Text(L10n.text("filters.any")).tag(nil as FileHealth?)
+                        ForEach(FileHealth.allCases, id: \.self) { health in
+                            Text(L10n.text(health.titleKey)).tag(Optional(health))
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(maxWidth: .infinity)
+                }
+            }
+
+            Divider()
+
+            Toggle(L10n.text("filters.favoritesOnly"), isOn: $library.filterCriteria.favoritesOnly)
+            Toggle(
+                L10n.text("filters.compilationsOnly"),
+                isOn: $library.filterCriteria.compilationsOnly
+            )
+
+            HStack {
+                Spacer()
+                Text(L10n.format("filters.resultCount", library.filteredTracks.count))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(AppTheme.secondaryInk)
+            }
+        }
+        .padding(AppTheme.spaceLG)
+        .frame(width: 390)
+        .background(AppTheme.canvas)
+    }
+
+    private func filterTextRow(_ key: String, text: Binding<String>) -> some View {
+        GridRow {
+            filterLabel(key)
+            TextField(L10n.text(key), text: text)
+                .textFieldStyle(.roundedBorder)
+        }
+    }
+
+    private func filterLabel(_ key: String) -> some View {
+        Text(L10n.text(key))
+            .foregroundStyle(AppTheme.secondaryInk)
+            .frame(width: 92, alignment: .trailing)
+    }
+
+    private func optionalIntegerBinding(
+        _ keyPath: WritableKeyPath<LibraryFilterCriteria, Int?>
+    ) -> Binding<String> {
+        Binding(
+            get: { library.filterCriteria[keyPath: keyPath].map(String.init) ?? "" },
+            set: { value in
+                var criteria = library.filterCriteria
+                criteria[keyPath: keyPath] = Int(value.filter(\.isNumber))
+                library.filterCriteria = criteria
+            }
+        )
+    }
+}
+
+private struct DuplicateLibraryView: View {
+    @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var player: PlaybackController
+    let groups: [DuplicateTrackGroup]
+
+    @State private var keepSelections: [DuplicateTrackGroup.ID: Track.ID] = [:]
+    @State private var pendingGroup: DuplicateTrackGroup?
+    @State private var errorMessage: String?
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: AppTheme.spaceMD) {
+                ForEach(groups) { group in
+                    duplicateCard(group)
+                }
+            }
+            .padding(.horizontal, AppTheme.spaceLG)
+            .padding(.vertical, AppTheme.spaceMD)
+        }
+        .confirmationDialog(
+            L10n.text("duplicates.confirm.title"),
+            isPresented: Binding(
+                get: { pendingGroup != nil },
+                set: { if !$0 { pendingGroup = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(L10n.text("duplicates.action.unregister")) {
+                resolvePendingGroup(moveManagedFilesToTrash: false)
+            }
+            Button(L10n.text("duplicates.action.trashManaged"), role: .destructive) {
+                resolvePendingGroup(moveManagedFilesToTrash: true)
+            }
+            Button(L10n.text("common.cancel"), role: .cancel) { pendingGroup = nil }
+        } message: {
+            Text(L10n.text("duplicates.confirm.message"))
+        }
+        .alert(
+            L10n.text("duplicates.error.title"),
+            isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )
+        ) {
+            Button(L10n.text("common.ok")) { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private func duplicateCard(_ group: DuplicateTrackGroup) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+            HStack(spacing: AppTheme.spaceSM) {
+                Label(
+                    L10n.text(group.kind.titleKey),
+                    systemImage: group.kind == .exact
+                        ? "checkmark.seal.fill" : "questionmark.diamond.fill"
+                )
+                .font(.headline)
+                .foregroundStyle(group.kind == .exact ? AppTheme.good : AppTheme.warning)
+                Spacer()
+                Text(L10n.format("duplicates.songCount", group.tracks.count))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(AppTheme.secondaryInk)
+            }
+
+            Text(L10n.text("duplicates.chooseKeep"))
+                .font(.callout)
+                .foregroundStyle(AppTheme.secondaryInk)
+
+            ForEach(group.tracks) { track in
+                Button {
+                    keepSelections[group.id] = track.id
+                    library.selectedTrackID = track.id
+                } label: {
+                    HStack(alignment: .top, spacing: AppTheme.spaceSM) {
+                        Image(systemName: keepID(for: group) == track.id
+                            ? "largecircle.fill.circle" : "circle")
+                            .foregroundStyle(keepID(for: group) == track.id
+                                ? AppTheme.accent : AppTheme.secondaryInk)
+                            .frame(width: 18)
+                        VStack(alignment: .leading, spacing: 3) {
+                            HStack(spacing: AppTheme.spaceXS) {
+                                Text(track.title).fontWeight(.semibold).lineLimit(1)
+                                if group.recommendedTrackID == track.id {
+                                    Text(L10n.text("duplicates.recommended"))
+                                        .font(.caption2.bold())
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(AppTheme.accent.opacity(0.13), in: Capsule())
+                                }
+                            }
+                            Text("\(track.artist) — \(track.album)")
+                                .font(.callout)
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .lineLimit(1)
+                            HStack(spacing: AppTheme.spaceMD) {
+                                Text(DurationFormatter.string(track.duration))
+                                Text(ByteCountFormatter.string(
+                                    fromByteCount: track.fileSize,
+                                    countStyle: .file
+                                ))
+                                Text(track.fileURL.lastPathComponent)
+                                    .lineLimit(1)
+                            }
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(AppTheme.secondaryInk)
+                            Text(track.managedPath)
+                                .font(.caption2.monospaced())
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(AppTheme.spaceSM)
+                    .contentShape(Rectangle())
+                    .background(
+                        keepID(for: group) == track.id
+                            ? AppTheme.accent.opacity(0.08) : AppTheme.raised,
+                        in: RoundedRectangle(cornerRadius: AppTheme.radiusSmall)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            HStack {
+                Text(L10n.text("duplicates.filesRemainUnlessTrash"))
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.secondaryInk)
+                Spacer()
+                Button(L10n.text("duplicates.action.resolve")) {
+                    pendingGroup = group
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(AppTheme.spaceMD)
+        .ongakuPanel()
+    }
+
+    private func keepID(for group: DuplicateTrackGroup) -> Track.ID {
+        keepSelections[group.id] ?? group.recommendedTrackID
+    }
+
+    private func resolvePendingGroup(moveManagedFilesToTrash: Bool) {
+        guard let group = pendingGroup else { return }
+        let keepID = keepID(for: group)
+        pendingGroup = nil
+        Task {
+            do {
+                _ = try await library.resolveDuplicateGroup(
+                    group.id,
+                    keeping: keepID,
+                    moveManagedFilesToTrash: moveManagedFilesToTrash
+                )
+                player.reconcilePlaybackQueue(with: library.tracks)
+                keepSelections[group.id] = nil
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+        }
+    }
+}
+
 private struct TrackSortRequest: Hashable, Sendable {
     let contentRevision: Int
     let section: LibrarySection
     let playlistID: Playlist.ID?
     let searchText: String
+    let filterCriteria: LibraryFilterCriteria
     let rules: [TrackSortRule]
 }
 
@@ -1070,26 +1450,6 @@ private struct AlbumDetail: View {
                         )
                         .lineLimit(1)
                 }
-                .contentShape(Rectangle())
-                .simultaneousGesture(
-                    DragGesture(minimumDistance: 0).onChanged { _ in
-                        library.selectedTrackID = track.id
-                    }
-                )
-                .simultaneousGesture(
-                    TapGesture(count: 2).onEnded {
-                        library.selectedTrackID = track.id
-                        player.play(track)
-                    }
-                )
-                .contextMenu {
-                    Button(L10n.text("track.play")) { player.play(track) }
-                    PlaybackQueueContextActions(tracks: [track])
-                    TrackPlaybackAttributeActions(track: track)
-                    Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
-                    Divider()
-                    Button(L10n.text("track.reveal")) { library.reveal(track) }
-                }
             }
             .width(min: 260, ideal: 380)
 
@@ -1107,6 +1467,23 @@ private struct AlbumDetail: View {
                 )
             }
             .width(min: 64, ideal: 72)
+        }
+        .contextMenu(forSelectionType: Track.ID.self) { selection in
+            if let track = album.sortedTracks.first(where: { selection.contains($0.id) }) {
+                Button(L10n.text("track.play")) { player.play(track) }
+                PlaybackQueueContextActions(tracks: [track])
+                TrackPlaybackAttributeActions(track: track)
+                Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
+                Button(L10n.text("metadataEditor.album.menu")) { onEditAlbum(album) }
+                Divider()
+                Button(L10n.text("track.reveal")) { library.reveal(track) }
+            }
+        } primaryAction: { selection in
+            guard let track = album.sortedTracks.first(where: { selection.contains($0.id) }) else {
+                return
+            }
+            library.selectedTrackID = track.id
+            player.play(track)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
         .padding(.bottom, AppTheme.spaceMD)
@@ -1424,41 +1801,12 @@ private struct ArtistDetail: View {
                             )
                             .lineLimit(1)
                     }
-                    .contentShape(Rectangle())
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 0).onChanged { _ in
-                            library.selectedTrackID = track.id
-                        }
-                    )
-                    .simultaneousGesture(
-                        TapGesture(count: 2).onEnded {
-                            library.selectedTrackID = track.id
-                            player.play(track)
-                        }
-                    )
-                    .contextMenu {
-                        Button(L10n.text("track.play")) { player.play(track) }
-                        PlaybackQueueContextActions(tracks: [track])
-                        TrackPlaybackAttributeActions(track: track)
-                        Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
-                        Divider()
-                        Button(L10n.text("track.reveal")) { library.reveal(track) }
-                    }
                 }
                 .width(min: 220, ideal: 300)
 
                 TableColumn(L10n.text("column.album")) { track in
                     Text(track.album)
                         .lineLimit(1)
-                        .contextMenu {
-                            if let album = artist.albums.first(where: {
-                                $0.name == track.album && $0.artist == track.artist
-                            }) {
-                                Button(L10n.text("metadataEditor.album.menu")) {
-                                    onEditAlbum(album)
-                                }
-                            }
-                        }
                 }
                 .width(min: 150, ideal: 210)
 
@@ -1476,6 +1824,30 @@ private struct ArtistDetail: View {
                     )
                 }
                 .width(min: 64, ideal: 72)
+            }
+            .contextMenu(forSelectionType: Track.ID.self) { selection in
+                if let track = artist.sortedTracks.first(where: { selection.contains($0.id) }) {
+                    Button(L10n.text("track.play")) { player.play(track) }
+                    PlaybackQueueContextActions(tracks: [track])
+                    TrackPlaybackAttributeActions(track: track)
+                    Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
+                    if let album = artist.albums.first(where: {
+                        $0.name == track.album && $0.artist == track.artist
+                    }) {
+                        Button(L10n.text("metadataEditor.album.menu")) { onEditAlbum(album) }
+                    }
+                    Button(L10n.text("metadataEditor.artist.menu")) {
+                        onEditArtist(artist)
+                    }
+                    Divider()
+                    Button(L10n.text("track.reveal")) { library.reveal(track) }
+                }
+            } primaryAction: { selection in
+                guard let track = artist.sortedTracks.first(where: { selection.contains($0.id) }) else {
+                    return
+                }
+                library.selectedTrackID = track.id
+                player.play(track)
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
             .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -1501,7 +1873,10 @@ private struct EmptyLibraryView: View {
             Text(hasTracks ? L10n.text("empty.filtered.body") : L10n.text("empty.library.body"))
         } actions: {
             if hasTracks {
-                Button(L10n.text("empty.clearSearch")) { library.searchText = "" }
+                Button(L10n.text("empty.clearSearchAndFilters")) {
+                    library.searchText = ""
+                    library.filterCriteria = LibraryFilterCriteria()
+                }
             } else {
                 Button(L10n.text("command.import")) {
                     NotificationCenter.default.post(name: .requestImport, object: nil)

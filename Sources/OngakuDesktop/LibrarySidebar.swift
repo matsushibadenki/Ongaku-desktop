@@ -45,6 +45,7 @@ private enum SmartPlaylistEditorTarget: Identifiable {
 
 struct LibrarySidebar: View {
     @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var libraryProfiles: LibraryProfileSettings
     @State private var playlistEditorTarget: PlaylistEditorTarget?
     @State private var playlistPendingDeletion: Playlist?
     @State private var folderEditorTarget: PlaylistFolderEditorTarget?
@@ -53,9 +54,65 @@ struct LibrarySidebar: View {
     @State private var importPreview: PlaylistImportPreview?
     @State private var expandedFolderIDs: Set<PlaylistFolder.ID> = []
     @State private var errorMessage: String?
+    @State private var isCreatingLibrary = false
+    @State private var isRenamingLibrary = false
+    @State private var libraryNameDraft = ""
 
     var body: some View {
         List(selection: sidebarSelection) {
+            Section(L10n.text("libraryProfile.section")) {
+                Menu {
+                    ForEach(libraryProfiles.availableProfiles) { profile in
+                        Button {
+                            libraryProfiles.activate(profile.id)
+                        } label: {
+                            if profile.id == libraryProfiles.activeLibraryID {
+                                Label(profile.name, systemImage: "checkmark")
+                            } else {
+                                Text(profile.name)
+                            }
+                        }
+                    }
+                    Divider()
+                    Button {
+                        libraryNameDraft = ""
+                        isCreatingLibrary = true
+                    } label: {
+                        Label(L10n.text("libraryProfile.create"), systemImage: "plus")
+                    }
+                    Button {
+                        libraryNameDraft = libraryProfiles.activeProfile.name
+                        isRenamingLibrary = true
+                    } label: {
+                        Label(L10n.text("libraryProfile.rename"), systemImage: "pencil")
+                    }
+                    if libraryProfiles.availableProfiles.count > 1 {
+                        Menu(L10n.text("libraryProfile.archive")) {
+                            ForEach(libraryProfiles.availableProfiles.filter {
+                                $0.id != libraryProfiles.activeLibraryID
+                            }) { profile in
+                                Button(profile.name) { libraryProfiles.archive(profile.id) }
+                            }
+                        }
+                    }
+                    if !libraryProfiles.archivedProfiles.isEmpty {
+                        Menu(L10n.text("libraryProfile.archived")) {
+                            ForEach(libraryProfiles.archivedProfiles) { profile in
+                                Button(L10n.format("libraryProfile.unarchive", profile.name)) {
+                                    libraryProfiles.unarchive(profile.id)
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    Label(libraryProfiles.activeProfile.name, systemImage: "books.vertical")
+                        .lineLimit(1)
+                        .foregroundStyle(AppTheme.ink)
+                }
+                .menuStyle(.borderlessButton)
+                .tint(AppTheme.ink)
+            }
+
             Section(L10n.text("sidebar.library")) {
                 ForEach([
                     LibrarySection.songs,
@@ -169,6 +226,22 @@ struct LibrarySidebar: View {
             Section(L10n.text("sidebar.integrity")) {
                 Label {
                     HStack {
+                        Text(L10n.text(LibrarySection.duplicates.titleKey))
+                            .fixedSize(horizontal: true, vertical: false)
+                        Spacer()
+                        if !library.duplicateGroups.isEmpty {
+                            Text("\(library.duplicateGroups.count)")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(AppTheme.warning)
+                        }
+                    }
+                } icon: {
+                    Image(systemName: LibrarySection.duplicates.systemImage)
+                }
+                .tag(SidebarDestination.section(.duplicates))
+
+                Label {
+                    HStack {
                         Text(L10n.text(LibrarySection.needsAttention.titleKey))
                             .fixedSize(horizontal: true, vertical: false)
                         Spacer()
@@ -203,6 +276,26 @@ struct LibrarySidebar: View {
         .sheet(item: $importPreview) { preview in
             PlaylistImportPreviewView(preview: preview)
                 .environmentObject(library)
+        }
+        .alert(L10n.text("libraryProfile.create"), isPresented: $isCreatingLibrary) {
+            TextField(L10n.text("libraryProfile.name"), text: $libraryNameDraft)
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+            Button(L10n.text("libraryProfile.create")) {
+                do { try libraryProfiles.createLibrary(named: libraryNameDraft) }
+                catch { errorMessage = error.localizedDescription }
+            }
+        } message: {
+            Text(L10n.text("libraryProfile.createDescription"))
+        }
+        .alert(L10n.text("libraryProfile.rename"), isPresented: $isRenamingLibrary) {
+            TextField(L10n.text("libraryProfile.name"), text: $libraryNameDraft)
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+            Button(L10n.text("libraryProfile.rename")) {
+                libraryProfiles.rename(
+                    libraryProfiles.activeLibraryID,
+                    to: libraryNameDraft
+                )
+            }
         }
         .confirmationDialog(
             L10n.text("playlist.delete.title"),

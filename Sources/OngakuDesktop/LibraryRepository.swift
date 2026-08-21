@@ -92,6 +92,9 @@ actor LibraryRepository {
 
     private typealias Schema7LibraryDocument = Schema6LibraryDocument
     private typealias Schema8LibraryDocument = Schema6LibraryDocument
+    private typealias Schema9LibraryDocument = Schema6LibraryDocument
+    private typealias Schema10LibraryDocument = Schema6LibraryDocument
+    private typealias Schema11LibraryDocument = Schema6LibraryDocument
 
     private struct CatalogIdentityIndex {
         private var artistIDsByName: [String: UUID] = [:]
@@ -135,6 +138,7 @@ actor LibraryRepository {
         case unsupportedSchema(Int)
         case copyVerificationFailed(String)
         case sourceIsNotRegularFile(String)
+        case relinkFingerprintMismatch(String)
 
         var errorDescription: String? {
             switch self {
@@ -144,6 +148,8 @@ actor LibraryRepository {
                 L10n.format("library.error.copyVerificationFailed", file)
             case .sourceIsNotRegularFile(let file):
                 L10n.format("library.error.sourceIsNotRegularFile", file)
+            case .relinkFingerprintMismatch(let file):
+                L10n.format("library.error.relinkFingerprintMismatch", file)
             }
         }
     }
@@ -243,6 +249,44 @@ actor LibraryRepository {
         try persistDocument(document, backUpReadablePrimary: true)
         currentDocument = document
         try reconcileImportJournal(with: tracks)
+    }
+
+    func save(document: LibraryDocument) throws {
+        try prepareDirectories()
+        var updated = document
+        updated.updatedAt = .now
+        try persistDocument(updated, backUpReadablePrimary: true)
+        currentDocument = updated
+        try reconcileImportJournal(with: updated.tracks)
+    }
+
+    func trashManagedFiles(
+        removedTracks: [Track],
+        retainedTracks: [Track]
+    ) -> (trashed: Int, retained: Int, failures: [String]) {
+        let retainedPaths = Set(retainedTracks.map { $0.fileURL.standardizedFileURL.path })
+        let uniqueURLs = Dictionary(
+            removedTracks.map { ($0.fileURL.standardizedFileURL.path, $0.fileURL.standardizedFileURL) },
+            uniquingKeysWith: { first, _ in first }
+        ).values
+
+        var trashed = 0
+        var retained = 0
+        var failures: [String] = []
+        for url in uniqueURLs {
+            guard isInside(url, directory: mediaURL), !retainedPaths.contains(url.path) else {
+                retained += 1
+                continue
+            }
+            guard fileManager.fileExists(atPath: url.path) else { continue }
+            do {
+                try fileManager.trashItem(at: url, resultingItemURL: nil)
+                trashed += 1
+            } catch {
+                failures.append(url.lastPathComponent)
+            }
+        }
+        return (trashed, retained, failures)
     }
 
     func save(playlists: [Playlist]) throws {
@@ -434,6 +478,14 @@ actor LibraryRepository {
                     composer: metadata.composer,
                     grouping: metadata.grouping,
                     genre: metadata.genre,
+                    participantCredits: metadata.participantCredits,
+                    workName: metadata.workName,
+                    movementName: metadata.movementName,
+                    movementNumber: metadata.movementNumber,
+                    movementCount: metadata.movementCount,
+                    beatsPerMinute: metadata.beatsPerMinute,
+                    copyright: metadata.copyright,
+                    isrc: metadata.isrc,
                     releaseYear: metadata.releaseYear,
                     trackNumber: metadata.trackNumber,
                     trackCount: metadata.trackCount,
@@ -441,6 +493,7 @@ actor LibraryRepository {
                     discCount: metadata.discCount,
                     isCompilation: metadata.isCompilation,
                     comments: metadata.comments,
+                    lyrics: metadata.lyrics,
                     duration: metadata.duration,
                     fileSize: Int64(values.fileSize ?? 0),
                     managedPath: destination.path,
@@ -534,6 +587,14 @@ actor LibraryRepository {
                         composer: metadata.composer,
                         grouping: metadata.grouping,
                         genre: metadata.genre,
+                        participantCredits: metadata.participantCredits,
+                        workName: metadata.workName,
+                        movementName: metadata.movementName,
+                        movementNumber: metadata.movementNumber,
+                        movementCount: metadata.movementCount,
+                        beatsPerMinute: metadata.beatsPerMinute,
+                        copyright: metadata.copyright,
+                        isrc: metadata.isrc,
                         releaseYear: metadata.releaseYear,
                         trackNumber: metadata.trackNumber,
                         trackCount: metadata.trackCount,
@@ -541,6 +602,7 @@ actor LibraryRepository {
                         discCount: metadata.discCount,
                         isCompilation: metadata.isCompilation,
                         comments: metadata.comments,
+                        lyrics: metadata.lyrics,
                         duration: metadata.duration,
                         fileSize: Int64(values.fileSize ?? 0),
                         managedPath: source.standardizedFileURL.path,
@@ -588,6 +650,110 @@ actor LibraryRepository {
         }
     }
 
+    func relink(_ track: Track, to sourceURL: URL) throws -> Track {
+        let source = sourceURL.standardizedFileURL
+        let didAccess = source.startAccessingSecurityScopedResource()
+        defer { if didAccess { source.stopAccessingSecurityScopedResource() } }
+
+        let values = try source.resourceValues(
+            forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]
+        )
+        guard values.isRegularFile == true, values.isSymbolicLink != true else {
+            throw RepositoryError.sourceIsNotRegularFile(source.lastPathComponent)
+        }
+        let size = Int64(values.fileSize ?? 0)
+        guard size == track.fileSize, try Self.sha256(of: source) == track.sha256 else {
+            throw RepositoryError.relinkFingerprintMismatch(source.lastPathComponent)
+        }
+
+        var relinked = track
+        relinked.managedPath = source.path
+        relinked.fileSize = size
+        relinked.lastVerifiedAt = .now
+        relinked.health = .verified
+        return relinked
+    }
+
+    func relinkMissingFiles(
+        in tracks: [Track],
+        searching searchRoots: [URL]? = nil
+    ) -> FileRelinkResult {
+        var updated = tracks
+        let missingIndices = updated.indices.filter { updated[$0].health == .missing }
+        guard !missingIndices.isEmpty else {
+            return FileRelinkResult(
+                tracks: updated,
+                scannedFileCount: 0,
+                relinkedTrackCount: 0,
+                issueCount: 0
+            )
+        }
+
+        var unresolvedBySize: [Int64: Set<Int>] = [:]
+        for index in missingIndices {
+            unresolvedBySize[updated[index].fileSize, default: []].insert(index)
+        }
+        var resolvedIndices = Set<Int>()
+        var visitedPaths = Set<String>()
+        var scannedFileCount = 0
+        var issueCount = 0
+
+        for root in (searchRoots ?? [mediaURL]) {
+            let standardizedRoot = root.standardizedFileURL
+            let didAccess = standardizedRoot.startAccessingSecurityScopedResource()
+            defer { if didAccess { standardizedRoot.stopAccessingSecurityScopedResource() } }
+
+            guard let enumerator = fileManager.enumerator(
+                at: standardizedRoot,
+                includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey],
+                options: [.skipsHiddenFiles, .skipsPackageDescendants],
+                errorHandler: { _, _ in true }
+            ) else {
+                issueCount += 1
+                continue
+            }
+
+            for case let candidateURL as URL in enumerator {
+                let candidate = candidateURL.standardizedFileURL
+                guard visitedPaths.insert(candidate.path).inserted,
+                      Self.isSupportedAudioFile(candidate),
+                      let values = try? candidate.resourceValues(
+                        forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]
+                      ),
+                      values.isRegularFile == true,
+                      values.isSymbolicLink != true
+                else { continue }
+
+                let size = Int64(values.fileSize ?? 0)
+                guard let possibleIndices = unresolvedBySize[size]?.subtracting(resolvedIndices),
+                      !possibleIndices.isEmpty
+                else { continue }
+                scannedFileCount += 1
+
+                do {
+                    let hash = try Self.sha256(of: candidate)
+                    for index in possibleIndices where updated[index].sha256 == hash {
+                        updated[index].managedPath = candidate.path
+                        updated[index].lastVerifiedAt = .now
+                        updated[index].health = .verified
+                        resolvedIndices.insert(index)
+                    }
+                } catch {
+                    issueCount += 1
+                }
+                if resolvedIndices.count == missingIndices.count { break }
+            }
+            if resolvedIndices.count == missingIndices.count { break }
+        }
+
+        return FileRelinkResult(
+            tracks: updated,
+            scannedFileCount: scannedFileCount,
+            relinkedTrackCount: resolvedIndices.count,
+            issueCount: issueCount
+        )
+    }
+
     nonisolated static func sha256(of url: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
@@ -599,6 +765,13 @@ actor LibraryRepository {
             hasher.update(data: data)
         }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private nonisolated static func isSupportedAudioFile(_ url: URL) -> Bool {
+        let supportedExtensions: Set<String> = [
+            "aac", "aif", "aiff", "alac", "caf", "flac", "m4a", "mp3", "wav",
+        ]
+        return supportedExtensions.contains(url.pathExtension.lowercased())
     }
 
     private func prepareDirectories() throws {
@@ -615,6 +788,51 @@ actor LibraryRepository {
                 return DecodedLibraryDocument(
                     document: document,
                     migratedFromSchemaVersion: nil
+                )
+            case 11:
+                let schema11 = try decoder.decode(Schema11LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema11.updatedAt,
+                        tracks: schema11.tracks,
+                        libraryID: schema11.libraryID,
+                        createdAt: schema11.createdAt,
+                        playlists: schema11.playlists,
+                        playlistFolders: schema11.playlistFolders,
+                        playbackEvents: schema11.playbackEvents,
+                        playbackQueue: schema11.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 11
+                )
+            case 10:
+                let schema10 = try decoder.decode(Schema10LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema10.updatedAt,
+                        tracks: schema10.tracks,
+                        libraryID: schema10.libraryID,
+                        createdAt: schema10.createdAt,
+                        playlists: schema10.playlists,
+                        playlistFolders: schema10.playlistFolders,
+                        playbackEvents: schema10.playbackEvents,
+                        playbackQueue: schema10.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 10
+                )
+            case 9:
+                let schema9 = try decoder.decode(Schema9LibraryDocument.self, from: data)
+                return DecodedLibraryDocument(
+                    document: LibraryDocument(
+                        updatedAt: schema9.updatedAt,
+                        tracks: schema9.tracks,
+                        libraryID: schema9.libraryID,
+                        createdAt: schema9.createdAt,
+                        playlists: schema9.playlists,
+                        playlistFolders: schema9.playlistFolders,
+                        playbackEvents: schema9.playbackEvents,
+                        playbackQueue: schema9.playbackQueue
+                    ),
+                    migratedFromSchemaVersion: 9
                 )
             case 8:
                 let schema8 = try decoder.decode(Schema8LibraryDocument.self, from: data)
@@ -1012,6 +1230,14 @@ actor LibraryRepository {
         composer: String,
         grouping: String,
         genre: String,
+        participantCredits: String,
+        workName: String,
+        movementName: String,
+        movementNumber: Int?,
+        movementCount: Int?,
+        beatsPerMinute: Int?,
+        copyright: String,
+        isrc: String,
         releaseYear: Int?,
         trackNumber: Int?,
         trackCount: Int?,
@@ -1019,6 +1245,7 @@ actor LibraryRepository {
         discCount: Int?,
         isCompilation: Bool,
         comments: String,
+        lyrics: TrackLyrics?,
         duration: TimeInterval
     ) {
         let asset = AVURLAsset(url: url)
@@ -1042,11 +1269,40 @@ actor LibraryRepository {
             return (Int(parts[0]), parts.count > 1 ? Int(parts[1]) : nil)
         }
 
+        func firstString(for identifiers: [AVMetadataIdentifier]) async -> String? {
+            for identifier in identifiers {
+                if let value = await string(for: identifier), !value.isEmpty {
+                    return value
+                }
+            }
+            return nil
+        }
+
         let parsed = parseFileName(fallbackName)
         let track = await numberedValue(for: .iTunesMetadataTrackNumber)
         let disc = await numberedValue(for: .iTunesMetadataDiscNumber)
         let releaseDate = await string(for: .iTunesMetadataReleaseDate) ?? ""
         let compilation = await string(for: .iTunesMetadataDiscCompilation) ?? ""
+        let beatsPerMinute = await firstString(for: [
+            .iTunesMetadataBeatsPerMin,
+            .id3MetadataBeatsPerMinute
+        ])
+        let copyright = await firstString(for: [
+            .iTunesMetadataCopyright,
+            .commonIdentifierCopyrights,
+            .id3MetadataCopyright
+        ]) ?? ""
+        let participantCredits = await firstString(for: [
+            .iTunesMetadataCredits,
+            .id3MetadataMusicianCreditsList,
+            .id3MetadataInvolvedPeopleList_v24
+        ]) ?? ""
+        let movementName = await firstString(for: [
+            .iTunesMetadataTrackSubTitle,
+            .id3MetadataSubTitle
+        ]) ?? ""
+        let embeddedLyrics = (try? await asset.load(.lyrics))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         return (
             await string(for: .commonIdentifierTitle) ?? parsed.title,
             await string(for: .commonIdentifierArtist) ?? parsed.artist,
@@ -1057,6 +1313,14 @@ actor LibraryRepository {
             await string(for: .iTunesMetadataComposer) ?? "",
             await string(for: .iTunesMetadataGrouping) ?? "",
             await string(for: .iTunesMetadataUserGenre) ?? "",
+            participantCredits,
+            "",
+            movementName,
+            nil,
+            nil,
+            beatsPerMinute.flatMap(Int.init),
+            copyright,
+            await string(for: .id3MetadataInternationalStandardRecordingCode) ?? "",
             Int(releaseDate.prefix(4)),
             track.number,
             track.total,
@@ -1064,6 +1328,9 @@ actor LibraryRepository {
             disc.total,
             compilation == "1" || compilation.lowercased() == "true",
             await string(for: .iTunesMetadataUserComment) ?? "",
+            embeddedLyrics.flatMap { text in
+                text.isEmpty ? nil : TrackLyrics(plainText: text, source: .embedded)
+            },
             duration.isFinite ? max(0, duration) : 0
         )
     }

@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import Sparkle
 
@@ -21,33 +22,43 @@ final class SoftwareUpdateController: ObservableObject {
 @main
 struct OngakuDesktopApp: App {
     @StateObject private var storage: LibraryStorageSettings
+    @StateObject private var libraryProfiles: LibraryProfileSettings
     @StateObject private var library: LibraryStore
     @StateObject private var language: AppLanguageSettings
     @StateObject private var appearance: AppAppearanceSettings
     @StateObject private var meterSettings: PlayerMeterSettings
+    @StateObject private var trackTableSettings: TrackTableSettings
     @StateObject private var windowPresentation = WindowPresentationController()
     @StateObject private var player: PlaybackController
     @StateObject private var systemNowPlaying: SystemNowPlayingController
     @StateObject private var softwareUpdater = SoftwareUpdateController()
 
     init() {
+        NSWindow.allowsAutomaticWindowTabbing = false
         let storage = LibraryStorageSettings()
         _storage = StateObject(wrappedValue: storage)
+        let libraryProfiles = LibraryProfileSettings(defaultMediaURL: storage.mediaDirectoryURL)
+        storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
+        _libraryProfiles = StateObject(wrappedValue: libraryProfiles)
         _language = StateObject(wrappedValue: AppLanguageSettings())
         _appearance = StateObject(wrappedValue: AppAppearanceSettings())
         _meterSettings = StateObject(wrappedValue: PlayerMeterSettings())
+        _trackTableSettings = StateObject(wrappedValue: TrackTableSettings())
         let player = PlaybackController()
         _player = StateObject(wrappedValue: player)
         _systemNowPlaying = StateObject(
             wrappedValue: SystemNowPlayingController(player: player)
         )
         _library = StateObject(wrappedValue: LibraryStore(
-            repository: LibraryRepository(mediaURL: storage.mediaDirectoryURL)
+            repository: LibraryRepository(
+                rootURL: libraryProfiles.activeProfile.catalogURL,
+                mediaURL: libraryProfiles.activeProfile.mediaURL
+            )
         ))
     }
 
     var body: some Scene {
-        WindowGroup {
+        Window("Ongaku", id: "main") {
             Group {
                 if windowPresentation.isMiniPlayer {
                     MiniPlayerView()
@@ -60,9 +71,11 @@ struct OngakuDesktopApp: App {
                 .environmentObject(library)
                 .environmentObject(player)
                 .environmentObject(storage)
+                .environmentObject(libraryProfiles)
                 .environmentObject(language)
                 .environmentObject(appearance)
                 .environmentObject(meterSettings)
+                .environmentObject(trackTableSettings)
                 .environment(\.locale, language.selectedLanguage.locale ?? .current)
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
@@ -72,6 +85,20 @@ struct OngakuDesktopApp: App {
                 }
                 .onChange(of: library.contentRevision) {
                     player.reconcilePlaybackQueue(with: library.tracks)
+                }
+                .onChange(of: libraryProfiles.activeLibraryID) {
+                    let profile = libraryProfiles.activeProfile
+                    storage.activateProfileMediaDirectory(profile.mediaURL)
+                    Task {
+                        await library.switchLibrary(
+                            catalogURL: profile.catalogURL,
+                            mediaURL: profile.mediaURL
+                        )
+                        player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
+                    }
+                }
+                .onChange(of: storage.mediaDirectoryURL) { _, url in
+                    libraryProfiles.updateActiveMediaURL(url)
                 }
                 .onChange(of: player.queueState) {
                     library.schedulePlaybackQueueSave(player.queueState)
@@ -83,6 +110,7 @@ struct OngakuDesktopApp: App {
                     systemNowPlaying.activate()
                 }
         }
+        .commandsRemoved()
         .defaultSize(width: 1_320, height: 780)
         .windowResizability(.contentSize)
         .commands {
@@ -92,11 +120,18 @@ struct OngakuDesktopApp: App {
                 }
             }
 
-            CommandGroup(after: .newItem) {
+            CommandGroup(replacing: .newItem) {
                 Button(L10n.text("command.import")) {
                     NotificationCenter.default.post(name: .requestImport, object: nil)
                 }
                 .keyboardShortcut("o", modifiers: .command)
+            }
+
+            CommandGroup(replacing: .help) {
+                Link(
+                    L10n.text("command.onlineHelp"),
+                    destination: URL(string: "https://github.com/matsushibadenki/Ongaku-desktop")!
+                )
             }
 
             CommandMenu(L10n.text("command.library")) {
@@ -125,9 +160,11 @@ struct OngakuDesktopApp: App {
                 .environmentObject(library)
                 .environmentObject(player)
                 .environmentObject(storage)
+                .environmentObject(libraryProfiles)
                 .environmentObject(language)
                 .environmentObject(appearance)
                 .environmentObject(meterSettings)
+                .environmentObject(trackTableSettings)
                 .id(language.selectedLanguage.rawValue)
         }
         .defaultSize(width: 761, height: 440)

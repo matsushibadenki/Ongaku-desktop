@@ -47,6 +47,100 @@ struct ApplicationSettingsTests {
         #expect(restored.barPosition == .top)
     }
 
+    @Test("Song list columns and sorting persist")
+    @MainActor
+    func trackTablePersistence() {
+        let suiteName = "OngakuDesktopTests.TrackTable.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = TrackTableSettings(defaults: defaults)
+        #expect(settings.visibleColumns == Set(TrackTableColumn.allCases))
+        #expect(settings.sortField == .title)
+        #expect(settings.sortAscending)
+
+        settings.visibleColumns.remove(.health)
+        settings.visibleColumns.remove(.album)
+        settings.sortField = .artist
+        settings.sortAscending = false
+
+        let restored = TrackTableSettings(defaults: defaults)
+        #expect(restored.visibleColumns == [.artist, .duration])
+        #expect(restored.sortField == .artist)
+        #expect(!restored.sortAscending)
+    }
+
+    @Test("Multiple libraries create, rename, switch, archive, and restore")
+    @MainActor
+    func libraryProfilePersistence() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Profiles-\(UUID().uuidString)", isDirectory: true)
+        let media = root.appendingPathComponent("Legacy Media", isDirectory: true)
+        let suiteName = "OngakuDesktopTests.Profiles.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            try? FileManager.default.removeItem(at: root)
+        }
+
+        let settings = LibraryProfileSettings(
+            defaultMediaURL: media,
+            defaults: defaults,
+            applicationSupportURL: root
+        )
+        let mainID = settings.activeLibraryID
+        let secondID = try settings.createLibrary(named: "Classical")
+        #expect(settings.activeLibraryID == secondID)
+        #expect(FileManager.default.fileExists(atPath: settings.activeProfile.mediaPath))
+        settings.rename(secondID, to: "Classical Archive")
+        settings.activate(mainID)
+        settings.archive(secondID)
+        #expect(settings.archivedProfiles.map(\.id) == [secondID])
+        settings.unarchive(secondID)
+        #expect(settings.availableProfiles.count == 2)
+
+        let restored = LibraryProfileSettings(
+            defaultMediaURL: media,
+            defaults: defaults,
+            applicationSupportURL: root
+        )
+        #expect(restored.activeLibraryID == mainID)
+        #expect(restored.profiles.first { $0.id == secondID }?.name == "Classical Archive")
+    }
+
+    @Test("Switching libraries isolates tracks and playback state")
+    @MainActor
+    func librarySwitchIsolation() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Switch-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let firstRoot = root.appendingPathComponent("First", isDirectory: true)
+        let secondRoot = root.appendingPathComponent("Second", isDirectory: true)
+        let firstTrack = Track(
+            id: UUID(), title: "First Song", artist: "Artist", album: "Album",
+            duration: 10, fileSize: 1, managedPath: "/tmp/first.m4a",
+            sha256: "first", addedAt: .now, health: .verified
+        )
+        let secondTrack = Track(
+            id: UUID(), title: "Second Song", artist: "Artist", album: "Album",
+            duration: 10, fileSize: 1, managedPath: "/tmp/second.m4a",
+            sha256: "second", addedAt: .now, health: .verified
+        )
+        try await LibraryRepository(rootURL: firstRoot).save(tracks: [firstTrack])
+        try await LibraryRepository(rootURL: secondRoot).save(tracks: [secondTrack])
+        let store = LibraryStore(repository: LibraryRepository(rootURL: firstRoot))
+        await store.load()
+        #expect(store.tracks.map(\.id) == [firstTrack.id])
+
+        await store.switchLibrary(
+            catalogURL: secondRoot,
+            mediaURL: secondRoot.appendingPathComponent("Ongaku Media")
+        )
+        #expect(store.tracks.map(\.id) == [secondTrack.id])
+        #expect(store.selectedPlaylistID == nil)
+        #expect(store.searchText.isEmpty)
+    }
+
     @Test("Mini Player restores the original window frame")
     @MainActor
     func miniPlayerWindowRestoration() async throws {

@@ -80,6 +80,85 @@ struct StandardLibraryResolverTests {
         #expect(result.map(\.id) == [catalogLeader.id, eventLeader.id])
     }
 
+    @Test("Duplicate analysis separates checksum matches from metadata candidates")
+    func resolvesDuplicateGroups() throws {
+        var exactA = makeTrack(title: "Original")
+        exactA.sha256 = "same-content"
+        var exactB = makeTrack(title: "Renamed Copy")
+        exactB.sha256 = "same-content"
+
+        var possibleA = makeTrack(title: "Café Song")
+        possibleA.sha256 = "version-a"
+        possibleA.duration = 180
+        var possibleB = makeTrack(title: "CAFE SONG")
+        possibleB.sha256 = "version-b"
+        possibleB.duration = 182.5
+        var different = makeTrack(title: "Cafe Song")
+        different.sha256 = "version-c"
+        different.duration = 190
+
+        let groups = DuplicateTrackAnalyzer.groups(
+            in: [exactA, exactB, possibleA, possibleB, different]
+        )
+        #expect(groups.count == 2)
+        #expect(groups.first { $0.kind == .exact }?.tracks.count == 2)
+        let possible = try #require(groups.first { $0.kind == .possible })
+        #expect(Set(possible.tracks.map(\.id)) == [possibleA.id, possibleB.id])
+
+        let duplicateTracks = StandardLibraryResolver.tracks(
+            for: .duplicates,
+            tracks: [exactA, exactB, possibleA, possibleB, different],
+            events: []
+        )
+        #expect(!duplicateTracks.contains { $0.id == different.id })
+    }
+
+    @Test("Detailed filters combine metadata, rating, favorite, and file state")
+    func appliesDetailedFilters() {
+        var matching = makeTrack(title: "Matching")
+        matching.artist = "Example Artist"
+        matching.composer = "Claude Debussy"
+        matching.genre = "Classical"
+        matching.releaseYear = 1910
+        matching.rating = 5
+        matching.isFavorite = true
+        var other = makeTrack(title: "Other")
+        other.artist = "Example Artist"
+        other.composer = "Someone Else"
+        other.genre = "Jazz"
+        other.releaseYear = 1960
+        other.rating = 2
+        other.health = .unchecked
+
+        let criteria = LibraryFilterCriteria(
+            artist: "example",
+            composer: "debussy",
+            genre: "class",
+            minimumYear: 1900,
+            maximumYear: 1920,
+            minimumRating: 4,
+            favoritesOnly: true,
+            health: .verified
+        )
+        #expect(criteria.matches(matching))
+        #expect(!criteria.matches(other))
+        #expect(criteria.activeCount == 8)
+    }
+
+    @Test("Full metadata search includes lyrics, credits, work, and identifiers")
+    func searchesAllMetadata() {
+        var track = makeTrack(title: "Untitled")
+        track.participantCredits = "Piano: Alice Example"
+        track.workName = "Moonlit Suite"
+        track.isrc = "JPAAA2600001"
+        track.lyrics = TrackLyrics(plainText: "a hidden lyric phrase", source: .manual)
+
+        #expect(CatalogSearch.matches(track, query: "alice"))
+        #expect(CatalogSearch.matches(track, query: "moonlit"))
+        #expect(CatalogSearch.matches(track, query: "hidden lyric"))
+        #expect(CatalogSearch.matches(track, query: "jpaaa26"))
+    }
+
     private func makeTrack(title: String) -> Track {
         Track(
             id: UUID(),

@@ -9,6 +9,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
     case frequentlyPlayed
     case recentlyPlayed
     case favorites
+    case duplicates
     case needsAttention
     case effects
 
@@ -24,6 +25,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .frequentlyPlayed: "sidebar.frequentlyPlayed"
         case .recentlyPlayed: "sidebar.recentlyPlayed"
         case .favorites: "sidebar.favorites"
+        case .duplicates: "sidebar.duplicates"
         case .needsAttention: "sidebar.attention"
         case .effects: "sidebar.effects"
         }
@@ -39,6 +41,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .frequentlyPlayed: "chart.bar.fill"
         case .recentlyPlayed: "clock.arrow.circlepath"
         case .favorites: "heart.fill"
+        case .duplicates: "square.on.square"
         case .needsAttention: "exclamationmark.shield"
         case .effects: "dial.medium"
         }
@@ -52,7 +55,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-enum FileHealth: String, Codable, Sendable {
+enum FileHealth: String, Codable, CaseIterable, Sendable {
     case verified
     case unchecked
     case missing
@@ -72,6 +75,124 @@ enum FileHealth: String, Codable, Sendable {
     }
 }
 
+enum LyricsSource: String, Codable, Sendable {
+    case embedded
+    case manual
+    case lrcFile
+    case lrclib
+}
+
+struct TimedLyricsLine: Identifiable, Codable, Hashable, Sendable {
+    var id: UUID = UUID()
+    var time: TimeInterval
+    var text: String
+}
+
+struct TrackLyrics: Codable, Hashable, Sendable {
+    var plainText: String
+    var syncedLines: [TimedLyricsLine] = []
+    var source: LyricsSource
+    var sourceIdentifier: String?
+    var updatedAt: Date = .now
+    var isManuallyEdited = false
+
+    var isSynced: Bool { !syncedLines.isEmpty }
+}
+
+enum LRCParserError: Error, Equatable {
+    case noTimedLines
+}
+
+enum LRCParser {
+    private static let timestampPattern = #"\[(\d{1,3}):(\d{2})(?:[\.:](\d{1,3}))?\]"#
+    private static let offsetPattern = #"^\[offset:([+-]?\d+)\]$"#
+
+    static func parse(
+        _ contents: String,
+        source: LyricsSource = .lrcFile,
+        updatedAt: Date = .now
+    ) throws -> TrackLyrics {
+        let timestampExpression = try NSRegularExpression(pattern: timestampPattern)
+        let offsetExpression = try NSRegularExpression(
+            pattern: offsetPattern,
+            options: [.caseInsensitive]
+        )
+        var offsetMilliseconds = 0
+        var parsedLines: [TimedLyricsLine] = []
+
+        for rawLine in contents.components(separatedBy: .newlines) {
+            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !line.isEmpty else { continue }
+            let fullRange = NSRange(line.startIndex..<line.endIndex, in: line)
+            if let match = offsetExpression.firstMatch(in: line, range: fullRange),
+               let range = Range(match.range(at: 1), in: line) {
+                offsetMilliseconds = Int(line[range]) ?? 0
+                continue
+            }
+
+            let matches = timestampExpression.matches(in: line, range: fullRange)
+            guard !matches.isEmpty else { continue }
+            let text = timestampExpression
+                .stringByReplacingMatches(in: line, range: fullRange, withTemplate: "")
+                .trimmingCharacters(in: .whitespaces)
+            for match in matches {
+                guard let minuteRange = Range(match.range(at: 1), in: line),
+                      let secondRange = Range(match.range(at: 2), in: line),
+                      let minutes = Double(line[minuteRange]),
+                      let seconds = Double(line[secondRange]) else { continue }
+                let fraction: Double
+                if let fractionRange = Range(match.range(at: 3), in: line) {
+                    let digits = String(line[fractionRange])
+                    fraction = (Double(digits) ?? 0) / pow(10, Double(digits.count))
+                } else {
+                    fraction = 0
+                }
+                parsedLines.append(TimedLyricsLine(
+                    time: max(0, minutes * 60 + seconds + fraction),
+                    text: text
+                ))
+            }
+        }
+
+        guard !parsedLines.isEmpty else { throw LRCParserError.noTimedLines }
+        let offset = Double(offsetMilliseconds) / 1_000
+        parsedLines = parsedLines.map {
+            TimedLyricsLine(id: $0.id, time: max(0, $0.time + offset), text: $0.text)
+        }
+        .sorted {
+            if $0.time != $1.time { return $0.time < $1.time }
+            return $0.id.uuidString < $1.id.uuidString
+        }
+        return TrackLyrics(
+            plainText: parsedLines.map(\.text).joined(separator: "\n"),
+            syncedLines: parsedLines,
+            source: source,
+            updatedAt: updatedAt,
+            isManuallyEdited: source == .manual
+        )
+    }
+
+    static func serialize(_ lines: [TimedLyricsLine]) -> String {
+        lines.sorted { $0.time < $1.time }.map { line in
+            let hundredths = Int((max(0, line.time) * 100).rounded())
+            let minutes = hundredths / 6_000
+            let seconds = (hundredths / 100) % 60
+            let fraction = hundredths % 100
+            return String(format: "[%02d:%02d.%02d]%@", minutes, seconds, fraction, line.text)
+        }
+        .joined(separator: "\n")
+    }
+}
+
+enum LyricsTimeline {
+    static func activeLineID(
+        in lines: [TimedLyricsLine],
+        at time: TimeInterval
+    ) -> TimedLyricsLine.ID? {
+        lines.last(where: { $0.time <= max(0, time) })?.id
+    }
+}
+
 struct Track: Identifiable, Codable, Hashable, Sendable {
     let id: UUID
     var title: String
@@ -85,6 +206,14 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var composerSortName: String = ""
     var grouping: String = ""
     var genre: String = ""
+    var participantCredits: String = ""
+    var workName: String = ""
+    var movementName: String = ""
+    var movementNumber: Int?
+    var movementCount: Int?
+    var beatsPerMinute: Int?
+    var copyright: String = ""
+    var isrc: String = ""
     var releaseYear: Int?
     var trackNumber: Int?
     var trackCount: Int?
@@ -93,6 +222,8 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var isCompilation: Bool = false
     var playCount: Int = 0
     var comments: String = ""
+    var lyrics: TrackLyrics? = nil
+    var musicBrainzReference: MusicBrainzReference? = nil
     var duration: TimeInterval
     var fileSize: Int64
     var managedPath: String
@@ -110,6 +241,128 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var fileURL: URL { URL(fileURLWithPath: managedPath) }
 }
 
+enum DuplicateMatchKind: String, Sendable {
+    case exact
+    case possible
+
+    var titleKey: String { "duplicates.kind.\(rawValue)" }
+}
+
+struct DuplicateTrackGroup: Identifiable, Sendable {
+    let id: String
+    let kind: DuplicateMatchKind
+    let tracks: [Track]
+    let recommendedTrackID: Track.ID
+}
+
+struct DuplicateResolutionResult: Sendable {
+    let removedCount: Int
+    let trashedFileCount: Int
+    let retainedFileCount: Int
+    let failedFileNames: [String]
+}
+
+enum DuplicateTrackAnalyzer {
+    nonisolated static func groups(in tracks: [Track]) -> [DuplicateTrackGroup] {
+        guard tracks.count > 1 else { return [] }
+        var sets = DuplicateTrackDisjointSet(ids: tracks.map(\.id))
+
+        for matches in Dictionary(grouping: tracks.filter { !$0.sha256.isEmpty }, by: \.sha256)
+            .values where matches.count > 1 {
+            guard let first = matches.first else { continue }
+            for track in matches.dropFirst() { sets.union(first.id, track.id) }
+        }
+
+        let candidates = Dictionary(grouping: tracks) { track in
+            "\(normalized(track.title))\u{1f}\(normalized(track.artist))"
+        }
+        for (key, matches) in candidates where !key.hasPrefix("\u{1f}") && matches.count > 1 {
+            let ordered = matches.sorted { $0.duration < $1.duration }
+            for index in ordered.indices.dropLast() {
+                let next = ordered.index(after: index)
+                if ordered[next].duration - ordered[index].duration <= 3 {
+                    sets.union(ordered[index].id, ordered[next].id)
+                }
+            }
+        }
+
+        let grouped = Dictionary(grouping: tracks) { sets.root(of: $0.id) }
+        return grouped.values.compactMap { matches in
+            guard matches.count > 1 else { return nil }
+            let ordered = matches.sorted(by: isPreferred)
+            let hashes = Set(matches.map(\.sha256).filter { !$0.isEmpty })
+            let kind: DuplicateMatchKind = hashes.count == 1 && !hashes.isEmpty
+                ? .exact : .possible
+            let ids = matches.map { $0.id.uuidString }.sorted().joined(separator: ":")
+            return DuplicateTrackGroup(
+                id: ids,
+                kind: kind,
+                tracks: ordered,
+                recommendedTrackID: ordered[0].id
+            )
+        }
+        .sorted {
+            if $0.kind != $1.kind { return $0.kind == .exact }
+            let lhs = $0.tracks.first?.title ?? ""
+            let rhs = $1.tracks.first?.title ?? ""
+            return lhs.localizedStandardCompare(rhs) == .orderedAscending
+        }
+    }
+
+    private nonisolated static func normalized(_ value: String) -> String {
+        value.folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: Locale(identifier: "en_US_POSIX")
+        )
+        .unicodeScalars
+        .filter { CharacterSet.alphanumerics.contains($0) }
+        .map(String.init)
+        .joined()
+    }
+
+    private nonisolated static func isPreferred(_ lhs: Track, _ rhs: Track) -> Bool {
+        let lhsScore = preferenceScore(lhs)
+        let rhsScore = preferenceScore(rhs)
+        if lhsScore != rhsScore { return lhsScore > rhsScore }
+        if lhs.addedAt != rhs.addedAt { return lhs.addedAt < rhs.addedAt }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    private nonisolated static func preferenceScore(_ track: Track) -> Int64 {
+        let metadata = [
+            track.album, track.albumArtist, track.composer, track.genre,
+            track.comments, track.isrc, track.workName,
+        ].count { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let verified = track.health == .verified ? 1_000_000_000 as Int64 : 0
+        let bitrate = track.duration > 0
+            ? min(Int64(Double(track.fileSize) / track.duration), 100_000_000) : 0
+        return verified + bitrate + Int64(metadata * 1_000)
+    }
+}
+
+private struct DuplicateTrackDisjointSet {
+    private var parent: [Track.ID: Track.ID]
+
+    init(ids: [Track.ID]) {
+        parent = Dictionary(uniqueKeysWithValues: ids.map { ($0, $0) })
+    }
+
+    mutating func root(of id: Track.ID) -> Track.ID {
+        guard let direct = parent[id], direct != id else { return id }
+        let resolved = root(of: direct)
+        parent[id] = resolved
+        return resolved
+    }
+
+    mutating func union(_ lhs: Track.ID, _ rhs: Track.ID) {
+        let lhsRoot = root(of: lhs)
+        let rhsRoot = root(of: rhs)
+        guard lhsRoot != rhsRoot else { return }
+        if lhsRoot.uuidString < rhsRoot.uuidString { parent[rhsRoot] = lhsRoot }
+        else { parent[lhsRoot] = rhsRoot }
+    }
+}
+
 struct TrackMetadataValues: Equatable, Sendable {
     var title: String
     var artist: String
@@ -122,6 +375,14 @@ struct TrackMetadataValues: Equatable, Sendable {
     var composerSortName: String
     var grouping: String
     var genre: String
+    var participantCredits: String
+    var workName: String
+    var movementName: String
+    var movementNumber: Int?
+    var movementCount: Int?
+    var beatsPerMinute: Int?
+    var copyright: String
+    var isrc: String
     var releaseYear: Int?
     var trackNumber: Int?
     var trackCount: Int?
@@ -144,6 +405,14 @@ struct TrackMetadataValues: Equatable, Sendable {
         composerSortName: String,
         grouping: String,
         genre: String,
+        participantCredits: String,
+        workName: String,
+        movementName: String,
+        movementNumber: Int?,
+        movementCount: Int?,
+        beatsPerMinute: Int?,
+        copyright: String,
+        isrc: String,
         releaseYear: Int?,
         trackNumber: Int?,
         trackCount: Int?,
@@ -165,6 +434,14 @@ struct TrackMetadataValues: Equatable, Sendable {
         self.composerSortName = composerSortName
         self.grouping = grouping
         self.genre = genre
+        self.participantCredits = participantCredits
+        self.workName = workName
+        self.movementName = movementName
+        self.movementNumber = movementNumber
+        self.movementCount = movementCount
+        self.beatsPerMinute = beatsPerMinute
+        self.copyright = copyright
+        self.isrc = isrc
         self.releaseYear = releaseYear
         self.trackNumber = trackNumber
         self.trackCount = trackCount
@@ -188,6 +465,14 @@ struct TrackMetadataValues: Equatable, Sendable {
         composerSortName = track.composerSortName
         grouping = track.grouping
         genre = track.genre
+        participantCredits = track.participantCredits
+        workName = track.workName
+        movementName = track.movementName
+        movementNumber = track.movementNumber
+        movementCount = track.movementCount
+        beatsPerMinute = track.beatsPerMinute
+        copyright = track.copyright
+        isrc = track.isrc
         releaseYear = track.releaseYear
         trackNumber = track.trackNumber
         trackCount = track.trackCount
@@ -212,6 +497,14 @@ enum TrackMetadataField: String, CaseIterable, Hashable, Sendable {
     case composerSortName
     case grouping
     case genre
+    case participantCredits
+    case workName
+    case movementName
+    case movementNumber
+    case movementCount
+    case beatsPerMinute
+    case copyright
+    case isrc
     case releaseYear
     case trackNumber
     case trackCount
@@ -241,9 +534,83 @@ enum CatalogSearch {
     static func matches(_ track: Track, query: String) -> Bool {
         let normalizedQuery = normalize(query)
         guard !normalizedQuery.isEmpty else { return true }
-        return normalize(track.title).contains(normalizedQuery)
-            || normalize(track.artist).contains(normalizedQuery)
-            || normalize(track.album).contains(normalizedQuery)
+        return searchableText(for: track).contains(normalizedQuery)
+    }
+
+    static func searchableText(for track: Track) -> String {
+        let lyrics = track.lyrics.map { value in
+            ([value.plainText] + value.syncedLines.map(\.text)).joined(separator: " ")
+        } ?? ""
+        let musicBrainz = track.musicBrainzReference.map { reference in
+            [
+                reference.recordingID,
+                Optional(reference.releaseID),
+                reference.releaseGroupID,
+                Optional(reference.artistIDs.joined(separator: " ")),
+                reference.country,
+                reference.mediaFormat,
+            ].compactMap { $0 }.joined(separator: " ")
+        } ?? ""
+        let numbers = [
+            track.releaseYear, track.trackNumber, track.trackCount,
+            track.discNumber, track.discCount, track.movementNumber,
+            track.movementCount, track.beatsPerMinute, track.rating,
+            track.playCount,
+        ].compactMap { $0.map(String.init) }
+        return normalize(([
+            track.title, track.artist, track.artistSortName,
+            track.album, track.albumSortName, track.albumArtist,
+            track.albumArtistSortName, track.composer, track.composerSortName,
+            track.grouping, track.genre, track.participantCredits,
+            track.workName, track.movementName, track.copyright,
+            track.isrc, track.comments, lyrics, musicBrainz,
+            track.fileURL.lastPathComponent,
+        ] + numbers).joined(separator: "\u{1f}"))
+    }
+}
+
+struct LibraryFilterCriteria: Equatable, Hashable, Sendable {
+    var artist = ""
+    var album = ""
+    var composer = ""
+    var genre = ""
+    var minimumYear: Int?
+    var maximumYear: Int?
+    var minimumRating = 0
+    var favoritesOnly = false
+    var compilationsOnly = false
+    var health: FileHealth?
+
+    var activeCount: Int {
+        [artist, album, composer, genre].count {
+            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        + (minimumYear == nil ? 0 : 1)
+        + (maximumYear == nil ? 0 : 1)
+        + (minimumRating == 0 ? 0 : 1)
+        + (favoritesOnly ? 1 : 0)
+        + (compilationsOnly ? 1 : 0)
+        + (health == nil ? 0 : 1)
+    }
+
+    func matches(_ track: Track) -> Bool {
+        if !contains(track.artist, query: artist) { return false }
+        if !contains(track.album, query: album) { return false }
+        if !contains(track.composer, query: composer) { return false }
+        if !contains(track.genre, query: genre) { return false }
+        if let minimumYear, (track.releaseYear ?? Int.min) < minimumYear { return false }
+        if let maximumYear, (track.releaseYear ?? Int.max) > maximumYear { return false }
+        if track.rating < minimumRating { return false }
+        if favoritesOnly && !track.isFavorite { return false }
+        if compilationsOnly && !track.isCompilation { return false }
+        if let health, track.health != health { return false }
+        return true
+    }
+
+    private func contains(_ value: String, query: String) -> Bool {
+        let normalizedQuery = CatalogSearch.normalize(query)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return normalizedQuery.isEmpty || CatalogSearch.normalize(value).contains(normalizedQuery)
     }
 }
 
@@ -570,6 +937,9 @@ enum StandardLibraryResolver {
             return tracks.filter(\.isFavorite).sorted(by: titleOrder)
         case .needsAttention:
             return tracks.filter { $0.health != .verified }
+        case .duplicates:
+            let ids = Set(DuplicateTrackAnalyzer.groups(in: tracks).flatMap { $0.tracks.map(\.id) })
+            return tracks.filter { ids.contains($0.id) }
         case .songs, .albums, .artists, .effects:
             return tracks
         }
@@ -630,7 +1000,7 @@ struct PlaybackQueueState: Codable, Equatable, Sendable {
 }
 
 struct LibraryDocument: Codable, Sendable {
-    static let currentSchema = 9
+    static let currentSchema = 12
 
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
@@ -665,6 +1035,14 @@ extension Track {
         case composerSortName
         case grouping
         case genre
+        case participantCredits
+        case workName
+        case movementName
+        case movementNumber
+        case movementCount
+        case beatsPerMinute
+        case copyright
+        case isrc
         case releaseYear
         case trackNumber
         case trackCount
@@ -673,6 +1051,8 @@ extension Track {
         case isCompilation
         case playCount
         case comments
+        case lyrics
+        case musicBrainzReference
         case duration
         case fileSize
         case managedPath
@@ -705,6 +1085,14 @@ extension Track {
         composerSortName = try container.decodeIfPresent(String.self, forKey: .composerSortName) ?? ""
         grouping = try container.decodeIfPresent(String.self, forKey: .grouping) ?? ""
         genre = try container.decodeIfPresent(String.self, forKey: .genre) ?? ""
+        participantCredits = try container.decodeIfPresent(String.self, forKey: .participantCredits) ?? ""
+        workName = try container.decodeIfPresent(String.self, forKey: .workName) ?? ""
+        movementName = try container.decodeIfPresent(String.self, forKey: .movementName) ?? ""
+        movementNumber = try container.decodeIfPresent(Int.self, forKey: .movementNumber)
+        movementCount = try container.decodeIfPresent(Int.self, forKey: .movementCount)
+        beatsPerMinute = try container.decodeIfPresent(Int.self, forKey: .beatsPerMinute)
+        copyright = try container.decodeIfPresent(String.self, forKey: .copyright) ?? ""
+        isrc = try container.decodeIfPresent(String.self, forKey: .isrc) ?? ""
         releaseYear = try container.decodeIfPresent(Int.self, forKey: .releaseYear)
         trackNumber = try container.decodeIfPresent(Int.self, forKey: .trackNumber)
         trackCount = try container.decodeIfPresent(Int.self, forKey: .trackCount)
@@ -713,6 +1101,11 @@ extension Track {
         isCompilation = try container.decodeIfPresent(Bool.self, forKey: .isCompilation) ?? false
         playCount = max(0, try container.decodeIfPresent(Int.self, forKey: .playCount) ?? 0)
         comments = try container.decodeIfPresent(String.self, forKey: .comments) ?? ""
+        lyrics = try container.decodeIfPresent(TrackLyrics.self, forKey: .lyrics)
+        musicBrainzReference = try container.decodeIfPresent(
+            MusicBrainzReference.self,
+            forKey: .musicBrainzReference
+        )
         duration = try container.decode(TimeInterval.self, forKey: .duration)
         fileSize = try container.decode(Int64.self, forKey: .fileSize)
         managedPath = try container.decode(String.self, forKey: .managedPath)
@@ -748,6 +1141,14 @@ extension Track {
         try container.encode(composerSortName, forKey: .composerSortName)
         try container.encode(grouping, forKey: .grouping)
         try container.encode(genre, forKey: .genre)
+        try container.encode(participantCredits, forKey: .participantCredits)
+        try container.encode(workName, forKey: .workName)
+        try container.encode(movementName, forKey: .movementName)
+        try container.encodeIfPresent(movementNumber, forKey: .movementNumber)
+        try container.encodeIfPresent(movementCount, forKey: .movementCount)
+        try container.encodeIfPresent(beatsPerMinute, forKey: .beatsPerMinute)
+        try container.encode(copyright, forKey: .copyright)
+        try container.encode(isrc, forKey: .isrc)
         try container.encodeIfPresent(releaseYear, forKey: .releaseYear)
         try container.encodeIfPresent(trackNumber, forKey: .trackNumber)
         try container.encodeIfPresent(trackCount, forKey: .trackCount)
@@ -756,6 +1157,8 @@ extension Track {
         try container.encode(isCompilation, forKey: .isCompilation)
         try container.encode(playCount, forKey: .playCount)
         try container.encode(comments, forKey: .comments)
+        try container.encodeIfPresent(lyrics, forKey: .lyrics)
+        try container.encodeIfPresent(musicBrainzReference, forKey: .musicBrainzReference)
         try container.encode(duration, forKey: .duration)
         try container.encode(fileSize, forKey: .fileSize)
         try container.encode(managedPath, forKey: .managedPath)
@@ -788,4 +1191,11 @@ struct AppleMusicImportSummary: Sendable {
     var imported: Int
     var relinked: Int
     var issues: Int
+}
+
+struct FileRelinkResult: Sendable {
+    var tracks: [Track]
+    var scannedFileCount: Int
+    var relinkedTrackCount: Int
+    var issueCount: Int
 }

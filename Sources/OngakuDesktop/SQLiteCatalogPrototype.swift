@@ -136,6 +136,7 @@ actor SQLiteCatalogPrototype {
                     WHERE instr(title_search, ?) > 0
                        OR instr(artist_search, ?) > 0
                        OR instr(album_search, ?) > 0
+                       OR instr(metadata_search, ?) > 0
                     ORDER BY title_search, id
                     LIMIT ?
                     """
@@ -152,7 +153,8 @@ actor SQLiteCatalogPrototype {
                     try bind(normalizedQuery, to: 1, in: statement, database: database)
                     try bind(normalizedQuery, to: 2, in: statement, database: database)
                     try bind(normalizedQuery, to: 3, in: statement, database: database)
-                    try bind(Int64(limit), to: 4, in: statement, database: database)
+                    try bind(normalizedQuery, to: 4, in: statement, database: database)
+                    try bind(Int64(limit), to: 5, in: statement, database: database)
                 }
                 var ids: [Track.ID] = []
                 while true {
@@ -296,7 +298,8 @@ actor SQLiteCatalogPrototype {
                     comments TEXT NOT NULL,
                     title_search TEXT NOT NULL,
                     artist_search TEXT NOT NULL,
-                    album_search TEXT NOT NULL
+                    album_search TEXT NOT NULL,
+                    metadata_search TEXT NOT NULL
                 );
                 CREATE INDEX track_artist_id_idx ON track(artist_id);
                 CREATE INDEX track_album_id_idx ON track(album_id);
@@ -343,6 +346,7 @@ actor SQLiteCatalogPrototype {
                     title_search,
                     artist_search,
                     album_search,
+                    metadata_search,
                     tokenize = 'trigram case_sensitive 0'
                 );
                 """
@@ -394,10 +398,10 @@ actor SQLiteCatalogPrototype {
                     album_artist_sort_name, composer, composer_sort_name,
                     grouping_name, genre, release_year, track_number, track_count,
                     disc_number, disc_count, is_compilation, rating, play_count, comments,
-                    title_search, artist_search, album_search
+                    title_search, artist_search, album_search, metadata_search
                 ) VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
                 """
         ) { trackStatement in
@@ -405,8 +409,8 @@ actor SQLiteCatalogPrototype {
                 database,
                 sql: """
                     INSERT INTO track_search(
-                        track_id, title_search, artist_search, album_search
-                    ) VALUES (?, ?, ?, ?)
+                        track_id, title_search, artist_search, album_search, metadata_search
+                    ) VALUES (?, ?, ?, ?, ?)
                     """
             ) { searchStatement in
                 for track in document.tracks {
@@ -446,6 +450,7 @@ actor SQLiteCatalogPrototype {
                     try bind(CatalogSearch.normalize(track.title), to: 29, in: trackStatement, database: database)
                     try bind(CatalogSearch.normalize(track.artist), to: 30, in: trackStatement, database: database)
                     try bind(CatalogSearch.normalize(track.album), to: 31, in: trackStatement, database: database)
+                    try bind(CatalogSearch.searchableText(for: track), to: 32, in: trackStatement, database: database)
                     try stepDone(trackStatement, database: database)
 
                     try reset(searchStatement, database: database)
@@ -453,6 +458,7 @@ actor SQLiteCatalogPrototype {
                     try bind(CatalogSearch.normalize(track.title), to: 2, in: searchStatement, database: database)
                     try bind(CatalogSearch.normalize(track.artist), to: 3, in: searchStatement, database: database)
                     try bind(CatalogSearch.normalize(track.album), to: 4, in: searchStatement, database: database)
+                    try bind(CatalogSearch.searchableText(for: track), to: 5, in: searchStatement, database: database)
                     try stepDone(searchStatement, database: database)
                 }
             }

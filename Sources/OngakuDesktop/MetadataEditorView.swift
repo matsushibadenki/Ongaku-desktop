@@ -30,6 +30,14 @@ private struct MetadataFormState {
     var composerSortName = ""
     var grouping = ""
     var genre = ""
+    var participantCredits = ""
+    var workName = ""
+    var movementName = ""
+    var movementNumber = ""
+    var movementCount = ""
+    var beatsPerMinute = ""
+    var copyright = ""
+    var isrc = ""
     var releaseYear = ""
     var trackNumber = ""
     var trackCount = ""
@@ -53,6 +61,14 @@ private struct MetadataFormState {
         composerSortName = track.composerSortName
         grouping = track.grouping
         genre = track.genre
+        participantCredits = track.participantCredits
+        workName = track.workName
+        movementName = track.movementName
+        movementNumber = track.movementNumber.map(String.init) ?? ""
+        movementCount = track.movementCount.map(String.init) ?? ""
+        beatsPerMinute = track.beatsPerMinute.map(String.init) ?? ""
+        copyright = track.copyright
+        isrc = track.isrc
         releaseYear = track.releaseYear.map(String.init) ?? ""
         trackNumber = track.trackNumber.map(String.init) ?? ""
         trackCount = track.trackCount.map(String.init) ?? ""
@@ -78,6 +94,14 @@ private struct MetadataFormState {
         composerSortName = Self.commonString(tracks, \.composerSortName)
         grouping = Self.commonString(tracks, \.grouping)
         genre = Self.commonString(tracks, \.genre)
+        participantCredits = Self.commonString(tracks, \.participantCredits)
+        workName = Self.commonString(tracks, \.workName)
+        movementName = Self.commonString(tracks, \.movementName)
+        movementNumber = Self.commonOptionalInteger(tracks, \.movementNumber)
+        movementCount = Self.commonOptionalInteger(tracks, \.movementCount)
+        beatsPerMinute = Self.commonOptionalInteger(tracks, \.beatsPerMinute)
+        copyright = Self.commonString(tracks, \.copyright)
+        isrc = Self.commonString(tracks, \.isrc)
         releaseYear = Self.commonOptionalInteger(tracks, \.releaseYear)
         trackNumber = Self.commonOptionalInteger(tracks, \.trackNumber)
         trackCount = Self.commonOptionalInteger(tracks, \.trackCount)
@@ -102,6 +126,14 @@ private struct MetadataFormState {
             composerSortName: composerSortName.trimmedForMetadata,
             grouping: grouping.trimmedForMetadata,
             genre: genre.trimmedForMetadata,
+            participantCredits: participantCredits.trimmedForMetadata,
+            workName: workName.trimmedForMetadata,
+            movementName: movementName.trimmedForMetadata,
+            movementNumber: positiveInteger(movementNumber),
+            movementCount: positiveInteger(movementCount),
+            beatsPerMinute: boundedInteger(beatsPerMinute, range: 1...999),
+            copyright: copyright.trimmedForMetadata,
+            isrc: normalizedISRC,
             releaseYear: positiveInteger(releaseYear),
             trackNumber: positiveInteger(trackNumber),
             trackCount: positiveInteger(trackCount),
@@ -117,6 +149,16 @@ private struct MetadataFormState {
     private func positiveInteger(_ value: String) -> Int? {
         guard let parsed = Int(value), parsed > 0 else { return nil }
         return parsed
+    }
+
+    private func boundedInteger(_ value: String, range: ClosedRange<Int>) -> Int? {
+        guard let parsed = Int(value), range.contains(parsed) else { return nil }
+        return parsed
+    }
+
+    private var normalizedISRC: String {
+        isrc.uppercased()
+            .filter { $0.isLetter || $0.isNumber }
     }
 
     private static func commonValue<Value: Equatable>(
@@ -158,6 +200,10 @@ struct MetadataEditorView: View {
     @State private var hasCustomArtwork = false
     @State private var shouldRemoveCustomArtwork = false
     @State private var selectedBulkFields: Set<TrackMetadataField> = []
+    @State private var musicBrainzCandidates: [MusicBrainzCandidate] = []
+    @State private var selectedMusicBrainzReference: MusicBrainzReference?
+    @State private var isSearchingMusicBrainz = false
+    @State private var isShowingMusicBrainzCandidates = false
 
     init(target: MetadataEditTarget) {
         self.target = target
@@ -180,12 +226,28 @@ struct MetadataEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
-            VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
-                Text(L10n.text(titleKey)).font(.title2.bold())
-                Text(L10n.text(descriptionKey))
-                    .font(.callout)
-                    .foregroundStyle(AppTheme.secondaryInk)
-                    .fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .top, spacing: AppTheme.spaceLG) {
+                VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                    Text(L10n.text(titleKey)).font(.title2.bold())
+                    Text(L10n.text(descriptionKey))
+                        .font(.callout)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                if supportsMusicBrainzSearch {
+                    Button {
+                        Task { await searchMusicBrainz() }
+                    } label: {
+                        if isSearchingMusicBrainz {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Label(L10n.text("musicbrainz.search"), systemImage: "globe")
+                        }
+                    }
+                    .disabled(isSearchingMusicBrainz)
+                    .help(L10n.text("musicbrainz.search.help"))
+                }
             }
 
             HStack(alignment: .top, spacing: AppTheme.spaceLG) {
@@ -197,6 +259,7 @@ struct MetadataEditorView: View {
                         VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
                             detailsSection
                             organizationSection
+                            creditsAndWorkSection
                             playbackSection
                             if isBulk { changePreviewSection }
                         }
@@ -260,6 +323,15 @@ struct MetadataEditorView: View {
             allowsMultipleSelection: false,
             onCompletion: importArtwork
         )
+        .sheet(isPresented: $isShowingMusicBrainzCandidates) {
+            if let referenceTrack = targetTracks.first {
+                MusicBrainzCandidatePicker(
+                    referenceTrack: referenceTrack,
+                    candidates: musicBrainzCandidates,
+                    onUse: applyMusicBrainzCandidate
+                )
+            }
+        }
     }
 
     private var detailsSection: some View {
@@ -351,7 +423,10 @@ struct MetadataEditorView: View {
                     number: $form.discNumber,
                     total: $form.discCount
                 )
-                LabeledContent(L10n.text("metadataEditor.field.compilation")) {
+                bulkLabeledContent(
+                    "metadataEditor.field.compilation",
+                    field: .isCompilation
+                ) {
                     Toggle("", isOn: $form.isCompilation)
                         .labelsHidden()
                         .toggleStyle(.switch)
@@ -375,7 +450,11 @@ struct MetadataEditorView: View {
                 field: .playCount,
                 text: $form.playCount
             )
-            bulkLabeledContent("metadataEditor.field.comments", field: .comments) {
+            bulkLabeledContent(
+                "metadataEditor.field.comments",
+                field: .comments,
+                alignment: .top
+            ) {
                 TextEditor(text: $form.comments)
                     .font(.body)
                     .frame(minHeight: 72)
@@ -387,6 +466,61 @@ struct MetadataEditorView: View {
                             .strokeBorder(AppTheme.rule.opacity(0.7))
                     }
             }
+        }
+    }
+
+    private var creditsAndWorkSection: some View {
+        metadataSection("metadataEditor.section.creditsAndWork") {
+            metadataTextEditor(
+                "metadataEditor.field.participantCredits",
+                field: .participantCredits,
+                text: $form.participantCredits
+            )
+            metadataField(
+                "metadataEditor.field.workName",
+                field: .workName,
+                text: $form.workName
+            )
+            if isTrack || isBulk {
+                metadataField(
+                    "metadataEditor.field.movementName",
+                    field: .movementName,
+                    text: $form.movementName
+                )
+                if isBulk {
+                    metadataField(
+                        "metadataEditor.field.movementNumber",
+                        field: .movementNumber,
+                        text: $form.movementNumber
+                    )
+                    metadataField(
+                        "metadataEditor.field.movementCount",
+                        field: .movementCount,
+                        text: $form.movementCount
+                    )
+                } else {
+                    numberPair(
+                        "metadataEditor.field.movementNumber",
+                        number: $form.movementNumber,
+                        total: $form.movementCount
+                    )
+                }
+                metadataField(
+                    "metadataEditor.field.beatsPerMinute",
+                    field: .beatsPerMinute,
+                    text: $form.beatsPerMinute
+                )
+                metadataField(
+                    "metadataEditor.field.isrc",
+                    field: .isrc,
+                    text: $form.isrc
+                )
+            }
+            metadataField(
+                "metadataEditor.field.copyright",
+                field: .copyright,
+                text: $form.copyright
+            )
         }
     }
 
@@ -441,22 +575,66 @@ struct MetadataEditorView: View {
         }
     }
 
+    private func metadataTextEditor(
+        _ key: String,
+        field: TrackMetadataField? = nil,
+        text: Binding<String>
+    ) -> some View {
+        bulkLabeledContent(key, field: field, alignment: .top) {
+            TextEditor(text: text)
+                .font(.body)
+                .frame(minHeight: 68)
+                .padding(4)
+                .background(AppTheme.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(AppTheme.rule.opacity(0.7))
+                }
+        }
+    }
+
     @ViewBuilder
     private func bulkLabeledContent<Content: View>(
         _ key: String,
         field: TrackMetadataField?,
+        alignment: VerticalAlignment = .firstTextBaseline,
         @ViewBuilder content: () -> Content
     ) -> some View {
         if isBulk, let field {
-            LabeledContent {
-                content().disabled(!selectedBulkFields.contains(field))
-            } label: {
+            alignedMetadataRow(alignment: alignment) {
                 Toggle(L10n.text(key), isOn: bulkFieldBinding(field))
                     .toggleStyle(.checkbox)
+            } content: {
+                content().disabled(!selectedBulkFields.contains(field))
             }
         } else {
-            LabeledContent(L10n.text(key)) { content() }
+            alignedMetadataRow(alignment: alignment) {
+                Text(L10n.text(key))
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .multilineTextAlignment(.trailing)
+                    .fixedSize(horizontal: false, vertical: true)
+            } content: {
+                content()
+            }
         }
+    }
+
+    private func alignedMetadataRow<Label: View, Content: View>(
+        alignment: VerticalAlignment = .firstTextBaseline,
+        @ViewBuilder label: () -> Label,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(alignment: alignment, spacing: AppTheme.spaceMD) {
+            label()
+                .frame(width: metadataLabelWidth, alignment: .trailing)
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var metadataLabelWidth: CGFloat {
+        isBulk ? 210 : 190
     }
 
     private func bulkFieldBinding(_ field: TrackMetadataField) -> Binding<Bool> {
@@ -479,7 +657,11 @@ struct MetadataEditorView: View {
         number: Binding<String>,
         total: Binding<String>
     ) -> some View {
-        LabeledContent(L10n.text(key)) {
+        alignedMetadataRow {
+            Text(L10n.text(key))
+                .foregroundStyle(AppTheme.secondaryInk)
+                .multilineTextAlignment(.trailing)
+        } content: {
             HStack(spacing: AppTheme.spaceXS) {
                 TextField("", text: number).frame(width: 70)
                 Text(L10n.text("metadataEditor.number.of"))
@@ -503,6 +685,10 @@ struct MetadataEditorView: View {
     private var isBulk: Bool {
         if case .tracks = target { return true }
         return false
+    }
+
+    private var supportsMusicBrainzSearch: Bool {
+        !isBulk && !isArtist && targetTracks.first != nil
     }
 
     private var titleKey: String {
@@ -646,7 +832,8 @@ struct MetadataEditorView: View {
                 try await library.updateTrackMetadata(
                     id: track.id,
                     metadata: form.values,
-                    artwork: artwork
+                    artwork: artwork,
+                    musicBrainzReference: selectedMusicBrainzReference
                 )
             case .tracks(let tracks):
                 try await library.updateTracksMetadata(
@@ -657,7 +844,8 @@ struct MetadataEditorView: View {
                 try await library.updateAlbumMetadata(
                     trackIDs: tracks.map(\.id),
                     metadata: form.values,
-                    artwork: artwork
+                    artwork: artwork,
+                    musicBrainzReference: selectedMusicBrainzReference
                 )
             case .artist(_, _, let trackIDs):
                 try await library.updateArtistMetadata(
@@ -732,6 +920,14 @@ struct MetadataEditorView: View {
         case .composerSortName: value = values.composerSortName
         case .grouping: value = values.grouping
         case .genre: value = values.genre
+        case .participantCredits: value = values.participantCredits
+        case .workName: value = values.workName
+        case .movementName: value = values.movementName
+        case .movementNumber: value = values.movementNumber.map(String.init) ?? ""
+        case .movementCount: value = values.movementCount.map(String.init) ?? ""
+        case .beatsPerMinute: value = values.beatsPerMinute.map(String.init) ?? ""
+        case .copyright: value = values.copyright
+        case .isrc: value = values.isrc
         case .releaseYear: value = values.releaseYear.map(String.init) ?? ""
         case .trackNumber: value = values.trackNumber.map(String.init) ?? ""
         case .trackCount: value = values.trackCount.map(String.init) ?? ""
@@ -744,6 +940,55 @@ struct MetadataEditorView: View {
         case .comments: value = values.comments
         }
         return value.isEmpty ? emptySummary : value
+    }
+
+    @MainActor
+    private func searchMusicBrainz() async {
+        guard let track = targetTracks.first else { return }
+        isSearchingMusicBrainz = true
+        errorMessage = nil
+        do {
+            let candidates = try await MusicBrainzService.shared.candidates(for: track)
+            musicBrainzCandidates = candidates
+            if candidates.isEmpty {
+                errorMessage = L10n.text("musicbrainz.noResults")
+            } else {
+                isShowingMusicBrainzCandidates = true
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isSearchingMusicBrainz = false
+    }
+
+    @MainActor
+    private func applyMusicBrainzCandidate(
+        _ candidate: MusicBrainzCandidate,
+        coverArt: CoverArtCandidate?,
+        artworkData: Data?
+    ) {
+        selectedMusicBrainzReference = candidate.reference(coverArt: coverArt)
+        if isTrack { form.title = candidate.title }
+        form.artist = candidate.artist
+        form.artistSortName = candidate.artistSortName
+        form.album = candidate.album
+        form.albumArtist = candidate.albumArtist
+        if let releaseYear = candidate.releaseYear {
+            form.releaseYear = String(releaseYear)
+        }
+        if isTrack {
+            if let trackNumber = candidate.trackNumber { form.trackNumber = String(trackNumber) }
+            if let trackCount = candidate.trackCount { form.trackCount = String(trackCount) }
+            if let isrc = candidate.isrc { form.isrc = isrc }
+        }
+        if let discNumber = candidate.discNumber { form.discNumber = String(discNumber) }
+        if let discCount = candidate.discCount { form.discCount = String(discCount) }
+        if let artworkData, let image = NSImage(data: artworkData) {
+            selectedArtworkData = artworkData
+            selectedArtworkImage = image
+            shouldRemoveCustomArtwork = false
+        }
+        errorMessage = nil
     }
 }
 

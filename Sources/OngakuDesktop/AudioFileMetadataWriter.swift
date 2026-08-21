@@ -6,9 +6,15 @@ enum AudioArtworkChange: Sendable {
     case set(Data)
 }
 
+enum AudioLyricsChange: Sendable {
+    case unchanged
+    case set(String)
+}
+
 struct AudioMetadataUpdate: Sendable {
     let metadata: TrackMetadataValues
     var artwork: AudioArtworkChange = .unchanged
+    var lyrics: AudioLyricsChange = .unchanged
 }
 
 struct EmbeddedFileFingerprint: Sendable {
@@ -118,6 +124,11 @@ actor AudioFileMetadataWriter {
             .iTunesMetadataComposer,
             .iTunesMetadataGrouping,
             .iTunesMetadataUserGenre,
+            .iTunesMetadataCredits,
+            .iTunesMetadataTrackSubTitle,
+            .iTunesMetadataBeatsPerMin,
+            .iTunesMetadataCopyright,
+            .id3MetadataInternationalStandardRecordingCode,
             .iTunesMetadataReleaseDate,
             .iTunesMetadataTrackNumber,
             .iTunesMetadataDiscNumber,
@@ -129,6 +140,9 @@ actor AudioFileMetadataWriter {
                 .commonIdentifierArtwork,
                 .iTunesMetadataCoverArt
             ])
+        }
+        if case .set = update.lyrics {
+            replacedIdentifiers.insert(.iTunesMetadataLyrics)
         }
         let existing = try await asset.load(.metadata)
         var result: [AVMetadataItem] = []
@@ -146,6 +160,19 @@ actor AudioFileMetadataWriter {
         appendString(.iTunesMetadataComposer, metadata.composer, to: &result)
         appendString(.iTunesMetadataGrouping, metadata.grouping, to: &result)
         appendString(.iTunesMetadataUserGenre, metadata.genre, to: &result)
+        appendString(.iTunesMetadataCredits, metadata.participantCredits, to: &result)
+        appendString(.iTunesMetadataTrackSubTitle, metadata.movementName, to: &result)
+        appendString(
+            .iTunesMetadataBeatsPerMin,
+            metadata.beatsPerMinute.map(String.init) ?? "",
+            to: &result
+        )
+        appendString(.iTunesMetadataCopyright, metadata.copyright, to: &result)
+        appendString(
+            .id3MetadataInternationalStandardRecordingCode,
+            metadata.isrc,
+            to: &result
+        )
         appendString(
             .iTunesMetadataReleaseDate,
             metadata.releaseYear.map(String.init) ?? "",
@@ -166,6 +193,9 @@ actor AudioFileMetadataWriter {
             value: metadata.isCompilation ? 1 : 0
         ))
         appendString(.iTunesMetadataUserComment, metadata.comments, to: &result)
+        if case .set(let lyrics) = update.lyrics {
+            appendString(.iTunesMetadataLyrics, lyrics, to: &result)
+        }
         if case .set(let data) = update.artwork {
             let item = AVMutableMetadataItem()
             item.identifier = .iTunesMetadataCoverArt

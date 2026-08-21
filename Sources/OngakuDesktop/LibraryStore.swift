@@ -19,10 +19,17 @@ final class LibraryStore: ObservableObject {
         var errorDescription: String? { L10n.text("metadataEditor.error.trackNotFound") }
     }
 
+    enum DuplicateResolutionError: LocalizedError {
+        case invalidSelection
+
+        var errorDescription: String? { L10n.text("duplicates.error.invalidSelection") }
+    }
+
     enum Activity: Equatable {
         case idle
         case importing
         case verifying
+        case relinking
         case notice(String)
         case failed(String)
     }
@@ -40,19 +47,22 @@ final class LibraryStore: ObservableObject {
     @Published var searchText = "" {
         didSet { scheduleIndexedSearch() }
     }
+    @Published var filterCriteria = LibraryFilterCriteria()
     @Published private(set) var activity: Activity = .idle
     @Published private(set) var lastIssues: [ImportIssue] = []
     @Published private(set) var searchBackendStatus: SearchBackendStatus = .jsonFallback
     @Published private var indexedSearchTrackIDs: Set<Track.ID>?
     @Published private(set) var indexedSearchQuery: String?
 
-    private let repository: LibraryRepository
-    private let searchIndex: SQLiteCatalogPrototype
+    private var repository: LibraryRepository
+    private var searchIndex: SQLiteCatalogPrototype
     private var libraryID = UUID()
     private var libraryCreatedAt = Date.now
     private var searchIndexSynchronizationTask: Task<Void, Never>?
     private var indexedSearchTask: Task<Void, Never>?
     private var playbackQueueSaveTask: Task<Void, Never>?
+    private var duplicateGroupCacheRevision = -1
+    private var duplicateGroupCache: [DuplicateTrackGroup] = []
     weak var undoManager: UndoManager?
 
     init(
@@ -96,6 +106,9 @@ final class LibraryStore: ObservableObject {
             )
         }
 
+        if filterCriteria.activeCount > 0 {
+            result = result.filter(filterCriteria.matches)
+        }
         guard !searchText.isEmpty else { return result }
         let normalizedQuery = CatalogSearch.normalize(searchText)
         if indexedSearchQuery == normalizedQuery, let indexedSearchTrackIDs {
@@ -106,6 +119,23 @@ final class LibraryStore: ObservableObject {
 
     var totalBytes: Int64 { tracks.reduce(0) { $0 + $1.fileSize } }
     var attentionCount: Int { tracks.filter { $0.health != .verified }.count }
+
+    var duplicateGroups: [DuplicateTrackGroup] {
+        if duplicateGroupCacheRevision != contentRevision {
+            duplicateGroupCache = DuplicateTrackAnalyzer.groups(in: tracks)
+            duplicateGroupCacheRevision = contentRevision
+        }
+        return duplicateGroupCache
+    }
+
+    var filteredDuplicateGroups: [DuplicateTrackGroup] {
+        return duplicateGroups.filter { group in
+            group.tracks.contains { track in
+                filterCriteria.matches(track)
+                    && (searchText.isEmpty || CatalogSearch.matches(track, query: searchText))
+            }
+        }
+    }
 
     func playbackStatistics(for trackID: Track.ID) -> TrackPlaybackStatistics {
         PlaybackStatisticsResolver.statistics(events: playbackEvents, tracks: tracks)[trackID]
@@ -710,6 +740,31 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    func switchLibrary(catalogURL: URL, mediaURL: URL) async {
+        searchIndexSynchronizationTask?.cancel()
+        indexedSearchTask?.cancel()
+        playbackQueueSaveTask?.cancel()
+        repository = LibraryRepository(rootURL: catalogURL, mediaURL: mediaURL)
+        searchIndex = SQLiteCatalogPrototype(rootURL: catalogURL)
+        tracks = []
+        playlists = []
+        playlistFolders = []
+        playbackEvents = []
+        playbackQueue = nil
+        selectedPlaylistID = nil
+        selectedTrackID = nil
+        selectedTrackIDs = []
+        selectedSection = .songs
+        searchText = ""
+        filterCriteria = LibraryFilterCriteria()
+        indexedSearchTrackIDs = nil
+        indexedSearchQuery = nil
+        searchBackendStatus = .jsonFallback
+        lastIssues = []
+        contentRevision &+= 1
+        await load()
+    }
+
     func importFiles(_ urls: [URL]) async {
         guard !urls.isEmpty else { return }
         activity = .importing
@@ -844,14 +899,62 @@ final class LibraryStore: ObservableObject {
         guard !tracks.isEmpty else { return }
         activity = .verifying
         tracks = await repository.verify(tracks)
+        let relinkResult = await repository.relinkMissingFiles(in: tracks)
+        tracks = relinkResult.tracks
         contentRevision &+= 1
         do {
             try await repository.save(tracks: tracks)
             scheduleSearchIndexSynchronization(document: currentDocument())
-            activity = .idle
+            activity = relinkResult.relinkedTrackCount > 0
+                ? .notice(L10n.format(
+                    "status.relinkAutomaticComplete",
+                    relinkResult.relinkedTrackCount
+                ))
+                : .idle
         } catch {
             activity = .failed(error.localizedDescription)
         }
+    }
+
+    func relinkMissingFiles(searching roots: [URL]) async {
+        guard !roots.isEmpty, tracks.contains(where: { $0.health == .missing }) else { return }
+        activity = .relinking
+        let result = await repository.relinkMissingFiles(in: tracks, searching: roots)
+        do {
+            if result.relinkedTrackCount > 0 {
+                try await persistRelinkedTracks(result.tracks)
+            }
+            activity = .notice(L10n.format(
+                "status.relinkSearchComplete",
+                result.relinkedTrackCount,
+                result.scannedFileCount
+            ))
+        } catch {
+            activity = .failed(error.localizedDescription)
+        }
+    }
+
+    func relinkTrack(id: Track.ID, to url: URL) async {
+        guard let index = tracks.firstIndex(where: { $0.id == id }) else {
+            activity = .failed(MetadataEditError.trackNotFound.localizedDescription)
+            return
+        }
+        activity = .relinking
+        do {
+            var updated = tracks
+            updated[index] = try await repository.relink(updated[index], to: url)
+            try await persistRelinkedTracks(updated)
+            activity = .notice(L10n.text("status.relinkManualComplete"))
+        } catch {
+            activity = .failed(error.localizedDescription)
+        }
+    }
+
+    private func persistRelinkedTracks(_ updated: [Track]) async throws {
+        try await repository.save(tracks: updated)
+        tracks = updated
+        contentRevision &+= 1
+        scheduleSearchIndexSynchronization(document: currentDocument())
     }
 
     func setMediaDirectory(_ url: URL) async throws {
@@ -877,6 +980,100 @@ final class LibraryStore: ObservableObject {
             contentRevision &+= 1
             scheduleSearchIndexSynchronization(document: currentDocument())
             activity = .notice(L10n.text("settings.storage.clearSuccess"))
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
+
+    func resolveDuplicateGroup(
+        _ groupID: DuplicateTrackGroup.ID,
+        keeping keepID: Track.ID,
+        moveManagedFilesToTrash: Bool
+    ) async throws -> DuplicateResolutionResult {
+        guard let group = duplicateGroups.first(where: { $0.id == groupID }),
+              group.tracks.contains(where: { $0.id == keepID }) else {
+            throw DuplicateResolutionError.invalidSelection
+        }
+        let removedIDs = Set(group.tracks.map(\.id)).subtracting([keepID])
+        guard !removedIDs.isEmpty else { throw DuplicateResolutionError.invalidSelection }
+        let removedTracks = tracks.filter { removedIDs.contains($0.id) }
+        let updatedTracks = tracks.filter { !removedIDs.contains($0.id) }
+
+        var updatedPlaylists = playlists
+        for index in updatedPlaylists.indices where updatedPlaylists[index].smartDefinition == nil {
+            var seen: Set<Track.ID> = []
+            updatedPlaylists[index].entries = updatedPlaylists[index].entries.compactMap { entry in
+                var updated = entry
+                if removedIDs.contains(updated.trackID) { updated.trackID = keepID }
+                return seen.insert(updated.trackID).inserted ? updated : nil
+            }
+            updatedPlaylists[index].updatedAt = .now
+        }
+        let updatedEvents = playbackEvents.map { event in
+            guard removedIDs.contains(event.trackID) else { return event }
+            var updated = event
+            updated.trackID = keepID
+            return updated
+        }
+        var updatedQueue = playbackQueue
+        if var queue = updatedQueue {
+            var seen: Set<Track.ID> = []
+            queue.trackIDs = queue.trackIDs.compactMap { id in
+                let updated = removedIDs.contains(id) ? keepID : id
+                return seen.insert(updated).inserted ? updated : nil
+            }
+            if let current = queue.currentTrackID, removedIDs.contains(current) {
+                queue.currentTrackID = keepID
+            }
+            updatedQueue = queue
+        }
+
+        playbackQueueSaveTask?.cancel()
+        let document = LibraryDocument(
+            updatedAt: .now,
+            tracks: updatedTracks,
+            libraryID: libraryID,
+            createdAt: libraryCreatedAt,
+            playlists: updatedPlaylists,
+            playlistFolders: playlistFolders,
+            playbackEvents: updatedEvents,
+            playbackQueue: updatedQueue
+        )
+        do {
+            try await repository.save(document: document)
+            tracks = updatedTracks
+            playlists = updatedPlaylists
+            playbackEvents = updatedEvents
+            playbackQueue = updatedQueue
+            if let selectedTrackID, removedIDs.contains(selectedTrackID) {
+                self.selectedTrackID = keepID
+            }
+            selectedTrackIDs.subtract(removedIDs)
+            selectedTrackIDs.insert(keepID)
+            contentRevision &+= 1
+            scheduleSearchIndexSynchronization(document: document)
+
+            var trashResult = (trashed: 0, retained: removedTracks.count, failures: [String]())
+            if moveManagedFilesToTrash {
+                trashResult = await repository.trashManagedFiles(
+                    removedTracks: removedTracks,
+                    retainedTracks: updatedTracks
+                )
+            }
+            let result = DuplicateResolutionResult(
+                removedCount: removedTracks.count,
+                trashedFileCount: trashResult.trashed,
+                retainedFileCount: trashResult.retained,
+                failedFileNames: trashResult.failures
+            )
+            activity = trashResult.failures.isEmpty
+                ? .notice(L10n.format("duplicates.status.resolved", result.removedCount))
+                : .failed(L10n.format(
+                    "duplicates.status.trashFailed",
+                    trashResult.failures.count
+                ))
+            return result
         } catch {
             activity = .failed(error.localizedDescription)
             throw error
@@ -913,7 +1110,8 @@ final class LibraryStore: ObservableObject {
     func updateTrackMetadata(
         id: Track.ID,
         metadata: TrackMetadataValues,
-        artwork: AudioArtworkChange = .unchanged
+        artwork: AudioArtworkChange = .unchanged,
+        musicBrainzReference: MusicBrainzReference? = nil
     ) async throws {
         var updated = tracks
         guard let index = updated.firstIndex(where: { $0.id == id }) else {
@@ -921,6 +1119,9 @@ final class LibraryStore: ObservableObject {
         }
         let original = updated[index]
         updated[index].apply(metadata, includesTrackSpecificValues: true)
+        if let musicBrainzReference {
+            updated[index].musicBrainzReference = musicBrainzReference
+        }
         if metadata.artist != original.artist || metadata.album != original.album {
             if let destination = tracks.first(where: {
                 $0.id != id && $0.artist == metadata.artist && $0.album == metadata.album
@@ -959,7 +1160,8 @@ final class LibraryStore: ObservableObject {
     func updateAlbumMetadata(
         trackIDs: [Track.ID],
         metadata: TrackMetadataValues,
-        artwork: AudioArtworkChange = .unchanged
+        artwork: AudioArtworkChange = .unchanged,
+        musicBrainzReference: MusicBrainzReference? = nil
     ) async throws {
         let ids = Set(trackIDs)
         var updated = tracks
@@ -973,6 +1175,9 @@ final class LibraryStore: ObservableObject {
         })?.artistID ?? UUID()
         for index in indices {
             updated[index].apply(metadata, includesTrackSpecificValues: false)
+            if let musicBrainzReference {
+                updated[index].musicBrainzReference = musicBrainzReference.albumReference
+            }
             if metadata.artist != originalArtist {
                 updated[index].artistID = destinationArtistID
             }
@@ -1003,6 +1208,19 @@ final class LibraryStore: ObservableObject {
         try await persistMetadataUpdate(updated, changedTrackIDs: ids)
     }
 
+    func updateTrackLyrics(id: Track.ID, lyrics: TrackLyrics?) async throws {
+        var updated = tracks
+        guard let index = updated.firstIndex(where: { $0.id == id }) else {
+            throw MetadataEditError.trackNotFound
+        }
+        updated[index].lyrics = lyrics
+        try await persistMetadataUpdate(
+            updated,
+            changedTrackIDs: [id],
+            lyrics: .set(lyrics?.plainText ?? "")
+        )
+    }
+
     func updateArtistMetadata(
         trackIDs: [Track.ID],
         artist: String
@@ -1022,7 +1240,8 @@ final class LibraryStore: ObservableObject {
     private func persistMetadataUpdate(
         _ proposed: [Track],
         changedTrackIDs: Set<Track.ID>,
-        artwork: AudioArtworkChange = .unchanged
+        artwork: AudioArtworkChange = .unchanged,
+        lyrics: AudioLyricsChange = .unchanged
     ) async throws {
         var updated = proposed
         for index in updated.indices where changedTrackIDs.contains(updated[index].id) {
@@ -1030,7 +1249,8 @@ final class LibraryStore: ObservableObject {
             let fingerprint = await AudioFileMetadataWriter.shared.embed(
                 AudioMetadataUpdate(
                     metadata: TrackMetadataValues(track: track),
-                    artwork: artwork
+                    artwork: artwork,
+                    lyrics: lyrics
                 ),
                 in: track.fileURL
             )
@@ -1270,7 +1490,12 @@ final class LibraryStore: ObservableObject {
     private func parityQueries(for tracks: [Track]) -> [String] {
         var queries = Set(["a", "1", "夜", "音"])
         for track in tracks.prefix(12) {
-            for value in [track.title, track.artist, track.album] {
+            for value in [
+                track.title, track.artist, track.album, track.albumArtist,
+                track.composer, track.genre, track.grouping, track.comments,
+                track.participantCredits, track.workName, track.movementName,
+                track.isrc, track.lyrics?.plainText ?? "",
+            ] {
                 let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { continue }
                 queries.insert(String(trimmed.prefix(1)))
@@ -1374,6 +1599,9 @@ private extension Track {
         composerSortName = metadata.composerSortName
         grouping = metadata.grouping
         genre = metadata.genre
+        participantCredits = metadata.participantCredits
+        workName = metadata.workName
+        copyright = metadata.copyright
         releaseYear = metadata.releaseYear
         discNumber = metadata.discNumber
         discCount = metadata.discCount
@@ -1381,6 +1609,13 @@ private extension Track {
         rating = min(max(metadata.rating, 0), 5)
         playCount = max(0, metadata.playCount)
         comments = metadata.comments
+        if includesTrackSpecificValues {
+            movementName = metadata.movementName
+            movementNumber = metadata.movementNumber
+            movementCount = metadata.movementCount
+            beatsPerMinute = metadata.beatsPerMinute
+            isrc = metadata.isrc
+        }
     }
 
     mutating func apply(_ patch: TrackMetadataPatch) {
@@ -1399,6 +1634,14 @@ private extension Track {
         if fields.contains(.composerSortName) { composerSortName = metadata.composerSortName }
         if fields.contains(.grouping) { grouping = metadata.grouping }
         if fields.contains(.genre) { genre = metadata.genre }
+        if fields.contains(.participantCredits) { participantCredits = metadata.participantCredits }
+        if fields.contains(.workName) { workName = metadata.workName }
+        if fields.contains(.movementName) { movementName = metadata.movementName }
+        if fields.contains(.movementNumber) { movementNumber = metadata.movementNumber }
+        if fields.contains(.movementCount) { movementCount = metadata.movementCount }
+        if fields.contains(.beatsPerMinute) { beatsPerMinute = metadata.beatsPerMinute }
+        if fields.contains(.copyright) { copyright = metadata.copyright }
+        if fields.contains(.isrc) { isrc = metadata.isrc }
         if fields.contains(.releaseYear) { releaseYear = metadata.releaseYear }
         if fields.contains(.trackNumber) { trackNumber = metadata.trackNumber }
         if fields.contains(.trackCount) { trackCount = metadata.trackCount }
