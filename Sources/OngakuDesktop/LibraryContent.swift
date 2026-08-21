@@ -152,6 +152,7 @@ struct LibraryContent: View {
     @EnvironmentObject private var trackTableSettings: TrackTableSettings
     @State private var sortOrder = [KeyPathComparator(\Track.title)]
     @State private var sortedTracks: [Track] = []
+    @State private var tableSelectedTrackIDs: Set<Track.ID> = []
     @State private var isSortingTracks = false
     @State private var trackSortTask: Task<Void, Never>?
     @State private var trackSortGeneration = UUID()
@@ -427,7 +428,7 @@ struct LibraryContent: View {
     }
 
     private var trackTable: some View {
-        Table(sortedTracks, selection: $library.selectedTrackIDs, sortOrder: $sortOrder) {
+        Table(sortedTracks, selection: $tableSelectedTrackIDs, sortOrder: $sortOrder) {
             TableColumn(L10n.text("column.title"), value: \.title) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
@@ -458,7 +459,11 @@ struct LibraryContent: View {
                             )
                             .accessibilityLabel(L10n.text("track.favorite"))
                     }
+                    Spacer(minLength: 0)
                 }
+                .contentShape(Rectangle())
+                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
+                .simultaneousGesture(trackCellPlaybackGesture(for: track))
                 .dropDestination(for: String.self) { payloads, location in
                     guard let playlistID = library.selectedPlaylistID,
                           library.selectedPlaylist?.smartDefinition == nil else { return false }
@@ -478,9 +483,14 @@ struct LibraryContent: View {
             .width(min: 240, ideal: 300)
 
             TableColumn(columnTitle(.artist), value: \.artist) { track in
-                Text(track.artist)
-                    .lineLimit(1)
-                    .opacity(columnOpacity(.artist))
+                HStack(spacing: 0) {
+                    Text(track.artist).lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
+                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .opacity(columnOpacity(.artist))
             }
             .width(
                 min: collapsedWidth(.artist, visible: 130),
@@ -489,9 +499,14 @@ struct LibraryContent: View {
             )
 
             TableColumn(columnTitle(.album), value: \.album) { track in
-                Text(track.album)
-                    .lineLimit(1)
-                    .opacity(columnOpacity(.album))
+                HStack(spacing: 0) {
+                    Text(track.album).lineLimit(1)
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
+                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .opacity(columnOpacity(.album))
             }
             .width(
                 min: collapsedWidth(.album, visible: 150),
@@ -500,9 +515,15 @@ struct LibraryContent: View {
             )
 
             TableColumn(columnTitle(.duration)) { track in
-                Text(DurationFormatter.string(track.duration))
-                    .font(.callout.monospacedDigit())
-                    .opacity(columnOpacity(.duration))
+                HStack(spacing: 0) {
+                    Text(DurationFormatter.string(track.duration))
+                        .font(.callout.monospacedDigit())
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
+                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .opacity(columnOpacity(.duration))
             }
             .width(
                 min: collapsedWidth(.duration, visible: 68),
@@ -511,11 +532,17 @@ struct LibraryContent: View {
             )
 
             TableColumn(columnTitle(.health)) { track in
-                HealthLabel(
-                    health: track.health,
-                    compact: true,
-                    isSelected: library.selectedTrackIDs.contains(track.id)
-                )
+                HStack(spacing: 0) {
+                    HealthLabel(
+                        health: track.health,
+                        compact: true,
+                        isSelected: library.selectedTrackIDs.contains(track.id)
+                    )
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
+                .simultaneousGesture(trackCellPlaybackGesture(for: track))
                 .opacity(columnOpacity(.health))
             }
             .width(
@@ -526,12 +553,6 @@ struct LibraryContent: View {
         }
         .contextMenu(forSelectionType: Track.ID.self) { selection in
             trackRowContextMenu(for: selection)
-        } primaryAction: { selection in
-            guard let track = sortedTracks.first(where: { selection.contains($0.id) }) else {
-                return
-            }
-            library.selectedTrackID = track.id
-            player.play(track)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
         .overlay(alignment: .topTrailing) {
@@ -557,29 +578,41 @@ struct LibraryContent: View {
             trackSortTask?.cancel()
             trackSortTask = nil
         }
-        .onChange(of: library.selectedTrackID) { _, selectedTrackID in
-            guard let selectedTrackID else {
-                library.selectedTrackIDs = []
-                return
-            }
-            if !library.selectedTrackIDs.contains(selectedTrackID) {
-                library.selectedTrackIDs = [selectedTrackID]
-            }
+        .onAppear {
+            tableSelectedTrackIDs = library.selectedTrackIDs
         }
-        .onChange(of: library.selectedTrackIDs) { previousSelection, selection in
-            if selection.isEmpty {
-                library.selectedTrackID = nil
+        .onChange(of: tableSelectedTrackIDs) { previousSelection, selection in
+            let focusedID = TrackSelectionResolver.focusedTrackID(
+                previousFocus: library.selectedTrackID,
+                previousSelection: previousSelection,
+                newSelection: selection
+            )
+            library.updateTrackSelection(selection, focusedID: focusedID)
+        }
+        .onChange(of: library.selectedTrackID) { _, focusedID in
+            guard let focusedID else {
+                if !tableSelectedTrackIDs.isEmpty {
+                    tableSelectedTrackIDs = []
+                }
                 return
             }
-            let newlySelected = selection.subtracting(previousSelection)
-            if let focusedID = newlySelected.first {
-                library.selectedTrackID = focusedID
-            } else if let selectedTrackID = library.selectedTrackID,
-                      selection.contains(selectedTrackID) {
-                // Keep the inspector focused while another selected row is removed.
-            } else {
-                library.selectedTrackID = selection.first
-            }
+            guard !tableSelectedTrackIDs.contains(focusedID) else { return }
+            tableSelectedTrackIDs = [focusedID]
+        }
+    }
+
+    private func trackCellSelectionGesture(for trackID: Track.ID) -> some Gesture {
+        TapGesture(count: 1).onEnded {
+            let modifiers = NSEvent.modifierFlags.intersection([.command, .shift, .control])
+            guard modifiers.isEmpty else { return }
+            tableSelectedTrackIDs = [trackID]
+        }
+    }
+
+    private func trackCellPlaybackGesture(for track: Track) -> some Gesture {
+        TapGesture(count: 2).onEnded {
+            tableSelectedTrackIDs = [track.id]
+            player.play(track)
         }
     }
 
@@ -1429,7 +1462,13 @@ private struct AlbumDetail: View {
     }
 
     private var trackTable: some View {
-        Table(album.sortedTracks, selection: $library.selectedTrackID) {
+        Table(
+            album.sortedTracks,
+            selection: Binding(
+                get: { library.selectedTrackID },
+                set: { library.selectedTrackID = $0 }
+            )
+        ) {
             TableColumn(L10n.text("column.title")) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
@@ -1776,7 +1815,13 @@ private struct ArtistDetail: View {
                 .padding(.horizontal, AppTheme.spaceLG)
                 .padding(.top, AppTheme.spaceSM)
 
-            Table(artist.sortedTracks, selection: $library.selectedTrackID) {
+            Table(
+                artist.sortedTracks,
+                selection: Binding(
+                    get: { library.selectedTrackID },
+                    set: { library.selectedTrackID = $0 }
+                )
+            ) {
                 TableColumn(L10n.text("column.title")) { track in
                     HStack(spacing: 10) {
                         Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")

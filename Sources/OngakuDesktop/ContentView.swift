@@ -7,6 +7,8 @@ struct ContentView: View {
     @EnvironmentObject private var player: PlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var isImporting = false
+    @State private var isImportingCD = false
+    @State private var isShowingAppleMusicStore = false
     @State private var isRelinkSearching = false
     @State private var isDropTargeted = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -50,6 +52,13 @@ struct ContentView: View {
             guard case .success(let urls) = result else { return }
             Task { await library.importFiles(urls) }
         }
+        .sheet(isPresented: $isImportingCD) {
+            AudioCDImportView()
+                .environmentObject(library)
+        }
+        .sheet(isPresented: $isShowingAppleMusicStore) {
+            AppleMusicStoreView()
+        }
         .fileImporter(
             isPresented: $isRelinkSearching,
             allowedContentTypes: [.folder],
@@ -60,6 +69,12 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestImport)) { _ in
             isImporting = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestCDImport)) { _ in
+            isImportingCD = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestAppleMusicStore)) { _ in
+            isShowingAppleMusicStore = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestVerification)) { _ in
             Task { await library.verifyLibrary() }
@@ -75,6 +90,20 @@ struct ContentView: View {
                     Label(L10n.text("command.import"), systemImage: "plus")
                 }
                 .help(L10n.text("toolbar.importHelp"))
+
+                Button {
+                    isImportingCD = true
+                } label: {
+                    Label(L10n.text("command.importCD"), systemImage: "opticaldisc")
+                }
+                .help(L10n.text("toolbar.importCDHelp"))
+
+                Button {
+                    isShowingAppleMusicStore = true
+                } label: {
+                    Label(L10n.text("command.appleMusicStore"), systemImage: "apple.logo")
+                }
+                .help(L10n.text("toolbar.appleMusicStoreHelp"))
 
                 Button {
                     Task { await library.verifyLibrary() }

@@ -4,6 +4,53 @@ import Testing
 
 @Suite("Standard library views")
 struct StandardLibraryResolverTests {
+    @Test("Playback history updates do not restore the playing row over a new selection")
+    @MainActor
+    func preservesSelectionAfterPlaybackStarts() async {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let store = LibraryStore(repository: LibraryRepository(rootURL: root))
+        let playing = UUID()
+        let newlySelected = UUID()
+
+        store.selectedTrackID = playing
+        await store.recordPlaybackEvent(PlaybackEvent(trackID: playing, kind: .started))
+        store.updateTrackSelection([newlySelected], focusedID: newlySelected)
+
+        #expect(store.selectedTrackID == newlySelected)
+        #expect(store.selectedTrackIDs == [newlySelected])
+    }
+
+    @Test("A new row selection replaces the previous focused song")
+    func resolvesFocusedRowSelection() {
+        let previous = UUID()
+        let newlySelected = UUID()
+
+        #expect(TrackSelectionResolver.focusedTrackID(
+            previousFocus: previous,
+            previousSelection: [previous],
+            newSelection: [newlySelected]
+        ) == newlySelected)
+        #expect(TrackSelectionResolver.focusedTrackID(
+            previousFocus: previous,
+            previousSelection: [previous],
+            newSelection: []
+        ) == nil)
+    }
+
+    @Test("Removing one row from a multiple selection keeps the focused song when possible")
+    func preservesFocusWithinMultipleSelection() {
+        let focused = UUID()
+        let other = UUID()
+
+        #expect(TrackSelectionResolver.focusedTrackID(
+            previousFocus: focused,
+            previousSelection: [focused, other],
+            newSelection: [focused]
+        ) == focused)
+    }
+
     @Test("Pinned and favorite views include only matching songs")
     func resolvesManualCollections() {
         var pinned = makeTrack(title: "Pinned")

@@ -952,6 +952,38 @@ enum StandardLibraryResolver {
     }
 }
 
+enum TrackSelectionResolver {
+    nonisolated static func focusedTrackID(
+        previousFocus: Track.ID?,
+        previousSelection: Set<Track.ID>,
+        newSelection: Set<Track.ID>
+    ) -> Track.ID? {
+        guard !newSelection.isEmpty else { return nil }
+        let newlySelected = newSelection.subtracting(previousSelection)
+        if let focusedID = newlySelected.sorted(by: stableIDOrder).first {
+            return focusedID
+        }
+        if let previousFocus, newSelection.contains(previousFocus) {
+            return previousFocus
+        }
+        return newSelection.sorted(by: stableIDOrder).first
+    }
+
+    private nonisolated static func stableIDOrder(_ lhs: Track.ID, _ rhs: Track.ID) -> Bool {
+        lhs.uuidString < rhs.uuidString
+    }
+}
+
+struct TrackSelectionState: Equatable, Sendable {
+    var focusedID: Track.ID?
+    var selectedIDs: Set<Track.ID>
+
+    nonisolated init(focusedID: Track.ID? = nil, selectedIDs: Set<Track.ID> = []) {
+        self.focusedID = focusedID
+        self.selectedIDs = selectedIDs
+    }
+}
+
 enum PlaybackHistoryResolver {
     nonisolated static func items(
         events: [PlaybackEvent],
@@ -1184,6 +1216,15 @@ struct ImportIssue: Identifiable, Sendable {
 struct ImportResult: Sendable {
     var imported: [Track]
     var issues: [ImportIssue]
+}
+
+struct AudioCDImportRequest: Sendable {
+    let sourceURL: URL
+    let title: String
+    let artist: String
+    let album: String
+    let trackNumber: Int
+    let trackCount: Int
 }
 
 struct AppleMusicImportSummary: Sendable {

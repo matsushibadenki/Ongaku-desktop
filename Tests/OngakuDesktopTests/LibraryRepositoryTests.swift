@@ -723,6 +723,47 @@ struct LibraryRepositoryTests {
         try? FileManager.default.removeItem(at: root)
     }
 
+    @Test("CD import metadata organizes verified copies by artist and album")
+    func importsCDMetadataOverrides() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let disc = root.appendingPathComponent("Audio CD")
+        let source = disc.appendingPathComponent("1 Audio Track.aiff")
+        try FileManager.default.createDirectory(at: disc, withIntermediateDirectories: true)
+        try Data([0x46, 0x4F, 0x52, 0x4D, 1, 2, 3, 4]).write(to: source)
+        let media = root.appendingPathComponent("Media")
+        let repository = LibraryRepository(
+            rootURL: root.appendingPathComponent("Catalog"),
+            mediaURL: media
+        )
+        let request = AudioCDImportRequest(
+            sourceURL: source,
+            title: "Opening",
+            artist: "Disc Artist",
+            album: "Disc Album",
+            trackNumber: 1,
+            trackCount: 12
+        )
+
+        let result = await repository.importFiles(
+            [source],
+            existing: [],
+            metadataOverrides: [source.standardizedFileURL.path: request]
+        )
+        let track = try #require(result.imported.first)
+
+        #expect(result.issues.isEmpty)
+        #expect(track.title == "Opening")
+        #expect(track.artist == "Disc Artist")
+        #expect(track.album == "Disc Album")
+        #expect(track.trackNumber == 1)
+        #expect(track.trackCount == 12)
+        #expect(track.managedPath.hasPrefix(
+            media.appendingPathComponent("Disc Artist/Disc Album").path + "/"
+        ))
+        #expect(try LibraryRepository.sha256(of: track.fileURL) == LibraryRepository.sha256(of: source))
+    }
+
     @Test("An installed file is recovered when import was interrupted before catalog save")
     func recoversInterruptedImport() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

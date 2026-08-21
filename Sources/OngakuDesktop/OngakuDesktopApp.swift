@@ -125,6 +125,11 @@ struct OngakuDesktopApp: App {
                     NotificationCenter.default.post(name: .requestImport, object: nil)
                 }
                 .keyboardShortcut("o", modifiers: .command)
+
+                Button(L10n.text("command.importCD")) {
+                    NotificationCenter.default.post(name: .requestCDImport, object: nil)
+                }
+                .keyboardShortcut("o", modifiers: [.command, .shift])
             }
 
             CommandGroup(replacing: .help) {
@@ -139,6 +144,13 @@ struct OngakuDesktopApp: App {
                     NotificationCenter.default.post(name: .requestVerification, object: nil)
                 }
                 .keyboardShortcut("v", modifiers: [.command, .shift])
+            }
+
+            CommandMenu(L10n.text("command.store")) {
+                Button(L10n.text("command.appleMusicStore")) {
+                    NotificationCenter.default.post(name: .requestAppleMusicStore, object: nil)
+                }
+                .keyboardShortcut("m", modifiers: [.command, .shift])
             }
 
             CommandMenu(L10n.text("command.playback")) {
@@ -174,5 +186,7 @@ struct OngakuDesktopApp: App {
 
 extension Notification.Name {
     static let requestImport = Notification.Name("OngakuDesktop.requestImport")
+    static let requestCDImport = Notification.Name("OngakuDesktop.requestCDImport")
+    static let requestAppleMusicStore = Notification.Name("OngakuDesktop.requestAppleMusicStore")
     static let requestVerification = Notification.Name("OngakuDesktop.requestVerification")
 }

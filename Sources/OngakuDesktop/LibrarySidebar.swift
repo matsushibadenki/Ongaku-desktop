@@ -105,12 +105,16 @@ struct LibrarySidebar: View {
                         }
                     }
                 } label: {
-                    Label(libraryProfiles.activeProfile.name, systemImage: "books.vertical")
-                        .lineLimit(1)
-                        .foregroundStyle(AppTheme.ink)
+                    libraryProfileMenuLabel
+                        .opacity(0)
                 }
                 .menuStyle(.borderlessButton)
-                .tint(AppTheme.ink)
+                .menuIndicator(.hidden)
+                .overlay(alignment: .leading) {
+                    libraryProfileMenuLabel
+                        .allowsHitTesting(false)
+                }
+                .accessibilityLabel(libraryProfiles.activeProfile.name)
             }
 
             Section(L10n.text("sidebar.library")) {
@@ -342,6 +346,19 @@ struct LibrarySidebar: View {
         } message: {
             Text(errorMessage ?? "")
         }
+    }
+
+    private var libraryProfileMenuLabel: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "books.vertical")
+                .frame(width: 16)
+            Text(libraryProfiles.activeProfile.name)
+                .lineLimit(1)
+            Image(systemName: "chevron.down")
+                .font(.caption2.weight(.semibold))
+        }
+        .foregroundStyle(Color.primary)
+        .contentShape(Rectangle())
     }
 
     private func playlistRow(_ playlist: Playlist) -> some View {

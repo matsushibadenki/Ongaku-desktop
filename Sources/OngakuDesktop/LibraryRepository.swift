@@ -400,7 +400,8 @@ actor LibraryRepository {
     func importFiles(
         _ sourceURLs: [URL],
         existing: [Track],
-        reportDuplicates: Bool = true
+        reportDuplicates: Bool = true,
+        metadataOverrides: [String: AudioCDImportRequest] = [:]
     ) async -> ImportResult {
         do { try prepareDirectories() } catch {
             return ImportResult(imported: [], issues: sourceURLs.map {
@@ -455,23 +456,29 @@ actor LibraryRepository {
                 }
 
                 let metadata = await Self.readMetadata(from: staged, fallbackName: source.deletingPathExtension().lastPathComponent)
+                let metadataOverride = metadataOverrides[source.standardizedFileURL.path]
+                let title = metadataOverride?.title ?? metadata.title
+                let artist = metadataOverride?.artist ?? metadata.artist
+                let album = metadataOverride?.album ?? metadata.album
+                let trackNumber = metadataOverride?.trackNumber ?? metadata.trackNumber
+                let trackCount = metadataOverride?.trackCount ?? metadata.trackCount
                 let destination = try destinationURL(
-                    artist: metadata.artist,
-                    album: metadata.album,
+                    artist: artist,
+                    album: album,
                     originalName: source.lastPathComponent,
                     hash: sourceHash
                 )
                 try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
                 let values = try staged.resourceValues(forKeys: [.fileSizeKey])
                 let identities = identityIndex.identities(
-                    artist: metadata.artist,
-                    album: metadata.album
+                    artist: artist,
+                    album: album
                 )
                 let track = Track(
                     id: UUID(),
-                    title: metadata.title,
-                    artist: metadata.artist,
-                    album: metadata.album,
+                    title: title,
+                    artist: artist,
+                    album: album,
                     artistSortName: metadata.artistSortName,
                     albumSortName: metadata.albumSortName,
                     albumArtist: metadata.albumArtist,
@@ -487,8 +494,8 @@ actor LibraryRepository {
                     copyright: metadata.copyright,
                     isrc: metadata.isrc,
                     releaseYear: metadata.releaseYear,
-                    trackNumber: metadata.trackNumber,
-                    trackCount: metadata.trackCount,
+                    trackNumber: trackNumber,
+                    trackCount: trackCount,
                     discNumber: metadata.discNumber,
                     discCount: metadata.discCount,
                     isCompilation: metadata.isCompilation,

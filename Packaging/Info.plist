@@ -32,5 +32,7 @@
 	<string>BDsXs9EbQOTcuSo9Jx+R49lpRVR3C0I4olojiX0N5kw=</string>
 	<key>NSHighResolutionCapable</key>
     <true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Ongaku uses Apple Music access to search the catalog and add selected songs to your cloud music library.</string>
 </dict>
 </plist>

@@ -42,8 +42,36 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var contentRevision = 0
     @Published var selectedSection: LibrarySection = .songs
     @Published var selectedPlaylistID: Playlist.ID?
-    @Published var selectedTrackID: Track.ID?
-    @Published var selectedTrackIDs: Set<Track.ID> = []
+    @Published private var trackSelection = TrackSelectionState()
+    var selectedTrackID: Track.ID? {
+        get { trackSelection.focusedID }
+        set {
+            let selectedIDs: Set<Track.ID>
+            if let newValue {
+                selectedIDs = trackSelection.selectedIDs.contains(newValue)
+                    ? trackSelection.selectedIDs
+                    : [newValue]
+            } else {
+                selectedIDs = []
+            }
+            let next = TrackSelectionState(focusedID: newValue, selectedIDs: selectedIDs)
+            guard trackSelection != next else { return }
+            trackSelection = next
+        }
+    }
+    var selectedTrackIDs: Set<Track.ID> {
+        get { trackSelection.selectedIDs }
+        set {
+            let focusedID = TrackSelectionResolver.focusedTrackID(
+                previousFocus: trackSelection.focusedID,
+                previousSelection: newValue,
+                newSelection: newValue
+            )
+            let next = TrackSelectionState(focusedID: focusedID, selectedIDs: newValue)
+            guard trackSelection != next else { return }
+            trackSelection = next
+        }
+    }
     @Published var searchText = "" {
         didSet { scheduleIndexedSearch() }
     }
@@ -75,6 +103,13 @@ final class LibraryStore: ObservableObject {
 
     var selectedTrack: Track? {
         tracks.first { $0.id == selectedTrackID }
+    }
+
+    func updateTrackSelection(_ selectedIDs: Set<Track.ID>, focusedID: Track.ID?) {
+        let validFocus = focusedID.flatMap { selectedIDs.contains($0) ? $0 : nil }
+        let next = TrackSelectionState(focusedID: validFocus, selectedIDs: selectedIDs)
+        guard trackSelection != next else { return }
+        trackSelection = next
     }
 
     var selectedPlaylist: Playlist? {
@@ -784,6 +819,42 @@ final class LibraryStore: ObservableObject {
                 ? .idle : .failed(L10n.format("import.issueCount", result.issues.count))
         } catch {
             activity = .failed(error.localizedDescription)
+        }
+    }
+
+    @discardableResult
+    func importAudioCD(_ requests: [AudioCDImportRequest]) async -> Int {
+        guard !requests.isEmpty else { return 0 }
+        activity = .importing
+        lastIssues = []
+        let overrides = Dictionary(
+            uniqueKeysWithValues: requests.map {
+                ($0.sourceURL.standardizedFileURL.path, $0)
+            }
+        )
+        let result = await repository.importFiles(
+            requests.map(\.sourceURL),
+            existing: tracks,
+            metadataOverrides: overrides
+        )
+        tracks.append(contentsOf: result.imported)
+        tracks.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+        contentRevision &+= 1
+        lastIssues = result.issues
+
+        do {
+            try await repository.save(tracks: tracks)
+            selectedTrackID = result.imported.first?.id ?? selectedTrackID
+            scheduleSearchIndexSynchronization(document: currentDocument())
+            if result.imported.isEmpty, !result.issues.isEmpty {
+                activity = .failed(L10n.format("import.issueCount", result.issues.count))
+            } else {
+                activity = .notice(L10n.format("status.cdImported", result.imported.count))
+            }
+            return result.imported.count
+        } catch {
+            activity = .failed(error.localizedDescription)
+            return 0
         }
     }
 
