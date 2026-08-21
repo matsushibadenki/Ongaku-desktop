@@ -84,7 +84,7 @@ actor LRCLIBService {
     private static let requestSpacing = Duration.milliseconds(350)
     private static let maximumCandidates = 20
     private static var clientIdentifier: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.1"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.2"
         return "Ongaku Desktop/\(version) (https://github.com/matsushibadenki/Ongaku-desktop)"
     }
 

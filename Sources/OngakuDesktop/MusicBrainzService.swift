@@ -111,7 +111,7 @@ actor MusicBrainzService {
     private static let maximumCandidates = 20
     private static let maximumArtworkSize = 12 * 1_024 * 1_024
     private static var clientIdentifier: String {
-        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.1"
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.2"
         return "OngakuDesktop/\(version) (https://github.com/matsushibadenki/Ongaku-desktop)"
     }
 

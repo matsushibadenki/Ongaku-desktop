@@ -88,7 +88,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 | ソーシャル | プロフィール、友達、視聴履歴共有、共同プレイリスト、絵文字リアクション | Apple Music APIで可能な範囲を優先し、不足分は同意制の独自バックエンド | [Later] M7 |
 | SharePlay | FaceTime中の同期再生、参加、退出、操作権限 | GroupActivitiesで再生位置とキュー操作を同期 | [Later] M7 |
 | ファミリー | Family Sharing加入状態に沿ったサービス利用 | Appleの権限状態を尊重し、独自の契約共有は実装しない | [Later] M6 |
-| 端末連携 | iPhone/iPad接続、同期、書き出し、Remote操作 | Finder同期へのハンドオフと、将来のOngaku companionアプリを分離設計 | [Later] M8 |
+| 端末連携 | iPhone/iPad接続、差分取り込み、同期、書き出し、Remote操作 | Ongaku companionアプリとNetwork framework／Bonjourで接続し、転送可能な非保護音源だけをチェックサム照合して取り込む。Finder同期とApple Music保護曲は公式導線へ分離 | [Later] M8 |
 | 設定 | 一般、再生、ファイル、詳細、アカウント、通知、制限、プライバシー | 設定スキーマをバージョン管理し、検索と初期値復元を提供 | [Later] M4, M9 |
 | システム統合 | Now Playing、メディアキー、Siri候補、通知、Spotlight、ショートカット、アクセシビリティ | MediaPlayer、App Intents、Core Spotlight、UserNotifications | [Next] M1; [Later] M9 |
 | その他 | ビジュアライザ、キーボードショートカット、メニュー、ヘルプ、記号説明 | Metal/SwiftUI、Commands、Help Book | [Later] M9 |
@@ -103,6 +103,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 | Appleの友達・フォロワー機能 | 公開APIで取得・更新できる範囲が限定的 | Apple側で可能な操作と、独自プロフィール／共同編集を明確に分離 |
 | Home Sharing | Apple固有の共有プロトコル全体は公開されていない | ローカルネットワーク上の標準的な読み取り専用共有とライブラリ移行を提供 |
 | iPhone/iPadへのMusic同期 | macOSではFinderが同期主体 | Finderを開くハンドオフ、M3U/音源書き出し、将来のcompanion同期を提供 |
+| iPhone/iPadからの音源取り込み | 公開APIでは端末のMusicライブラリ全体をFinderのように読み出せず、Apple MusicのDRM保護曲、`assetURL`を取得できない曲、クラウド上だけの曲は音声ファイルとして転送できない | companionアプリのDocuments内、ファイル選択で明示許可された音源、実機判定で読み出せる非保護音源だけを対象にする。対象外は「DRM保護」「クラウドのみ」「転送不可」を表示し、メタデータ照合とApple Music公式再生／ダウンロード導線を提供 |
 | AutoMix | Apple Musicカタログ、Apple silicon、対応OS等の条件がある | ローカル曲向けの無音除去、クロスフェード、BPM/拍合わせを独自実装 |
 
 公開APIが増えた場合は四半期ごとに再評価し、代替実装から正規連携へ移行する。
@@ -263,12 +264,21 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] iTunes Search APIによる地域別の楽曲・価格検索と公式購入ページへのハンドオフ
 - [Later] 購入済み項目の再取得後にローカルファイルを検出して取り込む案内
 - [Later] Finderの端末同期画面を開く導線と、端末向け書き出しプリセット
-- [Later] Ongaku companionアプリの必要性と同期プロトコルをADRで決定
+- [Later] iOS/iPadOS用Ongaku companionアプリを作成し、アプリ内Documentsとファイル選択で利用者が許可した音源を転送対象にする
+- [Later] Network framework、Bonjour、TLS、端末上の確認コードを用いるペアリング／再接続プロトコルをADRで確定し、非公開の端末同期APIは使用しない
+- [Later] iPhone/iPadとMacで安定ID、ファイルサイズ、更新日時、SHA-256を含むmanifestを交換し、Mac側に存在しない楽曲だけを差分表示する
+- [Later] 差分画面で楽曲単位／アルバム単位／全件を選択し、「Macに取り込む」を実行できるようにする。取り込み前に必要容量、保存先、重複、対象外理由を表示する
+- [Later] チャンク転送、進捗、中断、再開、キャンセル、容量不足、接続断を実装し、転送後のSHA-256一致を確認してからカタログへ確定する
+- [Later] 受信ファイルを既存の安全な取り込みパイプラインへ渡し、保存先指定時はアーティスト／アルバム別に整理する。失敗時は未確定ファイルを隔離し、原本と既存ライブラリを変更しない
+- [Later] MediaPlayerの`hasProtectedAsset`、`assetURL`、クラウド状態を実機で判定し、「転送可能」「DRM保護」「クラウドのみ」「読み出し不可」を一覧に表示する
+- [Later] Apple Music保護曲と読み出し不可曲は音声転送せず、MusicKit／カタログIDによるメタデータ照合とMac側のApple Music公式再生・ダウンロード導線に限定する
+- [Later] 端末名、接続許可、転送履歴、ペアリング解除、端末側データ削除を英語、日本語、简体中文で提供し、初期状態では自動転送を無効にする
+- [Later] iOSアプリのDocumentsをFinderファイル共有へ公開し、ネットワーク転送を使わない手動取り出し経路を用意する
 - [Later] Home Sharing相当のLANブラウズ、アクセス制御、読み取り専用再生
 - [Later] CD/DVD作成、印刷可能な曲一覧、プレイリスト共有
 - [Later] iTunes Remote相当の安全なローカルリモコンAPI
 
-終了条件: Apple非公開機能との差をUIとヘルプで明確にし、非公開APIを一切利用しないこと。
+終了条件: Apple非公開機能との差をUIとヘルプで明確にして非公開APIを一切利用せず、1,000曲の差分検出、転送中断・再開、重複、容量不足、DRM／クラウド曲混在を実機で検証し、転送済みファイルのチェックサム不一致とデータ損失が0件であること。
 
 ### M9 — 製品完成度（12週間）
 
@@ -335,6 +345,15 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - 共同編集バックエンドは、認証、レート制限、暗号化、削除、監査、データエクスポートを設計完了後に導入する。
 - SharePlayは[Group Activities](https://developer.apple.com/documentation/groupactivities)を使用し、音源ファイルそのものを参加者へ無断転送しない。
 
+### 端末連携
+
+- iPhone/iPadからMacへの音源転送は、iOS/iPadOS companionアプリとmacOSアプリ間の明示的な利用者承認を必須とする。
+- 端末探索と通信にはNetwork framework／Bonjourを使用し、端末識別、manifest交換、ファイル転送をUIやライブラリ保存処理から分離する。
+- manifestの差分判定は表示名ではなく安定IDとSHA-256を優先し、同一ファイルの再転送と別音源の誤統合を防ぐ。
+- 音声データはTLSで転送し、確認コードによる初回ペアリング、保存済み端末の失効、転送履歴の消去を提供する。
+- Apple MusicのDRM保護曲、クラウドのみの曲、公開APIで読み出せない曲は転送プロトコルへ渡さず、状態と代替操作だけを同期する。
+- 転送完了後は既存の取り込みジャーナル、SHA-256検証、重複検出、アーティスト／アルバム別整理を再利用する。
+
 ### UI
 
 - 画面固有の操作だけでなく、メニュー、右クリック、ドラッグ＆ドロップ、キーボード、VoiceOverに同じ機能を提供する。
@@ -345,6 +364,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 
 - Unit: キュー遷移、スマートルール、ID解決、メタデータ、マイグレーション、競合解決
 - Integration: AVAudioEngine、MusicKitモック、ファイルジャーナル、CloudKit／共同編集API
+- Device integration: iPhone/iPad実機でのペアリング、差分manifest、1,000曲転送、中断再開、DRM／クラウド／非保護音源の混在、Finderファイル共有
 - UI: 主要ユーザーフロー、三言語、キーボード、VoiceOver、権限拒否
 - Audio: ギャップ、クリックノイズ、ラウドネス、サンプルレート、チャンネル、DSPクリッピング
 - Data safety: 電源断相当、容量不足、権限喪失、外付け切断、破損manifest、部分コピー
@@ -375,6 +395,8 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 | ソーシャル機能の運用負荷 | セキュリティ・プライバシー事故 | M7までバックエンドを開始せず、脅威モデルをゲート化 |
 | スコープ過大 | 長期未リリース | 各Mを利用可能なリリースにし、ローカル1.0を先に完成 |
 | Intelと新OS機能の差 | 条件分岐とQA増大 | capability判定、機能別フォールバック、M10で支援範囲再評価 |
+| iOS端末内音源の公開API制限 | Apple Music保護曲やクラウド曲をファイルとして取り込めない | 非保護音源だけを実機で能力判定し、対象外理由と公式再生／ダウンロード導線を表示。非公開APIとDRM回避を禁止 |
+| 端末間転送の切断・容量不足・なりすまし | 部分ファイル、重複、データ漏えい | TLS、確認コード、チャンク再開、転送前容量確認、転送後SHA-256検証、未確定領域への隔離を必須化 |
 
 ## 13. 完了条件
 
@@ -408,6 +430,11 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [MusicKit / Apple Music API概要](https://developer.apple.com/musickit/)
 - [MPNowPlayingInfoCenter](https://developer.apple.com/documentation/mediaplayer/mpnowplayinginfocenter)
 - [Group Activities / SharePlay](https://developer.apple.com/documentation/groupactivities)
+- [Network framework](https://developer.apple.com/documentation/network)
+- [TN3151: Choosing the right networking API](https://developer.apple.com/documentation/technotes/tn3151-choosing-the-right-networking-api)
+- [MPMediaItem assetURL](https://developer.apple.com/documentation/mediaplayer/mpmediaitem/asseturl)
+- [MPMediaItem hasProtectedAsset](https://developer.apple.com/documentation/mediaplayer/mpmediaitem/hasprotectedasset)
+- [UIFileSharingEnabled](https://developer.apple.com/documentation/bundleresources/information-property-list/uifilesharingenabled)
 - [LRCLIB API Documentation](https://lrclib.net/docs)
 - [MusicBrainz API](https://musicbrainz.org/doc/MusicBrainz_API)
 - [Cover Art Archive API](https://musicbrainz.org/doc/Cover_Art_Archive/API)
