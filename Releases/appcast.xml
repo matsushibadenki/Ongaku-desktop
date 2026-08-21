@@ -6,6 +6,37 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.2</title>
+            <pubDate>Fri, 21 Aug 2026 15:00:47 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.2</link>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>0.1.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.2
+
+## 主な変更
+
+- 楽曲一覧の選択状態を再生中の曲から分離し、再生後に別の曲を選択しても元の曲へ戻る問題を改善しました。
+- 曲名、アーティスト、アルバムなど、選択行のどこからでも選択・ダブルクリック再生・コンテキストメニューを操作できるよう改善しました。
+- MusicBrainzとCover Art Archiveによる書誌情報・アートワーク候補の取得、LRCLIBによる歌詞取得に対応しました。
+- オーディオCDの検出、トラック選択、メタデータ編集、AIFF形式での安全な取り込みに対応しました。
+- Apple Musicカタログ検索、加入状態の判定、ライブラリ追加、iTunes Store購入ページへの公式ハンドオフを追加しました。
+- 複数ライブラリ、詳細検索・フィルタ、重複整理、参照切れファイルの再リンクなど、ライブラリ管理機能を拡張しました。
+- ライト／ダーク表示、サイドバー、楽曲情報編集、プレーヤー配置の視認性と操作性を改善しました。
+
+## 配布情報
+
+- macOS 14.0以降
+- Apple silicon（arm64）／Intel（x86_64）Universal Binary
+- Developer ID署名・Apple公証済み
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.2/OngakuDesktop-0.1.2-universal.dmg" length="5840766" type="application/octet-stream" sparkle:edSignature="6gWI6bdt4pnc4oZpLt/43SVNhdRzIByVnPewVZsiiLdQw5k0gK73Of8b4etbhpcIBJ4xsx9qehK7aJNOgeJyCA=="/>
+            <sparkle:deltas>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.2/OngakuDesktop3-2.delta" sparkle:deltaFrom="2" length="1966286" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="HnloGiRoVe1D/cnk9hMcarHHMc+xOs7yzGYUNnPhxh4adnA8yopCIYjyb8aqAxQ3sTEwn9Vp9KMwdaIOqcgnBA=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.2/OngakuDesktop3-1.delta" sparkle:deltaFrom="1" length="2687158" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="TixCLLM/F/r7QCgBXKLCDtSJe6kWkOZPWK9PmdwGY9KgjTslpiPbHvAECUMSGJQfdPof225s+j6bXfIHyZOKDQ=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.1.1</title>
             <pubDate>Wed, 19 Aug 2026 14:31:51 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.1</link>
