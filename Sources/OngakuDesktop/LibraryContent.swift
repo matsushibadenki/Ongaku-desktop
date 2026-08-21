@@ -437,11 +437,8 @@ struct LibraryContent: View {
                                 ? AppTheme.accent : AppTheme.secondaryInk
                         )
                         .frame(width: 16)
+                        .draggable(dragPayload(for: track))
                     Text(track.title)
-                        .trackTableForeground(
-                            isSelected: library.selectedTrackIDs.contains(track.id),
-                            fallback: AppTheme.ink
-                        )
                         .lineLimit(1)
                     if track.isPinned {
                         Image(systemName: "pin.fill")
@@ -462,7 +459,6 @@ struct LibraryContent: View {
                             .accessibilityLabel(L10n.text("track.favorite"))
                     }
                 }
-                .draggable(dragPayload(for: track))
                 .dropDestination(for: String.self) { payloads, location in
                     guard let playlistID = library.selectedPlaylistID,
                           library.selectedPlaylist?.smartDefinition == nil else { return false }
@@ -1444,10 +1440,6 @@ private struct AlbumDetail: View {
                         )
                         .frame(width: 16)
                     Text(track.title)
-                        .trackTableForeground(
-                            isSelected: library.selectedTrackID == track.id,
-                            fallback: AppTheme.ink
-                        )
                         .lineLimit(1)
                 }
             }
@@ -1795,10 +1787,6 @@ private struct ArtistDetail: View {
                             )
                             .frame(width: 16)
                         Text(track.title)
-                            .trackTableForeground(
-                                isSelected: library.selectedTrackID == track.id,
-                                fallback: AppTheme.ink
-                            )
                             .lineLimit(1)
                     }
                 }
