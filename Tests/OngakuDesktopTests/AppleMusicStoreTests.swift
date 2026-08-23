@@ -132,6 +132,91 @@ struct AppleMusicStoreTests {
         ) == ["newest"])
     }
 
+    @Test("Discovery paging replaces matching shelves and appends new shelves")
+    func mergesDiscoveryShelves() {
+        func item(_ id: String) -> AppleMusicCatalogItem {
+            AppleMusicCatalogItem(
+                id: id,
+                musicItemID: id,
+                kind: .album,
+                title: id,
+                subtitle: "Artist",
+                detail: "",
+                artworkURL: nil,
+                destinationURL: nil
+            )
+        }
+        let original = [
+            AppleMusicDiscoveryShelf(
+                id: "for-you",
+                title: "For You",
+                subtitle: nil,
+                items: [item("one")]
+            ),
+        ]
+        let incoming = [
+            AppleMusicDiscoveryShelf(
+                id: "for-you",
+                title: "Updated",
+                subtitle: nil,
+                items: [item("two")]
+            ),
+            AppleMusicDiscoveryShelf(
+                id: "more",
+                title: "More",
+                subtitle: nil,
+                items: [item("three")]
+            ),
+        ]
+
+        let merged = AppleMusicDiscoveryPlanner.mergingShelves(
+            original,
+            with: incoming,
+            replacingAll: false
+        )
+        #expect(merged.map(\.id) == ["for-you", "more"])
+        #expect(merged.first?.title == "Updated")
+        #expect(merged.first?.items.map(\.id) == ["two"])
+        #expect(AppleMusicDiscoveryPlanner.mergingShelves(
+            original,
+            with: incoming,
+            replacingAll: true
+        ) == incoming)
+    }
+
+    @Test("City chart filtering keeps complete pages and stable city names")
+    func filtersCityCharts() {
+        func item(_ id: String, city: String) -> AppleMusicCatalogItem {
+            AppleMusicCatalogItem(
+                id: id,
+                musicItemID: id,
+                kind: .song,
+                title: id,
+                subtitle: "Artist",
+                detail: "",
+                artworkURL: nil,
+                destinationURL: nil,
+                groupTitle: city
+            )
+        }
+        let items = [
+            item("tokyo-1", city: "Tokyo"),
+            item("osaka-1", city: "Osaka"),
+            item("tokyo-2", city: "Tokyo"),
+        ]
+
+        #expect(AppleMusicDiscoveryPlanner.chartGroupTitles(in: items)
+            == ["Osaka", "Tokyo"])
+        #expect(AppleMusicDiscoveryPlanner.filteringChartItems(
+            items,
+            groupTitle: "Tokyo"
+        ).map(\.id) == ["tokyo-1", "tokyo-2"])
+        #expect(AppleMusicDiscoveryPlanner.filteringChartItems(
+            items,
+            groupTitle: nil
+        ) == items)
+    }
+
     @Test("Catalog kinds expose playback and queue capabilities accurately")
     func playableCatalogKinds() {
         #expect(AppleMusicCatalogItemKind.song.isPlayable)
@@ -160,6 +245,13 @@ struct AppleMusicStoreTests {
         #expect(url.scheme == "https")
         #expect(url.host == "www.apple.com")
         #expect(url.path == "/apple-music")
+    }
+
+    @Test("Replay guidance uses Apple's official secure site")
+    func replayGuidanceURL() {
+        let url = AppleMusicStoreController.replayURL
+        #expect(url.scheme == "https")
+        #expect(url.host == "replay.music.apple.com")
     }
 
     @Test("Playlist creation body is private and preserves localized text")

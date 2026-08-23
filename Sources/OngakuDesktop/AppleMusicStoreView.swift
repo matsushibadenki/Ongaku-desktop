@@ -57,7 +57,20 @@ enum AppleMusicLibraryFilter: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-struct AppleMusicCatalogItem: Identifiable, Sendable {
+enum AppleMusicChartScope: String, CaseIterable, Identifiable, Sendable {
+    case cities
+    case genres
+
+    var id: String { rawValue }
+    var localizationKey: String { "appleMusic.charts.scope.\(rawValue)" }
+}
+
+struct AppleMusicGenreOption: Identifiable, Equatable, Sendable {
+    let id: String
+    let name: String
+}
+
+struct AppleMusicCatalogItem: Identifiable, Equatable, Sendable {
     let id: String
     let musicItemID: String
     let kind: AppleMusicCatalogItemKind
@@ -68,6 +81,7 @@ struct AppleMusicCatalogItem: Identifiable, Sendable {
     let destinationURL: URL?
     let playlistTrackType: String?
     let ratingResourceType: String?
+    let groupTitle: String?
 
     init(
         id: String,
@@ -79,7 +93,8 @@ struct AppleMusicCatalogItem: Identifiable, Sendable {
         artworkURL: URL?,
         destinationURL: URL?,
         playlistTrackType: String? = nil,
-        ratingResourceType: String? = nil
+        ratingResourceType: String? = nil,
+        groupTitle: String? = nil
     ) {
         self.id = id
         self.musicItemID = musicItemID
@@ -91,10 +106,11 @@ struct AppleMusicCatalogItem: Identifiable, Sendable {
         self.destinationURL = destinationURL
         self.playlistTrackType = playlistTrackType
         self.ratingResourceType = ratingResourceType ?? kind.catalogRatingType
+        self.groupTitle = groupTitle
     }
 }
 
-struct AppleMusicDiscoveryShelf: Identifiable, Sendable {
+struct AppleMusicDiscoveryShelf: Identifiable, Equatable, Sendable {
     let id: String
     let title: String
     let subtitle: String?
@@ -121,6 +137,35 @@ enum AppleMusicDiscoveryPlanner {
             .filter { seen.insert($0.id).inserted }
             .prefix(limit)
             .map(\.id)
+    }
+
+    static func mergingShelves(
+        _ existing: [AppleMusicDiscoveryShelf],
+        with incoming: [AppleMusicDiscoveryShelf],
+        replacingAll: Bool
+    ) -> [AppleMusicDiscoveryShelf] {
+        guard !replacingAll else { return incoming }
+        var result = existing
+        for shelf in incoming {
+            if let index = result.firstIndex(where: { $0.id == shelf.id }) {
+                result[index] = shelf
+            } else {
+                result.append(shelf)
+            }
+        }
+        return result
+    }
+
+    static func chartGroupTitles(in items: [AppleMusicCatalogItem]) -> [String] {
+        Array(Set(items.compactMap(\.groupTitle)))
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
+    static func filteringChartItems(
+        _ items: [AppleMusicCatalogItem],
+        groupTitle: String?
+    ) -> [AppleMusicCatalogItem] {
+        items.filter { groupTitle == nil || $0.groupTitle == groupTitle }
     }
 }
 
@@ -219,6 +264,9 @@ final class AppleMusicStoreController: ObservableObject {
 
     private enum RetryOperation {
         case discovery
+        case moreRecommendations
+        case discoveryDetails(AppleMusicCatalogItem)
+        case discoveryCharts(AppleMusicChartScope, String?, Bool)
         case loadLibrary(reset: Bool)
         case searchLibrary(String, AppleMusicLibraryFilter)
         case playlistContents(AppleMusicCatalogItem)
@@ -266,6 +314,19 @@ final class AppleMusicStoreController: ObservableObject {
     @Published private(set) var recommendationShelves: [AppleMusicDiscoveryShelf] = []
     @Published private(set) var recentlyPlayedItems: [AppleMusicCatalogItem] = []
     @Published private(set) var newReleaseItems: [AppleMusicCatalogItem] = []
+    @Published private(set) var hasMoreRecommendations = false
+    @Published private(set) var isLoadingMoreRecommendations = false
+    @Published private(set) var discoveryDetailItems: [AppleMusicCatalogItem] = []
+    @Published private(set) var discoveryDetailTitle = ""
+    @Published private(set) var discoveryDetailSubtitle = ""
+    @Published private(set) var isDiscoveryDetailWorking = false
+    @Published private(set) var discoveryRelatedItems: [AppleMusicCatalogItem] = []
+    @Published private(set) var chartGenres: [AppleMusicGenreOption] = []
+    @Published private(set) var discoveryChartItems: [AppleMusicCatalogItem] = []
+    @Published private(set) var discoveryChartTitle = ""
+    @Published private(set) var chartCityNames: [String] = []
+    @Published private(set) var hasMoreDiscoveryChartItems = false
+    @Published private(set) var isLoadingMoreDiscoveryCharts = false
 
     private let storeClient: ITunesStoreClient
     private var songsByID: [String: Song] = [:]
@@ -280,6 +341,15 @@ final class AppleMusicStoreController: ObservableObject {
     private var libraryFilter: AppleMusicLibraryFilter = .all
     private var unifiedSearchGeneration = UUID()
     private var retryOperation: RetryOperation?
+    private var recommendationOffset = 0
+    private let recommendationPageSize = 10
+    private var genresByID: [String: Genre] = [:]
+    private var allDiscoveryChartItems: [AppleMusicCatalogItem] = []
+    private var selectedChartCityName: String?
+    private var discoveryChartOffset = 0
+    private let discoveryChartPageSize = 12
+
+    nonisolated static let replayURL = URL(string: "https://replay.music.apple.com/")!
 
     init(storeClient: ITunesStoreClient = ITunesStoreClient()) {
         self.storeClient = storeClient
@@ -292,6 +362,12 @@ final class AppleMusicStoreController: ObservableObject {
         switch retryOperation {
         case .discovery:
             await loadDiscovery()
+        case .moreRecommendations:
+            await loadMoreRecommendations()
+        case .discoveryDetails(let item):
+            await loadDiscoveryDetails(item)
+        case .discoveryCharts(let scope, let genreID, let reset):
+            await loadDiscoveryCharts(scope: scope, genreID: genreID, reset: reset)
         case .loadLibrary(let reset):
             await loadLibrary(reset: reset)
         case .searchLibrary(let term, let filter):
@@ -342,11 +418,14 @@ final class AppleMusicStoreController: ObservableObject {
         var recentItems: [AppleMusicCatalogItem] = []
         var releaseAlbums: [Album] = []
         var errors: [String] = []
+        var recommendationCount = 0
 
         do {
             var request = MusicPersonalRecommendationsRequest()
-            request.limit = 10
+            request.limit = recommendationPageSize
+            request.offset = 0
             let response = try await request.response()
+            recommendationCount = response.recommendations.count
             shelves = response.recommendations.compactMap { recommendation in
                 releaseAlbums.append(contentsOf: recommendation.albums)
                 let items = recommendation.items.compactMap { item in
@@ -400,7 +479,13 @@ final class AppleMusicStoreController: ObservableObject {
         let releases = releaseIDs.compactMap { releaseAlbumsByID[$0] }
             .map(Self.catalogAlbumItem)
 
-        recommendationShelves = shelves
+        recommendationShelves = AppleMusicDiscoveryPlanner.mergingShelves(
+            recommendationShelves,
+            with: shelves,
+            replacingAll: true
+        )
+        recommendationOffset = recommendationCount
+        hasMoreRecommendations = recommendationCount == recommendationPageSize
         recentlyPlayedItems = recentItems
         newReleaseItems = Array(releases)
         await refreshFavoriteRatings(
@@ -413,6 +498,266 @@ final class AppleMusicStoreController: ObservableObject {
             message = errors.joined(separator: " ")
             markRetryableFailure()
         }
+    }
+
+    func loadMoreRecommendations() async {
+        guard authorization == .authorized,
+              hasMoreRecommendations,
+              !isLoadingMoreRecommendations else { return }
+        beginRetryableOperation(.moreRecommendations)
+        isLoadingMoreRecommendations = true
+        message = nil
+        defer { isLoadingMoreRecommendations = false }
+
+        do {
+            var request = MusicPersonalRecommendationsRequest()
+            request.limit = recommendationPageSize
+            request.offset = recommendationOffset
+            let response = try await request.response()
+            let incoming: [AppleMusicDiscoveryShelf] = response.recommendations.compactMap {
+                recommendation in
+                let items = recommendation.items.compactMap { discoveryItem($0) }
+                guard !items.isEmpty else { return nil }
+                return AppleMusicDiscoveryShelf(
+                    id: recommendation.id.rawValue,
+                    title: recommendation.title
+                        ?? L10n.text("appleMusic.discovery.recommended"),
+                    subtitle: recommendation.reason,
+                    items: Array(items.prefix(12))
+                )
+            }
+            recommendationShelves = AppleMusicDiscoveryPlanner.mergingShelves(
+                recommendationShelves,
+                with: incoming,
+                replacingAll: false
+            )
+            recommendationOffset += response.recommendations.count
+            hasMoreRecommendations = response.recommendations.count
+                == recommendationPageSize
+            await refreshFavoriteRatings(for: incoming.flatMap(\.items))
+            completeRetryableOperation()
+        } catch {
+            message = Self.localizedServiceError(error)
+            markRetryableFailure()
+        }
+    }
+
+    func loadDiscoveryDetails(_ item: AppleMusicCatalogItem) async {
+        guard authorization == .authorized else { return }
+        beginRetryableOperation(.discoveryDetails(item))
+        isDiscoveryDetailWorking = true
+        discoveryDetailItems = []
+        discoveryRelatedItems = []
+        discoveryDetailTitle = item.title
+        discoveryDetailSubtitle = item.subtitle
+        message = nil
+        defer { isDiscoveryDetailWorking = false }
+
+        do {
+            switch item.kind {
+            case .album:
+                guard let album = albumsByID[item.musicItemID] else {
+                    throw AppleMusicServiceError.unavailable
+                }
+                let detailedAlbum = try await album.with(
+                    .tracks,
+                    .relatedAlbums,
+                    .appearsOn
+                )
+                discoveryDetailItems = (detailedAlbum.tracks ?? []).compactMap {
+                    discoveryTrackItem($0)
+                }
+                let relatedAlbums = (detailedAlbum.relatedAlbums ?? []).map { album in
+                    albumsByID[album.id.rawValue] = album
+                    return Self.catalogAlbumItem(album)
+                }
+                let relatedPlaylists = (detailedAlbum.appearsOn ?? []).map { playlist in
+                    playlistsByID[playlist.id.rawValue] = playlist
+                    return Self.catalogPlaylistItem(playlist)
+                }
+                discoveryRelatedItems = relatedAlbums + relatedPlaylists
+            case .playlist:
+                guard let playlist = playlistsByID[item.musicItemID] else {
+                    throw AppleMusicServiceError.unavailable
+                }
+                let detailedPlaylist = try await playlist.with(.entries, .moreByCurator)
+                discoveryDetailItems = (detailedPlaylist.entries ?? []).compactMap { entry in
+                    guard let entryItem = entry.item else { return nil }
+                    return discoveryPlaylistEntryItem(entryItem, entryID: entry.id.rawValue)
+                }
+                discoveryRelatedItems = (detailedPlaylist.moreByCurator ?? []).map {
+                    playlist in
+                    playlistsByID[playlist.id.rawValue] = playlist
+                    return Self.catalogPlaylistItem(playlist)
+                }
+            case .song, .artist, .musicVideo, .station:
+                discoveryDetailItems = []
+            }
+            await refreshFavoriteRatings(for: discoveryDetailItems)
+            completeRetryableOperation()
+        } catch {
+            message = Self.localizedServiceError(error)
+            markRetryableFailure()
+        }
+    }
+
+    func loadDiscoveryCharts(
+        scope: AppleMusicChartScope,
+        genreID requestedGenreID: String? = nil,
+        reset: Bool = true
+    ) async {
+        guard authorization == .authorized else { return }
+        guard reset || (hasMoreDiscoveryChartItems && !isLoadingMoreDiscoveryCharts) else {
+            return
+        }
+        beginRetryableOperation(.discoveryCharts(scope, requestedGenreID, reset))
+        if reset {
+            isWorking = true
+        } else {
+            isLoadingMoreDiscoveryCharts = true
+        }
+        message = nil
+        defer {
+            isWorking = false
+            isLoadingMoreDiscoveryCharts = false
+        }
+
+        do {
+            if chartGenres.isEmpty {
+                var genreRequest = MusicCatalogResourceRequest<Genre>()
+                genreRequest.limit = 50
+                let response = try await genreRequest.response()
+                let genres = response.items.sorted {
+                    $0.name.localizedStandardCompare($1.name) == .orderedAscending
+                }
+                genresByID = Dictionary(uniqueKeysWithValues: genres.map {
+                    ($0.id.rawValue, $0)
+                })
+                chartGenres = genres.map {
+                    AppleMusicGenreOption(id: $0.id.rawValue, name: $0.name)
+                }
+            }
+
+            let genreID = requestedGenreID ?? chartGenres.first?.id
+            let genre = scope == .genres ? genreID.flatMap { genresByID[$0] } : nil
+            var request = MusicCatalogChartsRequest(
+                genre: genre,
+                kinds: scope == .cities ? [.cityTop] : [.mostPlayed],
+                types: [Song.self, Album.self, MusicKit.Playlist.self]
+            )
+            request.limit = discoveryChartPageSize
+            request.offset = reset ? 0 : discoveryChartOffset
+            let response = try await request.response()
+            var items: [AppleMusicCatalogItem] = []
+            var pageCounts: [Int] = []
+
+            for chart in response.songCharts {
+                pageCounts.append(chart.items.count)
+                for (rank, song) in chart.items.enumerated() {
+                    songsByID[song.id.rawValue] = song
+                    items.append(AppleMusicCatalogItem(
+                        id: "chart:\(chart.id):song:\(song.id.rawValue)",
+                        musicItemID: song.id.rawValue,
+                        kind: .song,
+                        title: song.title,
+                        subtitle: song.artistName,
+                        detail: Self.chartDetail(
+                            chart.title,
+                            rank: (reset ? 0 : discoveryChartOffset) + rank + 1
+                        ),
+                        artworkURL: song.artwork?.url(width: 180, height: 180),
+                        destinationURL: song.url,
+                        groupTitle: chart.title
+                    ))
+                }
+            }
+            for chart in response.albumCharts {
+                pageCounts.append(chart.items.count)
+                for (rank, album) in chart.items.enumerated() {
+                    albumsByID[album.id.rawValue] = album
+                    items.append(AppleMusicCatalogItem(
+                        id: "chart:\(chart.id):album:\(album.id.rawValue)",
+                        musicItemID: album.id.rawValue,
+                        kind: .album,
+                        title: album.title,
+                        subtitle: album.artistName,
+                        detail: Self.chartDetail(
+                            chart.title,
+                            rank: (reset ? 0 : discoveryChartOffset) + rank + 1
+                        ),
+                        artworkURL: album.artwork?.url(width: 180, height: 180),
+                        destinationURL: album.url,
+                        groupTitle: chart.title
+                    ))
+                }
+            }
+            for chart in response.playlistCharts {
+                pageCounts.append(chart.items.count)
+                for (rank, playlist) in chart.items.enumerated() {
+                    playlistsByID[playlist.id.rawValue] = playlist
+                    items.append(AppleMusicCatalogItem(
+                        id: "chart:\(chart.id):playlist:\(playlist.id.rawValue)",
+                        musicItemID: playlist.id.rawValue,
+                        kind: .playlist,
+                        title: playlist.name,
+                        subtitle: playlist.curatorName ?? "Apple Music",
+                        detail: Self.chartDetail(
+                            chart.title,
+                            rank: (reset ? 0 : discoveryChartOffset) + rank + 1
+                        ),
+                        artworkURL: playlist.artwork?.url(width: 180, height: 180),
+                        destinationURL: playlist.url,
+                        groupTitle: chart.title
+                    ))
+                }
+            }
+            allDiscoveryChartItems = reset
+                ? items
+                : Self.merging(allDiscoveryChartItems, with: items)
+            discoveryChartOffset = (reset ? 0 : discoveryChartOffset)
+                + discoveryChartPageSize
+            hasMoreDiscoveryChartItems = pageCounts.contains(discoveryChartPageSize)
+            chartCityNames = AppleMusicDiscoveryPlanner.chartGroupTitles(
+                in: allDiscoveryChartItems
+            )
+            if scope != .cities {
+                selectedChartCityName = nil
+            }
+            rebuildDiscoveryChartItems()
+            discoveryChartTitle = scope == .cities
+                ? L10n.text("appleMusic.charts.citiesTitle")
+                : chartGenres.first(where: { $0.id == genreID })?.name
+                    ?? L10n.text("appleMusic.charts.genresTitle")
+            await refreshFavoriteRatings(for: items)
+            completeRetryableOperation()
+        } catch {
+            if reset {
+                allDiscoveryChartItems = []
+                discoveryChartItems = []
+                chartCityNames = []
+            }
+            message = Self.localizedServiceError(error)
+            markRetryableFailure()
+        }
+    }
+
+    func loadMoreDiscoveryCharts(
+        scope: AppleMusicChartScope,
+        genreID: String?
+    ) async {
+        await loadDiscoveryCharts(scope: scope, genreID: genreID, reset: false)
+    }
+
+    func setChartCityFilter(_ cityName: String?) {
+        selectedChartCityName = cityName
+        rebuildDiscoveryChartItems()
+    }
+
+    private func rebuildDiscoveryChartItems() {
+        discoveryChartItems = AppleMusicDiscoveryPlanner.filteringChartItems(
+            allDiscoveryChartItems,
+            groupTitle: selectedChartCityName
+        )
     }
 
     func loadLibrary(reset: Bool = true) async {
@@ -1333,6 +1678,33 @@ final class AppleMusicStoreController: ObservableObject {
         }
     }
 
+    private func discoveryTrackItem(_ track: MusicKit.Track) -> AppleMusicCatalogItem? {
+        switch track {
+        case .song(let song):
+            songsByID[song.id.rawValue] = song
+            return Self.catalogSongItem(song)
+        case .musicVideo(let video):
+            return Self.catalogMusicVideoItem(video)
+        @unknown default:
+            return nil
+        }
+    }
+
+    private func discoveryPlaylistEntryItem(
+        _ item: MusicKit.Playlist.Entry.Item,
+        entryID: String
+    ) -> AppleMusicCatalogItem? {
+        switch item {
+        case .song(let song):
+            songsByID[song.id.rawValue] = song
+            return Self.catalogSongItem(song)
+        case .musicVideo(let video):
+            return Self.catalogMusicVideoItem(video, idPrefix: "playlistVideo:\(entryID):")
+        @unknown default:
+            return nil
+        }
+    }
+
     private func rebuildLibraryCatalog() {
         catalogItems = (librarySongItems + libraryAlbumItems + libraryPlaylistItems)
             .filter { libraryFilter.includes($0.kind) }
@@ -1402,6 +1774,22 @@ final class AppleMusicStoreController: ObservableObject {
             detail: station.isLive ? L10n.text("appleMusic.station.live") : "",
             artworkURL: station.artwork?.url(width: 180, height: 180),
             destinationURL: station.url
+        )
+    }
+
+    private static func catalogMusicVideoItem(
+        _ video: MusicVideo,
+        idPrefix: String = "musicVideo:"
+    ) -> AppleMusicCatalogItem {
+        AppleMusicCatalogItem(
+            id: "\(idPrefix)\(video.id.rawValue)",
+            musicItemID: video.id.rawValue,
+            kind: .musicVideo,
+            title: video.title,
+            subtitle: video.artistName,
+            detail: video.albumTitle ?? "",
+            artworkURL: video.artwork?.url(width: 180, height: 180),
+            destinationURL: video.url
         )
     }
 
@@ -1513,6 +1901,7 @@ private extension Array {
 struct AppleMusicStoreView: View {
     private enum Source: String, CaseIterable, Identifiable {
         case home
+        case charts
         case appleMusic
         case library
         case iTunesStore
@@ -1533,6 +1922,10 @@ struct AppleMusicStoreView: View {
     @State private var libraryQuery = ""
     @State private var libraryFilter: AppleMusicLibraryFilter = .all
     @State private var isShowingPlaylistContents = false
+    @State private var selectedDiscoveryItem: AppleMusicCatalogItem?
+    @State private var chartScope: AppleMusicChartScope = .cities
+    @State private var selectedChartGenreID: String?
+    @State private var selectedChartCityName: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1542,6 +1935,8 @@ struct AppleMusicStoreView: View {
                 authorizationView
             } else if source == .home {
                 discoveryContent
+            } else if source == .charts {
+                discoveryChartsContent
             } else if source == .library {
                 libraryContent
             } else {
@@ -1561,6 +1956,16 @@ struct AppleMusicStoreView: View {
         .onChange(of: source) { _, newSource in
             if newSource == .home {
                 Task { await controller.loadDiscovery() }
+            } else if newSource == .charts {
+                Task {
+                    await controller.loadDiscoveryCharts(
+                        scope: chartScope,
+                        genreID: selectedChartGenreID
+                    )
+                    if selectedChartGenreID == nil {
+                        selectedChartGenreID = controller.chartGenres.first?.id
+                    }
+                }
             } else if newSource == .library {
                 Task { await controller.loadLibrary() }
             }
@@ -1570,6 +1975,9 @@ struct AppleMusicStoreView: View {
         }
         .sheet(isPresented: $isShowingPlaylistContents) {
             playlistContentsSheet
+        }
+        .sheet(item: $selectedDiscoveryItem) { item in
+            discoveryDetailSheet(item)
         }
     }
 
@@ -1592,9 +2000,136 @@ struct AppleMusicStoreView: View {
             }
             .labelsHidden()
             .pickerStyle(.segmented)
-            .frame(width: 470)
+            .frame(width: 560)
         }
         .padding(20)
+    }
+
+    private var discoveryChartsContent: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(controller.discoveryChartTitle.isEmpty
+                        ? L10n.text("appleMusic.charts.discoveryTitle")
+                        : controller.discoveryChartTitle)
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.text("appleMusic.charts.discoverySubtitle"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Picker("", selection: $chartScope) {
+                    ForEach(AppleMusicChartScope.allCases) { scope in
+                        Text(L10n.text(scope.localizationKey)).tag(scope)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 190)
+                .onChange(of: chartScope) { _, scope in
+                    selectedChartCityName = nil
+                    controller.setChartCityFilter(nil)
+                    Task {
+                        await controller.loadDiscoveryCharts(
+                            scope: scope,
+                            genreID: selectedChartGenreID
+                        )
+                        if selectedChartGenreID == nil {
+                            selectedChartGenreID = controller.chartGenres.first?.id
+                        }
+                    }
+                }
+                if chartScope == .genres {
+                    Picker("", selection: $selectedChartGenreID) {
+                        ForEach(controller.chartGenres) { genre in
+                            Text(genre.name).tag(Optional(genre.id))
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 170)
+                    .onChange(of: selectedChartGenreID) { _, genreID in
+                        guard let genreID else { return }
+                        Task {
+                            await controller.loadDiscoveryCharts(
+                                scope: .genres,
+                                genreID: genreID
+                            )
+                        }
+                    }
+                } else if !controller.chartCityNames.isEmpty {
+                    Picker("", selection: $selectedChartCityName) {
+                        Text(L10n.text("appleMusic.charts.allCities"))
+                            .tag(String?.none)
+                        ForEach(controller.chartCityNames, id: \.self) { cityName in
+                            Text(cityName).tag(Optional(cityName))
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 170)
+                    .onChange(of: selectedChartCityName) { _, cityName in
+                        controller.setChartCityFilter(cityName)
+                    }
+                }
+                Button {
+                    Task {
+                        await controller.loadDiscoveryCharts(
+                            scope: chartScope,
+                            genreID: selectedChartGenreID
+                        )
+                    }
+                } label: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .help(L10n.text("appleMusic.discovery.refresh"))
+                .disabled(controller.isWorking)
+            }
+            .padding(20)
+
+            if controller.isWorking {
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.horizontal, 20)
+            } else {
+                VStack(spacing: 0) {
+                    List(controller.discoveryChartItems) { item in
+                        catalogRow(item)
+                    }
+                    .overlay {
+                        if controller.discoveryChartItems.isEmpty {
+                            ContentUnavailableView(
+                                controller.message
+                                    ?? L10n.text("appleMusic.charts.empty"),
+                                systemImage: "chart.bar.xaxis"
+                            )
+                        }
+                    }
+                    if controller.hasMoreDiscoveryChartItems {
+                        Divider()
+                        Button {
+                            Task {
+                                await controller.loadMoreDiscoveryCharts(
+                                    scope: chartScope,
+                                    genreID: selectedChartGenreID
+                                )
+                            }
+                        } label: {
+                            if controller.isLoadingMoreDiscoveryCharts {
+                                ProgressView().controlSize(.small)
+                            } else {
+                                Label(
+                                    L10n.text("appleMusic.charts.loadMore"),
+                                    systemImage: "chevron.down.circle"
+                                )
+                            }
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(controller.isLoadingMoreDiscoveryCharts)
+                        .padding(12)
+                    }
+                }
+            }
+        }
     }
 
     private var discoveryContent: some View {
@@ -1608,6 +2143,15 @@ struct AppleMusicStoreView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
+                Button {
+                    NSWorkspace.shared.open(AppleMusicStoreController.replayURL)
+                } label: {
+                    Label(
+                        L10n.text("appleMusic.replay.open"),
+                        systemImage: "clock.arrow.2.circlepath"
+                    )
+                }
+                .help(L10n.text("appleMusic.replay.help"))
                 Button {
                     Task { await controller.loadDiscovery() }
                 } label: {
@@ -1648,6 +2192,25 @@ struct AppleMusicStoreView: View {
                                 items: shelf.items,
                                 emptyKey: "appleMusic.discovery.recommendationsEmpty"
                             )
+                        }
+                        if controller.hasMoreRecommendations {
+                            Button {
+                                Task { await controller.loadMoreRecommendations() }
+                            } label: {
+                                if controller.isLoadingMoreRecommendations {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                } else {
+                                    Label(
+                                        L10n.text("appleMusic.discovery.loadMore"),
+                                        systemImage: "chevron.down.circle"
+                                    )
+                                }
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(controller.isLoadingMoreRecommendations)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 20)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -1732,16 +2295,112 @@ struct AppleMusicStoreView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+            if item.kind == .album || item.kind == .playlist {
+                Button(L10n.text("appleMusic.discovery.details")) {
+                    showDiscoveryDetails(item)
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+            }
         }
         .frame(width: 142, alignment: .leading)
         .contentShape(Rectangle())
         .contextMenu {
+            if item.kind == .album || item.kind == .playlist {
+                Button(L10n.text("appleMusic.discovery.details")) {
+                    showDiscoveryDetails(item)
+                }
+            }
             if let url = item.destinationURL {
                 Button(L10n.text("appleMusic.open")) {
                     NSWorkspace.shared.open(url)
                 }
             }
         }
+    }
+
+    private func discoveryDetailSheet(_ item: AppleMusicCatalogItem) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(controller.discoveryDetailTitle.isEmpty
+                        ? item.title : controller.discoveryDetailTitle)
+                        .font(.title2.weight(.semibold))
+                    Text(controller.discoveryDetailSubtitle.isEmpty
+                        ? item.subtitle : controller.discoveryDetailSubtitle)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if controller.canRetry {
+                    Button(L10n.text("common.retry")) {
+                        Task { await controller.retryLastOperation() }
+                    }
+                    .disabled(controller.isDiscoveryDetailWorking)
+                }
+                Button(L10n.text("common.close")) {
+                    selectedDiscoveryItem = nil
+                }
+                .keyboardShortcut(.cancelAction)
+            }
+            .padding(20)
+            Divider()
+            if controller.isDiscoveryDetailWorking {
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.horizontal, 20)
+            } else if controller.discoveryDetailItems.isEmpty
+                        && controller.discoveryRelatedItems.isEmpty {
+                ContentUnavailableView(
+                    controller.message
+                        ?? L10n.text("appleMusic.discovery.detailsEmpty"),
+                    systemImage: "music.note.list"
+                )
+            } else {
+                List {
+                    if !controller.discoveryDetailItems.isEmpty {
+                        Section(L10n.text("appleMusic.discovery.tracks")) {
+                            ForEach(controller.discoveryDetailItems) { detailItem in
+                                catalogRow(detailItem)
+                            }
+                        }
+                    }
+                    if !controller.discoveryRelatedItems.isEmpty {
+                        Section(L10n.text("appleMusic.discovery.related")) {
+                            ForEach(controller.discoveryRelatedItems) { relatedItem in
+                                HStack(spacing: 8) {
+                                    catalogRow(relatedItem)
+                                    if relatedItem.kind == .album
+                                        || relatedItem.kind == .playlist {
+                                        Button {
+                                            selectedDiscoveryItem = relatedItem
+                                            Task {
+                                                await controller.loadDiscoveryDetails(
+                                                    relatedItem
+                                                )
+                                            }
+                                        } label: {
+                                            Image(systemName: "chevron.right")
+                                        }
+                                        .buttonStyle(.borderless)
+                                        .help(L10n.text("appleMusic.discovery.details"))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .listStyle(.inset)
+            }
+        }
+        .frame(width: 760, height: 560)
+        .background(AppTheme.canvas)
+    }
+
+    private func showDiscoveryDetails(_ item: AppleMusicCatalogItem) {
+        selectedDiscoveryItem = item
+        Task { await controller.loadDiscoveryDetails(item) }
     }
 
     private var authorizationView: some View {
