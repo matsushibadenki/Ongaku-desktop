@@ -6,6 +6,35 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.3</title>
+            <pubDate>Sun, 23 Aug 2026 16:16:29 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.3</link>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>0.1.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.3
+
+## 主な変更
+
+- Ongaku Mixを追加し、再生履歴とローカル音源のテンポ、調性、ラウドネス、音色、オンセット、拍位置を使った候補選定と選曲理由の表示に対応しました。
+- 音響特徴量をライブラリ単位で解析・保存し、進捗表示と中止操作に対応しました。
+- サイドバー選択時の状態更新を安全なタイミングへ移し、SwiftUIの`Publishing changes from within view updates`警告を解消しました。
+- 音響解析の負荷と解析時間を抑え、再生中のオーディオ処理への影響を軽減しました。
+
+## 配布情報
+
+- macOS 14.0以降
+- Apple silicon（arm64）／Intel（x86_64）Universal Binary
+- Developer ID署名・Apple公証済み
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.3/OngakuDesktop-0.1.3-universal.dmg" length="6677980" type="application/octet-stream" sparkle:edSignature="7fNSc2BWvOieV0gREoAWAZJZYrGtWMqwYfMZfReqb+flOxm0dQSuca4HDpLZ/fIuzk3JmWIvjKxQkE+H3TTWAA=="/>
+            <sparkle:deltas>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.3/OngakuDesktop4-3.delta" sparkle:deltaFrom="3" length="1650562" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="1u9fqFyORae48Cs2xla2WrxQUGFPfdpwlitoIieJwo41/S02s7EjU4unCrdOnA6a4cs34kO42YF/g2bsxAdHBA=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.3/OngakuDesktop4-2.delta" sparkle:deltaFrom="2" length="2763746" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="W033YbHo7h5ER/nlYetyikhvht5go1UleFhbJ+M0+rf4uJV6Qq1NRzxjv/pbpNdqEgj0DJO9KrpaVYB6sVI7Bg=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.3/OngakuDesktop4-1.delta" sparkle:deltaFrom="1" length="3382054" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="mAlK9dPwaGXGG6jz1wvYRXtqYmnOqQb3u4r54JuIaPi50eIKIUtkTWhTExGER43y0owrUrjAc4U0ohuoHszfDA=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.1.2</title>
             <pubDate>Fri, 21 Aug 2026 15:00:47 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.2</link>
@@ -63,19 +92,6 @@
             <sparkle:deltas>
                 <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.1/OngakuDesktop2-1.delta" sparkle:deltaFrom="1" length="1582598" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="8/ghbK+teKciRIxiMSy4zYumTVGM6pea7OzA8v1dSeJen8+QspjmRVqVQj5VHzNuJrCyacNrzoILKVqUw4wPDQ=="/>
             </sparkle:deltas>
-        </item>
-        <item>
-            <title>0.1.0</title>
-            <pubDate>Mon, 17 Aug 2026 14:39:16 +0900</pubDate>
-            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.0</link>
-            <sparkle:version>1</sparkle:version>
-            <sparkle:shortVersionString>0.1.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.0
-
-- Universal macOS build for arm64 and x86_64.
-]]></description>
-            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.0/OngakuDesktop-0.1.0-universal.dmg" length="3524982" type="application/octet-stream" sparkle:edSignature="j/ZWhGDjWXyo96QtEEIOXEn8yT2NIbOXxgAbwSh5B/+r+W/b3Kk/qOPp+b1eP6Xuk9q3IwmWntnb6giq2J8uCA=="/>
         </item>
     </channel>
 </rss>
