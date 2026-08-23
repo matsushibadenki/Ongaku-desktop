@@ -105,6 +105,33 @@ struct AppleMusicStoreTests {
         ) == items)
     }
 
+    @Test("Discovery keeps unique recent releases in newest-first order")
+    func plansRecentReleases() {
+        let now = Date(timeIntervalSince1970: 2_000_000)
+        let cutoff = now.addingTimeInterval(-1_000)
+        let candidates: [(id: String, releaseDate: Date?)] = [
+            ("older", now.addingTimeInterval(-800)),
+            ("newest", now.addingTimeInterval(-100)),
+            ("newest", now.addingTimeInterval(-100)),
+            ("future", now.addingTimeInterval(500)),
+            ("expired", now.addingTimeInterval(-1_500)),
+            ("unknown", nil),
+        ]
+
+        #expect(AppleMusicDiscoveryPlanner.recentReleaseIDs(
+            candidates,
+            since: cutoff,
+            through: now,
+            limit: 10
+        ) == ["newest", "older"])
+        #expect(AppleMusicDiscoveryPlanner.recentReleaseIDs(
+            candidates,
+            since: cutoff,
+            through: now,
+            limit: 1
+        ) == ["newest"])
+    }
+
     @Test("Catalog kinds expose playback and queue capabilities accurately")
     func playableCatalogKinds() {
         #expect(AppleMusicCatalogItemKind.song.isPlayable)

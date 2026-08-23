@@ -94,6 +94,36 @@ struct AppleMusicCatalogItem: Identifiable, Sendable {
     }
 }
 
+struct AppleMusicDiscoveryShelf: Identifiable, Sendable {
+    let id: String
+    let title: String
+    let subtitle: String?
+    let items: [AppleMusicCatalogItem]
+}
+
+enum AppleMusicDiscoveryPlanner {
+    static func recentReleaseIDs(
+        _ candidates: [(id: String, releaseDate: Date?)],
+        since cutoff: Date,
+        through latestDate: Date,
+        limit: Int
+    ) -> [String] {
+        guard limit > 0 else { return [] }
+        var seen = Set<String>()
+        return candidates
+            .compactMap { candidate -> (id: String, date: Date)? in
+                guard let date = candidate.releaseDate,
+                      date >= cutoff,
+                      date <= latestDate else { return nil }
+                return (candidate.id, date)
+            }
+            .sorted { $0.date > $1.date }
+            .filter { seen.insert($0.id).inserted }
+            .prefix(limit)
+            .map(\.id)
+    }
+}
+
 private enum AppleMusicServiceError: Error {
     case unauthorized
     case unavailable
@@ -188,6 +218,7 @@ final class AppleMusicStoreController: ObservableObject {
     nonisolated static let subscriptionURL = URL(string: "https://www.apple.com/apple-music/")!
 
     private enum RetryOperation {
+        case discovery
         case loadLibrary(reset: Bool)
         case searchLibrary(String, AppleMusicLibraryFilter)
         case playlistContents(AppleMusicCatalogItem)
@@ -232,6 +263,9 @@ final class AppleMusicStoreController: ObservableObject {
     @Published private(set) var isUnifiedSearchWorking = false
     @Published private(set) var unifiedSearchMessage: String?
     @Published private(set) var canRetry = false
+    @Published private(set) var recommendationShelves: [AppleMusicDiscoveryShelf] = []
+    @Published private(set) var recentlyPlayedItems: [AppleMusicCatalogItem] = []
+    @Published private(set) var newReleaseItems: [AppleMusicCatalogItem] = []
 
     private let storeClient: ITunesStoreClient
     private var songsByID: [String: Song] = [:]
@@ -256,6 +290,8 @@ final class AppleMusicStoreController: ObservableObject {
         guard let retryOperation, !isWorking, !isUnifiedSearchWorking else { return }
         canRetry = false
         switch retryOperation {
+        case .discovery:
+            await loadDiscovery()
         case .loadLibrary(let reset):
             await loadLibrary(reset: reset)
         case .searchLibrary(let term, let filter):
@@ -289,6 +325,93 @@ final class AppleMusicStoreController: ObservableObject {
         await refreshSubscription()
         if hasCloudLibraryEnabled {
             await loadLibraryPlaylists()
+        }
+    }
+
+    func loadDiscovery() async {
+        guard authorization == .authorized else {
+            message = L10n.text("appleMusic.search.authorizationRequired")
+            return
+        }
+        beginRetryableOperation(.discovery)
+        isWorking = true
+        message = nil
+        defer { isWorking = false }
+
+        var shelves: [AppleMusicDiscoveryShelf] = []
+        var recentItems: [AppleMusicCatalogItem] = []
+        var releaseAlbums: [Album] = []
+        var errors: [String] = []
+
+        do {
+            var request = MusicPersonalRecommendationsRequest()
+            request.limit = 10
+            let response = try await request.response()
+            shelves = response.recommendations.compactMap { recommendation in
+                releaseAlbums.append(contentsOf: recommendation.albums)
+                let items = recommendation.items.compactMap { item in
+                    discoveryItem(item)
+                }
+                guard !items.isEmpty else { return nil }
+                return AppleMusicDiscoveryShelf(
+                    id: recommendation.id.rawValue,
+                    title: recommendation.title
+                        ?? L10n.text("appleMusic.discovery.recommended"),
+                    subtitle: recommendation.reason,
+                    items: Array(items.prefix(12))
+                )
+            }
+        } catch {
+            errors.append(Self.localizedServiceError(error))
+        }
+
+        do {
+            var request = MusicRecentlyPlayedContainerRequest()
+            request.limit = 20
+            let response = try await request.response()
+            recentItems = response.items.compactMap { recentlyPlayedItem($0) }
+        } catch {
+            errors.append(Self.localizedServiceError(error))
+        }
+
+        do {
+            var request = MusicCatalogChartsRequest(kinds: [.mostPlayed], types: [Album.self])
+            request.limit = 25
+            let response = try await request.response()
+            releaseAlbums.append(contentsOf: response.albumCharts.flatMap(\.items))
+        } catch {
+            errors.append(Self.localizedServiceError(error))
+        }
+
+        let now = Date()
+        let cutoff = Calendar.current.date(byAdding: .month, value: -6, to: now)
+            ?? now.addingTimeInterval(-15_552_000)
+        var releaseAlbumsByID: [String: Album] = [:]
+        for album in releaseAlbums where releaseAlbumsByID[album.id.rawValue] == nil {
+            releaseAlbumsByID[album.id.rawValue] = album
+            albumsByID[album.id.rawValue] = album
+        }
+        let releaseIDs = AppleMusicDiscoveryPlanner.recentReleaseIDs(
+            releaseAlbums.map { ($0.id.rawValue, $0.releaseDate) },
+            since: cutoff,
+            through: now.addingTimeInterval(604_800),
+            limit: 20
+        )
+        let releases = releaseIDs.compactMap { releaseAlbumsByID[$0] }
+            .map(Self.catalogAlbumItem)
+
+        recommendationShelves = shelves
+        recentlyPlayedItems = recentItems
+        newReleaseItems = Array(releases)
+        await refreshFavoriteRatings(
+            for: shelves.flatMap(\.items) + recentItems + newReleaseItems
+        )
+
+        if errors.isEmpty {
+            completeRetryableOperation()
+        } else {
+            message = errors.joined(separator: " ")
+            markRetryableFailure()
         }
     }
 
@@ -1174,6 +1297,42 @@ final class AppleMusicStoreController: ObservableObject {
         item.ratingResourceType.map { "\($0):\(item.musicItemID)" }
     }
 
+    private func discoveryItem(
+        _ item: MusicPersonalRecommendation.Item
+    ) -> AppleMusicCatalogItem? {
+        switch item {
+        case .album(let album):
+            albumsByID[album.id.rawValue] = album
+            return Self.catalogAlbumItem(album)
+        case .playlist(let playlist):
+            playlistsByID[playlist.id.rawValue] = playlist
+            return Self.catalogPlaylistItem(playlist)
+        case .station(let station):
+            stationsByID[station.id.rawValue] = station
+            return Self.catalogStationItem(station)
+        @unknown default:
+            return nil
+        }
+    }
+
+    private func recentlyPlayedItem(
+        _ item: RecentlyPlayedMusicItem
+    ) -> AppleMusicCatalogItem? {
+        switch item {
+        case .album(let album):
+            albumsByID[album.id.rawValue] = album
+            return Self.catalogAlbumItem(album)
+        case .playlist(let playlist):
+            playlistsByID[playlist.id.rawValue] = playlist
+            return Self.catalogPlaylistItem(playlist)
+        case .station(let station):
+            stationsByID[station.id.rawValue] = station
+            return Self.catalogStationItem(station)
+        @unknown default:
+            return nil
+        }
+    }
+
     private func rebuildLibraryCatalog() {
         catalogItems = (librarySongItems + libraryAlbumItems + libraryPlaylistItems)
             .filter { libraryFilter.includes($0.kind) }
@@ -1230,6 +1389,19 @@ final class AppleMusicStoreController: ObservableObject {
             detail: "",
             artworkURL: artist.artwork?.url(width: 180, height: 180),
             destinationURL: artist.url
+        )
+    }
+
+    private static func catalogStationItem(_ station: Station) -> AppleMusicCatalogItem {
+        AppleMusicCatalogItem(
+            id: "station:\(station.id.rawValue)",
+            musicItemID: station.id.rawValue,
+            kind: .station,
+            title: station.name,
+            subtitle: station.stationProviderName ?? "Apple Music",
+            detail: station.isLive ? L10n.text("appleMusic.station.live") : "",
+            artworkURL: station.artwork?.url(width: 180, height: 180),
+            destinationURL: station.url
         )
     }
 
@@ -1340,6 +1512,7 @@ private extension Array {
 
 struct AppleMusicStoreView: View {
     private enum Source: String, CaseIterable, Identifiable {
+        case home
         case appleMusic
         case library
         case iTunesStore
@@ -1352,7 +1525,7 @@ struct AppleMusicStoreView: View {
     @EnvironmentObject private var localPlayer: PlaybackController
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var controller: AppleMusicStoreController
-    @State private var source: Source = .appleMusic
+    @State private var source: Source = .home
     @State private var query = ""
     @State private var isCreatingPlaylist = false
     @State private var playlistName = ""
@@ -1367,6 +1540,8 @@ struct AppleMusicStoreView: View {
             Divider()
             if source != .iTunesStore && controller.authorization != .authorized {
                 authorizationView
+            } else if source == .home {
+                discoveryContent
             } else if source == .library {
                 libraryContent
             } else {
@@ -1377,9 +1552,16 @@ struct AppleMusicStoreView: View {
         }
         .frame(width: 900, height: 650)
         .background(AppTheme.canvas)
-        .task { await controller.refresh() }
+        .task {
+            await controller.refresh()
+            if controller.authorization == .authorized {
+                await controller.loadDiscovery()
+            }
+        }
         .onChange(of: source) { _, newSource in
-            if newSource == .library {
+            if newSource == .home {
+                Task { await controller.loadDiscovery() }
+            } else if newSource == .library {
                 Task { await controller.loadLibrary() }
             }
         }
@@ -1410,9 +1592,156 @@ struct AppleMusicStoreView: View {
             }
             .labelsHidden()
             .pickerStyle(.segmented)
-            .frame(width: 390)
+            .frame(width: 470)
         }
         .padding(20)
+    }
+
+    private var discoveryContent: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.text("appleMusic.discovery.title"))
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.text("appleMusic.discovery.subtitle"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button {
+                    Task { await controller.loadDiscovery() }
+                } label: {
+                    Label(L10n.text("appleMusic.discovery.refresh"), systemImage: "arrow.clockwise")
+                }
+                .disabled(controller.isWorking)
+            }
+            .padding(20)
+
+            statusStrip
+
+            if controller.isWorking
+                && controller.recommendationShelves.isEmpty
+                && controller.recentlyPlayedItems.isEmpty {
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.horizontal, 20)
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        discoverySection(
+                            title: L10n.text("appleMusic.discovery.newReleases"),
+                            subtitle: L10n.text("appleMusic.discovery.newReleasesDetail"),
+                            items: controller.newReleaseItems,
+                            emptyKey: "appleMusic.discovery.newReleasesEmpty"
+                        )
+                        discoverySection(
+                            title: L10n.text("appleMusic.discovery.recentlyPlayed"),
+                            subtitle: nil,
+                            items: controller.recentlyPlayedItems,
+                            emptyKey: "appleMusic.discovery.recentlyPlayedEmpty"
+                        )
+                        ForEach(controller.recommendationShelves) { shelf in
+                            discoverySection(
+                                title: shelf.title,
+                                subtitle: shelf.subtitle,
+                                items: shelf.items,
+                                emptyKey: "appleMusic.discovery.recommendationsEmpty"
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                }
+            }
+        }
+    }
+
+    private func discoverySection(
+        title: String,
+        subtitle: String?,
+        items: [AppleMusicCatalogItem],
+        emptyKey: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.headline)
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            if items.isEmpty {
+                Text(L10n.text(emptyKey))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .padding(.vertical, 12)
+            } else {
+                ScrollView(.horizontal) {
+                    LazyHStack(alignment: .top, spacing: 14) {
+                        ForEach(items) { item in
+                            discoveryCard(item)
+                        }
+                    }
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+    }
+
+    private func discoveryCard(_ item: AppleMusicCatalogItem) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ZStack(alignment: .bottomTrailing) {
+                AsyncImage(url: item.artworkURL) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    Image(systemName: "music.note")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(AppTheme.raised)
+                }
+                .frame(width: 142, height: 142)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+
+                if item.kind.isPlayable {
+                    Button {
+                        Task {
+                            await controller.playCatalogItem(
+                                item,
+                                with: appleMusicPlayback,
+                                localPlayer: localPlayer
+                            )
+                        }
+                    } label: {
+                        Image(systemName: "play.fill")
+                            .frame(width: 28, height: 28)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .buttonBorderShape(.circle)
+                    .controlSize(.small)
+                    .padding(8)
+                    .disabled(
+                        !controller.canPlayCatalogContent || appleMusicPlayback.isWorking
+                    )
+                }
+            }
+            Text(item.title)
+                .font(.callout.weight(.medium))
+                .lineLimit(1)
+            Text(item.subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(width: 142, alignment: .leading)
+        .contentShape(Rectangle())
+        .contextMenu {
+            if let url = item.destinationURL {
+                Button(L10n.text("appleMusic.open")) {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+        }
     }
 
     private var authorizationView: some View {
@@ -1430,7 +1759,12 @@ struct AppleMusicStoreView: View {
         } actions: {
             if controller.authorization == .notDetermined {
                 Button(L10n.text("appleMusic.authorization.action")) {
-                    Task { await controller.requestAccess() }
+                    Task {
+                        await controller.requestAccess()
+                        if controller.authorization == .authorized, source == .home {
+                            await controller.loadDiscovery()
+                        }
+                    }
                 }
                 .buttonStyle(.borderedProminent)
             } else {
