@@ -187,6 +187,16 @@ actor ITunesStoreClient {
 final class AppleMusicStoreController: ObservableObject {
     nonisolated static let subscriptionURL = URL(string: "https://www.apple.com/apple-music/")!
 
+    private enum RetryOperation {
+        case loadLibrary(reset: Bool)
+        case searchLibrary(String, AppleMusicLibraryFilter)
+        case playlistContents(AppleMusicCatalogItem)
+        case catalogSearch(String)
+        case unifiedSearch(String)
+        case charts
+        case storeSearch(String)
+    }
+
     enum AuthorizationState: Equatable {
         case notDetermined
         case denied
@@ -221,6 +231,7 @@ final class AppleMusicStoreController: ObservableObject {
     @Published private(set) var unifiedLibraryItems: [AppleMusicCatalogItem] = []
     @Published private(set) var isUnifiedSearchWorking = false
     @Published private(set) var unifiedSearchMessage: String?
+    @Published private(set) var canRetry = false
 
     private let storeClient: ITunesStoreClient
     private var songsByID: [String: Song] = [:]
@@ -234,10 +245,32 @@ final class AppleMusicStoreController: ObservableObject {
     private let libraryPageSize = 100
     private var libraryFilter: AppleMusicLibraryFilter = .all
     private var unifiedSearchGeneration = UUID()
+    private var retryOperation: RetryOperation?
 
     init(storeClient: ITunesStoreClient = ITunesStoreClient()) {
         self.storeClient = storeClient
         refreshAuthorizationState()
+    }
+
+    func retryLastOperation() async {
+        guard let retryOperation, !isWorking, !isUnifiedSearchWorking else { return }
+        canRetry = false
+        switch retryOperation {
+        case .loadLibrary(let reset):
+            await loadLibrary(reset: reset)
+        case .searchLibrary(let term, let filter):
+            await searchLibrary(term, filter: filter)
+        case .playlistContents(let item):
+            await loadPlaylistContents(item)
+        case .catalogSearch(let term):
+            await searchAppleMusic(term)
+        case .unifiedSearch(let term):
+            await searchUnified(term)
+        case .charts:
+            await loadAppleMusicCharts()
+        case .storeSearch(let term):
+            await searchITunesStore(term)
+        }
     }
 
     func requestAccess() async {
@@ -268,6 +301,7 @@ final class AppleMusicStoreController: ObservableObject {
             message = L10n.text("appleMusic.library.cloudRequired")
             return
         }
+        beginRetryableOperation(.loadLibrary(reset: reset))
         isWorking = true
         message = nil
         do {
@@ -352,8 +386,10 @@ final class AppleMusicStoreController: ObservableObject {
             message = catalogItems.isEmpty
                 ? L10n.text("appleMusic.library.empty")
                 : L10n.format("appleMusic.library.loaded", catalogItems.count)
+            completeRetryableOperation()
         } catch {
             message = Self.localizedServiceError(error)
+            markRetryableFailure()
         }
         isWorking = false
     }
@@ -378,6 +414,7 @@ final class AppleMusicStoreController: ObservableObject {
             message = L10n.text("appleMusic.library.cloudRequired")
             return
         }
+        beginRetryableOperation(.searchLibrary(term, filter))
         isWorking = true
         message = nil
         defer { isWorking = false }
@@ -418,14 +455,17 @@ final class AppleMusicStoreController: ObservableObject {
             message = catalogItems.isEmpty
                 ? L10n.text("appleMusic.search.noResults")
                 : L10n.format("appleMusic.library.searchResults", catalogItems.count)
+            completeRetryableOperation()
         } catch {
             message = Self.localizedServiceError(error)
+            markRetryableFailure()
         }
     }
 
     func loadPlaylistContents(_ item: AppleMusicCatalogItem) async {
         guard item.kind == .playlist,
               let playlist = playlistsByID[item.musicItemID] else { return }
+        beginRetryableOperation(.playlistContents(item))
         isWorking = true
         message = nil
         playlistEntries = []
@@ -463,8 +503,10 @@ final class AppleMusicStoreController: ObservableObject {
             if result.isEmpty {
                 message = L10n.text("appleMusic.library.playlistEmpty")
             }
+            completeRetryableOperation()
         } catch {
             message = Self.localizedServiceError(error)
+            markRetryableFailure()
         }
     }
 
@@ -575,6 +617,7 @@ final class AppleMusicStoreController: ObservableObject {
             message = L10n.text("appleMusic.search.authorizationRequired")
             return
         }
+        beginRetryableOperation(.catalogSearch(term))
         isWorking = true
         message = nil
         do {
@@ -681,8 +724,10 @@ final class AppleMusicStoreController: ObservableObject {
             if catalogItems.isEmpty {
                 message = L10n.text("appleMusic.search.noResults")
             }
+            completeRetryableOperation()
         } catch {
             message = Self.localizedServiceError(error)
+            markRetryableFailure()
         }
         isWorking = false
     }
@@ -705,6 +750,7 @@ final class AppleMusicStoreController: ObservableObject {
             return
         }
 
+        beginRetryableOperation(.unifiedSearch(term))
         isUnifiedSearchWorking = true
         unifiedSearchMessage = nil
         var catalogResults: [AppleMusicCatalogItem] = []
@@ -782,6 +828,11 @@ final class AppleMusicStoreController: ObservableObject {
         } else if !errors.isEmpty {
             unifiedSearchMessage = errors.joined(separator: " ")
         }
+        if errors.isEmpty {
+            completeRetryableOperation()
+        } else {
+            markRetryableFailure()
+        }
         isUnifiedSearchWorking = false
     }
 
@@ -790,6 +841,7 @@ final class AppleMusicStoreController: ObservableObject {
             message = L10n.text("appleMusic.search.authorizationRequired")
             return
         }
+        beginRetryableOperation(.charts)
         isWorking = true
         message = nil
         do {
@@ -874,8 +926,10 @@ final class AppleMusicStoreController: ObservableObject {
             message = catalogItems.isEmpty
                 ? L10n.text("appleMusic.search.noResults")
                 : L10n.format("appleMusic.charts.loaded", catalogItems.count)
+            completeRetryableOperation()
         } catch {
             message = Self.localizedServiceError(error)
+            markRetryableFailure()
         }
         isWorking = false
     }
@@ -883,6 +937,7 @@ final class AppleMusicStoreController: ObservableObject {
     func searchITunesStore(_ rawTerm: String) async {
         let term = rawTerm.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !term.isEmpty else { return }
+        beginRetryableOperation(.storeSearch(term))
         isWorking = true
         message = nil
         do {
@@ -891,8 +946,10 @@ final class AppleMusicStoreController: ObservableObject {
             if storeItems.isEmpty {
                 message = L10n.text("appleMusic.search.noResults")
             }
+            completeRetryableOperation()
         } catch {
             message = Self.localizedServiceError(error)
+            markRetryableFailure()
         }
         isWorking = false
     }
@@ -1023,6 +1080,20 @@ final class AppleMusicStoreController: ObservableObject {
 
     private func refreshAuthorizationState() {
         authorization = Self.authorizationState(MusicAuthorization.currentStatus)
+    }
+
+    private func beginRetryableOperation(_ operation: RetryOperation) {
+        retryOperation = operation
+        canRetry = false
+    }
+
+    private func completeRetryableOperation() {
+        retryOperation = nil
+        canRetry = false
+    }
+
+    private func markRetryableFailure() {
+        canRetry = retryOperation != nil
     }
 
     private func refreshSubscription() async {
@@ -1829,6 +1900,22 @@ struct AppleMusicStoreView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
+            }
+            if controller.canRetry || appleMusicPlayback.canRetry {
+                Button(L10n.text("common.retry")) {
+                    Task {
+                        if appleMusicPlayback.canRetry {
+                            await appleMusicPlayback.retryLastOperation()
+                        } else {
+                            await controller.retryLastOperation()
+                        }
+                    }
+                }
+                .disabled(
+                    controller.isWorking
+                        || controller.isUnifiedSearchWorking
+                        || appleMusicPlayback.isWorking
+                )
             }
             Spacer()
             Text(L10n.text("appleMusic.store.attribution"))

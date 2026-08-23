@@ -72,6 +72,39 @@ struct AppleMusicStoreTests {
         #expect(keptAfterCurrent == items)
     }
 
+    @Test("Catalog queue removes multiple upcoming items but protects the current item")
+    func removesCatalogQueueItemsSafely() {
+        let items = ["current", "second", "third", "fourth"].map {
+            AppleMusicQueueItem(
+                id: $0,
+                title: $0,
+                subtitle: "Artist",
+                duration: 180,
+                artworkURL: nil
+            )
+        }
+
+        let removed = AppleMusicQueueEditor.removing(
+            items,
+            ids: ["second", "fourth"],
+            currentItemID: "current"
+        )
+        #expect(removed.map(\.id) == ["current", "third"])
+
+        let protected = AppleMusicQueueEditor.removing(
+            items,
+            ids: ["current", "third"],
+            currentItemID: "current"
+        )
+        #expect(protected.map(\.id) == ["current", "second", "fourth"])
+
+        #expect(AppleMusicQueueEditor.removing(
+            items,
+            ids: [],
+            currentItemID: "current"
+        ) == items)
+    }
+
     @Test("Catalog kinds expose playback and queue capabilities accurately")
     func playableCatalogKinds() {
         #expect(AppleMusicCatalogItemKind.song.isPlayable)

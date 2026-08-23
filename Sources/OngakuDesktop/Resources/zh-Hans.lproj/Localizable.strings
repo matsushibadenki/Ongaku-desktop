@@ -109,6 +109,7 @@
 "unifiedSearch.source.catalog" = "Apple Music目录";
 "common.close" = "关闭";
 "common.create" = "创建";
+"common.retry" = "重试";
 "toolbar.verifyHelp" = "验证所有受管理音乐文件是否被更改或损坏";
 "sidebar.library" = "资料库";
 "libraryProfile.section" = "资料库";
@@ -660,6 +661,7 @@
 "player.queue.moveUp" = "上移";
 "player.queue.moveDown" = "下移";
 "player.queue.remove" = "从队列中移除";
+"player.queue.removeSelected" = "移除所选项目";
 "player.history.title" = "历史记录";
 "player.history.empty" = "暂无播放历史";
 "player.history.clear" = "清除历史记录";

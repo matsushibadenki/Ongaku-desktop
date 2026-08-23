@@ -72,7 +72,8 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] Apple Musicライブラリのお気に入り追加／解除、100件単位のページング、認証・地域差・競合・レート制限エラーの三言語表示
 - [Done] Apple Musicプレイリスト内容の閲覧、同期ライブラリ内検索、曲／アルバム／プレイリスト絞り込み
 - [Done] メイン検索欄からローカル・Apple Musicカタログ・同期ライブラリを横断する統合検索と出所表示
-- [Next] Apple Musicキューの削除、複数選択編集、失敗時の再試行
+- [Done] Apple Musicキューの単一／複数選択削除、再生中項目の保護、一括消去、通信失敗時の同一操作再試行
+- [Next] Apple Musicのホーム／新着／おすすめ棚と最近再生の取得
 - [Done] MediaPlayerによるシステムNow Playing、メディアキー、Control Center連携
 
 ## 4. 機能網羅表

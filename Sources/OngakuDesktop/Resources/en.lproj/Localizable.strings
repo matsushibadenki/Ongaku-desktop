@@ -109,6 +109,7 @@
 "unifiedSearch.source.catalog" = "Apple Music Catalog";
 "common.close" = "Close";
 "common.create" = "Create";
+"common.retry" = "Retry";
 "toolbar.verifyHelp" = "Verify the integrity of all managed music files";
 "sidebar.library" = "Library";
 "libraryProfile.section" = "Libraries";
@@ -660,6 +661,7 @@
 "player.queue.moveUp" = "Move Up";
 "player.queue.moveDown" = "Move Down";
 "player.queue.remove" = "Remove from Queue";
+"player.queue.removeSelected" = "Remove Selected";
 "player.history.title" = "History";
 "player.history.empty" = "No playback history";
 "player.history.clear" = "Clear History";

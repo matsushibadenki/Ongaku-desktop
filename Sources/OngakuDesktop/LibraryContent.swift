@@ -249,6 +249,12 @@ struct LibraryContent: View {
                 if appleMusicStore.isUnifiedSearchWorking {
                     ProgressView()
                         .controlSize(.small)
+                } else if appleMusicStore.canRetry,
+                          appleMusicStore.unifiedSearchMessage != nil {
+                    Button(L10n.text("common.retry")) {
+                        Task { await appleMusicStore.retryLastOperation() }
+                    }
+                    .buttonStyle(.borderless)
                 }
             }
             .padding(.horizontal, 14)

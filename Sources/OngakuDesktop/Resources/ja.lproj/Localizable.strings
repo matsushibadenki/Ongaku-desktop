@@ -109,6 +109,7 @@
 "unifiedSearch.source.catalog" = "Apple Musicカタログ";
 "common.close" = "閉じる";
 "common.create" = "作成";
+"common.retry" = "再試行";
 "toolbar.verifyHelp" = "管理中の音楽ファイルが変更・破損していないか検証します";
 "sidebar.library" = "ライブラリ";
 "libraryProfile.section" = "ライブラリ";
@@ -660,6 +661,7 @@
 "player.queue.moveUp" = "上へ移動";
 "player.queue.moveDown" = "下へ移動";
 "player.queue.remove" = "キューから削除";
+"player.queue.removeSelected" = "選択項目を削除";
 "player.history.title" = "履歴";
 "player.history.empty" = "再生履歴はありません";
 "player.history.clear" = "履歴を消去";

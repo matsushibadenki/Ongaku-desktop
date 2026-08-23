@@ -603,7 +603,7 @@ private struct PlaybackQueuePopover: View {
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @State private var selectedTab: Tab = .queue
     @State private var selectedQueueTrackID: Track.ID?
-    @State private var selectedAppleMusicQueueItemID: String?
+    @State private var selectedAppleMusicQueueItemIDs: Set<String> = []
     @State private var selectedHistorySessionID: UUID?
 
     var body: some View {
@@ -614,12 +614,20 @@ private struct PlaybackQueuePopover: View {
                 Spacer()
                 if selectedTab == .queue {
                     if appleMusicPlayback.currentItem != nil {
-                        Label(
-                            L10n.text("player.queue.appleMusicReadOnly"),
-                            systemImage: "apple.logo"
-                        )
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.secondaryInk)
+                        Button(L10n.text("player.queue.removeSelected")) {
+                            appleMusicPlayback.removeQueueItems(
+                                ids: selectedAppleMusicQueueItemIDs
+                            )
+                            selectedAppleMusicQueueItemIDs.removeAll()
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(removableAppleMusicSelection.isEmpty)
+                        Button(L10n.text("player.queue.clear")) {
+                            appleMusicPlayback.clearUpcomingQueue()
+                            selectedAppleMusicQueueItemIDs.removeAll()
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(appleMusicPlayback.queueItems.count <= 1)
                     } else {
                         Button(L10n.text("player.queue.undo")) {
                             player.undoLastQueueEdit()
@@ -727,7 +735,7 @@ private struct PlaybackQueuePopover: View {
             )
             .frame(height: 310)
         } else {
-            List(selection: $selectedAppleMusicQueueItemID) {
+            List(selection: $selectedAppleMusicQueueItemIDs) {
                 ForEach(Array(appleMusicPlayback.queueItems.enumerated()), id: \.element.id) {
                     index, item in
                     HStack(spacing: AppTheme.spaceSM) {
@@ -755,22 +763,33 @@ private struct PlaybackQueuePopover: View {
                     .contentShape(Rectangle())
                     .tag(item.id)
                     .simultaneousGesture(
-                        TapGesture().onEnded {
-                            selectedAppleMusicQueueItemID = item.id
-                        }
-                    )
-                    .simultaneousGesture(
                         TapGesture(count: 2).onEnded {
-                            selectedAppleMusicQueueItemID = item.id
+                            selectedAppleMusicQueueItemIDs = [item.id]
                             Task { await appleMusicPlayback.playQueueItem(id: item.id) }
                         }
                     )
+                    .contextMenu {
+                        Button(L10n.text("player.queue.remove")) {
+                            appleMusicPlayback.removeQueueItems(ids: [item.id])
+                            selectedAppleMusicQueueItemIDs.remove(item.id)
+                        }
+                        .disabled(appleMusicPlayback.currentQueueItem?.id == item.id)
+                    }
                 }
                 .onMove(perform: appleMusicPlayback.moveQueueItems)
             }
             .listStyle(.inset)
             .frame(height: 310)
+            .onChange(of: appleMusicPlayback.queueItems) { _, items in
+                selectedAppleMusicQueueItemIDs.formIntersection(Set(items.map(\.id)))
+            }
         }
+    }
+
+    private var removableAppleMusicSelection: Set<String> {
+        selectedAppleMusicQueueItemIDs.subtracting(
+            appleMusicPlayback.currentQueueItem.map { [$0.id] } ?? []
+        )
     }
 
     @ViewBuilder
@@ -885,6 +904,16 @@ private struct PlaybackQueuePopover: View {
                     || appleMusicPlayback.currentQueueItem?.id == item.id
             )
             .help(L10n.text("player.queue.moveDown"))
+
+            Button {
+                appleMusicPlayback.removeQueueItems(ids: [item.id])
+                selectedAppleMusicQueueItemIDs.remove(item.id)
+            } label: {
+                Image(systemName: "xmark")
+            }
+            .buttonStyle(.borderless)
+            .disabled(appleMusicPlayback.currentQueueItem?.id == item.id)
+            .help(L10n.text("player.queue.remove"))
         }
     }
 }

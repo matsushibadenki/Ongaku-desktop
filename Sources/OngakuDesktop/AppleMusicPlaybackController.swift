@@ -81,10 +81,28 @@ enum AppleMusicQueueEditor {
         result.insert(contentsOf: movingItems, at: insertionIndex)
         return result
     }
+
+    static func removing(
+        _ items: [AppleMusicQueueItem],
+        ids selectedIDs: Set<String>,
+        currentItemID: String?
+    ) -> [AppleMusicQueueItem] {
+        guard !selectedIDs.isEmpty else { return items }
+        return items.filter { item in
+            item.id == currentItemID || !selectedIDs.contains(item.id)
+        }
+    }
 }
 
 @MainActor
 final class AppleMusicPlaybackController: ObservableObject {
+    private enum RetryOperation {
+        case resume
+        case previous
+        case next
+        case queueItem(String)
+    }
+
     @Published private(set) var state = AppleMusicPlaybackState()
     @Published private(set) var currentItem: AppleMusicCatalogItem?
     @Published private(set) var errorMessage: String?
@@ -97,10 +115,12 @@ final class AppleMusicPlaybackController: ObservableObject {
     private var queueObservation: AnyCancellable?
     private var playerStateObservation: AnyCancellable?
     private var progressTask: Task<Void, Never>?
+    private var retryOperation: RetryOperation?
 
     var isPlaying: Bool { state.isPlaying }
     var isWorking: Bool { state.isWorking || isQueueEditing }
     var duration: TimeInterval { currentQueueItem?.duration ?? 0 }
+    var canRetry: Bool { retryOperation != nil && errorMessage != nil }
 
     init() {
         observePlayerState()
@@ -116,6 +136,7 @@ final class AppleMusicPlaybackController: ObservableObject {
         currentItem = item
         state.begin(itemID: item.musicItemID)
         errorMessage = nil
+        retryOperation = nil
 
         do {
             player.queue = queue
@@ -128,6 +149,7 @@ final class AppleMusicPlaybackController: ObservableObject {
         } catch {
             state.didFail()
             errorMessage = error.localizedDescription
+            retryOperation = .resume
         }
     }
 
@@ -146,10 +168,12 @@ final class AppleMusicPlaybackController: ObservableObject {
             try await player.play()
             state.didStart()
             errorMessage = nil
+            retryOperation = nil
             startProgressUpdates()
         } catch {
             state.didFail()
             errorMessage = error.localizedDescription
+            retryOperation = .resume
         }
     }
 
@@ -159,6 +183,7 @@ final class AppleMusicPlaybackController: ObservableObject {
         currentItem = nil
         state.didStop()
         errorMessage = nil
+        retryOperation = nil
         queueObservation = nil
         queueItems = []
         currentQueueItem = nil
@@ -172,8 +197,10 @@ final class AppleMusicPlaybackController: ObservableObject {
             try await player.skipToPreviousEntry()
             refreshQueueSnapshot()
             errorMessage = nil
+            retryOperation = nil
         } catch {
             errorMessage = error.localizedDescription
+            retryOperation = .previous
         }
     }
 
@@ -183,8 +210,10 @@ final class AppleMusicPlaybackController: ObservableObject {
             try await player.skipToNextEntry()
             refreshQueueSnapshot()
             errorMessage = nil
+            retryOperation = nil
         } catch {
             errorMessage = error.localizedDescription
+            retryOperation = .next
         }
     }
 
@@ -200,6 +229,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     ) async {
         guard currentItem != nil, !isQueueEditing else { return }
         isQueueEditing = true
+        retryOperation = nil
         defer { isQueueEditing = false }
         do {
             try await player.queue.insert(playableItem, position: position)
@@ -220,9 +250,25 @@ final class AppleMusicPlaybackController: ObservableObject {
             refreshQueueSnapshot()
             startProgressUpdates()
             errorMessage = nil
+            retryOperation = nil
         } catch {
             state.didFail()
             errorMessage = error.localizedDescription
+            retryOperation = .queueItem(id)
+        }
+    }
+
+    func retryLastOperation() async {
+        guard let retryOperation, !isWorking else { return }
+        switch retryOperation {
+        case .resume:
+            await resume()
+        case .previous:
+            await playPrevious()
+        case .next:
+            await playNext()
+        case .queueItem(let id):
+            await playQueueItem(id: id)
         }
     }
 
@@ -256,6 +302,32 @@ final class AppleMusicPlaybackController: ObservableObject {
             fromOffsets: IndexSet(integer: index),
             toOffset: destination > index ? destination + 1 : destination
         )
+    }
+
+    func removeQueueItems(ids: Set<String>) {
+        guard !isQueueEditing else { return }
+        let retainedItems = AppleMusicQueueEditor.removing(
+            queueItems,
+            ids: ids,
+            currentItemID: currentQueueItem?.id
+        )
+        guard retainedItems != queueItems else { return }
+
+        let retainedIDs = Set(retainedItems.map(\.id))
+        let visibleIDs = Set(queueItems.map(\.id))
+        let retainedEntries = player.queue.entries.filter { entry in
+            !visibleIDs.contains(entry.id) || retainedIDs.contains(entry.id)
+        }
+        var entries = ApplicationMusicPlayer.Queue.Entries()
+        entries.append(contentsOf: retainedEntries)
+        player.queue.entries = entries
+        errorMessage = nil
+        refreshQueueSnapshot()
+    }
+
+    func clearUpcomingQueue() {
+        guard let currentID = currentQueueItem?.id else { return }
+        removeQueueItems(ids: Set(queueItems.lazy.map(\.id).filter { $0 != currentID }))
     }
 
     func isCurrent(_ item: AppleMusicCatalogItem) -> Bool {
