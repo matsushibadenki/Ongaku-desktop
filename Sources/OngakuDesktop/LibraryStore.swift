@@ -5,6 +5,12 @@ import Foundation
 import AppKit
 #endif
 
+struct AudioFeatureAnalysisProgress: Equatable, Sendable {
+    let total: Int
+    var completed: Int = 0
+    var failed: Int = 0
+}
+
 @MainActor
 final class LibraryStore: ObservableObject {
     enum SearchBackendStatus: Equatable {
@@ -40,6 +46,10 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var playbackEvents: [PlaybackEvent] = []
     @Published private(set) var playbackQueue: PlaybackQueueState?
     @Published private(set) var contentRevision = 0
+    @Published private(set) var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
+    @Published private(set) var isAnalyzingAudioFeatures = false
+    @Published private(set) var audioFeatureRevision = 0
+    @Published private(set) var audioFeatureAnalysisProgress: AudioFeatureAnalysisProgress?
     @Published var selectedSection: LibrarySection = .songs
     @Published var selectedPlaylistID: Playlist.ID?
     @Published private var trackSelection = TrackSelectionState()
@@ -83,12 +93,15 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var indexedSearchQuery: String?
 
     private var repository: LibraryRepository
+    private var audioFeatureCache: AudioFeatureCache
     private var searchIndex: SQLiteCatalogPrototype
     private var libraryID = UUID()
     private var libraryCreatedAt = Date.now
     private var searchIndexSynchronizationTask: Task<Void, Never>?
     private var indexedSearchTask: Task<Void, Never>?
     private var playbackQueueSaveTask: Task<Void, Never>?
+    private var audioFeatureAnalysisTask: Task<Void, Never>?
+    private var audioFeatureAnalysisGeneration = UUID()
     private var duplicateGroupCacheRevision = -1
     private var duplicateGroupCache: [DuplicateTrackGroup] = []
     weak var undoManager: UndoManager?
@@ -98,6 +111,7 @@ final class LibraryStore: ObservableObject {
         searchIndex: SQLiteCatalogPrototype? = nil
     ) {
         self.repository = repository
+        audioFeatureCache = AudioFeatureCache(rootURL: repository.rootURL)
         self.searchIndex = searchIndex ?? SQLiteCatalogPrototype(rootURL: repository.rootURL)
     }
 
@@ -137,7 +151,8 @@ final class LibraryStore: ObservableObject {
             result = StandardLibraryResolver.tracks(
                 for: selectedSection,
                 tracks: tracks,
-                events: playbackEvents
+                events: playbackEvents,
+                audioFeatures: audioFeatures
             )
         }
 
@@ -747,6 +762,8 @@ final class LibraryStore: ObservableObject {
             playlistFolders = result.document.playlistFolders
             playbackEvents = result.document.playbackEvents
             playbackQueue = result.document.playbackQueue
+            audioFeatures = (try? await audioFeatureCache.load(validTracks: tracks)) ?? [:]
+            audioFeatureRevision &+= 1
             libraryID = result.document.libraryID
             libraryCreatedAt = result.document.createdAt
             contentRevision &+= 1
@@ -779,13 +796,21 @@ final class LibraryStore: ObservableObject {
         searchIndexSynchronizationTask?.cancel()
         indexedSearchTask?.cancel()
         playbackQueueSaveTask?.cancel()
+        audioFeatureAnalysisTask?.cancel()
+        audioFeatureAnalysisTask = nil
+        audioFeatureAnalysisGeneration = UUID()
         repository = LibraryRepository(rootURL: catalogURL, mediaURL: mediaURL)
+        audioFeatureCache = AudioFeatureCache(rootURL: catalogURL)
         searchIndex = SQLiteCatalogPrototype(rootURL: catalogURL)
         tracks = []
         playlists = []
         playlistFolders = []
         playbackEvents = []
         playbackQueue = nil
+        audioFeatures = [:]
+        isAnalyzingAudioFeatures = false
+        audioFeatureAnalysisProgress = nil
+        audioFeatureRevision &+= 1
         selectedPlaylistID = nil
         selectedTrackID = nil
         selectedTrackIDs = []
@@ -798,6 +823,88 @@ final class LibraryStore: ObservableObject {
         lastIssues = []
         contentRevision &+= 1
         await load()
+    }
+
+    func startOngakuMixFeatureAnalysis() {
+        let seed = OngakuMixResolver.seed(in: tracks, events: playbackEvents)
+        let candidates = OngakuMixResolver.candidates(
+            tracks: tracks,
+            events: playbackEvents,
+            audioFeatures: audioFeatures,
+            limit: 12
+        )
+        let targets = ([seed].compactMap { $0 } + candidates.map(\.track)).filter { track in
+            !(audioFeatures[track.id]?.isCurrent(for: track) ?? false)
+        }
+        startAudioFeatureAnalysis(targets: targets)
+    }
+
+    func startLibraryAudioFeatureAnalysis() {
+        let targets = tracks.filter { track in
+            !track.isExcludedFromPlayback
+                && track.health != .missing
+                && track.health != .unreadable
+                && !(audioFeatures[track.id]?.isCurrent(for: track) ?? false)
+        }
+        startAudioFeatureAnalysis(targets: targets)
+    }
+
+    func cancelAudioFeatureAnalysis() {
+        audioFeatureAnalysisTask?.cancel()
+    }
+
+    private func startAudioFeatureAnalysis(targets: [Track]) {
+        guard audioFeatureAnalysisTask == nil, !targets.isEmpty else { return }
+        let generation = UUID()
+        audioFeatureAnalysisGeneration = generation
+        let cache = audioFeatureCache
+        isAnalyzingAudioFeatures = true
+        audioFeatureAnalysisProgress = AudioFeatureAnalysisProgress(total: targets.count)
+        audioFeatureAnalysisTask = Task { [weak self] in
+            await self?.runAudioFeatureAnalysis(
+                targets: targets,
+                generation: generation,
+                cache: cache
+            )
+        }
+    }
+
+    private func runAudioFeatureAnalysis(
+        targets: [Track],
+        generation: UUID,
+        cache: AudioFeatureCache
+    ) async {
+        var updated = audioFeatures
+        var completed = 0
+        var failed = 0
+        for track in targets {
+            guard !Task.isCancelled else { break }
+            let analysis = await Task.detached(priority: .utility) {
+                try? AudioFeatureAnalyzer.analyze(track: track)
+            }.value
+            guard generation == audioFeatureAnalysisGeneration else { return }
+            if let analysis {
+                updated[track.id] = analysis
+                completed += 1
+            } else {
+                failed += 1
+            }
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        guard generation == audioFeatureAnalysisGeneration else { return }
+        try? await cache.save(updated)
+        await Task.yield()
+        if updated != audioFeatures {
+            audioFeatures = updated
+            audioFeatureRevision &+= 1
+        }
+        audioFeatureAnalysisProgress = AudioFeatureAnalysisProgress(
+            total: targets.count,
+            completed: completed,
+            failed: failed
+        )
+        isAnalyzingAudioFeatures = false
+        audioFeatureAnalysisTask = nil
     }
 
     func importFiles(_ urls: [URL]) async {

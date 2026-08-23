@@ -127,6 +127,7 @@ struct LibrarySidebar: View {
                     .frequentlyPlayed,
                     .recentlyPlayed,
                     .favorites,
+                    .ongakuMix,
                 ]) { section in
                     Label(L10n.text(section.titleKey), systemImage: section.systemImage)
                         .fixedSize(horizontal: true, vertical: false)
@@ -545,13 +546,18 @@ struct LibrarySidebar: View {
             },
             set: { destination in
                 guard let destination else { return }
-                switch destination {
-                case .section(let section):
-                    library.selectedPlaylistID = nil
-                    library.selectedSection = section
-                case .playlist(let id):
-                    library.selectedPlaylistID = id
-                    library.selectedTrackID = library.filteredTracks.first?.id
+                // AppKit's List selection setter can run while SwiftUI is still updating
+                // the sidebar. Publish the destination on the next main-loop turn so the
+                // shared library state never changes inside that view update transaction.
+                DispatchQueue.main.async {
+                    switch destination {
+                    case .section(let section):
+                        library.selectedPlaylistID = nil
+                        library.selectedSection = section
+                    case .playlist(let id):
+                        library.selectedPlaylistID = id
+                        library.selectedTrackID = library.filteredTracks.first?.id
+                    }
                 }
             }
         )

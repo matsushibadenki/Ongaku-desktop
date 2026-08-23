@@ -168,6 +168,10 @@ struct LibraryContent: View {
         VStack(spacing: 0) {
             header
 
+            if library.selectedPlaylist == nil && library.selectedSection == .ongakuMix {
+                ongakuMixBanner
+            }
+
             if !library.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 unifiedSearchContent
             } else if library.selectedPlaylist?.smartDefinition != nil
@@ -210,6 +214,13 @@ struct LibraryContent: View {
         .task {
             await appleMusicStore.refresh()
             scheduleUnifiedSearch(library.searchText)
+        }
+        .task(id: library.selectedSection) {
+            if library.selectedPlaylist == nil && library.selectedSection == .ongakuMix {
+                await Task.yield()
+                guard !Task.isCancelled else { return }
+                library.startOngakuMixFeatureAnalysis()
+            }
         }
         .onChange(of: library.searchText) { _, query in
             scheduleUnifiedSearch(query)
@@ -457,7 +468,7 @@ struct LibraryContent: View {
                 )
             }
         case .songs, .pinned, .recentlyAdded, .frequentlyPlayed, .recentlyPlayed,
-             .favorites, .needsAttention:
+             .favorites, .ongakuMix, .needsAttention:
             trackTable
         case .duplicates:
             DuplicateLibraryView(groups: library.filteredDuplicateGroups)
@@ -602,6 +613,82 @@ struct LibraryContent: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    private var ongakuMixCandidates: [OngakuMixCandidate] {
+        OngakuMixResolver.candidates(
+            tracks: library.tracks,
+            events: library.playbackEvents,
+            audioFeatures: library.audioFeatures
+        )
+    }
+
+    private var ongakuMixCandidateByID: [Track.ID: OngakuMixCandidate] {
+        Dictionary(uniqueKeysWithValues: ongakuMixCandidates.map { ($0.id, $0) })
+    }
+
+    private var ongakuMixBanner: some View {
+        HStack(spacing: AppTheme.spaceSM) {
+            Image(systemName: "wand.and.stars")
+                .foregroundStyle(AppTheme.accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.text("ongakuMix.banner.title"))
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(AppTheme.ink)
+                if let seed = OngakuMixResolver.seed(
+                    in: library.tracks,
+                    events: library.playbackEvents
+                ) {
+                    Text(L10n.format("ongakuMix.banner.seed", seed.title, seed.artist))
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .lineLimit(1)
+                } else {
+                    Text(L10n.text("ongakuMix.banner.noSeed"))
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
+            }
+            Spacer(minLength: 0)
+            if library.isAnalyzingAudioFeatures {
+                ProgressView()
+                    .controlSize(.small)
+                if let progress = library.audioFeatureAnalysisProgress {
+                    Text(L10n.format(
+                        "ongakuMix.analysis.progressCount",
+                        progress.completed,
+                        progress.total
+                    ))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(AppTheme.secondaryInk)
+                } else {
+                    Text(L10n.text("ongakuMix.analysis.progress"))
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
+                Button(L10n.text("ongakuMix.analysis.cancel")) {
+                    library.cancelAudioFeatureAnalysis()
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+            } else {
+                if !library.audioFeatures.isEmpty {
+                    Text(L10n.format("ongakuMix.analysis.count", library.audioFeatures.count))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+                }
+                Button(L10n.text("ongakuMix.analysis.all")) {
+                    library.startLibraryAudioFeatureAnalysis()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help(L10n.text("ongakuMix.analysis.all.help"))
+            }
+        }
+        .padding(.horizontal, AppTheme.spaceLG)
+        .padding(.vertical, AppTheme.spaceSM)
+        .background(AppTheme.raised)
+        .overlay(alignment: .bottom) { Divider() }
+    }
+
     private var standardSectionEmptyView: some View {
         ContentUnavailableView(
             L10n.text("empty.standard.\(library.selectedSection.rawValue).title"),
@@ -633,7 +720,8 @@ struct LibraryContent: View {
     }
 
     private var trackTable: some View {
-        Table(sortedTracks, selection: $tableSelectedTrackIDs, sortOrder: $sortOrder) {
+        let mixCandidates = isShowingOngakuMixReason ? ongakuMixCandidateByID : [:]
+        return Table(sortedTracks, selection: $tableSelectedTrackIDs, sortOrder: $sortOrder) {
             TableColumn(L10n.text("column.title"), value: \.title) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
@@ -754,6 +842,28 @@ struct LibraryContent: View {
                 min: collapsedWidth(.health, visible: 64),
                 ideal: collapsedWidth(.health, visible: 72),
                 max: collapsedMaximumWidth(.health)
+            )
+
+            TableColumn(isShowingOngakuMixReason ? L10n.text("ongakuMix.column.reason") : "") { track in
+                if let candidate = mixCandidates[track.id] {
+                    HStack(spacing: 6) {
+                        Text(candidate.reasons.map { L10n.text($0.titleKey) }
+                            .joined(separator: " · "))
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        Text("\(Int((candidate.score * 100).rounded()))%")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(AppTheme.secondaryInk)
+                    }
+                    .contentShape(Rectangle())
+                    .simultaneousGesture(trackCellSelectionGesture(for: track.id))
+                    .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                }
+            }
+            .width(
+                min: isShowingOngakuMixReason ? 180 : 0,
+                ideal: isShowingOngakuMixReason ? 260 : 0,
+                max: isShowingOngakuMixReason ? nil : 0
             )
         }
         .contextMenu(forSelectionType: Track.ID.self) { selection in
@@ -907,6 +1017,7 @@ struct LibraryContent: View {
     private var trackSortRequest: TrackSortRequest {
         TrackSortRequest(
             contentRevision: library.contentRevision,
+            audioFeatureRevision: library.audioFeatureRevision,
             section: library.selectedSection,
             playlistID: library.selectedPlaylistID,
             searchText: library.searchText,
@@ -942,6 +1053,10 @@ struct LibraryContent: View {
 
     private func columnTitle(_ column: TrackTableColumn) -> String {
         trackTableSettings.isVisible(column) ? L10n.text(column.localizationKey) : ""
+    }
+
+    private var isShowingOngakuMixReason: Bool {
+        library.selectedPlaylist == nil && library.selectedSection == .ongakuMix
     }
 
     private func columnOpacity(_ column: TrackTableColumn) -> Double {
@@ -1314,6 +1429,7 @@ private struct DuplicateLibraryView: View {
 
 private struct TrackSortRequest: Hashable, Sendable {
     let contentRevision: Int
+    let audioFeatureRevision: Int
     let section: LibrarySection
     let playlistID: Playlist.ID?
     let searchText: String

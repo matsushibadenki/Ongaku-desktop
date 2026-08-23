@@ -127,6 +127,96 @@ struct StandardLibraryResolverTests {
         #expect(result.map(\.id) == [catalogLeader.id, eventLeader.id])
     }
 
+    @Test("Ongaku Mix favors matching genre and a nearby tempo")
+    func ranksOngakuMixCandidates() throws {
+        var seed = makeTrack(title: "Seed")
+        seed.artist = "Seed Artist"
+        seed.genre = "Jazz"
+        seed.beatsPerMinute = 112
+        var close = makeTrack(title: "Close")
+        close.artist = "Another Artist"
+        close.genre = "jazz"
+        close.beatsPerMinute = 116
+        var distant = makeTrack(title: "Distant")
+        distant.artist = "Third Artist"
+        distant.genre = "Metal"
+        distant.beatsPerMinute = 190
+
+        let candidates = OngakuMixResolver.candidates(
+            tracks: [distant, close, seed],
+            events: [],
+            seedTrackID: seed.id
+        )
+
+        #expect(candidates.map(\.id) == [close.id, distant.id])
+        let first = try #require(candidates.first)
+        #expect(first.reasons.contains(.genre))
+        #expect(first.reasons.contains(.tempo))
+        #expect(StandardLibraryResolver.tracks(
+            for: .ongakuMix,
+            tracks: [distant, close, seed],
+            events: [PlaybackEvent(trackID: seed.id, kind: .started)]
+        ).first?.id == close.id)
+    }
+
+    @Test("Ongaku Mix excludes the seed and songs that cannot be played")
+    func filtersOngakuMixCandidates() {
+        let seed = makeTrack(title: "Seed")
+        let playable = makeTrack(title: "Playable")
+        var missing = makeTrack(title: "Missing")
+        missing.health = .missing
+        var excluded = makeTrack(title: "Excluded")
+        excluded.isExcludedFromPlayback = true
+
+        let candidates = OngakuMixResolver.candidates(
+            tracks: [seed, missing, excluded, playable],
+            events: [],
+            seedTrackID: seed.id
+        )
+
+        #expect(candidates.map(\.id) == [playable.id])
+    }
+
+    @Test("Ongaku Mix uses the most recently played song as its seed")
+    func resolvesOngakuMixSeedFromHistory() {
+        let base = Date(timeIntervalSince1970: 1_800_000_000)
+        let older = makeTrack(title: "Older")
+        let latest = makeTrack(title: "Latest")
+        let events = [
+            PlaybackEvent(trackID: latest.id, kind: .started, occurredAt: base.addingTimeInterval(2)),
+            PlaybackEvent(trackID: older.id, kind: .completed, occurredAt: base),
+        ]
+
+        #expect(OngakuMixResolver.seed(in: [older, latest], events: events)?.id == latest.id)
+    }
+
+    @Test("Ongaku Mix uses cached PCM loudness and timbre features")
+    func ranksOngakuMixPCMFeatures() throws {
+        var seed = makeTrack(title: "Seed")
+        seed.artist = "Seed Artist"
+        var similar = makeTrack(title: "Similar")
+        similar.artist = "Similar Artist"
+        var different = makeTrack(title: "Different")
+        different.artist = "Different Artist"
+        let features = [
+            seed.id: makeFeatures(track: seed, loudness: -12, centroid: 1_500),
+            similar.id: makeFeatures(track: similar, loudness: -13, centroid: 1_600),
+            different.id: makeFeatures(track: different, loudness: -38, centroid: 7_000),
+        ]
+
+        let candidates = OngakuMixResolver.candidates(
+            tracks: [different, similar, seed],
+            events: [],
+            seedTrackID: seed.id,
+            audioFeatures: features
+        )
+
+        let first = try #require(candidates.first)
+        #expect(first.id == similar.id)
+        #expect(first.reasons.contains(.loudness))
+        #expect(first.reasons.contains(.timbre))
+    }
+
     @Test("Duplicate analysis separates checksum matches from metadata candidates")
     func resolvesDuplicateGroups() throws {
         var exactA = makeTrack(title: "Original")
@@ -218,6 +308,21 @@ struct StandardLibraryResolverTests {
             sha256: UUID().uuidString,
             addedAt: .now,
             health: .verified
+        )
+    }
+
+    private func makeFeatures(
+        track: Track,
+        loudness: Double,
+        centroid: Double
+    ) -> AudioFeatureAnalysis {
+        AudioFeatureAnalysis(
+            trackID: track.id,
+            contentFingerprint: track.sha256,
+            averageLoudnessDBFS: loudness,
+            spectralCentroidHz: centroid,
+            estimatedTempoBPM: nil,
+            tempoConfidence: 0
         )
     }
 }

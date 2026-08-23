@@ -55,6 +55,7 @@
 		200000000000000000000032 /* AudioCDImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000049 /* AudioCDImportView.swift */; };
 		200000000000000000000033 /* AppleMusicStoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004A /* AppleMusicStoreView.swift */; };
 		200000000000000000000035 /* AppleMusicPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* AppleMusicPlaybackController.swift */; };
+		200000000000000000000036 /* AudioFeatureAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000050 /* AudioFeatureAnalysis.swift */; };
 		200000000000000000000034 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
 		200000000000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Assets.xcassets */; };
 		20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000041 /* SQLiteCatalogPrototype.swift */; };
@@ -79,6 +80,7 @@
 		100000000000000000000049 /* AudioCDImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCDImportView.swift; sourceTree = "<group>"; };
 		10000000000000000000004A /* AppleMusicStoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicStoreView.swift; sourceTree = "<group>"; };
 		10000000000000000000004F /* AppleMusicPlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicPlaybackController.swift; sourceTree = "<group>"; };
+		100000000000000000000050 /* AudioFeatureAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFeatureAnalysis.swift; sourceTree = "<group>"; };
 		10000000000000000000004B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		10000000000000000000004C /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		10000000000000000000004D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -150,6 +152,7 @@
 				100000000000000000000002 /* DesignTokens.swift */,
 				100000000000000000000003 /* Localization.swift */,
 				100000000000000000000004 /* LibraryModels.swift */,
+				100000000000000000000050 /* AudioFeatureAnalysis.swift */,
 				100000000000000000000005 /* LibraryRepository.swift */,
 				100000000000000000000041 /* SQLiteCatalogPrototype.swift */,
 				100000000000000000000006 /* LibraryStore.swift */,
@@ -295,6 +298,7 @@
 				200000000000000000000002 /* DesignTokens.swift in Sources */,
 				200000000000000000000003 /* Localization.swift in Sources */,
 				200000000000000000000004 /* LibraryModels.swift in Sources */,
+				200000000000000000000036 /* AudioFeatureAnalysis.swift in Sources */,
 				200000000000000000000005 /* LibraryRepository.swift in Sources */,
 				20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */,
 				200000000000000000000006 /* LibraryStore.swift in Sources */,
@@ -411,7 +415,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
 				ENABLE_APP_SANDBOX = NO;
@@ -422,7 +426,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -440,7 +444,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Developer ID Application";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
 				ENABLE_APP_SANDBOX = NO;
@@ -451,7 +455,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.2;
+				MARKETING_VERSION = 0.1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;

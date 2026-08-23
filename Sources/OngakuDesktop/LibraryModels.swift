@@ -9,6 +9,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
     case frequentlyPlayed
     case recentlyPlayed
     case favorites
+    case ongakuMix
     case duplicates
     case needsAttention
     case effects
@@ -25,6 +26,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .frequentlyPlayed: "sidebar.frequentlyPlayed"
         case .recentlyPlayed: "sidebar.recentlyPlayed"
         case .favorites: "sidebar.favorites"
+        case .ongakuMix: "sidebar.ongakuMix"
         case .duplicates: "sidebar.duplicates"
         case .needsAttention: "sidebar.attention"
         case .effects: "sidebar.effects"
@@ -41,6 +43,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .frequentlyPlayed: "chart.bar.fill"
         case .recentlyPlayed: "clock.arrow.circlepath"
         case .favorites: "heart.fill"
+        case .ongakuMix: "wand.and.stars"
         case .duplicates: "square.on.square"
         case .needsAttention: "exclamationmark.shield"
         case .effects: "dial.medium"
@@ -49,7 +52,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
 
     var preservesResolvedOrder: Bool {
         switch self {
-        case .recentlyAdded, .frequentlyPlayed, .recentlyPlayed: true
+        case .recentlyAdded, .frequentlyPlayed, .recentlyPlayed, .ongakuMix: true
         default: false
         }
     }
@@ -900,11 +903,221 @@ enum PlaybackStatisticsResolver {
     }
 }
 
+struct OngakuMixFeatureVector: Equatable, Sendable {
+    let normalizedGenre: String
+    let normalizedArtist: String
+    let beatsPerMinute: Double?
+    let tempoConfidence: Double
+    let duration: TimeInterval
+    let loudnessDBFS: Double?
+    let spectralCentroidHz: Double?
+    let keyPitchClass: Int?
+    let musicalMode: MusicalMode?
+    let keyConfidence: Double
+
+    nonisolated init(track: Track, analysis: AudioFeatureAnalysis? = nil) {
+        normalizedGenre = Self.normalize(track.genre)
+        normalizedArtist = Self.normalize(track.artist)
+        if let beatsPerMinute = track.beatsPerMinute {
+            self.beatsPerMinute = Double(beatsPerMinute)
+            tempoConfidence = 1
+        } else {
+            self.beatsPerMinute = analysis?.estimatedTempoBPM
+            tempoConfidence = analysis?.tempoConfidence ?? 0
+        }
+        duration = track.duration
+        loudnessDBFS = analysis?.averageLoudnessDBFS
+        spectralCentroidHz = analysis?.spectralCentroidHz
+        keyPitchClass = analysis?.estimatedKeyPitchClass
+        musicalMode = analysis?.estimatedMode
+        keyConfidence = analysis?.keyConfidence ?? 0
+    }
+
+    private nonisolated static func normalize(_ value: String) -> String {
+        value.trimmingCharacters(in: .whitespacesAndNewlines).folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: Locale(identifier: "en_US_POSIX")
+        )
+    }
+}
+
+enum OngakuMixReason: String, Hashable, Sendable {
+    case genre
+    case tempo
+    case duration
+    case loudness
+    case timbre
+    case harmony
+    case artist
+    case favorite
+    case rating
+    case listeningHistory
+    case discovery
+
+    var titleKey: String { "ongakuMix.reason.\(rawValue)" }
+}
+
+struct OngakuMixCandidate: Identifiable, Equatable, Sendable {
+    var id: Track.ID { track.id }
+    let track: Track
+    let score: Double
+    let reasons: [OngakuMixReason]
+}
+
+enum OngakuMixResolver {
+    nonisolated static func seed(
+        in tracks: [Track],
+        events: [PlaybackEvent],
+        preferredID: Track.ID? = nil
+    ) -> Track? {
+        let playable = tracks.filter(isPlayable)
+        guard !playable.isEmpty else { return nil }
+        if let preferredID, let preferred = playable.first(where: { $0.id == preferredID }) {
+            return preferred
+        }
+        let playableIDs = Set(playable.map(\.id))
+        if let recentID = events
+            .filter({ playableIDs.contains($0.trackID) })
+            .max(by: { $0.occurredAt < $1.occurredAt })?.trackID {
+            return playable.first { $0.id == recentID }
+        }
+        return playable.sorted(by: seedOrder).first
+    }
+
+    nonisolated static func candidates(
+        tracks: [Track],
+        events: [PlaybackEvent],
+        seedTrackID: Track.ID? = nil,
+        audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:],
+        limit: Int = 30
+    ) -> [OngakuMixCandidate] {
+        guard limit > 0,
+              let seed = seed(in: tracks, events: events, preferredID: seedTrackID) else {
+            return []
+        }
+        let seedFeatures = OngakuMixFeatureVector(
+            track: seed,
+            analysis: audioFeatures[seed.id]
+        )
+        let statistics = PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
+
+        return tracks.compactMap { track -> OngakuMixCandidate? in
+            guard track.id != seed.id, isPlayable(track) else { return nil }
+            let features = OngakuMixFeatureVector(
+                track: track,
+                analysis: audioFeatures[track.id]
+            )
+            let stats = statistics[track.id] ?? TrackPlaybackStatistics()
+            var score = 0.08
+            var reasons: [OngakuMixReason] = []
+
+            if !seedFeatures.normalizedGenre.isEmpty,
+               seedFeatures.normalizedGenre == features.normalizedGenre {
+                score += 0.32
+                reasons.append(.genre)
+            }
+            if !seedFeatures.normalizedArtist.isEmpty,
+               seedFeatures.normalizedArtist == features.normalizedArtist {
+                score += 0.08
+                reasons.append(.artist)
+            }
+            if let seedTempo = seedFeatures.beatsPerMinute,
+               let tempo = features.beatsPerMinute {
+                let proximity = max(0, 1 - abs(seedTempo - tempo) / 60)
+                let confidence = min(seedFeatures.tempoConfidence, features.tempoConfidence)
+                score += proximity * 0.22 * confidence
+                if abs(seedTempo - tempo) <= 18 { reasons.append(.tempo) }
+            }
+            if seedFeatures.duration > 0, features.duration > 0 {
+                let difference = abs(seedFeatures.duration - features.duration)
+                let scale = max(seedFeatures.duration, features.duration)
+                let proximity = max(0, 1 - difference / scale)
+                score += proximity * 0.12
+                if proximity >= 0.8 { reasons.append(.duration) }
+            }
+            if let seedLoudness = seedFeatures.loudnessDBFS,
+               let loudness = features.loudnessDBFS {
+                let proximity = max(0, 1 - abs(seedLoudness - loudness) / 20)
+                score += proximity * 0.10
+                if proximity >= 0.75 { reasons.append(.loudness) }
+            }
+            if let seedCentroid = seedFeatures.spectralCentroidHz,
+               let centroid = features.spectralCentroidHz,
+               seedCentroid > 0, centroid > 0 {
+                let octaveDistance = abs(log2(seedCentroid / centroid))
+                let proximity = max(0, 1 - octaveDistance / 2)
+                score += proximity * 0.10
+                if proximity >= 0.75 { reasons.append(.timbre) }
+            }
+            if let seedKey = seedFeatures.keyPitchClass,
+               let key = features.keyPitchClass,
+               seedKey == key,
+               seedFeatures.musicalMode == features.musicalMode {
+                let confidence = min(seedFeatures.keyConfidence, features.keyConfidence)
+                score += 0.12 * confidence
+                if confidence >= 0.02 { reasons.append(.harmony) }
+            }
+            if track.isFavorite {
+                score += 0.08
+                reasons.append(.favorite)
+            }
+            if track.rating > 0 {
+                score += Double(min(track.rating, 5)) / 5 * 0.08
+                if track.rating >= 4 { reasons.append(.rating) }
+            }
+            let completed = stats.playCount
+            let skipped = stats.skipCount
+            if completed > 0 {
+                score += min(Double(completed), 10) / 10 * 0.12
+                if completed > skipped { reasons.append(.listeningHistory) }
+            } else if skipped == 0 {
+                score += 0.06
+                reasons.append(.discovery)
+            }
+            score -= min(Double(skipped), 5) / 5 * 0.16
+
+            if reasons.isEmpty { reasons = [.discovery] }
+            return OngakuMixCandidate(
+                track: track,
+                score: min(max(score, 0), 1),
+                reasons: Array(reasons.prefix(3))
+            )
+        }
+        .sorted(by: candidateOrder)
+        .prefix(limit)
+        .map { $0 }
+    }
+
+    private nonisolated static func isPlayable(_ track: Track) -> Bool {
+        !track.isExcludedFromPlayback && track.health != .missing && track.health != .unreadable
+    }
+
+    private nonisolated static func seedOrder(_ lhs: Track, _ rhs: Track) -> Bool {
+        if lhs.isFavorite != rhs.isFavorite { return lhs.isFavorite }
+        if lhs.rating != rhs.rating { return lhs.rating > rhs.rating }
+        if lhs.playCount != rhs.playCount { return lhs.playCount > rhs.playCount }
+        let comparison = lhs.title.localizedStandardCompare(rhs.title)
+        if comparison != .orderedSame { return comparison == .orderedAscending }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
+    private nonisolated static func candidateOrder(
+        _ lhs: OngakuMixCandidate,
+        _ rhs: OngakuMixCandidate
+    ) -> Bool {
+        if lhs.score != rhs.score { return lhs.score > rhs.score }
+        let comparison = lhs.track.title.localizedStandardCompare(rhs.track.title)
+        if comparison != .orderedSame { return comparison == .orderedAscending }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+}
+
 enum StandardLibraryResolver {
     nonisolated static func tracks(
         for section: LibrarySection,
         tracks: [Track],
-        events: [PlaybackEvent]
+        events: [PlaybackEvent],
+        audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
     ) -> [Track] {
         switch section {
         case .pinned:
@@ -935,6 +1148,12 @@ enum StandardLibraryResolver {
             }
         case .favorites:
             return tracks.filter(\.isFavorite).sorted(by: titleOrder)
+        case .ongakuMix:
+            return OngakuMixResolver.candidates(
+                tracks: tracks,
+                events: events,
+                audioFeatures: audioFeatures
+            ).map(\.track)
         case .needsAttention:
             return tracks.filter { $0.health != .verified }
         case .duplicates:
