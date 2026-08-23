@@ -54,6 +54,7 @@
 		200000000000000000000031 /* MusicBrainzCandidatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000048 /* MusicBrainzCandidatePicker.swift */; };
 		200000000000000000000032 /* AudioCDImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000049 /* AudioCDImportView.swift */; };
 		200000000000000000000033 /* AppleMusicStoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004A /* AppleMusicStoreView.swift */; };
+		200000000000000000000035 /* AppleMusicPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* AppleMusicPlaybackController.swift */; };
 		200000000000000000000034 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
 		200000000000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Assets.xcassets */; };
 		20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000041 /* SQLiteCatalogPrototype.swift */; };
@@ -77,6 +78,7 @@
 		100000000000000000000048 /* MusicBrainzCandidatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicBrainzCandidatePicker.swift; sourceTree = "<group>"; };
 		100000000000000000000049 /* AudioCDImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCDImportView.swift; sourceTree = "<group>"; };
 		10000000000000000000004A /* AppleMusicStoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicStoreView.swift; sourceTree = "<group>"; };
+		10000000000000000000004F /* AppleMusicPlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicPlaybackController.swift; sourceTree = "<group>"; };
 		10000000000000000000004B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		10000000000000000000004C /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		10000000000000000000004D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -157,6 +159,7 @@
 				100000000000000000000048 /* MusicBrainzCandidatePicker.swift */,
 				100000000000000000000049 /* AudioCDImportView.swift */,
 				10000000000000000000004A /* AppleMusicStoreView.swift */,
+				10000000000000000000004F /* AppleMusicPlaybackController.swift */,
 				100000000000000000000031 /* LibraryStorageSettings.swift */,
 				100000000000000000000033 /* AppLanguageSettings.swift */,
 				100000000000000000000035 /* AppAppearanceSettings.swift */,
@@ -301,6 +304,7 @@
 				200000000000000000000031 /* MusicBrainzCandidatePicker.swift in Sources */,
 				200000000000000000000032 /* AudioCDImportView.swift in Sources */,
 				200000000000000000000033 /* AppleMusicStoreView.swift in Sources */,
+				200000000000000000000035 /* AppleMusicPlaybackController.swift in Sources */,
 				20000000000000000000001F /* LibraryStorageSettings.swift in Sources */,
 				200000000000000000000021 /* AppLanguageSettings.swift in Sources */,
 				200000000000000000000023 /* AppAppearanceSettings.swift in Sources */,

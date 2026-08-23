@@ -6,6 +6,7 @@ import SwiftUI
 
 struct PlayerBar: View {
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var isShowingVolume = false
 
@@ -74,20 +75,30 @@ struct PlayerBar: View {
             }
 
             HStack(spacing: AppTheme.spaceSM) {
-                Text(DurationFormatter.string(player.elapsed))
+                Text(DurationFormatter.string(displayedElapsed))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(AppTheme.secondaryInk)
                     .frame(width: 42, alignment: .trailing)
                 Slider(
                     value: Binding(
-                        get: { player.elapsed },
-                        set: { player.seek(to: $0) }
+                        get: { displayedElapsed },
+                        set: { newValue in
+                            if appleMusicPlayback.currentItem != nil {
+                                appleMusicPlayback.seek(to: newValue)
+                            } else {
+                                player.seek(to: newValue)
+                            }
+                        }
                     ),
-                    in: 0...max(player.duration, 1)
+                    in: 0...max(displayedDuration, 1)
                 )
-                .disabled(player.currentTrack == nil)
+                .disabled(
+                    appleMusicPlayback.currentItem != nil
+                        ? displayedDuration <= 0
+                        : player.currentTrack == nil
+                )
                 .accessibilityLabel(L10n.text("miniPlayer.progress"))
-                Text(DurationFormatter.string(player.duration))
+                Text(DurationFormatter.string(displayedDuration))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(AppTheme.secondaryInk)
                     .frame(width: 42, alignment: .leading)
@@ -99,11 +110,11 @@ struct PlayerBar: View {
 
     private var playerMetadata: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(player.currentTrack?.album ?? L10n.text("player.chooseTrack"))
+            Text(metadataSubtitle)
                 .font(.caption2)
                 .foregroundStyle(AppTheme.secondaryInk)
                 .lineLimit(1)
-            Text(player.currentTrack?.title ?? L10n.text("player.idle"))
+            Text(metadataTitle)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(AppTheme.ink)
                 .lineLimit(1)
@@ -113,21 +124,28 @@ struct PlayerBar: View {
 
     private var playerUtilities: some View {
         HStack(spacing: AppTheme.spaceXS) {
-            PlaybackModeMenu()
-            PlaybackQueueButton()
-            Button {
-                isShowingVolume.toggle()
-            } label: {
-                Image(systemName: volumeSymbol)
-                    .frame(width: 22, height: 22)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.borderless)
-            .help(L10n.text("miniPlayer.volume"))
-            .accessibilityLabel(L10n.text("miniPlayer.volume"))
-            .accessibilityValue("\(Int((player.volume * 100).rounded()))%")
-            .popover(isPresented: $isShowingVolume, arrowEdge: .bottom) {
-                volumePopover
+            if appleMusicPlayback.currentItem != nil {
+                Label("Apple Music", systemImage: "apple.logo")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(AppTheme.secondaryInk)
+                PlaybackQueueButton()
+            } else {
+                PlaybackModeMenu()
+                PlaybackQueueButton()
+                Button {
+                    isShowingVolume.toggle()
+                } label: {
+                    Image(systemName: volumeSymbol)
+                        .frame(width: 22, height: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless)
+                .help(L10n.text("miniPlayer.volume"))
+                .accessibilityLabel(L10n.text("miniPlayer.volume"))
+                .accessibilityValue("\(Int((player.volume * 100).rounded()))%")
+                .popover(isPresented: $isShowingVolume, arrowEdge: .bottom) {
+                    volumePopover
+                }
             }
         }
         .fixedSize()
@@ -148,8 +166,36 @@ struct PlayerBar: View {
     }
 
     private var metadataHelp: String {
+        if let queueItem = appleMusicPlayback.currentQueueItem {
+            return "\(queueItem.subtitle) — \(queueItem.title)"
+        }
+        if let item = appleMusicPlayback.currentItem {
+            return "\(item.subtitle) — \(item.title)"
+        }
         guard let track = player.currentTrack else { return L10n.text("player.chooseTrack") }
         return "\(track.album) — \(track.title)"
+    }
+
+    private var metadataTitle: String {
+        appleMusicPlayback.currentQueueItem?.title
+            ?? appleMusicPlayback.currentItem?.title
+            ?? player.currentTrack?.title
+            ?? L10n.text("player.idle")
+    }
+
+    private var metadataSubtitle: String {
+        appleMusicPlayback.currentQueueItem?.subtitle
+            ?? appleMusicPlayback.currentItem?.subtitle
+            ?? player.currentTrack?.album
+            ?? L10n.text("player.chooseTrack")
+    }
+
+    private var displayedElapsed: TimeInterval {
+        appleMusicPlayback.currentItem == nil ? player.elapsed : appleMusicPlayback.elapsed
+    }
+
+    private var displayedDuration: TimeInterval {
+        appleMusicPlayback.currentItem == nil ? player.duration : appleMusicPlayback.duration
     }
 
     private var volumeSymbol: String {
@@ -363,52 +409,82 @@ enum SpectrumPresentation {
 struct PlayerTransportControls: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
 
     var compact = false
 
     var body: some View {
         HStack(spacing: compact ? AppTheme.spaceXS : AppTheme.spaceSM) {
-            Button { player.playPrevious() } label: {
+            Button {
+                if appleMusicPlayback.currentItem != nil {
+                    Task { await appleMusicPlayback.playPrevious() }
+                } else {
+                    player.playPrevious()
+                }
+            } label: {
                 Image(systemName: "backward.fill")
                     .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
-            .disabled(player.currentTrack == nil)
+            .disabled(player.currentTrack == nil && appleMusicPlayback.currentItem == nil)
             .help(L10n.text("player.previous"))
             .accessibilityLabel(L10n.text("player.previous"))
 
             Button(action: primaryPlaybackAction) {
-                Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
+                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                     .frame(width: compact ? 24 : 30, height: compact ? 24 : 30)
                     .contentShape(Circle())
             }
             .buttonStyle(.borderedProminent)
             .buttonBorderShape(.circle)
             .controlSize(compact ? .small : .regular)
-            .disabled(player.currentTrack == nil && playableTrack == nil)
+            .disabled(
+                appleMusicPlayback.isWorking
+                    || (player.currentTrack == nil
+                        && playableTrack == nil
+                        && appleMusicPlayback.currentItem == nil)
+            )
             .keyboardShortcut(.space, modifiers: [])
-            .help(L10n.text(player.isPlaying ? "player.pause" : "track.play"))
-            .accessibilityLabel(L10n.text(player.isPlaying ? "player.pause" : "track.play"))
+            .help(L10n.text(isPlaying ? "player.pause" : "track.play"))
+            .accessibilityLabel(L10n.text(isPlaying ? "player.pause" : "track.play"))
 
-            Button { player.playNext() } label: {
+            Button {
+                if appleMusicPlayback.currentItem != nil {
+                    Task { await appleMusicPlayback.playNext() }
+                } else {
+                    player.playNext()
+                }
+            } label: {
                 Image(systemName: "forward.fill")
                     .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.borderless)
-            .disabled(player.currentTrack == nil)
+            .disabled(player.currentTrack == nil && appleMusicPlayback.currentItem == nil)
             .help(L10n.text("player.next"))
             .accessibilityLabel(L10n.text("player.next"))
         }
     }
 
     private func primaryPlaybackAction() {
-        if player.currentTrack != nil {
+        if appleMusicPlayback.currentItem != nil {
+            if appleMusicPlayback.isPlaying {
+                appleMusicPlayback.pause()
+            } else {
+                Task { await appleMusicPlayback.resume() }
+            }
+        } else if player.currentTrack != nil {
             player.togglePlayback()
         } else if let playableTrack {
             player.play(playableTrack)
         }
+    }
+
+    private var isPlaying: Bool {
+        appleMusicPlayback.currentItem != nil
+            ? appleMusicPlayback.isPlaying
+            : player.isPlaying
     }
 
     private var playableTrack: Track? {
@@ -524,8 +600,10 @@ private struct PlaybackQueuePopover: View {
 
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @State private var selectedTab: Tab = .queue
     @State private var selectedQueueTrackID: Track.ID?
+    @State private var selectedAppleMusicQueueItemID: String?
     @State private var selectedHistorySessionID: UUID?
 
     var body: some View {
@@ -535,15 +613,24 @@ private struct PlaybackQueuePopover: View {
                     .font(.headline)
                 Spacer()
                 if selectedTab == .queue {
-                    Button(L10n.text("player.queue.undo")) {
-                        player.undoLastQueueEdit()
+                    if appleMusicPlayback.currentItem != nil {
+                        Label(
+                            L10n.text("player.queue.appleMusicReadOnly"),
+                            systemImage: "apple.logo"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                    } else {
+                        Button(L10n.text("player.queue.undo")) {
+                            player.undoLastQueueEdit()
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(!player.canUndoQueueEdit)
+                        Button(L10n.text("player.queue.clear")) {
+                            player.clearUpcomingQueue()
+                        }
+                        .buttonStyle(.borderless)
                     }
-                    .buttonStyle(.borderless)
-                    .disabled(!player.canUndoQueueEdit)
-                    Button(L10n.text("player.queue.clear")) {
-                        player.clearUpcomingQueue()
-                    }
-                    .buttonStyle(.borderless)
                 } else {
                     Button(L10n.text("player.history.clear")) {
                         Task { await library.clearPlaybackHistory() }
@@ -578,7 +665,9 @@ private struct PlaybackQueuePopover: View {
 
     @ViewBuilder
     private var queueContent: some View {
-        if player.queuedTracks.isEmpty {
+        if appleMusicPlayback.currentItem != nil {
+            appleMusicQueueContent
+        } else if player.queuedTracks.isEmpty {
             ContentUnavailableView(
                 L10n.text("player.queue.empty"),
                 systemImage: "text.line.first.and.arrowtriangle.forward"
@@ -623,6 +712,61 @@ private struct PlaybackQueuePopover: View {
                     )
                 }
                 .onMove(perform: player.moveInQueue)
+            }
+            .listStyle(.inset)
+            .frame(height: 310)
+        }
+    }
+
+    @ViewBuilder
+    private var appleMusicQueueContent: some View {
+        if appleMusicPlayback.queueItems.isEmpty {
+            ContentUnavailableView(
+                L10n.text("player.queue.loadingAppleMusic"),
+                systemImage: "apple.logo"
+            )
+            .frame(height: 310)
+        } else {
+            List(selection: $selectedAppleMusicQueueItemID) {
+                ForEach(Array(appleMusicPlayback.queueItems.enumerated()), id: \.element.id) {
+                    index, item in
+                    HStack(spacing: AppTheme.spaceSM) {
+                        Image(systemName: appleMusicPlayback.currentQueueItem?.id == item.id
+                            ? "speaker.wave.2.fill" : "music.note")
+                            .foregroundStyle(appleMusicPlayback.currentQueueItem?.id == item.id
+                                ? AppTheme.accent : AppTheme.secondaryInk)
+                            .frame(width: 16)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(item.title)
+                                .lineLimit(1)
+                            Text(item.subtitle)
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .lineLimit(1)
+                        }
+                        Spacer()
+                        if item.duration > 0 {
+                            Text(DurationFormatter.string(item.duration))
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(AppTheme.secondaryInk)
+                        }
+                        appleMusicQueueButtons(item: item, index: index)
+                    }
+                    .contentShape(Rectangle())
+                    .tag(item.id)
+                    .simultaneousGesture(
+                        TapGesture().onEnded {
+                            selectedAppleMusicQueueItemID = item.id
+                        }
+                    )
+                    .simultaneousGesture(
+                        TapGesture(count: 2).onEnded {
+                            selectedAppleMusicQueueItemID = item.id
+                            Task { await appleMusicPlayback.playQueueItem(id: item.id) }
+                        }
+                    )
+                }
+                .onMove(perform: appleMusicPlayback.moveQueueItems)
             }
             .listStyle(.inset)
             .frame(height: 310)
@@ -717,6 +861,30 @@ private struct PlaybackQueuePopover: View {
             .buttonStyle(.borderless)
             .disabled(player.currentTrack?.id == track.id)
             .help(L10n.text("player.queue.remove"))
+        }
+    }
+
+    @ViewBuilder
+    private func appleMusicQueueButtons(item: AppleMusicQueueItem, index: Int) -> some View {
+        HStack(spacing: 2) {
+            Button { appleMusicPlayback.moveQueueItem(id: item.id, offset: -1) } label: {
+                Image(systemName: "chevron.up")
+            }
+            .buttonStyle(.borderless)
+            .disabled(
+                index <= 1 || appleMusicPlayback.currentQueueItem?.id == item.id
+            )
+            .help(L10n.text("player.queue.moveUp"))
+
+            Button { appleMusicPlayback.moveQueueItem(id: item.id, offset: 1) } label: {
+                Image(systemName: "chevron.down")
+            }
+            .buttonStyle(.borderless)
+            .disabled(
+                index == appleMusicPlayback.queueItems.count - 1
+                    || appleMusicPlayback.currentQueueItem?.id == item.id
+            )
+            .help(L10n.text("player.queue.moveDown"))
         }
     }
 }

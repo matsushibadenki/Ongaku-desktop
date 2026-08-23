@@ -82,14 +82,19 @@ struct SystemNowPlayingSnapshot: Equatable, Sendable {
 @MainActor
 final class SystemNowPlayingController: ObservableObject {
     private weak var player: PlaybackController?
+    private weak var appleMusicPlayback: AppleMusicPlaybackController?
     private var observations = Set<AnyCancellable>()
     private var commandTargets: [(command: MPRemoteCommand, token: Any)] = []
     private var artworkTask: Task<Void, Never>?
     private var artworkTrackID: Track.ID?
     private var artwork: MPMediaItemArtwork?
 
-    init(player: PlaybackController) {
+    init(
+        player: PlaybackController,
+        appleMusicPlayback: AppleMusicPlaybackController
+    ) {
         self.player = player
+        self.appleMusicPlayback = appleMusicPlayback
         configureRemoteCommands()
 
         Publishers.CombineLatest3(
@@ -102,6 +107,13 @@ final class SystemNowPlayingController: ObservableObject {
             self?.synchronize()
         }
         .store(in: &observations)
+
+        appleMusicPlayback.$state
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.synchronize()
+            }
+            .store(in: &observations)
 
         // Control Center advances elapsed time from the playback rate. A
         // one-second correction is enough to keep seeks and long playback in
@@ -121,6 +133,10 @@ final class SystemNowPlayingController: ObservableObject {
     }
 
     private func synchronize() {
+        if appleMusicPlayback?.currentItem != nil {
+            updateCommandAvailability(hasTrack: true)
+            return
+        }
         guard let player, let track = player.currentTrack else {
             artworkTask?.cancel()
             artworkTask = nil
@@ -171,21 +187,46 @@ final class SystemNowPlayingController: ObservableObject {
 
     private func configureRemoteCommands() {
         let center = MPRemoteCommandCenter.shared()
-        register(center.playCommand) { player in
-            guard player.currentTrack != nil else { return }
-            if !player.isPlaying { player.togglePlayback() }
+        register(center.playCommand) { player, appleMusicPlayback in
+            if appleMusicPlayback.currentItem != nil {
+                if !appleMusicPlayback.isPlaying {
+                    Task { await appleMusicPlayback.resume() }
+                }
+            } else if player.currentTrack != nil, !player.isPlaying {
+                player.togglePlayback()
+            }
         }
-        register(center.pauseCommand) { player in
-            if player.isPlaying { player.togglePlayback() }
+        register(center.pauseCommand) { player, appleMusicPlayback in
+            if appleMusicPlayback.currentItem != nil {
+                appleMusicPlayback.pause()
+            } else if player.isPlaying {
+                player.togglePlayback()
+            }
         }
-        register(center.togglePlayPauseCommand) { player in
-            player.togglePlayback()
+        register(center.togglePlayPauseCommand) { player, appleMusicPlayback in
+            if appleMusicPlayback.currentItem != nil {
+                if appleMusicPlayback.isPlaying {
+                    appleMusicPlayback.pause()
+                } else {
+                    Task { await appleMusicPlayback.resume() }
+                }
+            } else {
+                player.togglePlayback()
+            }
         }
-        register(center.previousTrackCommand) { player in
-            player.playPrevious()
+        register(center.previousTrackCommand) { player, appleMusicPlayback in
+            if appleMusicPlayback.currentItem != nil {
+                Task { await appleMusicPlayback.playPrevious() }
+            } else {
+                player.playPrevious()
+            }
         }
-        register(center.nextTrackCommand) { player in
-            player.playNext()
+        register(center.nextTrackCommand) { player, appleMusicPlayback in
+            if appleMusicPlayback.currentItem != nil {
+                Task { await appleMusicPlayback.playNext() }
+            } else {
+                player.playNext()
+            }
         }
 
         center.changePlaybackPositionCommand.isEnabled = true
@@ -194,7 +235,12 @@ final class SystemNowPlayingController: ObservableObject {
                 return .commandFailed
             }
             Task { @MainActor [weak self] in
-                self?.player?.seek(to: position)
+                if let appleMusicPlayback = self?.appleMusicPlayback,
+                   appleMusicPlayback.currentItem != nil {
+                    appleMusicPlayback.seek(to: position)
+                } else {
+                    self?.player?.seek(to: position)
+                }
             }
             return .success
         }
@@ -203,13 +249,17 @@ final class SystemNowPlayingController: ObservableObject {
 
     private func register(
         _ command: MPRemoteCommand,
-        action: @escaping @MainActor (PlaybackController) -> Void
+        action: @escaping @MainActor (
+            PlaybackController,
+            AppleMusicPlaybackController
+        ) -> Void
     ) {
         command.isEnabled = true
         let token = command.addTarget { [weak self] _ in
             Task { @MainActor [weak self] in
-                guard let player = self?.player else { return }
-                action(player)
+                guard let player = self?.player,
+                      let appleMusicPlayback = self?.appleMusicPlayback else { return }
+                action(player, appleMusicPlayback)
             }
             return .success
         }

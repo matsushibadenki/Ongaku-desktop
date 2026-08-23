@@ -8,20 +8,21 @@ import SwiftUI
 struct MiniPlayerView: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @State private var isShowingVolume = false
 
     var body: some View {
         HStack(spacing: AppTheme.spaceSM) {
-            NowPlayingArtwork(track: player.currentTrack, size: 96)
+            nowPlayingArtwork
 
             VStack(alignment: .leading, spacing: 7) {
                 HStack(alignment: .top, spacing: AppTheme.spaceXS) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(player.currentTrack?.title ?? L10n.text("player.idle"))
+                        Text(displayedTitle)
                             .font(.headline.weight(.bold))
                             .foregroundStyle(AppTheme.ink)
                             .lineLimit(1)
-                            .help(player.currentTrack?.title ?? L10n.text("player.idle"))
+                            .help(displayedTitle)
 
                         Text(trackContext)
                             .font(.caption)
@@ -31,22 +32,34 @@ struct MiniPlayerView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                    PlaybackModeMenu()
+                    if appleMusicPlayback.currentItem == nil {
+                        PlaybackModeMenu()
+                    }
                 }
 
                 HStack(spacing: 6) {
-                    Text(DurationFormatter.string(player.elapsed))
+                    Text(DurationFormatter.string(displayedElapsed))
                         .font(.caption2.monospacedDigit())
                         .foregroundStyle(AppTheme.secondaryInk)
                         .frame(width: 31, alignment: .trailing)
                     Slider(
                         value: Binding(
-                            get: { player.elapsed },
-                            set: { player.seek(to: $0) }
+                            get: { displayedElapsed },
+                            set: { newValue in
+                                if appleMusicPlayback.currentItem != nil {
+                                    appleMusicPlayback.seek(to: newValue)
+                                } else {
+                                    player.seek(to: newValue)
+                                }
+                            }
                         ),
-                        in: 0...max(player.duration, 1)
+                        in: 0...max(displayedDuration, 1)
                     )
-                    .disabled(player.currentTrack == nil)
+                    .disabled(
+                        appleMusicPlayback.currentItem != nil
+                            ? displayedDuration <= 0
+                            : player.currentTrack == nil
+                    )
                     .accessibilityLabel(L10n.text("miniPlayer.progress"))
 
                     Text(remainingTime)
@@ -65,18 +78,20 @@ struct MiniPlayerView: View {
 
                     PlaybackQueueButton()
 
-                    Button {
-                        isShowingVolume.toggle()
-                    } label: {
-                        Image(systemName: volumeSymbol)
-                            .frame(width: 22, height: 22)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.borderless)
-                    .help(L10n.text("miniPlayer.volume"))
-                    .accessibilityLabel(L10n.text("miniPlayer.volume"))
-                    .popover(isPresented: $isShowingVolume, arrowEdge: .bottom) {
-                        volumePopover
+                    if appleMusicPlayback.currentItem == nil {
+                        Button {
+                            isShowingVolume.toggle()
+                        } label: {
+                            Image(systemName: volumeSymbol)
+                                .frame(width: 22, height: 22)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.borderless)
+                        .help(L10n.text("miniPlayer.volume"))
+                        .accessibilityLabel(L10n.text("miniPlayer.volume"))
+                        .popover(isPresented: $isShowingVolume, arrowEdge: .bottom) {
+                            volumePopover
+                        }
                     }
                 }
             }
@@ -90,13 +105,57 @@ struct MiniPlayerView: View {
     }
 
     private var trackContext: String {
+        if let item = appleMusicPlayback.currentQueueItem {
+            return "\(item.subtitle) — Apple Music"
+        }
+        if let item = appleMusicPlayback.currentItem {
+            return "\(item.subtitle) — Apple Music"
+        }
         guard let track = player.currentTrack else { return L10n.text("player.chooseTrack") }
         return "\(track.artist) — \(track.album)"
     }
 
     private var remainingTime: String {
+        if appleMusicPlayback.currentItem != nil {
+            return "−\(DurationFormatter.string(max(displayedDuration - displayedElapsed, 0)))"
+        }
         guard player.currentTrack != nil else { return "0:00" }
-        return "−\(DurationFormatter.string(max(player.duration - player.elapsed, 0)))"
+        return "−\(DurationFormatter.string(max(displayedDuration - displayedElapsed, 0)))"
+    }
+
+    @ViewBuilder
+    private var nowPlayingArtwork: some View {
+        if let item = appleMusicPlayback.currentItem {
+            AsyncImage(
+                url: appleMusicPlayback.currentQueueItem?.artworkURL ?? item.artworkURL
+            ) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                Image(systemName: "apple.logo")
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppTheme.raised)
+            }
+            .frame(width: 96, height: 96)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else {
+            NowPlayingArtwork(track: player.currentTrack, size: 96)
+        }
+    }
+
+    private var displayedTitle: String {
+        appleMusicPlayback.currentQueueItem?.title
+            ?? appleMusicPlayback.currentItem?.title
+            ?? player.currentTrack?.title
+            ?? L10n.text("player.idle")
+    }
+
+    private var displayedElapsed: TimeInterval {
+        appleMusicPlayback.currentItem == nil ? player.elapsed : appleMusicPlayback.elapsed
+    }
+
+    private var displayedDuration: TimeInterval {
+        appleMusicPlayback.currentItem == nil ? player.duration : appleMusicPlayback.duration
     }
 
     private var volumePopover: some View {

@@ -5,6 +5,7 @@ struct ContentView: View {
     @Environment(\.undoManager) private var undoManager
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var isImporting = false
     @State private var isImportingCD = false
@@ -58,6 +59,8 @@ struct ContentView: View {
         }
         .sheet(isPresented: $isShowingAppleMusicStore) {
             AppleMusicStoreView()
+                .environmentObject(player)
+                .environmentObject(appleMusicPlayback)
         }
         .fileImporter(
             isPresented: $isRelinkSearching,
@@ -185,6 +188,8 @@ struct ContentView: View {
     ContentView()
         .environmentObject(LibraryStore())
         .environmentObject(PlaybackController())
+        .environmentObject(AppleMusicPlaybackController())
+        .environmentObject(AppleMusicStoreController())
         .environmentObject(PlayerMeterSettings())
         .environmentObject(TrackTableSettings())
         .environmentObject(LibraryProfileSettings(defaultMediaURL: storage.mediaDirectoryURL))

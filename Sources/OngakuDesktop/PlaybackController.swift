@@ -734,6 +734,7 @@ final class PlaybackController: ObservableObject {
     private var prerolledTrack: PrerolledTrack?
     private var silenceAnalyses: [URL: AudioSilenceAnalysis] = [:]
     private var silenceAnalysisTasks: [URL: Task<Void, Never>] = [:]
+    private var externalPlaybackStopHandler: (() -> Void)?
 
     private struct PrerolledTrack {
         let track: Track
@@ -784,6 +785,27 @@ final class PlaybackController: ObservableObject {
         effectsBypassed ? 0 : effectSettings.count(where: \.isEnabled)
     }
 
+    func setExternalPlaybackStopHandler(_ handler: @escaping () -> Void) {
+        externalPlaybackStopHandler = handler
+    }
+
+    func pauseForExternalPlayback() {
+        guard isPlaying else { return }
+        elapsed = currentElapsed()
+        stopPlayerNodes()
+        if let audioFile {
+            let frame = min(
+                AVAudioFramePosition(elapsed * audioFile.processingFormat.sampleRate),
+                audioFile.length
+            )
+            schedule(fromFrame: frame)
+        }
+        isPlaying = false
+        clearAudioVisualization()
+        stopTimer()
+        publishQueueState(force: true)
+    }
+
     var queuedTracks: [Track] { playbackQueue }
     var canUndoQueueEdit: Bool { !queueUndoStack.isEmpty }
 
@@ -830,6 +852,7 @@ final class PlaybackController: ObservableObject {
     }
 
     func play(_ track: Track) {
+        externalPlaybackStopHandler?()
         finishPlaybackSession(kind: .skipped)
         if !playbackQueue.contains(where: { $0.id == track.id }) {
             playbackQueue.append(track)
@@ -1016,6 +1039,7 @@ final class PlaybackController: ObservableObject {
             publishQueueState(force: true)
         } else {
             do {
+                externalPlaybackStopHandler?()
                 if elapsed >= duration - 0.01 {
                     stopPlayerNodes()
                     schedule(fromFrame: 0)

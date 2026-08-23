@@ -30,6 +30,8 @@ struct OngakuDesktopApp: App {
     @StateObject private var trackTableSettings: TrackTableSettings
     @StateObject private var windowPresentation = WindowPresentationController()
     @StateObject private var player: PlaybackController
+    @StateObject private var appleMusicPlayback: AppleMusicPlaybackController
+    @StateObject private var appleMusicStore: AppleMusicStoreController
     @StateObject private var systemNowPlaying: SystemNowPlayingController
     @StateObject private var softwareUpdater = SoftwareUpdateController()
 
@@ -45,9 +47,18 @@ struct OngakuDesktopApp: App {
         _meterSettings = StateObject(wrappedValue: PlayerMeterSettings())
         _trackTableSettings = StateObject(wrappedValue: TrackTableSettings())
         let player = PlaybackController()
+        let appleMusicPlayback = AppleMusicPlaybackController()
+        player.setExternalPlaybackStopHandler { [weak appleMusicPlayback] in
+            appleMusicPlayback?.stopForLocalPlayback()
+        }
         _player = StateObject(wrappedValue: player)
+        _appleMusicPlayback = StateObject(wrappedValue: appleMusicPlayback)
+        _appleMusicStore = StateObject(wrappedValue: AppleMusicStoreController())
         _systemNowPlaying = StateObject(
-            wrappedValue: SystemNowPlayingController(player: player)
+            wrappedValue: SystemNowPlayingController(
+                player: player,
+                appleMusicPlayback: appleMusicPlayback
+            )
         )
         _library = StateObject(wrappedValue: LibraryStore(
             repository: LibraryRepository(
@@ -70,6 +81,8 @@ struct OngakuDesktopApp: App {
                 .background(WindowMiniaturizeBridge(controller: windowPresentation))
                 .environmentObject(library)
                 .environmentObject(player)
+                .environmentObject(appleMusicPlayback)
+                .environmentObject(appleMusicStore)
                 .environmentObject(storage)
                 .environmentObject(libraryProfiles)
                 .environmentObject(language)

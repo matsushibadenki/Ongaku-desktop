@@ -149,6 +149,8 @@ private struct TrackPlaylistContextActions: View {
 struct LibraryContent: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
+    @EnvironmentObject private var appleMusicStore: AppleMusicStoreController
     @EnvironmentObject private var trackTableSettings: TrackTableSettings
     @State private var sortOrder = [KeyPathComparator(\Track.title)]
     @State private var sortedTracks: [Track] = []
@@ -160,12 +162,15 @@ struct LibraryContent: View {
     @State private var selectedArtistID: ArtistGroup.ID?
     @State private var metadataEditTarget: MetadataEditTarget?
     @State private var isShowingFilters = false
+    @State private var unifiedSearchTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 0) {
             header
 
-            if library.selectedPlaylist?.smartDefinition != nil
+            if !library.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                unifiedSearchContent
+            } else if library.selectedPlaylist?.smartDefinition != nil
                 && library.filteredTracks.isEmpty {
                 smartPlaylistEmptyView
             } else if library.selectedPlaylist != nil && library.filteredTracks.isEmpty {
@@ -201,6 +206,200 @@ struct LibraryContent: View {
         }
         .onAppear {
             restoreSavedSortOrder(for: library.selectedSection)
+        }
+        .task {
+            await appleMusicStore.refresh()
+            scheduleUnifiedSearch(library.searchText)
+        }
+        .onChange(of: library.searchText) { _, query in
+            scheduleUnifiedSearch(query)
+        }
+        .onDisappear {
+            unifiedSearchTask?.cancel()
+            unifiedSearchTask = nil
+        }
+    }
+
+    private var unifiedSearchContent: some View {
+        VSplitView {
+            Group {
+                if library.filteredTracks.isEmpty {
+                    ContentUnavailableView(
+                        L10n.text("unifiedSearch.localEmpty"),
+                        systemImage: "music.note"
+                    )
+                } else {
+                    trackTable
+                }
+            }
+            .frame(minHeight: 190, idealHeight: 330)
+
+            appleMusicUnifiedResults
+                .frame(minHeight: 180, idealHeight: 280)
+        }
+    }
+
+    private var appleMusicUnifiedResults: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Image(systemName: "apple.logo")
+                Text(L10n.text("unifiedSearch.appleMusic"))
+                    .font(.headline)
+                Spacer()
+                if appleMusicStore.isUnifiedSearchWorking {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+            }
+            .padding(.horizontal, 14)
+            .frame(height: 38)
+            .background(AppTheme.surface)
+            Divider()
+
+            if appleMusicStore.authorization != .authorized {
+                ContentUnavailableView {
+                    Label(
+                        L10n.text("unifiedSearch.authorizationTitle"),
+                        systemImage: "person.crop.circle.badge.exclamationmark"
+                    )
+                } description: {
+                    Text(L10n.text("unifiedSearch.authorizationMessage"))
+                } actions: {
+                    Button(L10n.text("unifiedSearch.openAppleMusic")) {
+                        NotificationCenter.default.post(
+                            name: .requestAppleMusicStore,
+                            object: nil
+                        )
+                    }
+                }
+            } else if appleMusicStore.isUnifiedSearchWorking
+                        && appleMusicStore.unifiedCatalogItems.isEmpty
+                        && appleMusicStore.unifiedLibraryItems.isEmpty {
+                ProgressView()
+                    .controlSize(.large)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if appleMusicStore.unifiedCatalogItems.isEmpty
+                        && appleMusicStore.unifiedLibraryItems.isEmpty {
+                ContentUnavailableView(
+                    appleMusicStore.unifiedSearchMessage
+                        ?? L10n.text("appleMusic.search.noResults"),
+                    systemImage: "magnifyingglass"
+                )
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(appleMusicStore.unifiedLibraryItems) { item in
+                            appleUnifiedSearchRow(
+                                item,
+                                sourceKey: "unifiedSearch.source.syncedLibrary"
+                            )
+                            Divider().padding(.leading, 58)
+                        }
+                        ForEach(appleMusicStore.unifiedCatalogItems) { item in
+                            appleUnifiedSearchRow(
+                                item,
+                                sourceKey: "unifiedSearch.source.catalog"
+                            )
+                            Divider().padding(.leading, 58)
+                        }
+                    }
+                }
+            }
+        }
+        .background(AppTheme.canvas)
+    }
+
+    private func appleUnifiedSearchRow(
+        _ item: AppleMusicCatalogItem,
+        sourceKey: String
+    ) -> some View {
+        HStack(spacing: 10) {
+            AsyncImage(url: item.artworkURL) { image in
+                image.resizable().scaledToFill()
+            } placeholder: {
+                Image(systemName: "music.note")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppTheme.raised)
+            }
+            .frame(width: 38, height: 38)
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.title)
+                    .font(.callout.weight(.medium))
+                    .lineLimit(1)
+                HStack(spacing: 5) {
+                    Text(item.subtitle)
+                        .lineLimit(1)
+                    Text(L10n.text(sourceKey))
+                        .font(.caption2.weight(.semibold))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(AppTheme.raised, in: Capsule())
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+            Spacer()
+            if item.kind.isPlayable {
+                Button {
+                    Task {
+                        await appleMusicStore.playCatalogItem(
+                            item,
+                            with: appleMusicPlayback,
+                            localPlayer: player
+                        )
+                    }
+                } label: {
+                    Image(systemName: "play.fill")
+                }
+                .buttonStyle(.borderless)
+                .help(L10n.text("appleMusic.playback.play"))
+                .disabled(
+                    !appleMusicStore.canPlayCatalogContent
+                        || appleMusicPlayback.isWorking
+                )
+            }
+            if item.ratingResourceType != nil {
+                Button {
+                    Task { await appleMusicStore.toggleFavorite(item) }
+                } label: {
+                    Image(systemName: appleMusicStore.isFavorite(item) ? "heart.fill" : "heart")
+                        .foregroundStyle(
+                            appleMusicStore.isFavorite(item) ? Color.red : Color.secondary
+                        )
+                }
+                .buttonStyle(.borderless)
+                .help(L10n.text(
+                    appleMusicStore.isFavorite(item)
+                        ? "appleMusic.favorite.remove" : "appleMusic.favorite.add"
+                ))
+            }
+            Button {
+                if let url = item.destinationURL {
+                    NSWorkspace.shared.open(url)
+                }
+            } label: {
+                Image(systemName: "arrow.up.forward.app")
+            }
+            .buttonStyle(.borderless)
+            .help(L10n.text("appleMusic.open"))
+            .disabled(item.destinationURL == nil)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+    }
+
+    private func scheduleUnifiedSearch(_ rawQuery: String) {
+        unifiedSearchTask?.cancel()
+        let query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        unifiedSearchTask = Task {
+            if !query.isEmpty {
+                try? await Task.sleep(for: .milliseconds(350))
+            }
+            guard !Task.isCancelled else { return }
+            await appleMusicStore.searchUnified(query)
         }
     }
 
