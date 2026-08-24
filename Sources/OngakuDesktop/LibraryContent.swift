@@ -649,20 +649,49 @@ struct LibraryContent: View {
             }
             Spacer(minLength: 0)
             if library.isAnalyzingAudioFeatures {
-                ProgressView()
-                    .controlSize(.small)
-                if let progress = library.audioFeatureAnalysisProgress {
-                    Text(L10n.format(
-                        "ongakuMix.analysis.progressCount",
-                        progress.completed,
-                        progress.total
-                    ))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(AppTheme.secondaryInk)
-                } else {
-                    Text(L10n.text("ongakuMix.analysis.progress"))
+                if library.isAudioFeatureAnalysisPaused {
+                    Image(systemName: "pause.circle.fill")
+                        .foregroundStyle(AppTheme.warning)
+                    Text(audioFeatureAnalysisPauseText)
                         .font(.caption)
                         .foregroundStyle(AppTheme.secondaryInk)
+                        .lineLimit(1)
+                } else {
+                    ProgressView()
+                        .controlSize(.small)
+                }
+                if !library.isAudioFeatureAnalysisPaused {
+                    if let progress = library.audioFeatureAnalysisProgress {
+                        Text(L10n.format(
+                            "ongakuMix.analysis.progressCount",
+                            progress.completed,
+                            progress.total
+                        ))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(AppTheme.secondaryInk)
+                    } else {
+                        Text(L10n.text("ongakuMix.analysis.progress"))
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.secondaryInk)
+                    }
+                }
+                if library.audioFeatureAnalysisPauseReason == nil
+                    || library.audioFeatureAnalysisPauseReason == .user {
+                    Button(
+                        L10n.text(
+                            library.isAudioFeatureAnalysisPaused
+                                ? "ongakuMix.analysis.resume"
+                                : "ongakuMix.analysis.pause"
+                        )
+                    ) {
+                        if library.isAudioFeatureAnalysisPaused {
+                            library.resumeAudioFeatureAnalysis()
+                        } else {
+                            library.pauseAudioFeatureAnalysis()
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .controlSize(.small)
                 }
                 Button(L10n.text("ongakuMix.analysis.cancel")) {
                     library.cancelAudioFeatureAnalysis()
@@ -687,6 +716,19 @@ struct LibraryContent: View {
         .padding(.vertical, AppTheme.spaceSM)
         .background(AppTheme.raised)
         .overlay(alignment: .bottom) { Divider() }
+    }
+
+    private var audioFeatureAnalysisPauseText: String {
+        switch library.audioFeatureAnalysisPauseReason {
+        case .user:
+            L10n.text("ongakuMix.analysis.paused.user")
+        case .lowPowerMode:
+            L10n.text("ongakuMix.analysis.paused.lowPower")
+        case .thermalPressure:
+            L10n.text("ongakuMix.analysis.paused.thermal")
+        case nil:
+            L10n.text("ongakuMix.analysis.paused")
+        }
     }
 
     private var standardSectionEmptyView: some View {
@@ -927,6 +969,18 @@ struct LibraryContent: View {
     private func trackCellPlaybackGesture(for track: Track) -> some Gesture {
         TapGesture(count: 2).onEnded {
             tableSelectedTrackIDs = [track.id]
+            playTrack(track)
+        }
+    }
+
+    private func playTrack(_ track: Track) {
+        if isShowingOngakuMixReason {
+            player.playOngakuMix(
+                track,
+                queue: ongakuMixCandidates.map(\.track),
+                audioFeatures: library.audioFeatures
+            )
+        } else {
             player.play(track)
         }
     }
@@ -944,7 +998,7 @@ struct LibraryContent: View {
     private func trackRowContextMenu(for selection: Set<Track.ID>) -> some View {
         let selectedTracks = sortedTracks.filter { selection.contains($0.id) }
         if let track = selectedTracks.first {
-            Button(L10n.text("track.play")) { player.play(track) }
+            Button(L10n.text("track.play")) { playTrack(track) }
             PlaybackQueueContextActions(tracks: selectedTracks)
             TrackPlaylistContextActions(trackIDs: selection)
             TrackPlaybackAttributeActions(track: track)

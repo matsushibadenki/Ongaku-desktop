@@ -11,6 +11,27 @@ struct AudioFeatureAnalysisProgress: Equatable, Sendable {
     var failed: Int = 0
 }
 
+enum AudioFeatureAnalysisPauseReason: Equatable, Sendable {
+    case user
+    case lowPowerMode
+    case thermalPressure
+}
+
+enum AudioFeatureAnalysisPowerPolicy {
+    nonisolated static func automaticPauseReason(
+        isLowPowerModeEnabled: Bool,
+        thermalState: ProcessInfo.ThermalState
+    ) -> AudioFeatureAnalysisPauseReason? {
+        if thermalState == .serious || thermalState == .critical {
+            return .thermalPressure
+        }
+        if isLowPowerModeEnabled {
+            return .lowPowerMode
+        }
+        return nil
+    }
+}
+
 @MainActor
 final class LibraryStore: ObservableObject {
     enum SearchBackendStatus: Equatable {
@@ -48,6 +69,8 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var contentRevision = 0
     @Published private(set) var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
     @Published private(set) var isAnalyzingAudioFeatures = false
+    @Published private(set) var isAudioFeatureAnalysisPaused = false
+    @Published private(set) var audioFeatureAnalysisPauseReason: AudioFeatureAnalysisPauseReason?
     @Published private(set) var audioFeatureRevision = 0
     @Published private(set) var audioFeatureAnalysisProgress: AudioFeatureAnalysisProgress?
     @Published var selectedSection: LibrarySection = .songs
@@ -102,6 +125,7 @@ final class LibraryStore: ObservableObject {
     private var playbackQueueSaveTask: Task<Void, Never>?
     private var audioFeatureAnalysisTask: Task<Void, Never>?
     private var audioFeatureAnalysisGeneration = UUID()
+    private var isAudioFeatureAnalysisUserPaused = false
     private var duplicateGroupCacheRevision = -1
     private var duplicateGroupCache: [DuplicateTrackGroup] = []
     weak var undoManager: UndoManager?
@@ -809,6 +833,9 @@ final class LibraryStore: ObservableObject {
         playbackQueue = nil
         audioFeatures = [:]
         isAnalyzingAudioFeatures = false
+        isAudioFeatureAnalysisPaused = false
+        audioFeatureAnalysisPauseReason = nil
+        isAudioFeatureAnalysisUserPaused = false
         audioFeatureAnalysisProgress = nil
         audioFeatureRevision &+= 1
         selectedPlaylistID = nil
@@ -853,12 +880,26 @@ final class LibraryStore: ObservableObject {
         audioFeatureAnalysisTask?.cancel()
     }
 
+    func pauseAudioFeatureAnalysis() {
+        guard isAnalyzingAudioFeatures else { return }
+        isAudioFeatureAnalysisUserPaused = true
+        updateAudioFeatureAnalysisPauseState(.user)
+    }
+
+    func resumeAudioFeatureAnalysis() {
+        guard isAnalyzingAudioFeatures else { return }
+        isAudioFeatureAnalysisUserPaused = false
+        updateAudioFeatureAnalysisPauseState(currentAutomaticAudioFeaturePauseReason())
+    }
+
     private func startAudioFeatureAnalysis(targets: [Track]) {
         guard audioFeatureAnalysisTask == nil, !targets.isEmpty else { return }
         let generation = UUID()
         audioFeatureAnalysisGeneration = generation
         let cache = audioFeatureCache
+        isAudioFeatureAnalysisUserPaused = false
         isAnalyzingAudioFeatures = true
+        updateAudioFeatureAnalysisPauseState(currentAutomaticAudioFeaturePauseReason())
         audioFeatureAnalysisProgress = AudioFeatureAnalysisProgress(total: targets.count)
         audioFeatureAnalysisTask = Task { [weak self] in
             await self?.runAudioFeatureAnalysis(
@@ -878,7 +919,9 @@ final class LibraryStore: ObservableObject {
         var completed = 0
         var failed = 0
         for track in targets {
-            guard !Task.isCancelled else { break }
+            guard await waitUntilAudioFeatureAnalysisCanContinue(generation: generation) else {
+                break
+            }
             let analysis = await Task.detached(priority: .utility) {
                 try? AudioFeatureAnalyzer.analyze(track: track)
             }.value
@@ -889,6 +932,11 @@ final class LibraryStore: ObservableObject {
             } else {
                 failed += 1
             }
+            audioFeatureAnalysisProgress = AudioFeatureAnalysisProgress(
+                total: targets.count,
+                completed: completed,
+                failed: failed
+            )
             try? await Task.sleep(for: .milliseconds(20))
         }
         guard generation == audioFeatureAnalysisGeneration else { return }
@@ -903,8 +951,45 @@ final class LibraryStore: ObservableObject {
             completed: completed,
             failed: failed
         )
+        isAudioFeatureAnalysisUserPaused = false
+        updateAudioFeatureAnalysisPauseState(nil)
         isAnalyzingAudioFeatures = false
         audioFeatureAnalysisTask = nil
+    }
+
+    private func waitUntilAudioFeatureAnalysisCanContinue(generation: UUID) async -> Bool {
+        while !Task.isCancelled && generation == audioFeatureAnalysisGeneration {
+            let reason = isAudioFeatureAnalysisUserPaused
+                ? AudioFeatureAnalysisPauseReason.user
+                : currentAutomaticAudioFeaturePauseReason()
+            updateAudioFeatureAnalysisPauseState(reason)
+            guard reason != nil else { return true }
+            do {
+                try await Task.sleep(for: .seconds(1))
+            } catch {
+                return false
+            }
+        }
+        return false
+    }
+
+    private func currentAutomaticAudioFeaturePauseReason() -> AudioFeatureAnalysisPauseReason? {
+        AudioFeatureAnalysisPowerPolicy.automaticPauseReason(
+            isLowPowerModeEnabled: ProcessInfo.processInfo.isLowPowerModeEnabled,
+            thermalState: ProcessInfo.processInfo.thermalState
+        )
+    }
+
+    private func updateAudioFeatureAnalysisPauseState(
+        _ reason: AudioFeatureAnalysisPauseReason?
+    ) {
+        let paused = reason != nil
+        if audioFeatureAnalysisPauseReason != reason {
+            audioFeatureAnalysisPauseReason = reason
+        }
+        if isAudioFeatureAnalysisPaused != paused {
+            isAudioFeatureAnalysisPaused = paused
+        }
     }
 
     func importFiles(_ urls: [URL]) async {

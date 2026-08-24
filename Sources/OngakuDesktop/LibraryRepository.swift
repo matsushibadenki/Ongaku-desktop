@@ -460,8 +460,13 @@ actor LibraryRepository {
                 let title = metadataOverride?.title ?? metadata.title
                 let artist = metadataOverride?.artist ?? metadata.artist
                 let album = metadataOverride?.album ?? metadata.album
+                let albumArtist = metadataOverride?.albumArtist ?? metadata.albumArtist
+                let releaseYear = metadataOverride?.releaseYear ?? metadata.releaseYear
+                let isrc = metadataOverride?.isrc ?? metadata.isrc
                 let trackNumber = metadataOverride?.trackNumber ?? metadata.trackNumber
                 let trackCount = metadataOverride?.trackCount ?? metadata.trackCount
+                let discNumber = metadataOverride?.discNumber ?? metadata.discNumber
+                let discCount = metadataOverride?.discCount ?? metadata.discCount
                 let destination = try destinationURL(
                     artist: artist,
                     album: album,
@@ -481,7 +486,7 @@ actor LibraryRepository {
                     album: album,
                     artistSortName: metadata.artistSortName,
                     albumSortName: metadata.albumSortName,
-                    albumArtist: metadata.albumArtist,
+                    albumArtist: albumArtist,
                     composer: metadata.composer,
                     grouping: metadata.grouping,
                     genre: metadata.genre,
@@ -492,15 +497,16 @@ actor LibraryRepository {
                     movementCount: metadata.movementCount,
                     beatsPerMinute: metadata.beatsPerMinute,
                     copyright: metadata.copyright,
-                    isrc: metadata.isrc,
-                    releaseYear: metadata.releaseYear,
+                    isrc: isrc,
+                    releaseYear: releaseYear,
                     trackNumber: trackNumber,
                     trackCount: trackCount,
-                    discNumber: metadata.discNumber,
-                    discCount: metadata.discCount,
+                    discNumber: discNumber,
+                    discCount: discCount,
                     isCompilation: metadata.isCompilation,
                     comments: metadata.comments,
                     lyrics: metadata.lyrics,
+                    musicBrainzReference: metadataOverride?.musicBrainzReference,
                     duration: metadata.duration,
                     fileSize: Int64(values.fileSize ?? 0),
                     managedPath: destination.path,

@@ -152,6 +152,65 @@ private struct PlaybackSettingsView: View {
                 }
                 .toggleStyle(.switch)
 
+                Divider()
+
+                VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
+                    settingsRow(
+                        title: L10n.text("settings.playback.normalization.title"),
+                        description: L10n.text("settings.playback.normalization.description")
+                    ) {
+                        Picker("", selection: $player.loudnessNormalizationMode) {
+                            ForEach(LoudnessNormalizationMode.allCases) { mode in
+                                Text(L10n.text(mode.localizationKey)).tag(mode)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 180)
+                    }
+
+                    VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                        HStack {
+                            Text(L10n.text("settings.playback.normalization.target"))
+                                .font(.callout.weight(.medium))
+                            Spacer(minLength: AppTheme.spaceLG)
+                            Text(L10n.format(
+                                "settings.playback.normalization.targetValue",
+                                player.loudnessTargetDBFS
+                            ))
+                            .font(.callout.monospacedDigit())
+                            .foregroundStyle(AppTheme.secondaryInk)
+                        }
+                        Slider(
+                            value: $player.loudnessTargetDBFS,
+                            in: LoudnessNormalizationPolicy.targetRange,
+                            step: 1
+                        )
+                        .accessibilityLabel(
+                            L10n.text("settings.playback.normalization.target")
+                        )
+                    }
+                    .disabled(player.loudnessNormalizationMode == .off)
+
+                    if let adjustment = player.loudnessAdjustmentDescription {
+                        Label(adjustment, systemImage: "waveform.badge.magnifyingglass")
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Toggle(isOn: $player.preventsClipping) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(L10n.text("settings.playback.clipping.title"))
+                                .font(.headline)
+                            Text(L10n.text("settings.playback.clipping.description"))
+                                .font(.callout)
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .toggleStyle(.switch)
+                }
+
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, AppTheme.spaceMD)

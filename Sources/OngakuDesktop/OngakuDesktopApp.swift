@@ -94,10 +94,14 @@ struct OngakuDesktopApp: App {
                 .id(language.selectedLanguage.rawValue)
                 .task {
                     await library.load()
+                    player.updateAudioFeatures(library.audioFeatures)
                     player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                 }
                 .onChange(of: library.contentRevision) {
                     player.reconcilePlaybackQueue(with: library.tracks)
+                }
+                .onChange(of: library.audioFeatureRevision) {
+                    player.updateAudioFeatures(library.audioFeatures)
                 }
                 .onChange(of: libraryProfiles.activeLibraryID) {
                     let profile = libraryProfiles.activeProfile

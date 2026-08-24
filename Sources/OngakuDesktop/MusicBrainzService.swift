@@ -1,4 +1,5 @@
 import AppKit
+import CryptoKit
 import Foundation
 
 struct MusicBrainzReference: Codable, Hashable, Sendable {
@@ -88,6 +89,86 @@ struct CoverArtCandidate: Identifiable, Equatable, Sendable {
     let downloadURL: URL
 }
 
+struct MusicBrainzDiscTOC: Equatable, Sendable {
+    let firstTrack: Int
+    let lastTrack: Int
+    let leadoutOffset: Int
+    let trackOffsets: [Int]
+
+    init(trackDurations: [TimeInterval]) {
+        firstTrack = 1
+        lastTrack = trackDurations.count
+        var offset = 150
+        var offsets: [Int] = []
+        for duration in trackDurations {
+            offsets.append(offset)
+            offset += max(Int((duration * 75).rounded()), 1)
+        }
+        leadoutOffset = offset
+        trackOffsets = offsets
+    }
+
+    init(firstTrack: Int, lastTrack: Int, leadoutOffset: Int, trackOffsets: [Int]) {
+        self.firstTrack = firstTrack
+        self.lastTrack = lastTrack
+        self.leadoutOffset = leadoutOffset
+        self.trackOffsets = trackOffsets
+    }
+
+    var discID: String {
+        var hexadecimal = String(format: "%02X%02X%08X", firstTrack, lastTrack, leadoutOffset)
+        for index in 0..<99 {
+            let trackNumber = index + 1
+            let offset: Int
+            if trackNumber >= firstTrack,
+               trackNumber <= lastTrack,
+               trackNumber - firstTrack < trackOffsets.count {
+                offset = trackOffsets[trackNumber - firstTrack]
+            } else {
+                offset = 0
+            }
+            hexadecimal += String(format: "%08X", offset)
+        }
+        let digest = Insecure.SHA1.hash(data: Data(hexadecimal.utf8))
+        return Data(digest).base64EncodedString()
+            .replacingOccurrences(of: "+", with: ".")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "-")
+    }
+
+    var queryValue: String {
+        ([firstTrack, lastTrack, leadoutOffset] + trackOffsets)
+            .map(String.init)
+            .joined(separator: " ")
+    }
+}
+
+struct MusicBrainzDiscTrackMetadata: Equatable, Sendable {
+    let position: Int
+    let title: String
+    let artist: String
+    let recordingID: String?
+    let artistIDs: [String]
+    let isrc: String?
+}
+
+struct MusicBrainzDiscReleaseCandidate: Identifiable, Equatable, Sendable {
+    let releaseID: String
+    let releaseGroupID: String?
+    let title: String
+    let artist: String
+    let artistIDs: [String]
+    let releaseDate: String?
+    let country: String?
+    let mediaFormat: String?
+    let discNumber: Int
+    let discCount: Int
+    let tracks: [MusicBrainzDiscTrackMetadata]
+
+    var id: String { "\(releaseID):\(discNumber)" }
+    var releaseYear: Int? { releaseDate.flatMap { Int($0.prefix(4)) } }
+}
+
 enum MusicBrainzServiceError: LocalizedError, Equatable {
     case invalidResponse
     case serviceUnavailable
@@ -170,6 +251,16 @@ actor MusicBrainzService {
         .map { $0 }
     }
 
+    func releases(for toc: MusicBrainzDiscTOC) async throws -> [MusicBrainzDiscReleaseCandidate] {
+        let response: DiscLookupResponse
+        do {
+            response = try await musicBrainzJSON(from: Self.discLookupURL(for: toc))
+        } catch MusicBrainzServiceError.invalidResponse {
+            response = try await musicBrainzJSON(from: Self.tocLookupURL(for: toc))
+        }
+        return Self.discCandidates(from: response, matching: toc)
+    }
+
     func coverArt(for releaseID: String) async throws -> [CoverArtCandidate] {
         let url = Self.coverArtURL(for: releaseID)
         let response: CoverArtResponse
@@ -224,6 +315,37 @@ actor MusicBrainzService {
         coverArtBaseURL
             .appendingPathComponent("release")
             .appendingPathComponent(releaseID)
+    }
+
+    nonisolated static func discLookupURL(for toc: MusicBrainzDiscTOC) -> URL {
+        var components = URLComponents(
+            url: baseURL.appendingPathComponent("discid").appendingPathComponent(toc.discID),
+            resolvingAgainstBaseURL: false
+        )!
+        components.queryItems = [
+            URLQueryItem(name: "fmt", value: "json"),
+            URLQueryItem(
+                name: "inc",
+                value: "recordings+artist-credits+release-groups+isrcs"
+            )
+        ]
+        return components.url!
+    }
+
+    nonisolated static func tocLookupURL(for toc: MusicBrainzDiscTOC) -> URL {
+        var components = URLComponents(
+            url: baseURL.appendingPathComponent("discid/-"),
+            resolvingAgainstBaseURL: false
+        )!
+        components.queryItems = [
+            URLQueryItem(name: "toc", value: toc.queryValue),
+            URLQueryItem(name: "fmt", value: "json"),
+            URLQueryItem(
+                name: "inc",
+                value: "recordings+artist-credits+release-groups+isrcs"
+            )
+        ]
+        return components.url!
     }
 
     nonisolated static func isrcSearchURL(_ isrc: String) -> URL {
@@ -343,6 +465,53 @@ actor MusicBrainzService {
             confidence: confidence,
             durationDifference: durationDifference
         )
+    }
+
+    private nonisolated static func discCandidates(
+        from response: DiscLookupResponse,
+        matching toc: MusicBrainzDiscTOC
+    ) -> [MusicBrainzDiscReleaseCandidate] {
+        let candidates = response.releases.flatMap { release -> [MusicBrainzDiscReleaseCandidate] in
+            let releaseCredit = creditedArtist(release.artistCredit)
+            return release.media.compactMap { medium in
+                let matchesDiscID = medium.discs?.contains(where: { $0.id == toc.discID }) == true
+                guard matchesDiscID || medium.tracks.count == toc.trackOffsets.count else {
+                    return nil
+                }
+                let tracks = medium.tracks.sorted { $0.position < $1.position }.map { track in
+                    let credits = track.recording?.artistCredit ?? track.artistCredit
+                        ?? release.artistCredit
+                    let credit = creditedArtist(credits)
+                    return MusicBrainzDiscTrackMetadata(
+                        position: track.position,
+                        title: track.title,
+                        artist: credit.name,
+                        recordingID: track.recording?.id,
+                        artistIDs: credits.map(\.artist.id),
+                        isrc: track.recording?.isrcs?.first
+                    )
+                }
+                return MusicBrainzDiscReleaseCandidate(
+                    releaseID: release.id,
+                    releaseGroupID: release.releaseGroup?.id,
+                    title: release.title,
+                    artist: releaseCredit.name,
+                    artistIDs: release.artistCredit.map(\.artist.id),
+                    releaseDate: release.date,
+                    country: release.country,
+                    mediaFormat: medium.format,
+                    discNumber: medium.position,
+                    discCount: release.media.count,
+                    tracks: tracks
+                )
+            }
+        }
+        return Dictionary(grouping: candidates, by: \.id).compactMap { $0.value.first }.sorted {
+            if $0.releaseDate != $1.releaseDate {
+                return ($0.releaseDate ?? "9999") < ($1.releaseDate ?? "9999")
+            }
+            return $0.id < $1.id
+        }
     }
 
     private nonisolated static func expand(
@@ -511,6 +680,58 @@ private struct RecordingSearchResponse: Decodable {
     struct MediumTrack: Decodable {
         let number: String
         let title: String
+    }
+}
+
+private struct DiscLookupResponse: Decodable {
+    let releases: [Release]
+
+    struct Release: Decodable {
+        let id: String
+        let title: String
+        let date: String?
+        let country: String?
+        let artistCredit: [RecordingSearchResponse.ArtistCredit]
+        let releaseGroup: RecordingSearchResponse.ReleaseGroup?
+        let media: [Medium]
+
+        enum CodingKeys: String, CodingKey {
+            case id, title, date, country, media
+            case artistCredit = "artist-credit"
+            case releaseGroup = "release-group"
+        }
+    }
+
+    struct Medium: Decodable {
+        let position: Int
+        let format: String?
+        let discs: [Disc]?
+        let tracks: [Track]
+    }
+
+    struct Disc: Decodable { let id: String }
+
+    struct Track: Decodable {
+        let position: Int
+        let title: String
+        let artistCredit: [RecordingSearchResponse.ArtistCredit]?
+        let recording: Recording?
+
+        enum CodingKeys: String, CodingKey {
+            case position, title, recording
+            case artistCredit = "artist-credit"
+        }
+    }
+
+    struct Recording: Decodable {
+        let id: String
+        let isrcs: [String]?
+        let artistCredit: [RecordingSearchResponse.ArtistCredit]
+
+        enum CodingKeys: String, CodingKey {
+            case id, isrcs
+            case artistCredit = "artist-credit"
+        }
     }
 }
 

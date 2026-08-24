@@ -217,6 +217,74 @@ struct StandardLibraryResolverTests {
         #expect(first.reasons.contains(.timbre))
     }
 
+    @Test("Ongaku Mix recognizes relative, parallel, and fifth-related keys")
+    func harmonicCompatibility() {
+        #expect(OngakuMixHarmonicCompatibility.score(
+            firstPitchClass: 0,
+            firstMode: .major,
+            secondPitchClass: 9,
+            secondMode: .minor
+        ) == 0.94)
+        #expect(OngakuMixHarmonicCompatibility.score(
+            firstPitchClass: 0,
+            firstMode: .major,
+            secondPitchClass: 7,
+            secondMode: .major
+        ) == 0.86)
+        #expect(OngakuMixHarmonicCompatibility.score(
+            firstPitchClass: 0,
+            firstMode: .major,
+            secondPitchClass: 0,
+            secondMode: .minor
+        ) == 0.72)
+        #expect(OngakuMixHarmonicCompatibility.score(
+            firstPitchClass: 0,
+            firstMode: .major,
+            secondPitchClass: 1,
+            secondMode: .major
+        ) == 0)
+    }
+
+    @Test("Ongaku Mix exposes compatible harmony as a selection reason")
+    func harmonicCompatibilityReason() throws {
+        let seed = makeTrack(title: "C Major")
+        let compatible = makeTrack(title: "A Minor")
+        let features = [
+            seed.id: AudioFeatureAnalysis(
+                trackID: seed.id,
+                contentFingerprint: seed.sha256,
+                averageLoudnessDBFS: -14,
+                spectralCentroidHz: 1_500,
+                estimatedTempoBPM: 120,
+                tempoConfidence: 0.9,
+                estimatedKeyPitchClass: 0,
+                estimatedMode: .major,
+                keyConfidence: 0.8
+            ),
+            compatible.id: AudioFeatureAnalysis(
+                trackID: compatible.id,
+                contentFingerprint: compatible.sha256,
+                averageLoudnessDBFS: -14,
+                spectralCentroidHz: 1_500,
+                estimatedTempoBPM: 120,
+                tempoConfidence: 0.9,
+                estimatedKeyPitchClass: 9,
+                estimatedMode: .minor,
+                keyConfidence: 0.8
+            ),
+        ]
+
+        let candidate = try #require(OngakuMixResolver.candidates(
+            tracks: [seed, compatible],
+            events: [],
+            seedTrackID: seed.id,
+            audioFeatures: features
+        ).first)
+
+        #expect(candidate.id == compatible.id)
+        #expect(candidate.reasons.first == .harmony)
+    }
+
     @Test("Duplicate analysis separates checksum matches from metadata candidates")
     func resolvesDuplicateGroups() throws {
         var exactA = makeTrack(title: "Original")

@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import Foundation
 import Testing
 @testable import OngakuDesktop
@@ -741,8 +742,25 @@ struct LibraryRepositoryTests {
             title: "Opening",
             artist: "Disc Artist",
             album: "Disc Album",
+            albumArtist: "Album Artist",
+            releaseYear: 2026,
+            isrc: "JPAAA2600001",
             trackNumber: 1,
-            trackCount: 12
+            trackCount: 12,
+            discNumber: 1,
+            discCount: 2,
+            musicBrainzReference: MusicBrainzReference(
+                recordingID: "recording-id",
+                releaseID: "release-id",
+                releaseGroupID: "release-group-id",
+                artistIDs: ["artist-id"],
+                isrc: "JPAAA2600001",
+                country: "JP",
+                mediaFormat: "CD",
+                coverArtID: nil,
+                coverArtTypes: [],
+                fetchedAt: .now
+            )
         )
 
         let result = await repository.importFiles(
@@ -758,10 +776,104 @@ struct LibraryRepositoryTests {
         #expect(track.album == "Disc Album")
         #expect(track.trackNumber == 1)
         #expect(track.trackCount == 12)
+        #expect(track.albumArtist == "Album Artist")
+        #expect(track.releaseYear == 2026)
+        #expect(track.isrc == "JPAAA2600001")
+        #expect(track.discNumber == 1)
+        #expect(track.discCount == 2)
+        #expect(track.musicBrainzReference?.releaseID == "release-id")
         #expect(track.managedPath.hasPrefix(
             media.appendingPathComponent("Disc Artist/Disc Album").path + "/"
         ))
         #expect(try LibraryRepository.sha256(of: track.fileURL) == LibraryRepository.sha256(of: source))
+    }
+
+    @Test("MusicBrainz Disc ID and lookup URLs follow the CD TOC specification")
+    func musicBrainzDiscID() {
+        let toc = MusicBrainzDiscTOC(
+            firstTrack: 1,
+            lastTrack: 3,
+            leadoutOffset: 45_000,
+            trackOffsets: [150, 15_000, 30_000]
+        )
+
+        #expect(toc.discID == "ohhlX44vA82K1SAvWfO52oJ_ZxQ-")
+        #expect(toc.queryValue == "1 3 45000 150 15000 30000")
+        #expect(MusicBrainzService.discLookupURL(for: toc).path.hasSuffix("/discid/\(toc.discID)"))
+        #expect(
+            URLComponents(
+                url: MusicBrainzService.tocLookupURL(for: toc),
+                resolvingAgainstBaseURL: false
+            )?.queryItems?.first(where: { $0.name == "toc" })?.value == toc.queryValue
+        )
+    }
+
+    @Test("Secure CD reads require two consecutive matching checksums")
+    func secureCDReadVerification() throws {
+        var stableSequence = ["first", "second", "second"]
+        let stable = try AudioCDRipper.verifiedSourceHash(
+            URL(fileURLWithPath: "/tmp/test-track.aiff")
+        ) { _ in stableSequence.removeFirst() }
+        #expect(stable == "second")
+
+        var unstableSequence = ["first", "second", "third"]
+        #expect(throws: AudioCDRipError.unstableRead) {
+            try AudioCDRipper.verifiedSourceHash(
+                URL(fileURLWithPath: "/tmp/test-track.aiff")
+            ) { _ in unstableSequence.removeFirst() }
+        }
+    }
+
+    @Test("CD ripper creates verified AIFF, WAV, ALAC, and AAC files")
+    func convertsCDImportFormats() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.aiff")
+        let format = AVAudioFormat(
+            standardFormatWithSampleRate: 44_100,
+            channels: 2
+        )!
+        do {
+            let sourceFile = try AVAudioFile(
+                forWriting: source,
+                settings: [
+                    AVFormatIDKey: kAudioFormatLinearPCM,
+                    AVSampleRateKey: 44_100,
+                    AVNumberOfChannelsKey: 2,
+                    AVLinearPCMBitDepthKey: 16,
+                    AVLinearPCMIsFloatKey: false,
+                    AVLinearPCMIsBigEndianKey: true,
+                ]
+            )
+            let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4_410)!
+            buffer.frameLength = 4_410
+            for channel in 0..<2 {
+                let samples = buffer.floatChannelData![channel]
+                for frame in 0..<4_410 {
+                    samples[frame] = Float(
+                        sin(2 * Double.pi * 440 * Double(frame) / 44_100) * 0.2
+                    )
+                }
+            }
+            try sourceFile.write(from: buffer)
+        }
+
+        for outputFormat in AudioCDImportFormat.allCases {
+            let output = root.appendingPathComponent("output-\(outputFormat.rawValue)")
+                .appendingPathExtension(outputFormat.pathExtension)
+            try AudioCDRipper.rip(
+                sourceURL: source,
+                destinationURL: output,
+                format: outputFormat,
+                aacQuality: .high
+            )
+            let decoded = try AVAudioFile(forReading: output)
+            let outputHash = try LibraryRepository.sha256(of: output)
+            #expect(decoded.length > 0)
+            #expect(!outputHash.isEmpty)
+        }
     }
 
     @Test("An installed file is recovered when import was interrupted before catalog save")

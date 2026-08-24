@@ -964,6 +964,33 @@ struct OngakuMixCandidate: Identifiable, Equatable, Sendable {
     let reasons: [OngakuMixReason]
 }
 
+enum OngakuMixHarmonicCompatibility {
+    nonisolated static func score(
+        firstPitchClass: Int?,
+        firstMode: MusicalMode?,
+        secondPitchClass: Int?,
+        secondMode: MusicalMode?
+    ) -> Double {
+        guard let firstPitchClass, let firstMode,
+              let secondPitchClass, let secondMode else { return 0 }
+        let first = normalized(firstPitchClass)
+        let second = normalized(secondPitchClass)
+        let distance = normalized(second - first)
+
+        if first == second && firstMode == secondMode { return 1 }
+        if first == second { return 0.72 }
+        if firstMode == secondMode && (distance == 5 || distance == 7) { return 0.86 }
+        if firstMode == .major, secondMode == .minor, distance == 9 { return 0.94 }
+        if firstMode == .minor, secondMode == .major, distance == 3 { return 0.94 }
+        return 0
+    }
+
+    private nonisolated static func normalized(_ pitchClass: Int) -> Int {
+        let remainder = pitchClass % 12
+        return remainder >= 0 ? remainder : remainder + 12
+    }
+}
+
 enum OngakuMixResolver {
     nonisolated static func seed(
         in tracks: [Track],
@@ -1049,13 +1076,18 @@ enum OngakuMixResolver {
                 score += proximity * 0.10
                 if proximity >= 0.75 { reasons.append(.timbre) }
             }
-            if let seedKey = seedFeatures.keyPitchClass,
-               let key = features.keyPitchClass,
-               seedKey == key,
-               seedFeatures.musicalMode == features.musicalMode {
+            let harmonicCompatibility = OngakuMixHarmonicCompatibility.score(
+                firstPitchClass: seedFeatures.keyPitchClass,
+                firstMode: seedFeatures.musicalMode,
+                secondPitchClass: features.keyPitchClass,
+                secondMode: features.musicalMode
+            )
+            if harmonicCompatibility > 0 {
                 let confidence = min(seedFeatures.keyConfidence, features.keyConfidence)
-                score += 0.12 * confidence
-                if confidence >= 0.02 { reasons.append(.harmony) }
+                score += 0.12 * confidence * harmonicCompatibility
+                if confidence >= 0.02, harmonicCompatibility >= 0.7 {
+                    reasons.insert(.harmony, at: 0)
+                }
             }
             if track.isFavorite {
                 score += 0.08
@@ -1442,8 +1474,14 @@ struct AudioCDImportRequest: Sendable {
     let title: String
     let artist: String
     let album: String
+    var albumArtist: String? = nil
+    var releaseYear: Int? = nil
+    var isrc: String? = nil
     let trackNumber: Int
     let trackCount: Int
+    var discNumber: Int? = nil
+    var discCount: Int? = nil
+    var musicBrainzReference: MusicBrainzReference? = nil
 }
 
 struct AppleMusicImportSummary: Sendable {

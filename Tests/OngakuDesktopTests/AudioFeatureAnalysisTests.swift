@@ -15,6 +15,7 @@ struct AudioFeatureAnalysisTests {
         let analysis = AudioFeatureAnalyzer.analyze(samples: samples, sampleRate: sampleRate)
 
         #expect(abs(analysis.averageLoudnessDBFS - -9.03) < 0.2)
+        #expect(abs((analysis.peakDBFS ?? -120) - -6.02) < 0.1)
         #expect(abs(analysis.spectralCentroidHz - frequency) < 10)
     }
 
@@ -102,7 +103,7 @@ struct AudioFeatureAnalysisTests {
         )
         [
             "estimatedKeyPitchClass", "estimatedMode", "keyConfidence",
-            "onsetPositions", "beatPositions",
+            "onsetPositions", "beatPositions", "peakDBFS",
         ].forEach { object.removeValue(forKey: $0) }
         let legacyData = try JSONSerialization.data(withJSONObject: object)
 
@@ -110,7 +111,109 @@ struct AudioFeatureAnalysisTests {
 
         #expect(decoded.algorithmVersion == 1)
         #expect(decoded.estimatedKeyPitchClass == nil)
+        #expect(decoded.peakDBFS == nil)
         #expect(!decoded.isCurrent(for: track))
+    }
+
+    @Test("Song normalization reaches its target and respects measured peak headroom")
+    func trackLoudnessNormalizationAndPeakProtection() {
+        let analysis = AudioFeatureAnalysis(
+            trackID: UUID(),
+            contentFingerprint: "loudness",
+            averageLoudnessDBFS: -20,
+            peakDBFS: -3,
+            spectralCentroidHz: 1_000,
+            estimatedTempoBPM: nil,
+            tempoConfidence: 0
+        )
+        let unrestricted = LoudnessNormalizationPolicy.result(
+            mode: .track,
+            trackAnalysis: analysis,
+            albumAnalyses: [],
+            targetDBFS: -14,
+            preventsClipping: false
+        )
+        let protected = LoudnessNormalizationPolicy.result(
+            mode: .track,
+            trackAnalysis: analysis,
+            albumAnalyses: [],
+            targetDBFS: -14,
+            preventsClipping: true
+        )
+
+        #expect(abs(unrestricted.gainDB - 6) < 0.001)
+        #expect(!unrestricted.isLimitedByPeak)
+        #expect(abs(protected.gainDB - 2) < 0.001)
+        #expect(protected.isLimitedByPeak)
+    }
+
+    @Test("Album normalization applies one energy-averaged gain to album members")
+    func albumLoudnessNormalization() {
+        let quiet = AudioFeatureAnalysis(
+            trackID: UUID(),
+            contentFingerprint: "quiet",
+            averageLoudnessDBFS: -20,
+            peakDBFS: -8,
+            spectralCentroidHz: 1_000,
+            estimatedTempoBPM: nil,
+            tempoConfidence: 0
+        )
+        let loud = AudioFeatureAnalysis(
+            trackID: UUID(),
+            contentFingerprint: "loud",
+            averageLoudnessDBFS: -14,
+            peakDBFS: -2,
+            spectralCentroidHz: 1_000,
+            estimatedTempoBPM: nil,
+            tempoConfidence: 0
+        )
+        let album = [quiet, loud]
+        let quietResult = LoudnessNormalizationPolicy.result(
+            mode: .album,
+            trackAnalysis: quiet,
+            albumAnalyses: album,
+            targetDBFS: -14,
+            preventsClipping: false
+        )
+        let loudResult = LoudnessNormalizationPolicy.result(
+            mode: .album,
+            trackAnalysis: loud,
+            albumAnalyses: album,
+            targetDBFS: -14,
+            preventsClipping: false
+        )
+
+        #expect(abs(quietResult.gainDB - loudResult.gainDB) < 0.0001)
+        #expect(quietResult.gainDB > 0)
+        #expect(quietResult.gainDB < 3)
+    }
+
+    @Test("Audio analysis pauses for low power and elevated thermal pressure")
+    func powerPolicyPauseReasons() {
+        #expect(
+            AudioFeatureAnalysisPowerPolicy.automaticPauseReason(
+                isLowPowerModeEnabled: false,
+                thermalState: .nominal
+            ) == nil
+        )
+        #expect(
+            AudioFeatureAnalysisPowerPolicy.automaticPauseReason(
+                isLowPowerModeEnabled: true,
+                thermalState: .fair
+            ) == .lowPowerMode
+        )
+        #expect(
+            AudioFeatureAnalysisPowerPolicy.automaticPauseReason(
+                isLowPowerModeEnabled: false,
+                thermalState: .serious
+            ) == .thermalPressure
+        )
+        #expect(
+            AudioFeatureAnalysisPowerPolicy.automaticPauseReason(
+                isLowPowerModeEnabled: true,
+                thermalState: .critical
+            ) == .thermalPressure
+        )
     }
 
     private func makeTrack(fingerprint: String) -> Track {

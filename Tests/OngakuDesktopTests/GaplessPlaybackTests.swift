@@ -109,6 +109,82 @@ struct GaplessPlaybackTests {
         #expect(end.incoming == 1)
     }
 
+    @Test("Crossfade headroom prevents normalized sources from summing above unity")
+    func clippingProtectedCrossfadeGains() {
+        let unprotected = CrossfadePolicy.clippingProtectedGains(
+            progress: 0.5,
+            outgoingNormalization: 1.25,
+            incomingNormalization: 1.25,
+            preventsClipping: false
+        )
+        let protected = CrossfadePolicy.clippingProtectedGains(
+            progress: 0.5,
+            outgoingNormalization: 1.25,
+            incomingNormalization: 1.25,
+            preventsClipping: true
+        )
+
+        #expect(unprotected.outgoing + unprotected.incoming > 1)
+        #expect(abs(Double(protected.outgoing + protected.incoming) - 1) < 0.0001)
+    }
+
+    @Test("Ongaku Mix aligns compatible, nearby tempos on beat boundaries")
+    func beatAlignedOngakuMixTransition() {
+        let plan = OngakuMixTransitionPolicy.plan(
+            baseCrossfadeDuration: 6,
+            currentElapsed: 90,
+            currentAudibleEnd: 100,
+            nextAudibleStart: 0.25,
+            nextAudibleEnd: 180,
+            currentAnalysis: makeAnalysis(
+                tempo: 120,
+                key: 0,
+                mode: .major,
+                firstBeat: 0.5
+            ),
+            nextAnalysis: makeAnalysis(
+                tempo: 122,
+                key: 7,
+                mode: .major,
+                firstBeat: 0.25
+            )
+        )
+
+        #expect(plan.usesBeatAlignment)
+        #expect(abs(plan.crossfadeDuration - (240 / 121)) < 0.001)
+        #expect(abs(plan.outgoingEndPosition - 100) < 0.001)
+        #expect(plan.incomingStartPosition >= 0.25)
+        #expect(plan.harmonicCompatibility == 0.86)
+    }
+
+    @Test("Ongaku Mix falls back safely when tempo or harmony is incompatible")
+    func ongakuMixTransitionFallback() {
+        let plan = OngakuMixTransitionPolicy.plan(
+            baseCrossfadeDuration: 5,
+            currentElapsed: 90,
+            currentAudibleEnd: 100,
+            nextAudibleStart: 0.4,
+            nextAudibleEnd: 180,
+            currentAnalysis: makeAnalysis(
+                tempo: 120,
+                key: 0,
+                mode: .major,
+                firstBeat: 0
+            ),
+            nextAnalysis: makeAnalysis(
+                tempo: 160,
+                key: 1,
+                mode: .major,
+                firstBeat: 0
+            )
+        )
+
+        #expect(!plan.usesBeatAlignment)
+        #expect(plan.crossfadeDuration == 5)
+        #expect(plan.outgoingEndPosition == 100)
+        #expect(plan.incomingStartPosition == 0.4)
+    }
+
     @Test("Silence policy preserves a safety margin around audible content")
     func silencePolicy() {
         let blocks = Array(repeating: 0.0, count: 10)
@@ -156,5 +232,25 @@ struct GaplessPlaybackTests {
 
         #expect(abs(analysis.leadingSilence - 0.08) < 0.015)
         #expect(abs(analysis.trailingSilence - 0.13) < 0.015)
+    }
+
+    private func makeAnalysis(
+        tempo: Double,
+        key: Int,
+        mode: MusicalMode,
+        firstBeat: TimeInterval
+    ) -> AudioFeatureAnalysis {
+        AudioFeatureAnalysis(
+            trackID: UUID(),
+            contentFingerprint: UUID().uuidString,
+            averageLoudnessDBFS: -14,
+            spectralCentroidHz: 1_500,
+            estimatedTempoBPM: tempo,
+            tempoConfidence: 0.9,
+            estimatedKeyPitchClass: key,
+            estimatedMode: mode,
+            keyConfidence: 0.8,
+            beatPositions: [firstBeat]
+        )
     }
 }

@@ -7,13 +7,14 @@ enum MusicalMode: String, Codable, Sendable {
 }
 
 struct AudioFeatureAnalysis: Codable, Equatable, Sendable {
-    static let currentAlgorithmVersion = 3
+    static let currentAlgorithmVersion = 4
 
     let trackID: Track.ID
     let contentFingerprint: String
     let algorithmVersion: Int
     let analyzedAt: Date
     let averageLoudnessDBFS: Double
+    let peakDBFS: Double?
     let spectralCentroidHz: Double
     let estimatedTempoBPM: Double?
     let tempoConfidence: Double
@@ -29,6 +30,7 @@ struct AudioFeatureAnalysis: Codable, Equatable, Sendable {
         algorithmVersion: Int = currentAlgorithmVersion,
         analyzedAt: Date = .now,
         averageLoudnessDBFS: Double,
+        peakDBFS: Double? = nil,
         spectralCentroidHz: Double,
         estimatedTempoBPM: Double?,
         tempoConfidence: Double,
@@ -43,6 +45,7 @@ struct AudioFeatureAnalysis: Codable, Equatable, Sendable {
         self.algorithmVersion = algorithmVersion
         self.analyzedAt = analyzedAt
         self.averageLoudnessDBFS = averageLoudnessDBFS
+        self.peakDBFS = peakDBFS
         self.spectralCentroidHz = spectralCentroidHz
         self.estimatedTempoBPM = estimatedTempoBPM
         self.tempoConfidence = tempoConfidence
@@ -139,6 +142,7 @@ enum AudioFeatureAnalyzer {
         }
 
         var energy = 0.0
+        var peakAmplitude = 0.0
         var derivativeEnergy = 0.0
         var previous = Double(samples[0])
         let blockSize = max(Int(sampleRate * envelopeBlockDuration), 1)
@@ -149,6 +153,7 @@ enum AudioFeatureAnalyzer {
 
         for sampleValue in samples {
             let sample = Double(sampleValue)
+            peakAmplitude = max(peakAmplitude, abs(sample))
             energy += sample * sample
             let difference = sample - previous
             derivativeEnergy += difference * difference
@@ -167,6 +172,7 @@ enum AudioFeatureAnalyzer {
 
         let meanSquare = energy / Double(samples.count)
         let loudness = meanSquare > 0 ? max(10 * log10(meanSquare), -120) : -120
+        let peakDBFS = peakAmplitude > 0 ? max(20 * log10(peakAmplitude), -120) : -120
         let centroid: Double
         if energy > 0 {
             centroid = min(
@@ -186,6 +192,7 @@ enum AudioFeatureAnalyzer {
             trackID: trackID,
             contentFingerprint: contentFingerprint,
             averageLoudnessDBFS: min(loudness, 0),
+            peakDBFS: min(peakDBFS, 0),
             spectralCentroidHz: max(centroid, 0),
             estimatedTempoBPM: tempo.bpm,
             tempoConfidence: tempo.confidence,

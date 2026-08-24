@@ -492,6 +492,197 @@ enum CrossfadePolicy {
             incoming: Float(sin(clamped * .pi / 2))
         )
     }
+
+    static func clippingProtectedGains(
+        progress: Double,
+        outgoingNormalization: Float,
+        incomingNormalization: Float,
+        preventsClipping: Bool
+    ) -> (outgoing: Float, incoming: Float) {
+        let transition = gains(progress: progress)
+        let outgoing = transition.outgoing * max(outgoingNormalization, 0)
+        let incoming = transition.incoming * max(incomingNormalization, 0)
+        guard preventsClipping else { return (outgoing, incoming) }
+        let summedAmplitude = outgoing + incoming
+        let headroom = summedAmplitude > 1 ? 1 / summedAmplitude : 1
+        return (outgoing * headroom, incoming * headroom)
+    }
+}
+
+enum LoudnessNormalizationMode: String, CaseIterable, Identifiable, Sendable {
+    case off
+    case track
+    case album
+
+    var id: String { rawValue }
+    var localizationKey: String { "settings.playback.normalization.mode.\(rawValue)" }
+}
+
+struct LoudnessNormalizationResult: Equatable, Sendable {
+    let gainDB: Double
+    let linearGain: Float
+    let isLimitedByPeak: Bool
+
+    static let unity = LoudnessNormalizationResult(
+        gainDB: 0,
+        linearGain: 1,
+        isLimitedByPeak: false
+    )
+}
+
+enum LoudnessNormalizationPolicy {
+    static let defaultTargetDBFS = -14.0
+    static let targetRange = -24.0 ... -10.0
+    static let peakCeilingDBFS = -1.0
+    static let maximumBoostDB = 12.0
+    static let maximumAttenuationDB = -24.0
+
+    nonisolated static func result(
+        mode: LoudnessNormalizationMode,
+        trackAnalysis: AudioFeatureAnalysis?,
+        albumAnalyses: [AudioFeatureAnalysis],
+        targetDBFS: Double,
+        preventsClipping: Bool
+    ) -> LoudnessNormalizationResult {
+        guard mode != .off, let trackAnalysis else { return .unity }
+        let referenceLoudness: Double
+        switch mode {
+        case .off:
+            return .unity
+        case .track:
+            referenceLoudness = trackAnalysis.averageLoudnessDBFS
+        case .album:
+            let analyses = albumAnalyses.isEmpty ? [trackAnalysis] : albumAnalyses
+            let meanEnergy = analyses.reduce(0.0) {
+                $0 + pow(10, $1.averageLoudnessDBFS / 10)
+            } / Double(analyses.count)
+            referenceLoudness = meanEnergy > 0 ? 10 * log10(meanEnergy) : -120
+        }
+
+        let target = min(max(targetDBFS, targetRange.lowerBound), targetRange.upperBound)
+        var gainDB = min(
+            max(target - referenceLoudness, maximumAttenuationDB),
+            maximumBoostDB
+        )
+        var isLimitedByPeak = false
+        if preventsClipping {
+            let permittedBoost = trackAnalysis.peakDBFS.map {
+                peakCeilingDBFS - $0
+            } ?? 0
+            if gainDB > permittedBoost {
+                gainDB = permittedBoost
+                isLimitedByPeak = true
+            }
+        }
+        return LoudnessNormalizationResult(
+            gainDB: gainDB,
+            linearGain: Float(pow(10, gainDB / 20)),
+            isLimitedByPeak: isLimitedByPeak
+        )
+    }
+}
+
+struct OngakuMixTransitionPlan: Equatable, Sendable {
+    let crossfadeDuration: TimeInterval
+    let outgoingEndPosition: TimeInterval
+    let incomingStartPosition: TimeInterval
+    let usesBeatAlignment: Bool
+    let harmonicCompatibility: Double
+}
+
+enum OngakuMixTransitionPolicy {
+    private static let transitionBeatCount = 4.0
+    private static let minimumTempoConfidence = 0.4
+    private static let maximumTempoDifferenceRatio = 0.08
+
+    nonisolated static func plan(
+        baseCrossfadeDuration: TimeInterval,
+        currentElapsed: TimeInterval,
+        currentAudibleEnd: TimeInterval,
+        nextAudibleStart: TimeInterval,
+        nextAudibleEnd: TimeInterval,
+        currentAnalysis: AudioFeatureAnalysis?,
+        nextAnalysis: AudioFeatureAnalysis?
+    ) -> OngakuMixTransitionPlan {
+        let harmonicCompatibility = OngakuMixHarmonicCompatibility.score(
+            firstPitchClass: currentAnalysis?.estimatedKeyPitchClass,
+            firstMode: currentAnalysis?.estimatedMode,
+            secondPitchClass: nextAnalysis?.estimatedKeyPitchClass,
+            secondMode: nextAnalysis?.estimatedMode
+        )
+        let fallback = OngakuMixTransitionPlan(
+            crossfadeDuration: baseCrossfadeDuration,
+            outgoingEndPosition: currentAudibleEnd,
+            incomingStartPosition: nextAudibleStart,
+            usesBeatAlignment: false,
+            harmonicCompatibility: harmonicCompatibility
+        )
+        guard baseCrossfadeDuration > 0,
+              harmonicCompatibility >= 0.7,
+              let currentAnalysis,
+              let nextAnalysis,
+              let currentTempo = currentAnalysis.estimatedTempoBPM,
+              let nextTempo = nextAnalysis.estimatedTempoBPM,
+              currentTempo > 0,
+              nextTempo > 0,
+              currentAnalysis.tempoConfidence >= minimumTempoConfidence,
+              nextAnalysis.tempoConfidence >= minimumTempoConfidence,
+              let currentReferenceBeat = currentAnalysis.beatPositions?.first,
+              let nextReferenceBeat = nextAnalysis.beatPositions?.first else {
+            return fallback
+        }
+        let tempoDifference = abs(currentTempo - nextTempo) / max(currentTempo, nextTempo)
+        guard tempoDifference <= maximumTempoDifferenceRatio else { return fallback }
+
+        let averageTempo = (currentTempo + nextTempo) / 2
+        let alignedDuration = min(
+            baseCrossfadeDuration,
+            transitionBeatCount * 60 / averageTempo
+        )
+        guard alignedDuration >= 0.5 else { return fallback }
+        let outgoingEnd = beat(
+            onOrBefore: currentAudibleEnd,
+            reference: currentReferenceBeat,
+            interval: 60 / currentTempo
+        )
+        guard outgoingEnd >= currentElapsed + alignedDuration + 0.05 else {
+            return fallback
+        }
+        let incomingAnchor = beat(
+            onOrAfter: nextAudibleStart + alignedDuration,
+            reference: nextReferenceBeat,
+            interval: 60 / nextTempo
+        )
+        let incomingStart = incomingAnchor - alignedDuration
+        guard incomingStart >= nextAudibleStart - 0.001,
+              incomingAnchor <= nextAudibleEnd else { return fallback }
+
+        return OngakuMixTransitionPlan(
+            crossfadeDuration: alignedDuration,
+            outgoingEndPosition: outgoingEnd,
+            incomingStartPosition: max(incomingStart, nextAudibleStart),
+            usesBeatAlignment: true,
+            harmonicCompatibility: harmonicCompatibility
+        )
+    }
+
+    private nonisolated static func beat(
+        onOrBefore target: TimeInterval,
+        reference: TimeInterval,
+        interval: TimeInterval
+    ) -> TimeInterval {
+        guard interval > 0 else { return target }
+        return reference + floor((target - reference) / interval) * interval
+    }
+
+    private nonisolated static func beat(
+        onOrAfter target: TimeInterval,
+        reference: TimeInterval,
+        interval: TimeInterval
+    ) -> TimeInterval {
+        guard interval > 0 else { return target }
+        return reference + ceil((target - reference) / interval) * interval
+    }
 }
 
 struct AudioSilenceAnalysis: Equatable, Sendable {
@@ -658,6 +849,9 @@ final class PlaybackController: ObservableObject {
     private static let playbackModeKey = "audio.playbackMode.v1"
     private static let crossfadeDurationKey = "audio.crossfadeDuration.v1"
     private static let disableCrossfadeWithinAlbumKey = "audio.disableCrossfadeWithinAlbum.v1"
+    private static let loudnessNormalizationModeKey = "audio.loudnessNormalizationMode.v1"
+    private static let loudnessTargetKey = "audio.loudnessTargetDBFS.v1"
+    private static let preventsClippingKey = "audio.preventsClipping.v1"
 
     @Published private(set) var currentTrack: Track?
     @Published private(set) var isPlaying = false
@@ -699,6 +893,35 @@ final class PlaybackController: ObservableObject {
             )
         }
     }
+    @Published var loudnessNormalizationMode: LoudnessNormalizationMode {
+        didSet {
+            UserDefaults.standard.set(
+                loudnessNormalizationMode.rawValue,
+                forKey: Self.loudnessNormalizationModeKey
+            )
+            applyPlaybackGains()
+        }
+    }
+    @Published var loudnessTargetDBFS: Double {
+        didSet {
+            let clamped = min(
+                max(loudnessTargetDBFS, LoudnessNormalizationPolicy.targetRange.lowerBound),
+                LoudnessNormalizationPolicy.targetRange.upperBound
+            )
+            if loudnessTargetDBFS != clamped {
+                loudnessTargetDBFS = clamped
+                return
+            }
+            UserDefaults.standard.set(clamped, forKey: Self.loudnessTargetKey)
+            applyPlaybackGains()
+        }
+    }
+    @Published var preventsClipping: Bool {
+        didSet {
+            UserDefaults.standard.set(preventsClipping, forKey: Self.preventsClippingKey)
+            applyPlaybackGains()
+        }
+    }
 
     let playbackEventPublisher = PassthroughSubject<PlaybackEvent, Never>()
 
@@ -734,6 +957,8 @@ final class PlaybackController: ObservableObject {
     private var prerolledTrack: PrerolledTrack?
     private var silenceAnalyses: [URL: AudioSilenceAnalysis] = [:]
     private var silenceAnalysisTasks: [URL: Task<Void, Never>] = [:]
+    private var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
+    private var usesOngakuMixTransitions = false
     private var externalPlaybackStopHandler: (() -> Void)?
 
     private struct PrerolledTrack {
@@ -763,6 +988,18 @@ final class PlaybackController: ObservableObject {
         disableCrossfadeWithinAlbum = UserDefaults.standard.object(
             forKey: Self.disableCrossfadeWithinAlbumKey
         ) as? Bool ?? true
+        loudnessNormalizationMode = UserDefaults.standard.string(
+            forKey: Self.loudnessNormalizationModeKey
+        ).flatMap(LoudnessNormalizationMode.init(rawValue:)) ?? .off
+        let storedTarget = UserDefaults.standard.object(forKey: Self.loudnessTargetKey) as? Double
+            ?? LoudnessNormalizationPolicy.defaultTargetDBFS
+        loudnessTargetDBFS = min(
+            max(storedTarget, LoudnessNormalizationPolicy.targetRange.lowerBound),
+            LoudnessNormalizationPolicy.targetRange.upperBound
+        )
+        preventsClipping = UserDefaults.standard.object(
+            forKey: Self.preventsClippingKey
+        ) as? Bool ?? true
         engine.attach(primaryPlayerNode)
         engine.attach(secondaryPlayerNode)
         engine.attach(sourceMixerNode)
@@ -783,6 +1020,17 @@ final class PlaybackController: ObservableObject {
 
     var enabledEffectCount: Int {
         effectsBypassed ? 0 : effectSettings.count(where: \.isEnabled)
+    }
+
+    var loudnessAdjustmentDescription: String? {
+        guard loudnessNormalizationMode != .off, let currentTrack else { return nil }
+        guard audioFeatures[currentTrack.id] != nil else {
+            return L10n.text("settings.playback.normalization.pending")
+        }
+        let result = normalizationResult(for: currentTrack)
+        return result.isLimitedByPeak
+            ? L10n.format("settings.playback.normalization.currentLimited", result.gainDB)
+            : L10n.format("settings.playback.normalization.current", result.gainDB)
     }
 
     func setExternalPlaybackStopHandler(_ handler: @escaping () -> Void) {
@@ -852,6 +1100,32 @@ final class PlaybackController: ObservableObject {
     }
 
     func play(_ track: Track) {
+        usesOngakuMixTransitions = false
+        playQueuedTrack(track)
+    }
+
+    func playOngakuMix(
+        _ track: Track,
+        queue: [Track],
+        audioFeatures: [Track.ID: AudioFeatureAnalysis]
+    ) {
+        var seen = Set<Track.ID>()
+        playbackQueue = queue.filter { seen.insert($0.id).inserted }
+        if !playbackQueue.contains(where: { $0.id == track.id }) {
+            playbackQueue.insert(track, at: 0)
+        }
+        self.audioFeatures = audioFeatures
+        usesOngakuMixTransitions = true
+        queueUndoStack.removeAll()
+        playQueuedTrack(track)
+    }
+
+    func updateAudioFeatures(_ audioFeatures: [Track.ID: AudioFeatureAnalysis]) {
+        self.audioFeatures = audioFeatures
+        applyPlaybackGains()
+    }
+
+    private func playQueuedTrack(_ track: Track) {
         externalPlaybackStopHandler?()
         finishPlaybackSession(kind: .skipped)
         if !playbackQueue.contains(where: { $0.id == track.id }) {
@@ -861,6 +1135,7 @@ final class PlaybackController: ObservableObject {
     }
 
     func restorePlaybackQueue(_ savedState: PlaybackQueueState?, tracks: [Track]) {
+        usesOngakuMixTransitions = false
         finishPlaybackSession(kind: .skipped)
         let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
         let requestedIDs = savedState?.trackIDs ?? tracks.map(\.id)
@@ -1074,7 +1349,7 @@ final class PlaybackController: ObservableObject {
             seek(to: 0)
             return
         }
-        play(previous)
+        playQueuedTrack(previous)
     }
 
     func playNext() {
@@ -1085,10 +1360,11 @@ final class PlaybackController: ObservableObject {
             in: playbackQueue,
             mode: navigationMode
         ) else { return }
-        play(next)
+        playQueuedTrack(next)
     }
 
     func clearCurrentTrack() {
+        usesOngakuMixTransitions = false
         finishPlaybackSession(kind: .skipped)
         stopCurrentPlayback()
         currentTrack = nil
@@ -1351,6 +1627,7 @@ final class PlaybackController: ObservableObject {
             return
         }
         let frameCount = AVAudioFrameCount(min(remaining, AVAudioFramePosition(UInt32.max)))
+        playerNode.volume = normalizationResult(for: currentTrack).linearGain
         playerNode.scheduleSegment(
             audioFile,
             startingFrame: frame,
@@ -1491,14 +1768,25 @@ final class PlaybackController: ObservableObject {
             disablesWithinAlbum: disableCrossfadeWithinAlbum,
             formatsAreCompatible: formatsAreCompatible
         )
+        let currentPosition = max(duration - remaining, 0)
+        let transitionPlan = OngakuMixTransitionPolicy.plan(
+            baseCrossfadeDuration: effectiveCrossfadeDuration,
+            currentElapsed: currentPosition,
+            currentAudibleEnd: max(duration - currentAnalysis.trailingSilence, 0),
+            nextAudibleStart: nextAnalysis.leadingSilence,
+            nextAudibleEnd: max(nextDuration - nextAnalysis.trailingSilence, 0),
+            currentAnalysis: usesOngakuMixTransitions ? audioFeatures[currentTrack.id] : nil,
+            nextAnalysis: usesOngakuMixTransitions ? audioFeatures[nextTrack.id] : nil
+        )
 
         let generation = playbackGeneration
         let nodeStartSampleTime = activeTrackNodeStartSampleTime
             + max(0, audioFile.length - scheduledStartFrame)
-        let nextStartFrame = effectiveCrossfadeDuration > 0
+        let nextStartFrame = transitionPlan.crossfadeDuration > 0
             ? min(
                 AVAudioFramePosition(
-                    nextAnalysis.leadingSilence * nextFile.processingFormat.sampleRate
+                    transitionPlan.incomingStartPosition
+                        * nextFile.processingFormat.sampleRate
                 ),
                 nextFile.length
             )
@@ -1513,13 +1801,18 @@ final class PlaybackController: ObservableObject {
 
         let targetNode: AVAudioPlayerNode
         let crossfadeStartHostTime: UInt64?
-        if effectiveCrossfadeDuration > 0 {
+        if transitionPlan.crossfadeDuration > 0 {
             targetNode = standbyPlayerNode
             targetNode.stop()
             targetNode.volume = 0
             crossfadeStartHostTime = mach_absolute_time()
                 + AVAudioTime.hostTime(
-                    forSeconds: max(audibleCurrentRemaining - effectiveCrossfadeDuration, 0)
+                    forSeconds: max(
+                        transitionPlan.outgoingEndPosition
+                            - currentPosition
+                            - transitionPlan.crossfadeDuration,
+                        0
+                    )
                 )
         } else {
             targetNode = playerNode
@@ -1530,12 +1823,12 @@ final class PlaybackController: ObservableObject {
             track: nextTrack,
             file: nextFile,
             generation: generation,
-            nodeStartSampleTime: effectiveCrossfadeDuration > 0 ? 0 : nodeStartSampleTime,
+            nodeStartSampleTime: transitionPlan.crossfadeDuration > 0 ? 0 : nodeStartSampleTime,
             playbackNode: targetNode,
-            crossfadeDuration: effectiveCrossfadeDuration,
+            crossfadeDuration: transitionPlan.crossfadeDuration,
             crossfadeStartHostTime: crossfadeStartHostTime,
             scheduledStartFrame: nextStartFrame,
-            outgoingTransitionPosition: max(duration - currentAnalysis.trailingSilence, 0)
+            outgoingTransitionPosition: transitionPlan.outgoingEndPosition
         )
         targetNode.scheduleSegment(
             nextFile,
@@ -1570,6 +1863,7 @@ final class PlaybackController: ObservableObject {
         secondaryPlayerNode.volume = 1
         audioFile = prepared.file
         currentTrack = prepared.track
+        playerNode.volume = normalizationResult(for: prepared.track).linearGain
         primeTransitionAnalyses(startingWith: prepared.track)
         sourceSampleRate = prepared.file.processingFormat.sampleRate
         scheduledStartFrame = prepared.scheduledStartFrame
@@ -1617,7 +1911,14 @@ final class PlaybackController: ObservableObject {
         let elapsedHostTime = now - startHostTime
         let progress = AVAudioTime.seconds(forHostTime: elapsedHostTime)
             / prepared.crossfadeDuration
-        let gains = CrossfadePolicy.gains(progress: progress)
+        let gains = CrossfadePolicy.clippingProtectedGains(
+            progress: progress,
+            outgoingNormalization: currentTrack.map {
+                normalizationResult(for: $0).linearGain
+            } ?? 1,
+            incomingNormalization: normalizationResult(for: prepared.track).linearGain,
+            preventsClipping: preventsClipping
+        )
         playerNode.volume = gains.outgoing
         prepared.playbackNode.volume = gains.incoming
         if progress >= 1 {
@@ -1650,6 +1951,29 @@ final class PlaybackController: ObservableObject {
 
     @objc private func crossfadeTick() {
         updateCrossfadeVolumes()
+    }
+
+    private func normalizationResult(for track: Track) -> LoudnessNormalizationResult {
+        let albumAnalyses: [AudioFeatureAnalysis] = playbackQueue.compactMap { queuedTrack in
+            guard queuedTrack.albumID == track.albumID else { return nil }
+            return audioFeatures[queuedTrack.id]
+        }
+        return LoudnessNormalizationPolicy.result(
+            mode: loudnessNormalizationMode,
+            trackAnalysis: audioFeatures[track.id],
+            albumAnalyses: albumAnalyses,
+            targetDBFS: loudnessTargetDBFS,
+            preventsClipping: preventsClipping
+        )
+    }
+
+    private func applyPlaybackGains() {
+        guard let currentTrack else { return }
+        if prerolledTrack?.crossfadeDuration ?? 0 > 0 {
+            updateCrossfadeVolumes()
+        } else {
+            playerNode.volume = normalizationResult(for: currentTrack).linearGain
+        }
     }
 
     private func beginPlaybackSessionIfNeeded() {
