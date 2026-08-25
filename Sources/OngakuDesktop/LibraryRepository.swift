@@ -241,6 +241,23 @@ actor LibraryRepository {
         )
     }
 
+    /// Decodes another Ongaku catalog without preparing its directories,
+    /// migrating it in place, writing backups, or changing this repository's
+    /// current document.
+    func readExternalLibraryDocument(at manifestURL: URL) throws -> LibraryDocument {
+        let source = manifestURL.standardizedFileURL
+        let values = try source.resourceValues(
+            forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]
+        )
+        guard values.isRegularFile == true, values.isSymbolicLink != true else {
+            throw RepositoryError.sourceIsNotRegularFile(source.lastPathComponent)
+        }
+        guard values.fileSize ?? 0 <= 512 * 1_024 * 1_024 else {
+            throw CocoaError(.fileReadTooLarge)
+        }
+        return try decodeDocument(at: source).document
+    }
+
     func save(tracks: [Track]) throws {
         try prepareDirectories()
         var document = try documentForMutation()

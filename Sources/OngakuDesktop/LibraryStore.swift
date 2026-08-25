@@ -1050,6 +1050,470 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    @discardableResult
+    func importLegacyLibrary(
+        _ preview: LegacyLibraryMigrationPreview
+    ) async throws -> LegacyLibraryMigrationSummary {
+        activity = .importing
+        lastIssues = []
+
+        let readyTracks = preview.tracks.filter {
+            $0.status == .ready && $0.location != nil
+        }
+        let hashResults = await Task.detached(priority: .userInitiated) {
+            readyTracks.map { source -> (Int, URL, Result<String, Error>) in
+                let url = source.location!
+                do { return (source.id, url, .success(try LibraryRepository.sha256(of: url))) }
+                catch { return (source.id, url, .failure(error)) }
+            }
+        }.value
+
+        var hashByLegacyID: [Int: String] = [:]
+        var sourceIssues: [ImportIssue] = []
+        for (legacyID, url, result) in hashResults {
+            switch result {
+            case .success(let hash): hashByLegacyID[legacyID] = hash
+            case .failure(let error):
+                sourceIssues.append(ImportIssue(
+                    fileName: url.lastPathComponent,
+                    message: error.localizedDescription
+                ))
+            }
+        }
+
+        let hashableReadyTracks = readyTracks.filter { hashByLegacyID[$0.id] != nil }
+        let overridePairs: [(String, AudioCDImportRequest)] = hashableReadyTracks.compactMap {
+            source in
+                guard let location = source.location else { return nil }
+                return (
+                    location.standardizedFileURL.path,
+                    AudioCDImportRequest(
+                        sourceURL: location,
+                        title: source.title,
+                        artist: source.artist,
+                        album: source.album,
+                        albumArtist: source.albumArtist.isEmpty ? nil : source.albumArtist,
+                        releaseYear: source.releaseYear,
+                        trackNumber: source.trackNumber ?? 0,
+                        trackCount: source.trackCount ?? 0,
+                        discNumber: source.discNumber,
+                        discCount: source.discCount
+                    )
+                )
+            }
+        let overrides: [String: AudioCDImportRequest] = Dictionary(
+            overridePairs,
+            uniquingKeysWith: { first, _ in first }
+        )
+        let importResult = await repository.importFiles(
+            hashableReadyTracks.compactMap(\.location),
+            existing: tracks,
+            reportDuplicates: false,
+            metadataOverrides: overrides
+        )
+
+        var updatedTracks = tracks + importResult.imported
+        let importedIDs: Set<Track.ID> = Set(importResult.imported.map(\.id))
+        let sourceByHash = Dictionary(
+            hashableReadyTracks.compactMap { source -> (String, LegacyLibraryTrack)? in
+                guard let hash = hashByLegacyID[source.id] else { return nil }
+                return (hash, source)
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+        for index in updatedTracks.indices where importedIDs.contains(updatedTracks[index].id) {
+            guard let source = sourceByHash[updatedTracks[index].sha256] else { continue }
+            Self.applyLegacyMetadata(source, to: &updatedTracks[index])
+        }
+
+        var trackIDByLegacyID: [Int: Track.ID] = [:]
+        let tracksByPath: [String: Track.ID] = Dictionary(
+            updatedTracks.map { ($0.fileURL.standardizedFileURL.path, $0.id) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let tracksByHash: [String: Track.ID] = Dictionary(
+            updatedTracks.map { ($0.sha256, $0.id) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        for source in preview.tracks {
+            if let location = source.location,
+               let trackID = tracksByPath[location.standardizedFileURL.path] {
+                trackIDByLegacyID[source.id] = trackID
+            } else if let hash = hashByLegacyID[source.id], let trackID = tracksByHash[hash] {
+                trackIDByLegacyID[source.id] = trackID
+            }
+        }
+
+        var updatedPlaylists = playlists
+        var importedPlaylistCount = 0
+        for source in preview.playlists {
+            var seen: Set<Track.ID> = []
+            let trackIDs = source.trackIDs.compactMap { trackIDByLegacyID[$0] }
+                .filter { seen.insert($0).inserted }
+            let alreadyExists = updatedPlaylists.contains {
+                $0.name == source.name && $0.entries.map(\.trackID) == trackIDs
+            }
+            guard !alreadyExists else { continue }
+            let nextOrder = updatedPlaylists.filter { $0.folderID == nil }
+                .map(\.sortOrder).max().map { $0 + 1 } ?? 0
+            updatedPlaylists.append(Playlist(
+                name: source.name,
+                description: source.description,
+                sortOrder: nextOrder,
+                entries: trackIDs.map { PlaylistEntry(trackID: $0) }
+            ))
+            importedPlaylistCount += 1
+        }
+
+        updatedTracks.sort {
+            $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+
+        let document = LibraryDocument(
+            updatedAt: .now,
+            tracks: updatedTracks,
+            libraryID: libraryID,
+            createdAt: libraryCreatedAt,
+            playlists: updatedPlaylists,
+            playlistFolders: playlistFolders,
+            playbackEvents: playbackEvents,
+            playbackQueue: playbackQueue
+        )
+        do {
+            try await repository.save(document: document)
+            tracks = updatedTracks
+            playlists = updatedPlaylists
+            lastIssues = sourceIssues + importResult.issues
+            selectedTrackID = importResult.imported.first?.id ?? selectedTrackID
+            contentRevision &+= 1
+            scheduleSearchIndexSynchronization(document: document)
+            let mappedExistingCount = Set(trackIDByLegacyID.values)
+                .subtracting(importedIDs).count
+            let summary = LegacyLibraryMigrationSummary(
+                imported: importResult.imported.count,
+                linkedExisting: mappedExistingCount,
+                playlists: importedPlaylistCount,
+                issues: lastIssues.count + preview.missingCount + preview.unsupportedCount
+            )
+            activity = .notice(L10n.format(
+                "status.libraryMigrationImported",
+                summary.imported,
+                summary.playlists,
+                summary.issues
+            ))
+            return summary
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
+
+    func previewOngakuLibrary(at selectedURL: URL) async throws -> OngakuLibraryMigrationPreview {
+        let selected = selectedURL.standardizedFileURL
+        let selectedValues = try? selected.resourceValues(forKeys: [.isDirectoryKey])
+        let isDirectory = selectedValues?.isDirectory == true
+        let manifestURL = isDirectory
+            ? selected.appendingPathComponent("library-v1.json")
+            : selected
+        guard FileManager.default.fileExists(atPath: manifestURL.path) else {
+            throw OngakuLibraryMigrationError.manifestNotFound
+        }
+        let document = try await repository.readExternalLibraryDocument(at: manifestURL)
+        guard document.libraryID != libraryID else {
+            throw OngakuLibraryMigrationError.sameLibrary
+        }
+        guard !document.tracks.isEmpty else {
+            throw OngakuLibraryMigrationError.noTracks
+        }
+        let existingHashes = Set(tracks.map(\.sha256).filter { !$0.isEmpty })
+        let existingPaths = Set(tracks.map { $0.fileURL.standardizedFileURL.path })
+        let rows = document.tracks.map { track -> OngakuLibraryMigrationRow in
+            let fileURL = track.fileURL.standardizedFileURL
+            let status: LegacyLibraryTrackStatus
+            if (!track.sha256.isEmpty && existingHashes.contains(track.sha256))
+                || existingPaths.contains(fileURL.path) {
+                status = .alreadyRegistered
+            } else if !Self.isSupportedAudioFile(fileURL) {
+                status = .unsupported
+            } else if Self.isReadableRegularAudioFile(fileURL) {
+                status = .ready
+            } else {
+                status = .missing
+            }
+            return OngakuLibraryMigrationRow(track: track, status: status)
+        }
+        return OngakuLibraryMigrationPreview(
+            manifestURL: manifestURL,
+            document: document,
+            rows: rows
+        )
+    }
+
+    @discardableResult
+    func importOngakuLibrary(
+        _ preview: OngakuLibraryMigrationPreview
+    ) async throws -> OngakuLibraryMigrationSummary {
+        activity = .importing
+        lastIssues = []
+        let readySources = preview.rows.filter { $0.status == .ready }.map(\.track)
+        let hashResults = await Task.detached(priority: .userInitiated) {
+            readySources.map { source -> (Track, Result<String, Error>) in
+                do { return (source, .success(try LibraryRepository.sha256(of: source.fileURL))) }
+                catch { return (source, .failure(error)) }
+            }
+        }.value
+
+        var actualHashBySourceID: [Track.ID: String] = [:]
+        var sourceIssues: [ImportIssue] = []
+        for (source, result) in hashResults {
+            switch result {
+            case .success(let hash): actualHashBySourceID[source.id] = hash
+            case .failure(let error):
+                sourceIssues.append(ImportIssue(
+                    fileName: source.fileURL.lastPathComponent,
+                    message: error.localizedDescription
+                ))
+            }
+        }
+        let hashableSources = readySources.filter { actualHashBySourceID[$0.id] != nil }
+        let overridePairs: [(String, AudioCDImportRequest)] = hashableSources.map { source in
+            (
+                source.fileURL.standardizedFileURL.path,
+                AudioCDImportRequest(
+                    sourceURL: source.fileURL,
+                    title: source.title,
+                    artist: source.artist,
+                    album: source.album,
+                    albumArtist: source.albumArtist.isEmpty ? nil : source.albumArtist,
+                    releaseYear: source.releaseYear,
+                    isrc: source.isrc.isEmpty ? nil : source.isrc,
+                    trackNumber: source.trackNumber ?? 0,
+                    trackCount: source.trackCount ?? 0,
+                    discNumber: source.discNumber,
+                    discCount: source.discCount,
+                    musicBrainzReference: source.musicBrainzReference
+                )
+            )
+        }
+        let overrides = Dictionary(
+            overridePairs,
+            uniquingKeysWith: { first, _ in first }
+        )
+        let importResult = await repository.importFiles(
+            hashableSources.map(\.fileURL),
+            existing: tracks,
+            reportDuplicates: false,
+            metadataOverrides: overrides
+        )
+
+        var updatedTracks = tracks + importResult.imported
+        let importedIDs: Set<Track.ID> = Set(importResult.imported.map(\.id))
+        let sourceByHash = Dictionary(
+            hashableSources.compactMap { source -> (String, Track)? in
+                guard let hash = actualHashBySourceID[source.id] else { return nil }
+                return (hash, source)
+            },
+            uniquingKeysWith: { first, _ in first }
+        )
+        for index in updatedTracks.indices where importedIDs.contains(updatedTracks[index].id) {
+            guard let source = sourceByHash[updatedTracks[index].sha256] else { continue }
+            Self.applyOngakuMetadata(source, to: &updatedTracks[index])
+        }
+
+        let tracksByHash: [String: Track.ID] = Dictionary(
+            updatedTracks.filter { !$0.sha256.isEmpty }.map { ($0.sha256, $0.id) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        let tracksByPath: [String: Track.ID] = Dictionary(
+            updatedTracks.map { ($0.fileURL.standardizedFileURL.path, $0.id) },
+            uniquingKeysWith: { first, _ in first }
+        )
+        var trackIDMap: [Track.ID: Track.ID] = [:]
+        for row in preview.rows {
+            let source = row.track
+            if let actualHash = actualHashBySourceID[source.id],
+               let destinationID = tracksByHash[actualHash] {
+                trackIDMap[source.id] = destinationID
+            } else if !source.sha256.isEmpty, let destinationID = tracksByHash[source.sha256] {
+                trackIDMap[source.id] = destinationID
+            } else if let destinationID = tracksByPath[source.fileURL.standardizedFileURL.path] {
+                trackIDMap[source.id] = destinationID
+            }
+        }
+
+        var updatedFolders = playlistFolders
+        var folderIDMap: [PlaylistFolder.ID: PlaylistFolder.ID] = [:]
+        var importedFolderCount = 0
+        for source in preview.document.playlistFolders.sorted(by: { $0.sortOrder < $1.sortOrder }) {
+            if let existing = updatedFolders.first(where: { $0.name == source.name }) {
+                folderIDMap[source.id] = existing.id
+                continue
+            }
+            let destination = PlaylistFolder(
+                name: source.name,
+                sortOrder: updatedFolders.map(\.sortOrder).max().map { $0 + 1 } ?? 0,
+                createdAt: source.createdAt,
+                updatedAt: source.updatedAt
+            )
+            updatedFolders.append(destination)
+            folderIDMap[source.id] = destination.id
+            importedFolderCount += 1
+        }
+
+        var updatedPlaylists = playlists
+        var importedPlaylistCount = 0
+        for source in preview.document.playlists.sorted(by: { $0.sortOrder < $1.sortOrder }) {
+            var seen: Set<Track.ID> = []
+            let entries = source.entries.compactMap { entry -> PlaylistEntry? in
+                guard let destinationID = trackIDMap[entry.trackID],
+                      seen.insert(destinationID).inserted else { return nil }
+                return PlaylistEntry(trackID: destinationID, addedAt: entry.addedAt)
+            }
+            let destinationFolderID = source.folderID.flatMap { folderIDMap[$0] }
+            let alreadyExists = updatedPlaylists.contains {
+                $0.name == source.name
+                    && $0.folderID == destinationFolderID
+                    && $0.smartDefinition == source.smartDefinition
+                    && $0.entries.map(\.trackID) == entries.map(\.trackID)
+            }
+            guard !alreadyExists else { continue }
+            updatedPlaylists.append(Playlist(
+                name: source.name,
+                description: source.description,
+                folderID: destinationFolderID,
+                sortOrder: updatedPlaylists.filter { $0.folderID == destinationFolderID }
+                    .map(\.sortOrder).max().map { $0 + 1 } ?? 0,
+                smartDefinition: source.smartDefinition,
+                entries: source.smartDefinition == nil ? entries : [],
+                createdAt: source.createdAt,
+                updatedAt: source.updatedAt
+            ))
+            importedPlaylistCount += 1
+        }
+        updatedTracks.sort {
+            $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+
+        let destinationDocument = LibraryDocument(
+            updatedAt: .now,
+            tracks: updatedTracks,
+            libraryID: libraryID,
+            createdAt: libraryCreatedAt,
+            playlists: updatedPlaylists,
+            playlistFolders: updatedFolders,
+            playbackEvents: playbackEvents,
+            playbackQueue: playbackQueue
+        )
+        do {
+            try await repository.save(document: destinationDocument)
+            tracks = updatedTracks
+            playlists = updatedPlaylists
+            playlistFolders = updatedFolders
+            lastIssues = sourceIssues + importResult.issues
+            selectedTrackID = importResult.imported.first?.id ?? selectedTrackID
+            contentRevision &+= 1
+            scheduleSearchIndexSynchronization(document: destinationDocument)
+            let summary = OngakuLibraryMigrationSummary(
+                imported: importResult.imported.count,
+                linkedExisting: Set(trackIDMap.values).subtracting(importedIDs).count,
+                playlists: importedPlaylistCount,
+                folders: importedFolderCount,
+                issues: lastIssues.count + preview.missingCount + preview.unsupportedCount
+            )
+            activity = .notice(L10n.format(
+                "status.ongakuLibraryMigrationImported",
+                summary.imported,
+                summary.playlists,
+                summary.folders,
+                summary.issues
+            ))
+            return summary
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
+
+    func previewSharedFolder(at folderURL: URL) async throws -> SharedFolderMigrationPreview {
+        let root = folderURL.standardizedFileURL
+        let existingHashes = Set(tracks.map(\.sha256).filter { !$0.isEmpty })
+        let files = await Task.detached(priority: .userInitiated) {
+            Self.resolveDroppedAudioFiles([root])
+        }.value
+        guard !files.isEmpty else { throw SharedFolderMigrationError.noAudioFiles }
+
+        let hashResults = await Task.detached(priority: .userInitiated) {
+            files.map { file -> (URL, Result<String, Error>) in
+                do { return (file, .success(try LibraryRepository.sha256(of: file))) }
+                catch { return (file, .failure(error)) }
+            }
+        }.value
+        let rootPrefix = root.path.hasSuffix("/") ? root.path : root.path + "/"
+        let rows = hashResults.map { file, result -> SharedFolderMigrationRow in
+            let relativePath = file.path.hasPrefix(rootPrefix)
+                ? String(file.path.dropFirst(rootPrefix.count))
+                : file.lastPathComponent
+            switch result {
+            case .success(let hash):
+                return SharedFolderMigrationRow(
+                    sourceURL: file,
+                    relativePath: relativePath,
+                    sha256: hash,
+                    status: existingHashes.contains(hash) ? .alreadyRegistered : .ready
+                )
+            case .failure:
+                return SharedFolderMigrationRow(
+                    sourceURL: file,
+                    relativePath: relativePath,
+                    sha256: nil,
+                    status: .missing
+                )
+            }
+        }
+        return SharedFolderMigrationPreview(rootURL: root, rows: rows)
+    }
+
+    @discardableResult
+    func importSharedFolder(
+        _ preview: SharedFolderMigrationPreview
+    ) async throws -> SharedFolderMigrationSummary {
+        activity = .importing
+        lastIssues = []
+        let sources = preview.rows.filter { $0.status == .ready }.map(\.sourceURL)
+        let result = await repository.importFiles(
+            sources,
+            existing: tracks,
+            reportDuplicates: false
+        )
+        var updatedTracks = tracks + result.imported
+        updatedTracks.sort {
+            $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        }
+        do {
+            try await repository.save(tracks: updatedTracks)
+            tracks = updatedTracks
+            lastIssues = result.issues
+            selectedTrackID = result.imported.first?.id ?? selectedTrackID
+            contentRevision &+= 1
+            scheduleSearchIndexSynchronization(document: currentDocument())
+            let summary = SharedFolderMigrationSummary(
+                imported: result.imported.count,
+                linkedExisting: preview.registeredCount,
+                issues: result.issues.count + preview.unavailableCount
+            )
+            activity = .notice(L10n.format(
+                "status.sharedFolderMigrationImported",
+                summary.imported,
+                summary.linkedExisting,
+                summary.issues
+            ))
+            return summary
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
+
     func importDroppedItems(_ urls: [URL]) async {
         guard !urls.isEmpty else { return }
         activity = .importing
@@ -1839,6 +2303,59 @@ final class LibraryStore: ObservableObject {
             "aac", "aif", "aiff", "alac", "caf", "flac", "m4a", "mp3", "wav",
         ]
         return supportedExtensions.contains(url.pathExtension.lowercased())
+    }
+
+    private nonisolated static func isReadableRegularAudioFile(_ url: URL) -> Bool {
+        guard let values = try? url.resourceValues(
+            forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .isReadableKey]
+        ) else { return false }
+        return values.isRegularFile == true
+            && values.isSymbolicLink != true
+            && values.isReadable == true
+    }
+
+    private nonisolated static func applyLegacyMetadata(
+        _ source: LegacyLibraryTrack,
+        to track: inout Track
+    ) {
+        track.title = source.title
+        track.artist = source.artist
+        track.artistSortName = source.artistSortName
+        track.album = source.album
+        track.albumSortName = source.albumSortName
+        track.albumArtist = source.albumArtist
+        track.albumArtistSortName = source.albumArtistSortName
+        track.composer = source.composer
+        track.composerSortName = source.composerSortName
+        track.grouping = source.grouping
+        track.genre = source.genre
+        track.beatsPerMinute = source.beatsPerMinute
+        track.copyright = source.copyright
+        track.releaseYear = source.releaseYear
+        track.trackNumber = source.trackNumber
+        track.trackCount = source.trackCount
+        track.discNumber = source.discNumber
+        track.discCount = source.discCount
+        track.isCompilation = source.isCompilation
+        track.rating = source.rating
+        track.playCount = source.playCount
+        track.comments = source.comments
+        track.isFavorite = source.isFavorite
+        track.isExcludedFromPlayback = source.isExcludedFromPlayback
+        track.addedAt = source.addedAt ?? track.addedAt
+    }
+
+    private nonisolated static func applyOngakuMetadata(
+        _ source: Track,
+        to track: inout Track
+    ) {
+        track.apply(TrackMetadataValues(track: source), includesTrackSpecificValues: true)
+        track.lyrics = source.lyrics
+        track.musicBrainzReference = source.musicBrainzReference
+        track.addedAt = source.addedAt
+        track.isPinned = source.isPinned
+        track.isFavorite = source.isFavorite
+        track.isExcludedFromPlayback = source.isExcludedFromPlayback
     }
 }
 

@@ -147,6 +147,31 @@ struct OngakuDesktopApp: App {
                     NotificationCenter.default.post(name: .requestCDImport, object: nil)
                 }
                 .keyboardShortcut("o", modifiers: [.command, .shift])
+
+                Button(L10n.text("command.importURL")) {
+                    NotificationCenter.default.post(name: .requestURLImport, object: nil)
+                }
+                .keyboardShortcut("o", modifiers: [.command, .option])
+
+                Divider()
+
+                Button(L10n.text("command.migrateLibrary")) {
+                    NotificationCenter.default.post(name: .requestLibraryMigration, object: nil)
+                }
+
+                Button(L10n.text("command.migrateOngakuLibrary")) {
+                    NotificationCenter.default.post(
+                        name: .requestOngakuLibraryMigration,
+                        object: nil
+                    )
+                }
+
+                Button(L10n.text("command.migrateSharedFolder")) {
+                    NotificationCenter.default.post(
+                        name: .requestSharedFolderMigration,
+                        object: nil
+                    )
+                }
             }
 
             CommandGroup(replacing: .help) {
@@ -204,6 +229,14 @@ struct OngakuDesktopApp: App {
 extension Notification.Name {
     static let requestImport = Notification.Name("OngakuDesktop.requestImport")
     static let requestCDImport = Notification.Name("OngakuDesktop.requestCDImport")
+    static let requestURLImport = Notification.Name("OngakuDesktop.requestURLImport")
+    static let requestLibraryMigration = Notification.Name("OngakuDesktop.requestLibraryMigration")
+    static let requestOngakuLibraryMigration = Notification.Name(
+        "OngakuDesktop.requestOngakuLibraryMigration"
+    )
+    static let requestSharedFolderMigration = Notification.Name(
+        "OngakuDesktop.requestSharedFolderMigration"
+    )
     static let requestAppleMusicStore = Notification.Name("OngakuDesktop.requestAppleMusicStore")
     static let requestVerification = Notification.Name("OngakuDesktop.requestVerification")
 }

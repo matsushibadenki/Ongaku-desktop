@@ -9,6 +9,10 @@ struct ContentView: View {
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var isImporting = false
     @State private var isImportingCD = false
+    @State private var isImportingURL = false
+    @State private var isMigratingLibrary = false
+    @State private var isMigratingOngakuLibrary = false
+    @State private var isMigratingSharedFolder = false
     @State private var isShowingAppleMusicStore = false
     @State private var isRelinkSearching = false
     @State private var isDropTargeted = false
@@ -57,6 +61,22 @@ struct ContentView: View {
             AudioCDImportView()
                 .environmentObject(library)
         }
+        .sheet(isPresented: $isImportingURL) {
+            URLAudioImportView()
+                .environmentObject(library)
+        }
+        .sheet(isPresented: $isMigratingLibrary) {
+            LegacyLibraryMigrationView()
+                .environmentObject(library)
+        }
+        .sheet(isPresented: $isMigratingOngakuLibrary) {
+            OngakuLibraryMigrationView()
+                .environmentObject(library)
+        }
+        .sheet(isPresented: $isMigratingSharedFolder) {
+            SharedFolderMigrationView()
+                .environmentObject(library)
+        }
         .sheet(isPresented: $isShowingAppleMusicStore) {
             AppleMusicStoreView()
                 .environmentObject(player)
@@ -75,6 +95,18 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestCDImport)) { _ in
             isImportingCD = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestURLImport)) { _ in
+            isImportingURL = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestLibraryMigration)) { _ in
+            isMigratingLibrary = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestOngakuLibraryMigration)) { _ in
+            isMigratingOngakuLibrary = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestSharedFolderMigration)) { _ in
+            isMigratingSharedFolder = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestAppleMusicStore)) { _ in
             isShowingAppleMusicStore = true
@@ -100,6 +132,13 @@ struct ContentView: View {
                     Label(L10n.text("command.importCD"), systemImage: "opticaldisc")
                 }
                 .help(L10n.text("toolbar.importCDHelp"))
+
+                Button {
+                    isImportingURL = true
+                } label: {
+                    Label(L10n.text("command.importURL"), systemImage: "link.badge.plus")
+                }
+                .help(L10n.text("toolbar.importURLHelp"))
 
                 Button {
                     isShowingAppleMusicStore = true

@@ -1087,6 +1087,414 @@ struct LibraryRepositoryTests {
                 atPath: musicFolder.appendingPathComponent("Ongaku Media").path))
     }
 
+    @Test("URL audio import accepts only public standard-port HTTPS URLs")
+    func validatesAudioImportURLs() throws {
+        let valid = try URLAudioImportPolicy.validatedURL(
+            from: "https://cdn.example.com/releases/song.flac"
+        )
+        #expect(valid.host == "cdn.example.com")
+
+        let blocked = [
+            "http://cdn.example.com/song.flac",
+            "https://localhost/song.flac",
+            "https://127.0.0.1/song.flac",
+            "https://10.1.2.3/song.flac",
+            "https://172.20.1.2/song.flac",
+            "https://192.168.1.2/song.flac",
+            "https://user:password@cdn.example.com/song.flac",
+            "https://cdn.example.com:8443/song.flac",
+        ]
+        for value in blocked {
+            #expect(throws: URLAudioImportError.self) {
+                try URLAudioImportPolicy.validatedURL(from: value)
+            }
+        }
+    }
+
+    @Test("URL audio response requires a compatible MIME type, extension, and size")
+    func validatesAudioImportResponse() throws {
+        let url = URL(string: "https://cdn.example.com/song.flac")!
+        let response = try #require(HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: "HTTP/1.1",
+            headerFields: [
+                "Content-Type": "audio/flac",
+                "Content-Length": "1234",
+            ]
+        ))
+        let descriptor = try URLAudioImportPolicy.descriptor(
+            response: response,
+            fallbackURL: url
+        )
+        #expect(descriptor.pathExtension == "flac")
+        #expect(descriptor.mimeType == "audio/flac")
+        #expect(descriptor.expectedSize == 1_234)
+
+        let mismatched = try #require(HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: ["Content-Type": "audio/mpeg"]
+        ))
+        #expect(throws: URLAudioImportError.mismatchedFileType) {
+            try URLAudioImportPolicy.descriptor(response: mismatched, fallbackURL: url)
+        }
+
+        let oversized = try #require(HTTPURLResponse(
+            url: url,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: [
+                "Content-Type": "audio/flac",
+                "Content-Length": String(URLAudioImportPolicy.maximumFileSize + 1),
+            ]
+        ))
+        #expect(throws: URLAudioImportError.fileTooLarge) {
+            try URLAudioImportPolicy.descriptor(response: oversized, fallbackURL: url)
+        }
+    }
+
+    @Test("URL audio import validates the downloaded audio contents")
+    func validatesDownloadedAudioContents() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+
+        let audioURL = root.appendingPathComponent("valid.aiff")
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+        do {
+            let file = try AVAudioFile(forWriting: audioURL, settings: format.settings)
+            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 64))
+            buffer.frameLength = 64
+            try file.write(from: buffer)
+        }
+        try URLAudioImportPolicy.validateDownloadedFile(audioURL)
+
+        let fakeURL = root.appendingPathComponent("fake.mp3")
+        try Data("not audio".utf8).write(to: fakeURL)
+        #expect(throws: URLAudioImportError.invalidAudio) {
+            try URLAudioImportPolicy.validateDownloadedFile(fakeURL)
+        }
+    }
+
+    @Test("Music and iTunes XML migration previews songs, metadata, and user playlists")
+    func previewsLegacyMusicLibrary() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let registeredURL = root.appendingPathComponent("Registered.mp3")
+        let readyURL = root.appendingPathComponent("Ready.flac")
+        let unsupportedURL = root.appendingPathComponent("Notes.txt")
+        try Data([0x49, 0x44, 0x33]).write(to: registeredURL)
+        try Data([0x66, 0x4C, 0x61, 0x43]).write(to: readyURL)
+        try Data("notes".utf8).write(to: unsupportedURL)
+        let existing = Track(
+            id: UUID(), title: "Registered", artist: "Artist", album: "Album",
+            duration: 1, fileSize: 3, managedPath: registeredURL.path,
+            sha256: "existing", addedAt: .now, health: .verified
+        )
+        let xmlURL = root.appendingPathComponent("Music Library.xml")
+        let library: [String: Any] = [
+            "Library Persistent ID": "LIBRARY123",
+            "Tracks": [
+                "1": [
+                    "Track ID": 1, "Name": "Registered", "Artist": "Artist",
+                    "Album": "Album", "Location": registeredURL.absoluteString,
+                ],
+                "2": [
+                    "Track ID": 2, "Name": "Migration Song", "Artist": "Migration Artist",
+                    "Sort Artist": "Artist, Migration", "Album": "Migration Album",
+                    "Album Artist": "Various", "Composer": "Composer", "Genre": "Jazz",
+                    "BPM": 123, "Copyright": "© Migration",
+                    "Year": 1999, "Track Number": 3, "Track Count": 12,
+                    "Disc Number": 1, "Disc Count": 2, "Rating": 80,
+                    "Play Count": 7, "Loved": true, "Compilation": true,
+                    "Comments": "From XML", "Location": readyURL.absoluteString,
+                ],
+                "3": [
+                    "Track ID": 3, "Name": "Missing",
+                    "Location": root.appendingPathComponent("Missing.mp3").absoluteString,
+                ],
+                "4": [
+                    "Track ID": 4, "Name": "Unsupported",
+                    "Location": unsupportedURL.absoluteString,
+                ],
+            ],
+            "Playlists": [
+                [
+                    "Name": "Road Songs", "Playlist Persistent ID": "PLAYLIST1",
+                    "Playlist Items": [["Track ID": 2], ["Track ID": 1]],
+                ],
+                ["Name": "Library", "Master": true, "Playlist Items": []],
+                ["Name": "Smart", "Smart Info": Data([1]), "Playlist Items": []],
+            ],
+        ]
+        try PropertyListSerialization.data(
+            fromPropertyList: library,
+            format: .xml,
+            options: 0
+        ).write(to: xmlURL)
+
+        let preview = try LegacyLibraryMigrationService.preview(
+            from: xmlURL,
+            existingTracks: [existing]
+        )
+
+        #expect(preview.sourceName == "LIBRARY123")
+        #expect(preview.readyCount == 1)
+        #expect(preview.registeredCount == 1)
+        #expect(preview.missingCount == 1)
+        #expect(preview.unsupportedCount == 1)
+        let track = try #require(preview.tracks.first { $0.id == 2 })
+        #expect(track.artistSortName == "Artist, Migration")
+        #expect(track.albumArtist == "Various")
+        #expect(track.beatsPerMinute == 123)
+        #expect(track.copyright == "© Migration")
+        #expect(track.rating == 4)
+        #expect(track.playCount == 7)
+        #expect(track.isFavorite)
+        #expect(track.isCompilation)
+        #expect(preview.playlists.map(\.name) == ["Road Songs"])
+        #expect(preview.playlists[0].trackIDs == [2, 1])
+    }
+
+    @Test("Music XML migration copies originals, restores metadata and playlists, and is idempotent")
+    @MainActor
+    func importsLegacyMusicLibrary() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("Original.aiff")
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+        do {
+            let file = try AVAudioFile(forWriting: source, settings: format.settings)
+            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 128))
+            buffer.frameLength = 128
+            try file.write(from: buffer)
+        }
+        let originalHash = try LibraryRepository.sha256(of: source)
+        let addedAt = Date(timeIntervalSince1970: 1_000_000)
+        let xmlURL = root.appendingPathComponent("Library.xml")
+        let library: [String: Any] = [
+            "Tracks": [
+                "10": [
+                    "Track ID": 10, "Name": "Imported Title", "Artist": "Imported Artist",
+                    "Album": "Imported Album", "Composer": "Imported Composer",
+                    "Genre": "Ambient", "Year": 2005, "Track Number": 2,
+                    "Track Count": 8, "Rating": 100, "Play Count": 11,
+                    "Loved": true, "Date Added": addedAt, "Location": source.absoluteString,
+                ],
+            ],
+            "Playlists": [[
+                "Name": "XML Favorites", "Playlist Persistent ID": "XMLFAVORITES",
+                "Playlist Items": [["Track ID": 10]],
+            ]],
+        ]
+        try PropertyListSerialization.data(
+            fromPropertyList: library,
+            format: .xml,
+            options: 0
+        ).write(to: xmlURL)
+        let repository = LibraryRepository(
+            rootURL: root.appendingPathComponent("Catalog"),
+            mediaURL: root.appendingPathComponent("Managed Media")
+        )
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try LegacyLibraryMigrationService.preview(from: xmlURL, existingTracks: [])
+
+        let first = try await store.importLegacyLibrary(preview)
+
+        #expect(first.imported == 1)
+        #expect(first.playlists == 1)
+        let imported = try #require(store.tracks.first)
+        #expect(imported.title == "Imported Title")
+        #expect(imported.artist == "Imported Artist")
+        #expect(imported.album == "Imported Album")
+        #expect(imported.composer == "Imported Composer")
+        #expect(imported.rating == 5)
+        #expect(imported.playCount == 11)
+        #expect(imported.isFavorite)
+        #expect(imported.addedAt == addedAt)
+        #expect(imported.fileURL.standardizedFileURL != source.standardizedFileURL)
+        #expect(try LibraryRepository.sha256(of: source) == originalHash)
+        #expect(store.playlists.first?.name == "XML Favorites")
+        #expect(store.playlists.first?.entries.map(\.trackID) == [imported.id])
+
+        let second = try await store.importLegacyLibrary(preview)
+        #expect(second.imported == 0)
+        #expect(second.playlists == 0)
+        #expect(store.tracks.count == 1)
+        #expect(store.playlists.count == 1)
+    }
+
+    @Test("Another Ongaku library merges metadata, smart playlists, folders, and audio non-destructively")
+    @MainActor
+    func importsAnotherOngakuLibrary() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let sourceRoot = root.appendingPathComponent("Source Library", isDirectory: true)
+        let destinationRoot = root.appendingPathComponent("Destination", isDirectory: true)
+        try FileManager.default.createDirectory(at: sourceRoot, withIntermediateDirectories: true)
+        let sourceAudio = sourceRoot.appendingPathComponent("Source Song.aiff")
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+        do {
+            let file = try AVAudioFile(forWriting: sourceAudio, settings: format.settings)
+            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 128))
+            buffer.frameLength = 128
+            try file.write(from: buffer)
+        }
+        let sourceAudioHash = try LibraryRepository.sha256(of: sourceAudio)
+        let sourceTrack = Track(
+            id: UUID(), title: "Ongaku Source", artist: "Source Artist",
+            album: "Source Album", composer: "Source Composer", genre: "Electronic",
+            playCount: 19, comments: "Preserved", lyrics: TrackLyrics(
+                plainText: "Source lyrics", source: .manual, isManuallyEdited: true
+            ), duration: 1, fileSize: 1, managedPath: sourceAudio.path,
+            sha256: sourceAudioHash, addedAt: Date(timeIntervalSince1970: 2_000_000),
+            lastVerifiedAt: .now, health: .verified, isPinned: true,
+            isFavorite: true, rating: 5
+        )
+        let missingTrack = Track(
+            id: UUID(), title: "Missing", artist: "Source Artist", album: "Source Album",
+            duration: 1, fileSize: 1,
+            managedPath: sourceRoot.appendingPathComponent("Missing.mp3").path,
+            sha256: "missing-hash", addedAt: .now, health: .missing
+        )
+        let folder = PlaylistFolder(name: "Imported Folder", sortOrder: 0)
+        let regular = Playlist(
+            name: "Imported Regular", folderID: folder.id, sortOrder: 0,
+            entries: [PlaylistEntry(trackID: sourceTrack.id)]
+        )
+        var smartDefinition = SmartPlaylistDefinition()
+        smartDefinition.root.rules = [SmartPlaylistRule(
+            field: .favorite,
+            comparison: .isTrue,
+            value: ""
+        )]
+        let smart = Playlist(
+            name: "Imported Smart", sortOrder: 0,
+            smartDefinition: smartDefinition
+        )
+        let sourceDocument = LibraryDocument(
+            tracks: [sourceTrack, missingTrack],
+            libraryID: UUID(),
+            playlists: [regular, smart],
+            playlistFolders: [folder]
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let sourceManifest = sourceRoot.appendingPathComponent("library-v1.json")
+        try encoder.encode(sourceDocument).write(to: sourceManifest, options: .atomic)
+        let manifestBefore = try Data(contentsOf: sourceManifest)
+
+        let repository = LibraryRepository(
+            rootURL: destinationRoot,
+            mediaURL: destinationRoot.appendingPathComponent("Ongaku Media")
+        )
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewOngakuLibrary(at: sourceRoot)
+
+        #expect(preview.readyCount == 1)
+        #expect(preview.missingCount == 1)
+        #expect(preview.document.playlists.count == 2)
+        #expect(preview.document.playlistFolders.count == 1)
+
+        let first = try await store.importOngakuLibrary(preview)
+
+        #expect(first.imported == 1)
+        #expect(first.playlists == 2)
+        #expect(first.folders == 1)
+        let imported = try #require(store.tracks.first)
+        #expect(imported.title == "Ongaku Source")
+        #expect(imported.composer == "Source Composer")
+        #expect(imported.genre == "Electronic")
+        #expect(imported.playCount == 19)
+        #expect(imported.comments == "Preserved")
+        #expect(imported.lyrics?.plainText == "Source lyrics")
+        #expect(imported.isPinned)
+        #expect(imported.isFavorite)
+        #expect(imported.rating == 5)
+        #expect(imported.fileURL.standardizedFileURL != sourceAudio.standardizedFileURL)
+        #expect(try LibraryRepository.sha256(of: sourceAudio) == sourceAudioHash)
+        #expect(try Data(contentsOf: sourceManifest) == manifestBefore)
+        #expect(!FileManager.default.fileExists(
+            atPath: sourceRoot.appendingPathComponent("library-schema-12.migration-backup.json").path
+        ))
+        let importedFolder = try #require(store.playlistFolders.first)
+        let importedRegular = try #require(store.playlists.first { $0.name == "Imported Regular" })
+        let importedSmart = try #require(store.playlists.first { $0.name == "Imported Smart" })
+        #expect(importedRegular.folderID == importedFolder.id)
+        #expect(importedRegular.entries.map(\.trackID) == [imported.id])
+        #expect(importedSmart.smartDefinition == smartDefinition)
+
+        let secondPreview = try await store.previewOngakuLibrary(at: sourceRoot)
+        #expect(secondPreview.registeredCount == 1)
+        let second = try await store.importOngakuLibrary(secondPreview)
+        #expect(second.imported == 0)
+        #expect(second.playlists == 0)
+        #expect(second.folders == 0)
+        #expect(store.tracks.count == 1)
+        #expect(store.playlists.count == 2)
+        #expect(store.playlistFolders.count == 1)
+        #expect(try Data(contentsOf: sourceManifest) == manifestBefore)
+    }
+
+    @Test("Shared folder migration previews, verifies, copies, and remains idempotent")
+    @MainActor
+    func importsSharedFolderNonDestructively() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let shared = root.appendingPathComponent("Mounted Share", isDirectory: true)
+        let nested = shared.appendingPathComponent("Artist/Album", isDirectory: true)
+        let destination = root.appendingPathComponent("Destination", isDirectory: true)
+        try FileManager.default.createDirectory(at: nested, withIntermediateDirectories: true)
+        let source = nested.appendingPathComponent("Shared Song.aiff")
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+        do {
+            let file = try AVAudioFile(forWriting: source, settings: format.settings)
+            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 128))
+            buffer.frameLength = 128
+            try file.write(from: buffer)
+        }
+        let sourceHash = try LibraryRepository.sha256(of: source)
+        let sourceData = try Data(contentsOf: source)
+
+        let repository = LibraryRepository(
+            rootURL: destination,
+            mediaURL: destination.appendingPathComponent("Ongaku Media")
+        )
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewSharedFolder(at: shared)
+
+        #expect(preview.readyCount == 1)
+        #expect(preview.registeredCount == 0)
+        #expect(preview.rows.first?.relativePath == "Artist/Album/Shared Song.aiff")
+        #expect(preview.rows.first?.sha256 == sourceHash)
+
+        let first = try await store.importSharedFolder(preview)
+        #expect(first.imported == 1)
+        #expect(first.issues == 0)
+        #expect(store.tracks.count == 1)
+        #expect(store.tracks[0].fileURL.standardizedFileURL != source.standardizedFileURL)
+        #expect(try LibraryRepository.sha256(of: store.tracks[0].fileURL) == sourceHash)
+        #expect(try Data(contentsOf: source) == sourceData)
+
+        let secondPreview = try await store.previewSharedFolder(at: shared)
+        #expect(secondPreview.readyCount == 0)
+        #expect(secondPreview.registeredCount == 1)
+        #expect(try Data(contentsOf: source) == sourceData)
+    }
+
     @Test("Apple Music media-folder-url is decoded")
     func decodesAppleMusicMediaFolder() {
         let expected = URL(fileURLWithPath: "/Volumes/Music/Media.localized", isDirectory: true)
