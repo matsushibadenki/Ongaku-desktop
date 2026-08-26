@@ -172,6 +172,15 @@ struct OngakuDesktopApp: App {
                         object: nil
                     )
                 }
+
+                Divider()
+
+                Button(L10n.text("command.organizeMedia")) {
+                    NotificationCenter.default.post(
+                        name: .requestMediaOrganization,
+                        object: nil
+                    )
+                }
             }
 
             CommandGroup(replacing: .help) {
@@ -236,6 +245,9 @@ extension Notification.Name {
     )
     static let requestSharedFolderMigration = Notification.Name(
         "OngakuDesktop.requestSharedFolderMigration"
+    )
+    static let requestMediaOrganization = Notification.Name(
+        "OngakuDesktop.requestMediaOrganization"
     )
     static let requestAppleMusicStore = Notification.Name("OngakuDesktop.requestAppleMusicStore")
     static let requestVerification = Notification.Name("OngakuDesktop.requestVerification")

@@ -28,6 +28,20 @@ actor LibraryRepository {
         var entries: [ImportJournalEntry] = []
     }
 
+    private struct MediaOrganizationJournalEntry: Codable {
+        var sourcePath: String
+        var destinationPath: String
+        var expectedSHA256: String
+        var moved: Bool
+    }
+
+    private struct MediaOrganizationJournal: Codable {
+        static let currentSchema = 1
+        var schemaVersion = currentSchema
+        var updatedAt: Date = .now
+        var entries: [MediaOrganizationJournalEntry]
+    }
+
     private struct DecodedLibraryDocument {
         var document: LibraryDocument
         var migratedFromSchemaVersion: Int?
@@ -180,6 +194,9 @@ actor LibraryRepository {
         return rootURL.appendingPathComponent("library-\(source).migration-backup.json")
     }
     private var importJournalURL: URL { rootURL.appendingPathComponent("import-journal-v1.json") }
+    private var mediaOrganizationJournalURL: URL {
+        rootURL.appendingPathComponent("media-organization-journal-v1.json")
+    }
     private var playlistArtworkDirectoryURL: URL {
         rootURL.appendingPathComponent("Playlist Artwork", isDirectory: true)
     }
@@ -216,6 +233,7 @@ actor LibraryRepository {
         }
 
         var document = decoded.document
+        try reconcileMediaOrganizationJournal(with: document.tracks)
         let recovery = try recoverImports(into: &document)
         if let sourceSchemaVersion = decoded.migratedFromSchemaVersion {
             if let decodedSourceURL {
@@ -256,6 +274,133 @@ actor LibraryRepository {
             throw CocoaError(.fileReadTooLarge)
         }
         return try decodeDocument(at: source).document
+    }
+
+    func currentMediaDirectoryURL() -> URL { mediaURL }
+
+    func planMediaOrganization(
+        tracks: [Track],
+        destinationRootURL: URL
+    ) throws -> MediaOrganizationPreview {
+        let destinationRoot = destinationRootURL.standardizedFileURL
+        let sourceRoot = mediaURL.standardizedFileURL
+        var reservedPaths: Set<String> = []
+        let grouped = Dictionary(grouping: tracks) { $0.fileURL.standardizedFileURL.path }
+        var items: [MediaOrganizationItem] = []
+
+        for (path, matchingTracks) in grouped.sorted(by: { $0.key < $1.key }) {
+            let source = URL(fileURLWithPath: path).standardizedFileURL
+            guard isInside(source, directory: sourceRoot) else {
+                items.append(MediaOrganizationItem(
+                    trackIDs: matchingTracks.map(\.id), sourceURL: source,
+                    destinationURL: source, expectedSHA256: matchingTracks[0].sha256,
+                    status: .external
+                ))
+                continue
+            }
+            guard let values = try? source.resourceValues(
+                forKeys: [.isRegularFileKey, .isSymbolicLinkKey]
+            ), values.isRegularFile == true, values.isSymbolicLink != true,
+                  let hash = try? Self.sha256(of: source),
+                  matchingTracks.contains(where: { $0.sha256 == hash }) else {
+                items.append(MediaOrganizationItem(
+                    trackIDs: matchingTracks.map(\.id), sourceURL: source,
+                    destinationURL: source, expectedSHA256: matchingTracks[0].sha256,
+                    status: .unavailable
+                ))
+                continue
+            }
+
+            let representative = matchingTracks[0]
+            let directory = destinationRoot
+                .appendingPathComponent(Self.safePathComponent(representative.artist), isDirectory: true)
+                .appendingPathComponent(Self.safePathComponent(representative.album), isDirectory: true)
+            let proposed = directory.appendingPathComponent(Self.safePathComponent(source.lastPathComponent))
+            let destination = uniqueOrganizationDestination(
+                proposed: proposed,
+                source: source,
+                hash: hash,
+                reservedPaths: &reservedPaths
+            )
+            items.append(MediaOrganizationItem(
+                trackIDs: matchingTracks.map(\.id), sourceURL: source,
+                destinationURL: destination, expectedSHA256: hash,
+                status: source.path == destination.path ? .unchanged : .move
+            ))
+        }
+        return MediaOrganizationPreview(
+            sourceRootURL: sourceRoot,
+            destinationRootURL: destinationRoot,
+            items: items
+        )
+    }
+
+    func executeMediaOrganization(
+        document: LibraryDocument,
+        preview: MediaOrganizationPreview
+    ) throws -> (document: LibraryDocument, summary: MediaOrganizationSummary) {
+        try prepareDirectories()
+        let moves = preview.items.filter { $0.status == .move }
+        var journal = MediaOrganizationJournal(entries: moves.map {
+            MediaOrganizationJournalEntry(
+                sourcePath: $0.sourceURL.path,
+                destinationPath: $0.destinationURL.path,
+                expectedSHA256: $0.expectedSHA256,
+                moved: false
+            )
+        })
+        try persistMediaOrganizationJournal(journal)
+
+        do {
+            for index in journal.entries.indices {
+                let source = URL(fileURLWithPath: journal.entries[index].sourcePath)
+                let destination = URL(fileURLWithPath: journal.entries[index].destinationPath)
+                guard try Self.sha256(of: source) == journal.entries[index].expectedSHA256 else {
+                    throw RepositoryError.copyVerificationFailed(source.lastPathComponent)
+                }
+                try fileManager.createDirectory(
+                    at: destination.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try fileManager.moveItem(at: source, to: destination)
+                journal.entries[index].moved = true
+                guard try Self.sha256(of: destination) == journal.entries[index].expectedSHA256 else {
+                    throw RepositoryError.copyVerificationFailed(destination.lastPathComponent)
+                }
+                journal.updatedAt = .now
+                try persistMediaOrganizationJournal(journal)
+            }
+
+            let destinationByTrackID = Dictionary(
+                uniqueKeysWithValues: moves.flatMap { item in
+                    item.trackIDs.map { ($0, item.destinationURL.path) }
+                }
+            )
+            var updated = document
+            for index in updated.tracks.indices {
+                if let path = destinationByTrackID[updated.tracks[index].id] {
+                    updated.tracks[index].managedPath = path
+                    updated.tracks[index].lastVerifiedAt = .now
+                    updated.tracks[index].health = .verified
+                }
+            }
+            updated.updatedAt = .now
+            try persistDocument(updated, backUpReadablePrimary: true)
+            currentDocument = updated
+            try clearMediaOrganizationJournal()
+            mediaURL = preview.destinationRootURL.standardizedFileURL
+            return (
+                updated,
+                MediaOrganizationSummary(
+                    moved: moves.count,
+                    updatedTracks: destinationByTrackID.count
+                )
+            )
+        } catch {
+            rollbackMediaOrganizationJournal(journal)
+            try? clearMediaOrganizationJournal()
+            throw error
+        }
     }
 
     func save(tracks: [Track]) throws {
@@ -1239,6 +1384,81 @@ actor LibraryRepository {
                 return candidate
             }
             counter += 1
+        }
+    }
+
+    private func uniqueOrganizationDestination(
+        proposed: URL,
+        source: URL,
+        hash: String,
+        reservedPaths: inout Set<String>
+    ) -> URL {
+        if proposed.standardizedFileURL.path == source.standardizedFileURL.path {
+            reservedPaths.insert(proposed.path)
+            return proposed
+        }
+        func isAvailable(_ candidate: URL) -> Bool {
+            !reservedPaths.contains(candidate.path) && !fileManager.fileExists(atPath: candidate.path)
+        }
+        if isAvailable(proposed) {
+            reservedPaths.insert(proposed.path)
+            return proposed
+        }
+        var counter = 1
+        while true {
+            let suffix = counter == 1 ? String(hash.prefix(8)) : "\(hash.prefix(8))-\(counter)"
+            let candidate = proposed.deletingPathExtension()
+                .appendingPathExtension(suffix)
+                .appendingPathExtension(proposed.pathExtension)
+            if isAvailable(candidate) {
+                reservedPaths.insert(candidate.path)
+                return candidate
+            }
+            counter += 1
+        }
+    }
+
+    private func persistMediaOrganizationJournal(
+        _ journal: MediaOrganizationJournal
+    ) throws {
+        try encoder.encode(journal).write(to: mediaOrganizationJournalURL, options: [.atomic])
+    }
+
+    private func clearMediaOrganizationJournal() throws {
+        guard fileManager.fileExists(atPath: mediaOrganizationJournalURL.path) else { return }
+        try fileManager.removeItem(at: mediaOrganizationJournalURL)
+    }
+
+    private func reconcileMediaOrganizationJournal(with tracks: [Track]) throws {
+        guard fileManager.fileExists(atPath: mediaOrganizationJournalURL.path) else { return }
+        let data = try Data(contentsOf: mediaOrganizationJournalURL)
+        let journal = try decoder.decode(MediaOrganizationJournal.self, from: data)
+        guard journal.schemaVersion == MediaOrganizationJournal.currentSchema else {
+            throw RepositoryError.unsupportedSchema(journal.schemaVersion)
+        }
+        let catalogPaths = Set(tracks.map { $0.fileURL.standardizedFileURL.path })
+        let committed = !journal.entries.isEmpty && journal.entries.allSatisfy {
+            let destination = URL(fileURLWithPath: $0.destinationPath).standardizedFileURL
+            return catalogPaths.contains(destination.path)
+                && fileManager.fileExists(atPath: destination.path)
+                && (try? Self.sha256(of: destination)) == $0.expectedSHA256
+        }
+        if !committed { rollbackMediaOrganizationJournal(journal) }
+        try clearMediaOrganizationJournal()
+    }
+
+    private func rollbackMediaOrganizationJournal(_ journal: MediaOrganizationJournal) {
+        for entry in journal.entries.reversed() {
+            let source = URL(fileURLWithPath: entry.sourcePath)
+            let destination = URL(fileURLWithPath: entry.destinationPath)
+            guard !fileManager.fileExists(atPath: source.path),
+                  fileManager.fileExists(atPath: destination.path),
+                  (try? Self.sha256(of: destination)) == entry.expectedSHA256 else { continue }
+            try? fileManager.createDirectory(
+                at: source.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            try? fileManager.moveItem(at: destination, to: source)
         }
     }
 

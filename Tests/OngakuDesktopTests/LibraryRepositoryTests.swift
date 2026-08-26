@@ -1495,6 +1495,185 @@ struct LibraryRepositoryTests {
         #expect(try Data(contentsOf: source) == sourceData)
     }
 
+    @Test("Media organization dry-runs and transactionally moves only managed files")
+    @MainActor
+    func organizesManagedMediaWithDryRun() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let oldMedia = root.appendingPathComponent("Old Media", isDirectory: true)
+        let newMedia = root.appendingPathComponent("New Media", isDirectory: true)
+        let externalRoot = root.appendingPathComponent("External", isDirectory: true)
+        try FileManager.default.createDirectory(at: oldMedia, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: externalRoot, withIntermediateDirectories: true)
+
+        func writeAudio(_ url: URL) throws {
+            let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+            let file = try AVAudioFile(forWriting: url, settings: format.settings)
+            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 128))
+            buffer.frameLength = 128
+            try file.write(from: buffer)
+        }
+        let managedSource = oldMedia.appendingPathComponent("Loose.aiff")
+        let externalSource = externalRoot.appendingPathComponent("Reference.aiff")
+        try writeAudio(managedSource)
+        try writeAudio(externalSource)
+        let managedHash = try LibraryRepository.sha256(of: managedSource)
+        let externalHash = try LibraryRepository.sha256(of: externalSource)
+        let managed = Track(
+            id: UUID(), title: "Managed", artist: "Artist", album: "Album", duration: 1,
+            fileSize: 1, managedPath: managedSource.path, sha256: managedHash,
+            addedAt: .now, health: .verified
+        )
+        let external = Track(
+            id: UUID(), title: "External", artist: "Artist", album: "Album", duration: 1,
+            fileSize: 1, managedPath: externalSource.path, sha256: externalHash,
+            addedAt: .now, health: .verified
+        )
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: oldMedia)
+        try await repository.save(document: LibraryDocument(tracks: [managed, external]))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        let preview = try await store.previewMediaOrganization(destination: newMedia)
+        #expect(preview.moveCount == 1)
+        #expect(preview.externalCount == 1)
+        let planned = try #require(preview.items.first { $0.status == .move })
+        #expect(planned.destinationURL.path.hasSuffix("Artist/Album/Loose.aiff"))
+        #expect(FileManager.default.fileExists(atPath: managedSource.path))
+        #expect(!FileManager.default.fileExists(atPath: planned.destinationURL.path))
+
+        let summary = try await store.executeMediaOrganization(preview)
+        #expect(summary.moved == 1)
+        #expect(summary.updatedTracks == 1)
+        #expect(!FileManager.default.fileExists(atPath: managedSource.path))
+        #expect(FileManager.default.fileExists(atPath: planned.destinationURL.path))
+        #expect(try LibraryRepository.sha256(of: planned.destinationURL) == managedHash)
+        #expect(store.tracks.first { $0.id == managed.id }?.fileURL == planned.destinationURL)
+        #expect(store.tracks.first { $0.id == external.id }?.fileURL == externalSource)
+        #expect(!FileManager.default.fileExists(
+            atPath: catalog.appendingPathComponent("media-organization-journal-v1.json").path
+        ))
+    }
+
+    @Test("Media organization rolls back completed moves when a later checksum changes")
+    @MainActor
+    func rollsBackFailedMediaOrganization() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let destination = root.appendingPathComponent("Destination", isDirectory: true)
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+        var sourceURLs: [URL] = []
+        var tracks: [Track] = []
+        for name in ["A.aiff", "B.aiff"] {
+            let url = media.appendingPathComponent(name)
+            do {
+                let file = try AVAudioFile(forWriting: url, settings: format.settings)
+                let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 128))
+                buffer.frameLength = 128
+                try file.write(from: buffer)
+            }
+            let hash = try LibraryRepository.sha256(of: url)
+            sourceURLs.append(url)
+            tracks.append(Track(
+                id: UUID(), title: name, artist: "Artist", album: "Album", duration: 1,
+                fileSize: 1, managedPath: url.path, sha256: hash,
+                addedAt: .now, health: .verified
+            ))
+        }
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: tracks))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: destination)
+        try Data("changed".utf8).write(to: sourceURLs[1])
+        #expect(preview.moveCount == 2)
+        #expect(try LibraryRepository.sha256(of: sourceURLs[1]) != tracks[1].sha256)
+
+        do {
+            _ = try await store.executeMediaOrganization(preview)
+            Issue.record("Expected checksum verification to fail")
+        } catch {}
+
+        #expect(FileManager.default.fileExists(atPath: sourceURLs[0].path))
+        #expect(FileManager.default.fileExists(atPath: sourceURLs[1].path))
+        #expect(!FileManager.default.fileExists(
+            atPath: destination.appendingPathComponent("Artist/Album/A.aiff").path
+        ))
+        #expect(store.tracks.map(\.managedPath) == tracks.map(\.managedPath))
+        #expect(!FileManager.default.fileExists(
+            atPath: catalog.appendingPathComponent("media-organization-journal-v1.json").path
+        ))
+    }
+
+    @Test("An interrupted Media organization journal rolls files back on next launch")
+    func recoversInterruptedMediaOrganization() async throws {
+        struct Entry: Codable {
+            var sourcePath: String
+            var destinationPath: String
+            var expectedSHA256: String
+            var moved: Bool
+        }
+        struct Journal: Codable {
+            var schemaVersion = 1
+            var updatedAt = Date.now
+            var entries: [Entry]
+        }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let source = media.appendingPathComponent("Loose.aiff")
+        let destination = media.appendingPathComponent("Artist/Album/Loose.aiff")
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+        do {
+            let file = try AVAudioFile(forWriting: source, settings: format.settings)
+            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 128))
+            buffer.frameLength = 128
+            try file.write(from: buffer)
+        }
+        let hash = try LibraryRepository.sha256(of: source)
+        let track = Track(
+            id: UUID(), title: "Loose", artist: "Artist", album: "Album",
+            duration: 1, fileSize: 1, managedPath: source.path, sha256: hash,
+            addedAt: .now, health: .verified
+        )
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: [track]))
+        try FileManager.default.createDirectory(
+            at: destination.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        try FileManager.default.moveItem(at: source, to: destination)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(Journal(entries: [Entry(
+            sourcePath: source.path,
+            destinationPath: destination.path,
+            expectedSHA256: hash,
+            moved: false
+        )])).write(
+            to: catalog.appendingPathComponent("media-organization-journal-v1.json"),
+            options: .atomic
+        )
+
+        let relaunched = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let loaded = try await relaunched.load()
+        #expect(loaded.document.tracks.first?.managedPath == source.path)
+        #expect(FileManager.default.fileExists(atPath: source.path))
+        #expect(!FileManager.default.fileExists(atPath: destination.path))
+        #expect(!FileManager.default.fileExists(
+            atPath: catalog.appendingPathComponent("media-organization-journal-v1.json").path
+        ))
+    }
+
     @Test("Apple Music media-folder-url is decoded")
     func decodesAppleMusicMediaFolder() {
         let expected = URL(fileURLWithPath: "/Volumes/Music/Media.localized", isDirectory: true)

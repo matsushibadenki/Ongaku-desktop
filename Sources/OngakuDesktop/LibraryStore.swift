@@ -1514,6 +1514,44 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    func mediaDirectoryURL() async -> URL {
+        await repository.currentMediaDirectoryURL()
+    }
+
+    func previewMediaOrganization(
+        destination: URL
+    ) async throws -> MediaOrganizationPreview {
+        try await repository.planMediaOrganization(
+            tracks: tracks,
+            destinationRootURL: destination
+        )
+    }
+
+    @discardableResult
+    func executeMediaOrganization(
+        _ preview: MediaOrganizationPreview
+    ) async throws -> MediaOrganizationSummary {
+        activity = .importing
+        do {
+            let result = try await repository.executeMediaOrganization(
+                document: currentDocument(),
+                preview: preview
+            )
+            tracks = result.document.tracks
+            contentRevision &+= 1
+            scheduleSearchIndexSynchronization(document: result.document)
+            activity = .notice(L10n.format(
+                "status.mediaOrganizationComplete",
+                result.summary.moved,
+                result.summary.updatedTracks
+            ))
+            return result.summary
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
+
     func importDroppedItems(_ urls: [URL]) async {
         guard !urls.isEmpty else { return }
         activity = .importing

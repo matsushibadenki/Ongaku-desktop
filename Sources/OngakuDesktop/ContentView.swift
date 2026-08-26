@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var isMigratingLibrary = false
     @State private var isMigratingOngakuLibrary = false
     @State private var isMigratingSharedFolder = false
+    @State private var isOrganizingMedia = false
     @State private var isShowingAppleMusicStore = false
     @State private var isRelinkSearching = false
     @State private var isDropTargeted = false
@@ -77,6 +78,10 @@ struct ContentView: View {
             SharedFolderMigrationView()
                 .environmentObject(library)
         }
+        .sheet(isPresented: $isOrganizingMedia) {
+            MediaOrganizationView()
+                .environmentObject(library)
+        }
         .sheet(isPresented: $isShowingAppleMusicStore) {
             AppleMusicStoreView()
                 .environmentObject(player)
@@ -107,6 +112,9 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestSharedFolderMigration)) { _ in
             isMigratingSharedFolder = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestMediaOrganization)) { _ in
+            isOrganizingMedia = true
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestAppleMusicStore)) { _ in
             isShowingAppleMusicStore = true
