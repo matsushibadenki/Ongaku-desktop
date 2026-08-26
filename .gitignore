@@ -29,3 +29,8 @@ DerivedData/
 
 # Local convenience alias
 /Ongakuのエイリアス
+
+
+# 管理ファイル
+website/
+dontUpload/
