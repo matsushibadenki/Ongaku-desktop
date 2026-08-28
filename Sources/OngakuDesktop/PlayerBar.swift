@@ -474,11 +474,25 @@ struct PlayerTransportControls: View {
             } else {
                 Task { await appleMusicPlayback.resume() }
             }
+        } else if let selectedTrack = PlaybackStartResolver.selectedTrackToStart(
+            currentTrackID: player.currentTrack?.id,
+            selectedTrack: library.selectedTrack
+        ) {
+            playSelectedTrack(selectedTrack)
         } else if player.currentTrack != nil {
             player.togglePlayback()
         } else if let playableTrack {
-            player.play(playableTrack)
+            playSelectedTrack(playableTrack)
         }
+    }
+
+    private func playSelectedTrack(_ track: Track) {
+        let visibleQueue = library.filteredTracks
+        player.play(
+            track,
+            queue: visibleQueue.contains(where: { $0.id == track.id })
+                ? visibleQueue : library.tracks
+        )
     }
 
     private var isPlaying: Bool {

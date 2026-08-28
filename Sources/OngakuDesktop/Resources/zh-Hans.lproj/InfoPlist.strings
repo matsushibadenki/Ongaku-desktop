@@ -1,1 +1,2 @@
 "NSAppleMusicUsageDescription" = "Ongaku使用Apple Music访问权限来搜索和播放目录，并将所选歌曲添加到您的云音乐资料库。";
+"NSLocalNetworkUsageDescription" = "Ongaku使用本地网络与iPhone或iPad安全同步所选音乐文件。";

@@ -34,5 +34,11 @@
     <true/>
 	<key>NSAppleMusicUsageDescription</key>
 	<string>Ongaku uses Apple Music access to search the catalog and add selected songs to your cloud music library.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Ongaku uses your local network to securely sync selected music files with your iPhone or iPad.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ongaku-sync._tcp</string>
+	</array>
 </dict>
 </plist>

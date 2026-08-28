@@ -981,7 +981,7 @@ struct LibraryContent: View {
                 audioFeatures: library.audioFeatures
             )
         } else {
-            player.play(track)
+            player.play(track, queue: sortedTracks)
         }
     }
 
@@ -1810,9 +1810,12 @@ private struct AlbumDetail: View {
                     .foregroundStyle(AppTheme.secondaryInk)
 
                     Button {
-                        guard let firstTrack = album.sortedTracks.first else { return }
-                        library.selectedTrackID = firstTrack.id
-                        player.play(firstTrack)
+                        guard let startTrack = PlaybackStartResolver.startingTrack(
+                            in: album.sortedTracks,
+                            selectedID: library.selectedTrackID
+                        ) else { return }
+                        library.selectedTrackID = startTrack.id
+                        player.play(startTrack, queue: album.sortedTracks)
                     } label: {
                         Label(L10n.text("album.play"), systemImage: "play.fill")
                     }
@@ -1876,7 +1879,9 @@ private struct AlbumDetail: View {
         }
         .contextMenu(forSelectionType: Track.ID.self) { selection in
             if let track = album.sortedTracks.first(where: { selection.contains($0.id) }) {
-                Button(L10n.text("track.play")) { player.play(track) }
+                Button(L10n.text("track.play")) {
+                    player.play(track, queue: album.sortedTracks)
+                }
                 PlaybackQueueContextActions(tracks: [track])
                 TrackPlaybackAttributeActions(track: track)
                 Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
@@ -1889,7 +1894,7 @@ private struct AlbumDetail: View {
                 return
             }
             library.selectedTrackID = track.id
-            player.play(track)
+            player.play(track, queue: album.sortedTracks)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
         .padding(.bottom, AppTheme.spaceMD)
@@ -2113,9 +2118,12 @@ private struct ArtistDetail: View {
                         .foregroundStyle(AppTheme.secondaryInk)
 
                     Button {
-                        guard let firstTrack = artist.sortedTracks.first else { return }
-                        library.selectedTrackID = firstTrack.id
-                        player.play(firstTrack)
+                        guard let startTrack = PlaybackStartResolver.startingTrack(
+                            in: artist.sortedTracks,
+                            selectedID: library.selectedTrackID
+                        ) else { return }
+                        library.selectedTrackID = startTrack.id
+                        player.play(startTrack, queue: artist.sortedTracks)
                     } label: {
                         Label(L10n.text("artist.play"), systemImage: "play.fill")
                     }
@@ -2235,7 +2243,9 @@ private struct ArtistDetail: View {
             }
             .contextMenu(forSelectionType: Track.ID.self) { selection in
                 if let track = artist.sortedTracks.first(where: { selection.contains($0.id) }) {
-                    Button(L10n.text("track.play")) { player.play(track) }
+                    Button(L10n.text("track.play")) {
+                        player.play(track, queue: artist.sortedTracks)
+                    }
                     PlaybackQueueContextActions(tracks: [track])
                     TrackPlaybackAttributeActions(track: track)
                     Button(L10n.text("metadataEditor.track.menu")) { onEditTrack(track) }
@@ -2255,7 +2265,7 @@ private struct ArtistDetail: View {
                     return
                 }
                 library.selectedTrackID = track.id
-                player.play(track)
+                player.play(track, queue: artist.sortedTracks)
             }
             .tableStyle(.inset(alternatesRowBackgrounds: true))
             .safeAreaInset(edge: .bottom, spacing: 0) {

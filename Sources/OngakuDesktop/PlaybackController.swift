@@ -1104,6 +1104,17 @@ final class PlaybackController: ObservableObject {
         playQueuedTrack(track)
     }
 
+    func play(_ track: Track, queue: [Track]) {
+        var seen = Set<Track.ID>()
+        playbackQueue = queue.filter { seen.insert($0.id).inserted }
+        if !playbackQueue.contains(where: { $0.id == track.id }) {
+            playbackQueue.insert(track, at: 0)
+        }
+        usesOngakuMixTransitions = false
+        queueUndoStack.removeAll()
+        playQueuedTrack(track)
+    }
+
     func playOngakuMix(
         _ track: Track,
         queue: [Track],

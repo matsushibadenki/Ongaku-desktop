@@ -1225,6 +1225,28 @@ enum TrackSelectionResolver {
     }
 }
 
+enum PlaybackStartResolver {
+    nonisolated static func startingTrack(
+        in tracks: [Track],
+        selectedID: Track.ID?
+    ) -> Track? {
+        if let selectedID,
+           let selected = tracks.first(where: { $0.id == selectedID }) {
+            return selected
+        }
+        return tracks.first
+    }
+
+    nonisolated static func selectedTrackToStart(
+        currentTrackID: Track.ID?,
+        selectedTrack: Track?
+    ) -> Track? {
+        guard let selectedTrack,
+              selectedTrack.id != currentTrackID else { return nil }
+        return selectedTrack
+    }
+}
+
 struct TrackSelectionState: Equatable, Sendable {
     var focusedID: Track.ID?
     var selectedIDs: Set<Track.ID>

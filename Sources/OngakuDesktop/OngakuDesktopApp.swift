@@ -33,6 +33,7 @@ struct OngakuDesktopApp: App {
     @StateObject private var appleMusicPlayback: AppleMusicPlaybackController
     @StateObject private var appleMusicStore: AppleMusicStoreController
     @StateObject private var systemNowPlaying: SystemNowPlayingController
+    @StateObject private var phoneSync = PhoneSyncController()
     @StateObject private var softwareUpdater = SoftwareUpdateController()
 
     init() {
@@ -89,15 +90,19 @@ struct OngakuDesktopApp: App {
                 .environmentObject(appearance)
                 .environmentObject(meterSettings)
                 .environmentObject(trackTableSettings)
+                .environmentObject(phoneSync)
                 .environment(\.locale, language.selectedLanguage.locale ?? .current)
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
                 .task {
                     await library.load()
+                    phoneSync.updateLocalTracks(library.tracks)
+                    phoneSync.start()
                     player.updateAudioFeatures(library.audioFeatures)
                     player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                 }
                 .onChange(of: library.contentRevision) {
+                    phoneSync.updateLocalTracks(library.tracks)
                     player.reconcilePlaybackQueue(with: library.tracks)
                 }
                 .onChange(of: library.audioFeatureRevision) {
@@ -228,6 +233,7 @@ struct OngakuDesktopApp: App {
                 .environmentObject(appearance)
                 .environmentObject(meterSettings)
                 .environmentObject(trackTableSettings)
+                .environmentObject(phoneSync)
                 .id(language.selectedLanguage.rawValue)
         }
         .defaultSize(width: 761, height: 440)

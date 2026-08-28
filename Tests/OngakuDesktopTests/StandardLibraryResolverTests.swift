@@ -364,6 +364,59 @@ struct StandardLibraryResolverTests {
         #expect(CatalogSearch.matches(track, query: "jpaaa26"))
     }
 
+    @Test("Playback starts from the selected track in the visible list")
+    func startsPlaybackFromSelectedTrack() throws {
+        let first = makeTrack(title: "First")
+        let selected = makeTrack(title: "Selected")
+        let last = makeTrack(title: "Last")
+
+        let resolved = try #require(
+            PlaybackStartResolver.startingTrack(
+                in: [first, selected, last],
+                selectedID: selected.id
+            )
+        )
+
+        #expect(resolved.id == selected.id)
+    }
+
+    @Test("Playback falls back to the first track when the selection is outside the list")
+    func fallsBackToFirstPlaybackTrack() throws {
+        let first = makeTrack(title: "First")
+        let second = makeTrack(title: "Second")
+
+        let resolved = try #require(
+            PlaybackStartResolver.startingTrack(
+                in: [first, second],
+                selectedID: UUID()
+            )
+        )
+
+        #expect(resolved.id == first.id)
+        #expect(PlaybackStartResolver.startingTrack(in: [], selectedID: first.id) == nil)
+    }
+
+    @Test("Player transport starts a newly selected track instead of resuming the loaded track")
+    func playerTransportStartsNewSelection() throws {
+        let loaded = makeTrack(title: "Loaded First")
+        let selected = makeTrack(title: "Selected Later")
+
+        let resolved = try #require(
+            PlaybackStartResolver.selectedTrackToStart(
+                currentTrackID: loaded.id,
+                selectedTrack: selected
+            )
+        )
+
+        #expect(resolved.id == selected.id)
+        #expect(
+            PlaybackStartResolver.selectedTrackToStart(
+                currentTrackID: selected.id,
+                selectedTrack: selected
+            ) == nil
+        )
+    }
+
     private func makeTrack(title: String) -> Track {
         Track(
             id: UUID(),

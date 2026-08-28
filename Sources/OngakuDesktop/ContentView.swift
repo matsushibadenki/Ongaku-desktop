@@ -7,6 +7,7 @@ struct ContentView: View {
     @EnvironmentObject private var player: PlaybackController
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
+    @EnvironmentObject private var phoneSync: PhoneSyncController
     @State private var isImporting = false
     @State private var isImportingCD = false
     @State private var isImportingURL = false
@@ -15,6 +16,7 @@ struct ContentView: View {
     @State private var isMigratingSharedFolder = false
     @State private var isOrganizingMedia = false
     @State private var isShowingAppleMusicStore = false
+    @State private var isShowingDeviceSync = false
     @State private var isRelinkSearching = false
     @State private var isDropTargeted = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -87,6 +89,11 @@ struct ContentView: View {
                 .environmentObject(player)
                 .environmentObject(appleMusicPlayback)
         }
+        .sheet(isPresented: $isShowingDeviceSync) {
+            DeviceSyncView()
+                .environmentObject(library)
+                .environmentObject(phoneSync)
+        }
         .fileImporter(
             isPresented: $isRelinkSearching,
             allowedContentTypes: [.folder],
@@ -124,6 +131,13 @@ struct ContentView: View {
         }
         .onAppear {
             library.undoManager = undoManager
+            phoneSync.onVerifiedIncomingFile = { url in
+                Task { @MainActor in
+                    await library.importFiles([url])
+                    try? FileManager.default.removeItem(at: url)
+                }
+            }
+            phoneSync.updateLocalTracks(library.tracks)
         }
         .toolbar {
             ToolbarItemGroup {
@@ -154,6 +168,13 @@ struct ContentView: View {
                     Label(L10n.text("command.appleMusicStore"), systemImage: "apple.logo")
                 }
                 .help(L10n.text("toolbar.appleMusicStoreHelp"))
+
+                Button {
+                    isShowingDeviceSync = true
+                } label: {
+                    Label(L10n.text("deviceSync.title"), systemImage: "iphone.and.arrow.forward")
+                }
+                .help(L10n.text("deviceSync.toolbar.help"))
 
                 Button {
                     Task { await library.verifyLibrary() }
@@ -239,6 +260,7 @@ struct ContentView: View {
         .environmentObject(AppleMusicStoreController())
         .environmentObject(PlayerMeterSettings())
         .environmentObject(TrackTableSettings())
+        .environmentObject(PhoneSyncController())
         .environmentObject(LibraryProfileSettings(defaultMediaURL: storage.mediaDirectoryURL))
         .frame(width: 1240, height: 780)
 }
