@@ -174,6 +174,7 @@ struct ContentView: View {
                 } label: {
                     Label(L10n.text("deviceSync.title"), systemImage: "iphone.and.arrow.forward")
                 }
+                .keyboardShortcut("i", modifiers: [.command, .shift])
                 .help(L10n.text("deviceSync.toolbar.help"))
 
                 Button {
