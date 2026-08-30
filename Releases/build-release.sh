@@ -195,6 +195,8 @@ if [[ $LOCAL_BUILD -eq 0 ]]; then
 
     "$GENERATE_APPCAST" \
         --account "$SPARKLE_ACCOUNT" \
+        --versions "$BUILD_NUMBER" \
+        --maximum-versions 0 \
         --download-url-prefix "https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v${VERSION}/" \
         --link "https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v${VERSION}" \
         --embed-release-notes \

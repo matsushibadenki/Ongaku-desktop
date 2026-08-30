@@ -6,6 +6,37 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.4</title>
+            <pubDate>Sun, 30 Aug 2026 10:19:33 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.4</link>
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>0.1.4</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.4
+
+## 主な変更
+
+- Ongaku for iPhoneとの柔軟な同期、容量上限、双方向同期、Macにない曲のダウンロードに対応しました。
+- iPhoneの自動検知、接続状態の案内、Appleの公開APIで可能な範囲のUSB検知を追加しました。
+- URL・CD取り込みと、Music/iTunes XML、Ongakuライブラリ、共有フォルダからの移行を強化しました。
+- 選択した曲ではなく一覧の先頭から再生される問題を修正しました。
+- メディア整理、参照切れファイルの再リンク、MusicBrainz情報、多言語表示を拡充しました。
+
+## 配布情報
+
+- macOS 14.0以降
+- Apple silicon（arm64）／Intel（x86_64）Universal Binary
+- Developer ID署名・Apple公証済み
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.4/OngakuDesktop-0.1.4-universal.dmg" length="7573508" type="application/octet-stream" sparkle:edSignature="j7rafdnPGP268F72F01ms8JgMcpc3zIKhCJh8wP485BA7VDjN1tYOa0L58nmTLqoAU+P5ygZ/QVPfD7WdrK5BQ=="/>
+            <sparkle:deltas>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.4/OngakuDesktop5-4.delta" sparkle:deltaFrom="4" length="1742074" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="tPKGpX5n+2WJ+NA7hPChS+NbxbdLOOu9WKxhCAZ84WNRk1Pc5+Cm0ebh50sn5rQfey502vvlDA3O8jEyxCR6Bw=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.4/OngakuDesktop5-3.delta" sparkle:deltaFrom="3" length="2550650" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="TkWM/PnSwedU0wOWYHnVS6hZx6caDCvO9jOKaRZ4tTUz/GYyKQ+tn6vxCXPnlVuCh5UqcgxtPvWUH2AwvDh5Aw=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.4/OngakuDesktop5-2.delta" sparkle:deltaFrom="2" length="3562158" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="fHKi0jHSpO9lgESJEN0mVr2bcsPF0AItOYtCR+dknBWOCUWvKU8czTuzVUqubbpOUfpQRWbkGVoVS1VkqyU1Dg=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.4/OngakuDesktop5-1.delta" sparkle:deltaFrom="1" length="4149138" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="8okXZaCcwozDxWI5IuJvI7QFvILdgGF2PEWyo/k+MAOy5d0lhq+hdFOvZQCt+Aq01rBX4dQMmnoGHuq7mZLZAQ=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.1.3</title>
             <pubDate>Sun, 23 Aug 2026 16:16:29 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.3</link>
