@@ -14,6 +14,9 @@ jobs:
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app
 
+      - name: Report Swift toolchain
+        run: swift --version
+
       - name: Swift unit, localization, layout, and privacy tests
         run: swift test
 
