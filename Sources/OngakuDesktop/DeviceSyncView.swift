@@ -13,6 +13,9 @@ struct DeviceSyncView: View {
     @State private var allSongsPolicy: AllSongsPolicy = .addMissing
     @State private var capacityPriority: CapacityPriority = .recentlyModified
     @State private var capacityReserve: CapacityReserve = .oneGB
+    @State private var isShowingOverlayPreview = false
+    @State private var isShowingPlaylistPreview = false
+    @State private var isShowingOverlayAudit = false
 
     private static let mobileAppURL = URL(
         string: "https://apps.apple.com/jp/app/ongaku-%E9%99%90%E7%95%8C%E3%81%BE%E3%81%A7%E9%AB%98%E9%9F%B3%E8%B3%AA%E3%82%92%E6%B1%82%E3%82%81%E3%82%8B%E3%83%8F%E3%82%A4%E3%83%AC%E3%82%BE%E9%9F%B3%E6%A5%BD%E3%83%97%E3%83%AC%E3%83%BC%E3%83%A4%E3%83%BC/id6761979714"
@@ -86,13 +89,39 @@ struct DeviceSyncView: View {
             content
         }
         .frame(minWidth: 820, minHeight: 640)
+        .accessibilityIdentifier("device-sync.window")
         .background(AppTheme.canvas)
+        .sheet(isPresented: $isShowingOverlayPreview) {
+            OverlaySyncPreviewSheet()
+                .environmentObject(library)
+                .environmentObject(sync)
+        }
+        .sheet(isPresented: $isShowingOverlayAudit) {
+            OverlaySyncAuditSheet()
+                .environmentObject(library)
+                .environmentObject(sync)
+        }
+        .sheet(isPresented: $isShowingPlaylistPreview) {
+            PlaylistSyncPreviewSheet()
+                .environmentObject(library)
+                .environmentObject(sync)
+        }
         .onAppear {
-            sync.updateLocalTracks(library.tracks)
+            sync.updateLocalTracks(
+                library.tracks,
+                playbackEvents: library.playbackEvents,
+                playlists: library.playlists,
+                displayTags: library.syncedDisplayTags
+            )
             sync.start()
         }
         .onChange(of: library.contentRevision) {
-            sync.updateLocalTracks(library.tracks)
+            sync.updateLocalTracks(
+                library.tracks,
+                playbackEvents: library.playbackEvents,
+                playlists: library.playlists,
+                displayTags: library.syncedDisplayTags
+            )
         }
     }
 
@@ -131,10 +160,16 @@ struct DeviceSyncView: View {
                 }
             }
 
+            Button(L10n.text("deviceSync.audit.title"), systemImage: "clock.arrow.circlepath") {
+                isShowingOverlayAudit = true
+            }
+            .disabled(sync.overlayAuditHistory.isEmpty)
+
             Button(L10n.text("common.close")) {
                 dismiss()
             }
             .keyboardShortcut(.cancelAction)
+            .accessibilityIdentifier("device-sync.close")
         }
         .padding(AppTheme.spaceLG)
     }
@@ -155,6 +190,7 @@ struct DeviceSyncView: View {
                         sync.retryDiscovery()
                     }
                     .buttonStyle(.borderedProminent)
+                    .accessibilityIdentifier("device-sync.retry")
                 }
 
                 mobileAppCard
@@ -226,6 +262,7 @@ struct DeviceSyncView: View {
                     Button(L10n.text("deviceSync.discovery.retry"), systemImage: "arrow.clockwise") {
                         sync.retryDiscovery()
                     }
+                    .accessibilityIdentifier("device-sync.retry")
                 }
                 .frame(maxWidth: .infinity, minHeight: 180)
                 .padding(.horizontal, AppTheme.spaceMD)
@@ -253,6 +290,7 @@ struct DeviceSyncView: View {
                             }
                             .buttonStyle(.borderedProminent)
                             .disabled(connectingPhoneName != nil)
+                            .accessibilityIdentifier("device-sync.connect.\(phone.id)")
                         }
                     }
                     .padding(.vertical, AppTheme.spaceXS)
@@ -342,6 +380,84 @@ struct DeviceSyncView: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, AppTheme.spaceLG)
             .padding(.top, AppTheme.spaceMD)
+
+            if !sync.remoteOverlays.isEmpty {
+                Button {
+                    isShowingOverlayPreview = true
+                } label: {
+                    HStack(spacing: AppTheme.spaceSM) {
+                        Image(systemName: "slider.horizontal.3")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L10n.text("deviceSync.overlay.review"))
+                                .font(.headline)
+                            Text(L10n.format(
+                                "deviceSync.overlay.receivedCount",
+                                sync.remoteOverlays.count
+                            ))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(AppTheme.spaceMD)
+                    .background(AppTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, AppTheme.spaceLG)
+                .padding(.top, AppTheme.spaceSM)
+            }
+
+            if !sync.remotePlaylistOverlays.isEmpty {
+                Button {
+                    isShowingPlaylistPreview = true
+                } label: {
+                    HStack(spacing: AppTheme.spaceSM) {
+                        Image(systemName: "music.note.list")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(L10n.text("deviceSync.playlist.review"))
+                                .font(.headline)
+                            Text(L10n.format(
+                                "deviceSync.playlist.receivedCount",
+                                sync.remotePlaylistOverlays.count
+                            ))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(AppTheme.spaceMD)
+                    .background(AppTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, AppTheme.spaceLG)
+                .padding(.top, AppTheme.spaceSM)
+            }
+
+            if let receipt = sync.latestOverlayReceipt {
+                HStack(alignment: .top, spacing: AppTheme.spaceSM) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundStyle(AppTheme.good)
+                    Text(L10n.format(
+                        "deviceSync.overlay.receiptSummary",
+                        receipt.items.count,
+                        receipt.appliedFieldCount,
+                        receipt.ignoredCount
+                    ))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, AppTheme.spaceLG)
+                .padding(.top, AppTheme.spaceSM)
+            }
 
             if syncMode == .sync {
                 bulkSyncContent
@@ -962,17 +1078,48 @@ struct DeviceSyncView: View {
 
     private func transferFooter(_ transfer: DeviceTransferState) -> some View {
         HStack(spacing: AppTheme.spaceSM) {
-            if transfer.phase == .preparing || transfer.phase == .transferring || transfer.phase == .verifying {
+            if transfer.phase == .transferring || transfer.phase == .paused {
+                ProgressView(value: transfer.fractionCompleted)
+                    .progressViewStyle(.circular)
+                    .controlSize(.small)
+            } else if transfer.phase == .preparing || transfer.phase == .verifying {
                 ProgressView()
                     .controlSize(.small)
             } else {
                 Image(systemName: transfer.phase == .completed ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                     .foregroundStyle(transfer.phase == .completed ? AppTheme.good : AppTheme.danger)
             }
-            Text(transferStatus(transfer))
-                .font(.callout)
-                .lineLimit(1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(transferStatus(transfer))
+                    .font(.callout)
+                    .lineLimit(1)
+                if transfer.phase == .transferring || transfer.phase == .paused {
+                    Text(transferProgressText(transfer))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+            }
             Spacer()
+            if transfer.phase == .transferring {
+                Button(L10n.text("deviceSync.transfer.pause"), systemImage: "pause.fill") {
+                    sync.pauseTransfer(transfer.id)
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.text("deviceSync.transfer.pause"))
+            } else if transfer.phase == .paused {
+                Button(L10n.text("deviceSync.transfer.resume"), systemImage: "play.fill") {
+                    sync.resumeTransfer(transfer.id)
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.text("deviceSync.transfer.resume"))
+            }
+            if transfer.isActive {
+                Button(L10n.text("deviceSync.transfer.cancel"), systemImage: "xmark") {
+                    sync.cancelTransfer(transfer.id)
+                }
+                .labelStyle(.iconOnly)
+                .help(L10n.text("deviceSync.transfer.cancel"))
+            }
         }
         .padding(.horizontal, AppTheme.spaceLG)
         .padding(.vertical, AppTheme.spaceSM)
@@ -1003,13 +1150,30 @@ struct DeviceSyncView: View {
             L10n.format("deviceSync.transfer.preparing", transfer.item.title)
         case .transferring:
             L10n.format("deviceSync.transfer.transferring", transfer.item.title)
+        case .paused:
+            L10n.format("deviceSync.transfer.paused", transfer.item.title)
         case .verifying:
             L10n.format("deviceSync.transfer.verifying", transfer.item.title)
         case .completed:
             L10n.format("deviceSync.transfer.completed", transfer.item.title)
+        case .cancelled:
+            L10n.format("deviceSync.transfer.cancelled", transfer.item.title)
+        case .interrupted:
+            L10n.format("deviceSync.transfer.interrupted", transfer.item.title)
+        case .insufficientStorage:
+            L10n.format("deviceSync.transfer.insufficientStorage", transfer.item.title)
         case .failed(let message):
             L10n.format("deviceSync.transfer.failed", transfer.item.title, message)
         }
+    }
+
+    private func transferProgressText(_ transfer: DeviceTransferState) -> String {
+        L10n.format(
+            "deviceSync.transfer.progress",
+            Int((transfer.fractionCompleted * 100).rounded()),
+            ByteCountFormatter.string(fromByteCount: transfer.bytesTransferred, countStyle: .file),
+            ByteCountFormatter.string(fromByteCount: transfer.item.fileSize, countStyle: .file)
+        )
     }
 
     private func metadata(for item: DeviceSyncItem) -> String {
@@ -1027,6 +1191,616 @@ struct DeviceSyncView: View {
             sha256: track.sha256,
             modifiedAt: track.lastVerifiedAt ?? track.addedAt
         )
+    }
+}
+
+private struct OverlaySyncPreviewSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var sync: PhoneSyncController
+    @State private var selectedFields: [String: Set<DeviceSyncOverlayField>] = [:]
+    @State private var isApplying = false
+
+    private var previews: [DeviceSyncOverlayPreview] { sync.overlayPreviews }
+
+    private var selectedApplications: [DeviceSyncOverlayApplication] {
+        previews.compactMap { preview in
+            guard let fields = selectedFields[preview.id], !fields.isEmpty,
+                  preview.status == .different,
+                  let trackID = preview.localTrackID else { return nil }
+            return DeviceSyncOverlayApplication(
+                trackID: trackID,
+                overlay: preview.remote,
+                fields: fields
+            )
+        }
+    }
+
+    private var selectedFieldCount: Int {
+        selectedApplications.reduce(0) { $0 + $1.fields.count }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.text("deviceSync.overlay.title"))
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.text("deviceSync.overlay.description"))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button(L10n.text("common.close")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(AppTheme.spaceLG)
+
+            Divider()
+
+            List(previews) { preview in
+                HStack(alignment: .top, spacing: AppTheme.spaceMD) {
+                    Toggle("", isOn: selectionBinding(for: preview))
+                        .labelsHidden()
+                        .disabled(preview.status != .different)
+
+                    Image(systemName: statusIcon(preview.status))
+                        .foregroundStyle(statusColor(preview.status))
+                        .frame(width: 22)
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(preview.remote.title)
+                            .font(.headline)
+                        Text([preview.remote.artist, preview.remote.album]
+                            .filter { !$0.isEmpty }
+                            .joined(separator: " · "))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                        Text(statusText(preview.status))
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(statusColor(preview.status))
+                        if let local = preview.local, preview.status == .different {
+                            Text(comparisonText(local: local, remote: preview.remote))
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            LazyVGrid(
+                                columns: [GridItem(.adaptive(minimum: 132), alignment: .leading)],
+                                alignment: .leading,
+                                spacing: 6
+                            ) {
+                                ForEach(availableFields(for: preview), id: \.self) { field in
+                                    Toggle(fieldTitle(field), isOn: fieldBinding(field, for: preview))
+                                        .toggleStyle(.checkbox)
+                                        .font(.caption)
+                                }
+                            }
+                            .padding(.top, 3)
+                        }
+                    }
+                    Spacer(minLength: AppTheme.spaceMD)
+                }
+                .padding(.vertical, AppTheme.spaceXS)
+            }
+            .scrollContentBackground(.hidden)
+
+            Divider()
+
+            HStack {
+                Text(L10n.format(
+                    "deviceSync.overlay.selectedSummary",
+                    selectedApplications.count,
+                    selectedFieldCount
+                ))
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button(L10n.text("common.cancel")) { dismiss() }
+                Button {
+                    applySelected()
+                } label: {
+                    if isApplying {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Text(L10n.text("deviceSync.overlay.apply"))
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(selectedApplications.isEmpty || isApplying)
+            }
+            .padding(AppTheme.spaceLG)
+        }
+        .frame(minWidth: 720, minHeight: 560)
+        .background(AppTheme.canvas)
+        .onAppear {
+            selectedFields = Dictionary(uniqueKeysWithValues: previews.compactMap { preview in
+                let fields = availableFields(for: preview)
+                return fields.isEmpty ? nil : (preview.id, Set(fields))
+            })
+        }
+    }
+
+    private func selectionBinding(for preview: DeviceSyncOverlayPreview) -> Binding<Bool> {
+        Binding(
+            get: {
+                let available = Set(availableFields(for: preview))
+                return !available.isEmpty && selectedFields[preview.id] == available
+            },
+            set: { isSelected in
+                selectedFields[preview.id] = isSelected
+                    ? Set(availableFields(for: preview))
+                    : []
+            }
+        )
+    }
+
+    private func fieldBinding(
+        _ field: DeviceSyncOverlayField,
+        for preview: DeviceSyncOverlayPreview
+    ) -> Binding<Bool> {
+        Binding(
+            get: { selectedFields[preview.id, default: []].contains(field) },
+            set: { isSelected in
+                if isSelected { selectedFields[preview.id, default: []].insert(field) }
+                else { selectedFields[preview.id, default: []].remove(field) }
+            }
+        )
+    }
+
+    private func availableFields(for preview: DeviceSyncOverlayPreview) -> [DeviceSyncOverlayField] {
+        guard preview.status == .different, let local = preview.local else { return [] }
+        return DeviceSyncOverlayField.allCases.filter { field in
+            switch field {
+            case .favorite: return local.isFavorite != preview.remote.isFavorite
+            case .rating: return local.rating != preview.remote.rating
+            case .playCount: return preview.remote.playCount > local.playCount
+            case .skipCount: return preview.remote.skipCount > local.skipCount
+            case .lastPlayedAt:
+                guard let remoteDate = preview.remote.lastPlayedAt else { return false }
+                return local.lastPlayedAt.map { remoteDate > $0 } ?? true
+            case .displayTags:
+                return (local.displayTags ?? []) != (preview.remote.displayTags ?? [])
+            }
+        }
+    }
+
+    private func fieldTitle(_ field: DeviceSyncOverlayField) -> String {
+        L10n.text("deviceSync.overlay.field.\(field.rawValue)")
+    }
+
+    private func applySelected() {
+        let applications = selectedApplications
+        let auditID = UUID()
+        let changes = applications.compactMap { application -> DeviceSyncAuditChange? in
+            guard let preview = previews.first(where: { $0.id == application.overlay.sourceKey }),
+                  let local = preview.local else { return nil }
+            return DeviceSyncAuditChange(
+                trackID: application.trackID,
+                title: application.overlay.title,
+                before: local,
+                after: application.overlay,
+                fields: application.fields.sorted { $0.rawValue < $1.rawValue }
+            )
+        }
+        let conflicts = previews.compactMap { preview -> DeviceSyncAuditConflict? in
+            let reason: DeviceSyncAuditConflictReason?
+            switch preview.status {
+            case .ambiguous: reason = .ambiguous
+            case .unmatched: reason = .unmatched
+            case .different where availableFields(for: preview).isEmpty:
+                reason = .noApplicableFields
+            default: reason = nil
+            }
+            guard let reason else { return nil }
+            return DeviceSyncAuditConflict(
+                sourceKey: preview.remote.sourceKey,
+                title: preview.remote.title,
+                reason: reason
+            )
+        }
+        isApplying = true
+        Task {
+            let applied = await library.applySyncedTrackOverlays(applications)
+            sync.updateLocalTracks(
+                library.tracks,
+                playbackEvents: library.playbackEvents,
+                playlists: library.playlists,
+                displayTags: library.syncedDisplayTags
+            )
+            isApplying = false
+            if applied > 0 {
+                let receipt = DeviceSyncOverlayReceipt(
+                    id: auditID,
+                    appliedAt: .now,
+                    items: applications.map { application in
+                        DeviceSyncOverlayReceiptItem(
+                            sourceKey: application.overlay.sourceKey,
+                            fields: application.fields.sorted { $0.rawValue < $1.rawValue }
+                        )
+                    },
+                    ignoredCount: previews.count - applications.count
+                )
+                sync.recordOverlayAudit(DeviceSyncAuditEntry(
+                    id: auditID,
+                    occurredAt: receipt.appliedAt,
+                    deviceName: connectedDeviceName,
+                    changes: changes,
+                    conflicts: conflicts,
+                    isUndone: false
+                ))
+                sync.sendOverlayReceipt(receipt)
+                dismiss()
+            }
+        }
+    }
+
+    private var connectedDeviceName: String {
+        if case .connected(let name) = sync.connectionState { return name }
+        return "iPhone"
+    }
+
+    private func statusIcon(_ status: DeviceSyncOverlayMatchStatus) -> String {
+        switch status {
+        case .different: "arrow.triangle.2.circlepath"
+        case .identical: "checkmark.circle.fill"
+        case .ambiguous: "exclamationmark.triangle.fill"
+        case .unmatched: "questionmark.circle"
+        }
+    }
+
+    private func statusColor(_ status: DeviceSyncOverlayMatchStatus) -> Color {
+        switch status {
+        case .different: AppTheme.accent
+        case .identical: AppTheme.good
+        case .ambiguous: .orange
+        case .unmatched: .secondary
+        }
+    }
+
+    private func statusText(_ status: DeviceSyncOverlayMatchStatus) -> String {
+        L10n.text("deviceSync.overlay.status.\(status.rawValue)")
+    }
+
+    private func comparisonText(
+        local: DeviceSyncTrackOverlay,
+        remote: DeviceSyncTrackOverlay
+    ) -> String {
+        L10n.format(
+            "deviceSync.overlay.comparison",
+            local.rating,
+            remote.rating,
+            local.playCount,
+            remote.playCount,
+            local.skipCount,
+            remote.skipCount
+        )
+    }
+}
+
+private struct PlaylistSyncPreviewSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var sync: PhoneSyncController
+    @State private var selectedIDs: Set<UUID> = []
+    @State private var isApplying = false
+    @State private var errorMessage: String?
+
+    private var previews: [DeviceSyncPlaylistPreview] {
+        sync.playlistPreviews(tracks: library.tracks, playlists: library.playlists)
+    }
+
+    private var selectedApplications: [DeviceSyncPlaylistApplication] {
+        previews.compactMap { preview in
+            guard selectedIDs.contains(preview.id),
+                  preview.status == .new || preview.status == .different else { return nil }
+            return DeviceSyncPlaylistApplication(
+                remote: preview.remote,
+                trackIDs: preview.matchedTrackIDs
+            )
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.text("deviceSync.playlist.title"))
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.text("deviceSync.playlist.description"))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Button(L10n.text("common.close")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(AppTheme.spaceLG)
+
+            Divider()
+
+            List(previews) { preview in
+                HStack(alignment: .top, spacing: AppTheme.spaceMD) {
+                    Toggle("", isOn: selectionBinding(for: preview))
+                        .labelsHidden()
+                        .disabled(preview.status != .new && preview.status != .different)
+
+                    Image(systemName: statusIcon(preview.status))
+                        .foregroundStyle(statusColor(preview.status))
+                        .frame(width: 22)
+
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(preview.remote.name)
+                            .font(.headline)
+                        Text(L10n.format(
+                            "deviceSync.playlist.trackCount",
+                            preview.remote.tracks.count
+                        ))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                        Text(statusText(preview))
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(statusColor(preview.status))
+                    }
+                    Spacer(minLength: AppTheme.spaceMD)
+                }
+                .padding(.vertical, AppTheme.spaceXS)
+            }
+            .scrollContentBackground(.hidden)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+                HStack {
+                    Text(L10n.format(
+                        "deviceSync.playlist.selectedSummary",
+                        selectedApplications.count
+                    ))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button(L10n.text("common.cancel")) { dismiss() }
+                    Button {
+                        applySelected()
+                    } label: {
+                        if isApplying {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Text(L10n.text("deviceSync.playlist.apply"))
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(selectedApplications.isEmpty || isApplying)
+                }
+            }
+            .padding(AppTheme.spaceLG)
+        }
+        .frame(minWidth: 680, minHeight: 540)
+        .background(AppTheme.canvas)
+        .onAppear {
+            selectedIDs = Set(previews.compactMap { preview in
+                preview.status == .new || preview.status == .different ? preview.id : nil
+            })
+        }
+    }
+
+    private func selectionBinding(for preview: DeviceSyncPlaylistPreview) -> Binding<Bool> {
+        Binding(
+            get: { selectedIDs.contains(preview.id) },
+            set: { selected in
+                if selected { selectedIDs.insert(preview.id) }
+                else { selectedIDs.remove(preview.id) }
+            }
+        )
+    }
+
+    private func applySelected() {
+        let applications = selectedApplications
+        let previewSnapshot = previews
+        isApplying = true
+        errorMessage = nil
+        Task {
+            do {
+                let changes = try await library.applySyncedPlaylistOverlays(applications)
+                let conflicts = previewSnapshot.compactMap(auditConflict(for:))
+                if !changes.isEmpty {
+                    sync.recordOverlayAudit(DeviceSyncAuditEntry(
+                        id: UUID(),
+                        occurredAt: .now,
+                        deviceName: connectedDeviceName,
+                        changes: [],
+                        playlistChanges: changes,
+                        conflicts: conflicts,
+                        isUndone: false
+                    ))
+                    sync.updateLocalTracks(
+                        library.tracks,
+                        playbackEvents: library.playbackEvents,
+                        playlists: library.playlists,
+                        displayTags: library.syncedDisplayTags
+                    )
+                    dismiss()
+                }
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isApplying = false
+        }
+    }
+
+    private func auditConflict(
+        for preview: DeviceSyncPlaylistPreview
+    ) -> DeviceSyncAuditConflict? {
+        guard preview.status == .conflicted else { return nil }
+        let reason: DeviceSyncAuditConflictReason
+        if preview.local?.smartDefinition != nil {
+            reason = .playlistSmartCollision
+        } else if preview.ambiguousTrackCount > 0 {
+            reason = .playlistTracksAmbiguous
+        } else {
+            reason = .playlistTracksUnmatched
+        }
+        return DeviceSyncAuditConflict(
+            sourceKey: "playlist:\(preview.id.uuidString)",
+            title: preview.remote.name,
+            reason: reason
+        )
+    }
+
+    private var connectedDeviceName: String {
+        if case .connected(let name) = sync.connectionState { return name }
+        return "iPhone"
+    }
+
+    private func statusText(_ preview: DeviceSyncPlaylistPreview) -> String {
+        if preview.status == .conflicted {
+            if preview.local?.smartDefinition != nil {
+                return L10n.text("deviceSync.playlist.status.smartCollision")
+            }
+            return L10n.format(
+                "deviceSync.playlist.status.trackConflict",
+                preview.unmatchedTrackCount,
+                preview.ambiguousTrackCount
+            )
+        }
+        return L10n.text("deviceSync.playlist.status.\(preview.status.rawValue)")
+    }
+
+    private func statusIcon(_ status: DeviceSyncPlaylistMatchStatus) -> String {
+        switch status {
+        case .new: "plus.circle.fill"
+        case .different: "arrow.triangle.2.circlepath"
+        case .identical: "checkmark.circle.fill"
+        case .conflicted: "exclamationmark.triangle.fill"
+        }
+    }
+
+    private func statusColor(_ status: DeviceSyncPlaylistMatchStatus) -> Color {
+        switch status {
+        case .new, .different: AppTheme.accent
+        case .identical: AppTheme.good
+        case .conflicted: .orange
+        }
+    }
+}
+
+private struct OverlaySyncAuditSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var sync: PhoneSyncController
+    @State private var undoingID: UUID?
+    @State private var undoConflictCount = 0
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.text("deviceSync.audit.title"))
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.text("deviceSync.audit.description"))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button(L10n.text("common.close")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(AppTheme.spaceLG)
+
+            Divider()
+
+            List(sync.overlayAuditHistory) { entry in
+                VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(entry.deviceName)
+                            .font(.headline)
+                        Text(entry.occurredAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        if entry.isUndone {
+                            Label(L10n.text("deviceSync.audit.undone"), systemImage: "arrow.uturn.backward.circle.fill")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    Text(L10n.format(
+                        "deviceSync.audit.summary",
+                        entry.changes.count,
+                        entry.appliedFieldCount,
+                        entry.conflicts.count
+                    ))
+                        .font(.callout)
+
+                    if entry.appliedPlaylistCount > 0 {
+                        Text(L10n.format(
+                            "deviceSync.audit.playlistSummary",
+                            entry.appliedPlaylistCount
+                        ))
+                            .font(.callout)
+                    }
+
+                    ForEach(entry.conflicts, id: \.sourceKey) { conflict in
+                        Label(
+                            "\(conflict.title): \(conflictReason(conflict.reason))",
+                            systemImage: "exclamationmark.triangle"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                    }
+
+                    if !entry.isUndone {
+                        Button(L10n.text("deviceSync.audit.undo"), systemImage: "arrow.uturn.backward") {
+                            undo(entry)
+                        }
+                        .disabled(undoingID != nil)
+                    }
+                }
+                .padding(.vertical, AppTheme.spaceXS)
+            }
+            .scrollContentBackground(.hidden)
+
+            if undoConflictCount > 0 {
+                Text(L10n.format("deviceSync.audit.undoConflicts", undoConflictCount))
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .padding(AppTheme.spaceMD)
+            }
+        }
+        .frame(minWidth: 680, minHeight: 520)
+        .background(AppTheme.canvas)
+    }
+
+    private func undo(_ entry: DeviceSyncAuditEntry) {
+        undoingID = entry.id
+        Task {
+            let trackResult = await library.undoSyncedTrackOverlays(entry.changes)
+            let playlistResult = await library.undoSyncedPlaylistChanges(
+                entry.playlistChanges ?? []
+            )
+            undoConflictCount = trackResult.conflictFieldCount
+                + playlistResult.conflictFieldCount
+            if trackResult.restoredFieldCount + playlistResult.restoredFieldCount > 0 {
+                sync.markOverlayAuditUndone(entry.id)
+                sync.updateLocalTracks(
+                    library.tracks,
+                    playbackEvents: library.playbackEvents,
+                    playlists: library.playlists,
+                    displayTags: library.syncedDisplayTags
+                )
+            }
+            undoingID = nil
+        }
+    }
+
+    private func conflictReason(_ reason: DeviceSyncAuditConflictReason) -> String {
+        L10n.text("deviceSync.audit.conflict.\(reason.rawValue)")
     }
 }
 

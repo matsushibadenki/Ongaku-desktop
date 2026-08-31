@@ -66,6 +66,7 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var playlistFolders: [PlaylistFolder] = []
     @Published private(set) var playbackEvents: [PlaybackEvent] = []
     @Published private(set) var playbackQueue: PlaybackQueueState?
+    @Published private(set) var syncedDisplayTags: [Track.ID: [String]] = [:]
     @Published private(set) var contentRevision = 0
     @Published private(set) var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
     @Published private(set) var isAnalyzingAudioFeatures = false
@@ -116,6 +117,7 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var indexedSearchQuery: String?
 
     private var repository: LibraryRepository
+    private let deviceSyncTagsURL: URL
     private var audioFeatureCache: AudioFeatureCache
     private var searchIndex: SQLiteCatalogPrototype
     private var libraryID = UUID()
@@ -135,6 +137,7 @@ final class LibraryStore: ObservableObject {
         searchIndex: SQLiteCatalogPrototype? = nil
     ) {
         self.repository = repository
+        deviceSyncTagsURL = repository.rootURL.appendingPathComponent("device-sync-tags-v1.json")
         audioFeatureCache = AudioFeatureCache(rootURL: repository.rootURL)
         self.searchIndex = searchIndex ?? SQLiteCatalogPrototype(rootURL: repository.rootURL)
     }
@@ -217,7 +220,10 @@ final class LibraryStore: ObservableObject {
     }
 
     func setFavorite(_ isFavorite: Bool, for trackID: Track.ID) async {
-        await updatePlaybackAttributes(for: trackID) { $0.isFavorite = isFavorite }
+        await updatePlaybackAttributes(for: trackID) {
+            $0.isFavorite = isFavorite
+            $0.syncedOverlayUpdatedAt = .now
+        }
     }
 
     func setPinned(_ isPinned: Bool, for trackID: Track.ID) async {
@@ -227,12 +233,164 @@ final class LibraryStore: ObservableObject {
     func setRating(_ rating: Int, for trackID: Track.ID) async {
         await updatePlaybackAttributes(for: trackID) {
             $0.rating = min(max(rating, 0), 5)
+            $0.syncedOverlayUpdatedAt = .now
         }
     }
 
     func setExcludedFromPlayback(_ isExcluded: Bool, for trackID: Track.ID) async {
         await updatePlaybackAttributes(for: trackID) {
             $0.isExcludedFromPlayback = isExcluded
+        }
+    }
+
+    @discardableResult
+    func applySyncedTrackOverlays(
+        _ applications: [DeviceSyncOverlayApplication]
+    ) async -> Int {
+        guard !applications.isEmpty else { return 0 }
+        let previous = tracks
+        let previousTags = syncedDisplayTags
+        let statistics = PlaybackStatisticsResolver.statistics(
+            events: playbackEvents,
+            tracks: tracks
+        )
+        var appliedCount = 0
+
+        for application in applications {
+            guard let index = tracks.firstIndex(where: { $0.id == application.trackID }) else {
+                continue
+            }
+            let remote = application.overlay
+            let current = statistics[application.trackID] ?? TrackPlaybackStatistics()
+
+            if application.fields.contains(.favorite) {
+                tracks[index].isFavorite = remote.isFavorite
+            }
+            if application.fields.contains(.rating) {
+                tracks[index].rating = min(max(remote.rating, 0), 5)
+            }
+            if !application.fields.isDisjoint(with: [.favorite, .rating]) {
+                tracks[index].syncedOverlayUpdatedAt = max(
+                    tracks[index].syncedOverlayUpdatedAt ?? .distantPast,
+                    remote.updatedAt
+                )
+            }
+            if application.fields.contains(.playCount), remote.playCount > current.playCount {
+                tracks[index].playCount += remote.playCount - current.playCount
+            }
+            if application.fields.contains(.skipCount), remote.skipCount > current.skipCount {
+                tracks[index].syncedSkipCount += remote.skipCount - current.skipCount
+            }
+            if application.fields.contains(.lastPlayedAt),
+               let remoteLastPlayedAt = remote.lastPlayedAt,
+               tracks[index].syncedLastPlayedAt.map({ remoteLastPlayedAt > $0 }) ?? true {
+                tracks[index].syncedLastPlayedAt = remoteLastPlayedAt
+            }
+            if application.fields.contains(.displayTags), let tags = remote.displayTags {
+                syncedDisplayTags[application.trackID] = Self.normalizedDisplayTags(tags)
+            }
+            appliedCount += 1
+        }
+
+        guard appliedCount > 0 else { return 0 }
+        contentRevision &+= 1
+        do {
+            try await repository.save(tracks: tracks)
+            try saveDeviceSyncTags()
+            activity = .notice(L10n.text("deviceSync.overlay.applied"))
+            return appliedCount
+        } catch {
+            tracks = previous
+            syncedDisplayTags = previousTags
+            contentRevision &+= 1
+            activity = .failed(error.localizedDescription)
+            return 0
+        }
+    }
+
+    @discardableResult
+    func undoSyncedTrackOverlays(
+        _ changes: [DeviceSyncAuditChange]
+    ) async -> DeviceSyncOverlayUndoResult {
+        guard !changes.isEmpty else {
+            return DeviceSyncOverlayUndoResult(restoredFieldCount: 0, conflictFieldCount: 0)
+        }
+        let previous = tracks
+        let previousTags = syncedDisplayTags
+        let statistics = PlaybackStatisticsResolver.statistics(
+            events: playbackEvents,
+            tracks: tracks
+        )
+        var restoredFieldCount = 0
+        var conflictFieldCount = 0
+
+        for change in changes {
+            guard let index = tracks.firstIndex(where: { $0.id == change.trackID }) else {
+                conflictFieldCount += change.fields.count
+                continue
+            }
+            let current = statistics[change.trackID] ?? TrackPlaybackStatistics()
+            for field in change.fields {
+                switch field {
+                case .favorite where tracks[index].isFavorite == change.after.isFavorite:
+                    tracks[index].isFavorite = change.before.isFavorite
+                    tracks[index].syncedOverlayUpdatedAt = .now
+                    restoredFieldCount += 1
+                case .rating where tracks[index].rating == change.after.rating:
+                    tracks[index].rating = change.before.rating
+                    tracks[index].syncedOverlayUpdatedAt = .now
+                    restoredFieldCount += 1
+                case .playCount where current.playCount == change.after.playCount:
+                    let delta = max(0, change.after.playCount - change.before.playCount)
+                    tracks[index].playCount = max(0, tracks[index].playCount - delta)
+                    restoredFieldCount += 1
+                case .skipCount where current.skipCount == change.after.skipCount:
+                    let delta = max(0, change.after.skipCount - change.before.skipCount)
+                    tracks[index].syncedSkipCount = max(0, tracks[index].syncedSkipCount - delta)
+                    restoredFieldCount += 1
+                case .lastPlayedAt where current.lastPlayedAt == change.after.lastPlayedAt:
+                    tracks[index].syncedLastPlayedAt = change.before.lastPlayedAt
+                    restoredFieldCount += 1
+                case .displayTags:
+                    let currentTags = syncedDisplayTags[change.trackID] ?? []
+                    if currentTags == (change.after.displayTags ?? []) {
+                        syncedDisplayTags[change.trackID] = Self.normalizedDisplayTags(
+                            change.before.displayTags ?? []
+                        )
+                        restoredFieldCount += 1
+                    } else {
+                        conflictFieldCount += 1
+                    }
+                default:
+                    conflictFieldCount += 1
+                }
+            }
+        }
+
+        guard restoredFieldCount > 0 else {
+            return DeviceSyncOverlayUndoResult(
+                restoredFieldCount: 0,
+                conflictFieldCount: conflictFieldCount
+            )
+        }
+        contentRevision &+= 1
+        do {
+            try await repository.save(tracks: tracks)
+            try saveDeviceSyncTags()
+            activity = .notice(L10n.text("deviceSync.audit.undoCompleted"))
+            return DeviceSyncOverlayUndoResult(
+                restoredFieldCount: restoredFieldCount,
+                conflictFieldCount: conflictFieldCount
+            )
+        } catch {
+            tracks = previous
+            syncedDisplayTags = previousTags
+            contentRevision &+= 1
+            activity = .failed(error.localizedDescription)
+            return DeviceSyncOverlayUndoResult(
+                restoredFieldCount: 0,
+                conflictFieldCount: changes.reduce(0) { $0 + $1.fields.count }
+            )
         }
     }
 
@@ -284,6 +442,34 @@ final class LibraryStore: ObservableObject {
             try? await repository.removePlaylistArtwork(at: playlist.artworkPath)
             throw error
         }
+    }
+
+    @discardableResult
+    func createPlaylistFromAppleMusic(
+        name rawName: String,
+        trackIDs: [Track.ID]
+    ) async throws -> Playlist.ID {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { throw PlaylistTransferError.emptyName }
+        let validTrackIDs = Set(tracks.map(\.id))
+        var seen: Set<Track.ID> = []
+        let orderedTrackIDs = trackIDs.filter {
+            validTrackIDs.contains($0) && seen.insert($0).inserted
+        }
+        let nextOrder = playlists.filter { $0.folderID == nil }
+            .map(\.sortOrder).max().map { $0 + 1 } ?? 0
+        let playlist = Playlist(
+            name: name,
+            description: L10n.text("appleMusic.conversion.playlistDescription"),
+            sortOrder: nextOrder,
+            entries: orderedTrackIDs.map { PlaylistEntry(trackID: $0) }
+        )
+        try await persistPlaylists(
+            playlists + [playlist],
+            undoActionName: L10n.text("undo.playlist.create")
+        )
+        selectedPlaylistID = playlist.id
+        return playlist.id
     }
 
     func updatePlaylist(
@@ -736,6 +922,93 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    func applySyncedPlaylistOverlays(
+        _ applications: [DeviceSyncPlaylistApplication]
+    ) async throws -> [DeviceSyncPlaylistAuditChange] {
+        guard !applications.isEmpty else { return [] }
+        var updated = playlists
+        var changes: [DeviceSyncPlaylistAuditChange] = []
+        var nextSortOrder = (updated.map(\.sortOrder).max() ?? -1) + 1
+
+        for application in applications {
+            let entries = application.trackIDs.map {
+                PlaylistEntry(trackID: $0, addedAt: application.remote.updatedAt)
+            }
+            if let index = updated.firstIndex(where: { $0.id == application.remote.id }) {
+                guard updated[index].smartDefinition == nil else { continue }
+                let before = updated[index]
+                updated[index].name = application.remote.name
+                updated[index].entries = entries
+                updated[index].updatedAt = application.remote.updatedAt
+                changes.append(DeviceSyncPlaylistAuditChange(
+                    before: before,
+                    after: updated[index]
+                ))
+            } else {
+                let playlist = Playlist(
+                    id: application.remote.id,
+                    name: application.remote.name,
+                    sortOrder: nextSortOrder,
+                    entries: entries,
+                    createdAt: application.remote.createdAt,
+                    updatedAt: application.remote.updatedAt
+                )
+                nextSortOrder += 1
+                updated.append(playlist)
+                changes.append(DeviceSyncPlaylistAuditChange(before: nil, after: playlist))
+            }
+        }
+
+        guard !changes.isEmpty else { return [] }
+        try await persistPlaylists(updated, registersUndo: false)
+        return changes
+    }
+
+    func undoSyncedPlaylistChanges(
+        _ changes: [DeviceSyncPlaylistAuditChange]
+    ) async -> DeviceSyncOverlayUndoResult {
+        guard !changes.isEmpty else {
+            return DeviceSyncOverlayUndoResult(restoredFieldCount: 0, conflictFieldCount: 0)
+        }
+        var updated = playlists
+        var restoredCount = 0
+        var conflictCount = 0
+
+        for change in changes {
+            guard let index = updated.firstIndex(where: { $0.id == change.after.id }),
+                  updated[index] == change.after else {
+                conflictCount += 1
+                continue
+            }
+            if let before = change.before {
+                updated[index] = before
+            } else {
+                updated.remove(at: index)
+            }
+            restoredCount += 1
+        }
+
+        guard restoredCount > 0 else {
+            return DeviceSyncOverlayUndoResult(
+                restoredFieldCount: 0,
+                conflictFieldCount: conflictCount
+            )
+        }
+        do {
+            try await persistPlaylists(updated, registersUndo: false)
+            activity = .notice(L10n.text("deviceSync.audit.undoCompleted"))
+            return DeviceSyncOverlayUndoResult(
+                restoredFieldCount: restoredCount,
+                conflictFieldCount: conflictCount
+            )
+        } catch {
+            return DeviceSyncOverlayUndoResult(
+                restoredFieldCount: 0,
+                conflictFieldCount: changes.count
+            )
+        }
+    }
+
     private func registerPlaylistUndo(
         restoring snapshot: PlaylistOrganizationSnapshot,
         inverse: PlaylistOrganizationSnapshot,
@@ -786,6 +1059,7 @@ final class LibraryStore: ObservableObject {
             playlistFolders = result.document.playlistFolders
             playbackEvents = result.document.playbackEvents
             playbackQueue = result.document.playbackQueue
+            loadDeviceSyncTags()
             audioFeatures = (try? await audioFeatureCache.load(validTracks: tracks)) ?? [:]
             audioFeatureRevision &+= 1
             libraryID = result.document.libraryID
@@ -814,6 +1088,43 @@ final class LibraryStore: ObservableObject {
         } catch {
             activity = .failed(error.localizedDescription)
         }
+    }
+
+    private func loadDeviceSyncTags() {
+        guard let data = try? Data(contentsOf: deviceSyncTagsURL),
+              let decoded = try? JSONDecoder().decode([UUID: [String]].self, from: data) else {
+            syncedDisplayTags = [:]
+            return
+        }
+        let validIDs = Set(tracks.map(\.id))
+        syncedDisplayTags = decoded.reduce(into: [:]) { result, pair in
+            guard validIDs.contains(pair.key) else { return }
+            let tags = Self.normalizedDisplayTags(pair.value)
+            if !tags.isEmpty { result[pair.key] = tags }
+        }
+    }
+
+    private func saveDeviceSyncTags() throws {
+        let nonEmpty = syncedDisplayTags.filter { !$0.value.isEmpty }
+        let data = try JSONEncoder().encode(nonEmpty)
+        try FileManager.default.createDirectory(
+            at: deviceSyncTagsURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try data.write(to: deviceSyncTagsURL, options: .atomic)
+    }
+
+    private nonisolated static func normalizedDisplayTags(_ values: [String]) -> [String] {
+        var seen: Set<String> = []
+        return Array(values.compactMap { value in
+            let tag = String(value.trimmingCharacters(in: .whitespacesAndNewlines).prefix(24))
+            guard !tag.isEmpty else { return nil }
+            let key = tag.folding(
+                options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            )
+            return seen.insert(key).inserted ? tag : nil
+        }.prefix(12))
     }
 
     func switchLibrary(catalogURL: URL, mediaURL: URL) async {

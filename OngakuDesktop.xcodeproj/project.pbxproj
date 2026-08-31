@@ -64,18 +64,38 @@
 		200000000000000000000042 /* DeviceSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000056 /* DeviceSyncModels.swift */; };
 		200000000000000000000043 /* PhoneSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000057 /* PhoneSyncController.swift */; };
 		200000000000000000000044 /* DeviceSyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000058 /* DeviceSyncView.swift */; };
+		200000000000000000000045 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000059 /* PrivacyInfo.xcprivacy */; };
+		U20000000000000000000001 /* OngakuDesktopUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = U10000000000000000000001 /* OngakuDesktopUITests.swift */; };
 		D20000000000000000000001 /* OngakuMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* OngakuMobileApp.swift */; };
 		D20000000000000000000002 /* MobileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* MobileContentView.swift */; };
 		D20000000000000000000003 /* MobileSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000003 /* MobileSyncController.swift */; };
 		D20000000000000000000004 /* DeviceSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000000B /* DeviceSyncModels.swift */; };
 		D20000000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000010 /* Localizable.strings */; };
 		D20000000000000000000006 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000011 /* InfoPlist.strings */; };
+		D20000000000000000000007 /* LibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000012 /* LibraryModels.swift */; };
+		D20000000000000000000008 /* AudioFeatureAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000013 /* AudioFeatureAnalysis.swift */; };
+		D20000000000000000000009 /* SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* SharedMusicModels.swift */; };
+		D2000000000000000000000A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000015 /* PrivacyInfo.xcprivacy */; };
+		200000000000000000000046 /* SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005A /* SharedMusicModels.swift */; };
+		200000000000000000000047 /* AudioSignalPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005B /* AudioSignalPath.swift */; };
+		200000000000000000000048 /* SocialPrivacySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005C /* SocialPrivacySettings.swift */; };
+		200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005D /* SocialPrivacySettingsView.swift */; };
 		200000000000000000000034 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
 		200000000000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Assets.xcassets */; };
 		20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000041 /* SQLiteCatalogPrototype.swift */; };
 		20000000000000000000002B /* SystemNowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000042 /* SystemNowPlayingController.swift */; };
 		20000000000000000000002C /* PlayerMeterSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000043 /* PlayerMeterSettings.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		U80000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 800000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 500000000000000000000001;
+			remoteInfo = OngakuDesktop;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		100000000000000000000001 /* OngakuDesktopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuDesktopApp.swift; sourceTree = "<group>"; };
@@ -103,6 +123,10 @@
 		100000000000000000000056 /* DeviceSyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSyncModels.swift; sourceTree = "<group>"; };
 		100000000000000000000057 /* PhoneSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSyncController.swift; sourceTree = "<group>"; };
 		100000000000000000000058 /* DeviceSyncView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSyncView.swift; sourceTree = "<group>"; };
+		100000000000000000000059 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		10000000000000000000005B /* AudioSignalPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSignalPath.swift; sourceTree = "<group>"; };
+		10000000000000000000005C /* SocialPrivacySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettings.swift; sourceTree = "<group>"; };
+		10000000000000000000005D /* SocialPrivacySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettingsView.swift; sourceTree = "<group>"; };
 		D10000000000000000000001 /* OngakuMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuMobileApp.swift; sourceTree = "<group>"; };
 		D10000000000000000000002 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
 		D10000000000000000000003 /* MobileSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSyncController.swift; sourceTree = "<group>"; };
@@ -114,6 +138,11 @@
 		D10000000000000000000009 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D1000000000000000000000A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		D1000000000000000000000B /* DeviceSyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceSyncModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000012 /* LibraryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/LibraryModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000013 /* AudioFeatureAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/AudioFeatureAnalysis.swift; sourceTree = "<group>"; };
+		D10000000000000000000014 /* SharedMusicModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/SharedMusicModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000015 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		10000000000000000000005A /* SharedMusicModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedMusicModels.swift; sourceTree = "<group>"; };
 		10000000000000000000004B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		10000000000000000000004C /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		10000000000000000000004D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -155,6 +184,8 @@
 		100000000000000000000042 /* SystemNowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemNowPlayingController.swift; sourceTree = "<group>"; };
 		100000000000000000000043 /* PlayerMeterSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerMeterSettings.swift; sourceTree = "<group>"; };
 		100000000000000000000020 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		U10000000000000000000001 /* OngakuDesktopUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuDesktopUITests.swift; sourceTree = "<group>"; };
+		U10000000000000000000002 /* OngakuDesktopUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OngakuDesktopUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +204,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		U30000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -181,6 +219,7 @@
 			children = (
 				400000000000000000000002 /* OngakuDesktop */,
 				D40000000000000000000001 /* OngakuMobile */,
+				U40000000000000000000001 /* OngakuDesktopUITests */,
 				100000000000000000000040 /* Assets.xcassets */,
 				400000000000000000000003 /* Products */,
 			);
@@ -193,6 +232,7 @@
 				100000000000000000000002 /* DesignTokens.swift */,
 				100000000000000000000003 /* Localization.swift */,
 				100000000000000000000004 /* LibraryModels.swift */,
+				10000000000000000000005A /* SharedMusicModels.swift */,
 				100000000000000000000050 /* AudioFeatureAnalysis.swift */,
 				100000000000000000000005 /* LibraryRepository.swift */,
 				100000000000000000000041 /* SQLiteCatalogPrototype.swift */,
@@ -218,6 +258,9 @@
 				100000000000000000000043 /* PlayerMeterSettings.swift */,
 				100000000000000000000036 /* WindowPresentationController.swift */,
 				100000000000000000000007 /* PlaybackController.swift */,
+				10000000000000000000005B /* AudioSignalPath.swift */,
+				10000000000000000000005C /* SocialPrivacySettings.swift */,
+				10000000000000000000005D /* SocialPrivacySettingsView.swift */,
 				100000000000000000000042 /* SystemNowPlayingController.swift */,
 				100000000000000000000011 /* AudioOutputManager.swift */,
 				100000000000000000000021 /* AudioEffectPreset.swift */,
@@ -249,6 +292,7 @@
 				100000000000000000000034 /* PreferencesView.swift */,
 				100000000000000000000010 /* Localizable.strings */,
 				10000000000000000000004E /* InfoPlist.strings */,
+				100000000000000000000059 /* PrivacyInfo.xcprivacy */,
 			);
 			name = OngakuDesktop;
 			path = Sources/OngakuDesktop;
@@ -261,18 +305,31 @@
 				D10000000000000000000002 /* MobileContentView.swift */,
 				D10000000000000000000003 /* MobileSyncController.swift */,
 				D1000000000000000000000B /* DeviceSyncModels.swift */,
+				D10000000000000000000012 /* LibraryModels.swift */,
+				D10000000000000000000013 /* AudioFeatureAnalysis.swift */,
+				D10000000000000000000014 /* SharedMusicModels.swift */,
 				D10000000000000000000010 /* Localizable.strings */,
 				D10000000000000000000011 /* InfoPlist.strings */,
+				D10000000000000000000015 /* PrivacyInfo.xcprivacy */,
 			);
 			name = OngakuMobile;
 			path = Sources/OngakuMobile;
 			sourceTree = "<group>";
+		};
+		U40000000000000000000001 /* OngakuDesktopUITests */ = {
+			isa = PBXGroup;
+			children = (
+				U10000000000000000000001 /* OngakuDesktopUITests.swift */,
+			);
+			path = Tests/OngakuDesktopUITests;
+			sourceTree = SOURCE_ROOT;
 		};
 		400000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				100000000000000000000020 /* OngakuDesktop.app */,
 				D10000000000000000000004 /* OngakuMobile.app */,
+				U10000000000000000000002 /* OngakuDesktopUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -319,6 +376,24 @@
 			productReference = D10000000000000000000004 /* OngakuMobile.app */;
 			productType = "com.apple.product-type.application";
 		};
+		U50000000000000000000001 /* OngakuDesktopUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = UC00000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuDesktopUITests" */;
+			buildPhases = (
+				U60000000000000000000001 /* Sources */,
+				U30000000000000000000001 /* Frameworks */,
+				U70000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				U90000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = OngakuDesktopUITests;
+			productName = OngakuDesktopUITests;
+			productReference = U10000000000000000000002 /* OngakuDesktopUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -338,6 +413,10 @@
 						CreatedOnToolsVersion = 26.6;
 						DevelopmentTeam = 3WH28SSRZC;
 						ProvisioningStyle = Automatic;
+					};
+					U50000000000000000000001 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 500000000000000000000001;
 					};
 				};
 			};
@@ -361,6 +440,7 @@
 			targets = (
 				500000000000000000000001 /* OngakuDesktop */,
 				D50000000000000000000001 /* OngakuMobile */,
+				U50000000000000000000001 /* OngakuDesktopUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -373,6 +453,7 @@
 				20000000000000000000000D /* Localizable.strings in Resources */,
 				200000000000000000000029 /* Assets.xcassets in Resources */,
 				200000000000000000000034 /* InfoPlist.strings in Resources */,
+				200000000000000000000045 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -382,6 +463,14 @@
 			files = (
 				D20000000000000000000005 /* Localizable.strings in Resources */,
 				D20000000000000000000006 /* InfoPlist.strings in Resources */,
+				D2000000000000000000000A /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		U70000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -396,6 +485,7 @@
 				200000000000000000000002 /* DesignTokens.swift in Sources */,
 				200000000000000000000003 /* Localization.swift in Sources */,
 				200000000000000000000004 /* LibraryModels.swift in Sources */,
+				200000000000000000000046 /* SharedMusicModels.swift in Sources */,
 				200000000000000000000036 /* AudioFeatureAnalysis.swift in Sources */,
 				200000000000000000000005 /* LibraryRepository.swift in Sources */,
 				20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */,
@@ -421,6 +511,9 @@
 				20000000000000000000002C /* PlayerMeterSettings.swift in Sources */,
 				200000000000000000000024 /* WindowPresentationController.swift in Sources */,
 				200000000000000000000007 /* PlaybackController.swift in Sources */,
+				200000000000000000000047 /* AudioSignalPath.swift in Sources */,
+				200000000000000000000048 /* SocialPrivacySettings.swift in Sources */,
+				200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */,
 				20000000000000000000002B /* SystemNowPlayingController.swift in Sources */,
 				20000000000000000000000E /* AudioOutputManager.swift in Sources */,
 				20000000000000000000000F /* AudioEffectPreset.swift in Sources */,
@@ -461,10 +554,29 @@
 				D20000000000000000000002 /* MobileContentView.swift in Sources */,
 				D20000000000000000000003 /* MobileSyncController.swift in Sources */,
 				D20000000000000000000004 /* DeviceSyncModels.swift in Sources */,
+				D20000000000000000000007 /* LibraryModels.swift in Sources */,
+				D20000000000000000000008 /* AudioFeatureAnalysis.swift in Sources */,
+				D20000000000000000000009 /* SharedMusicModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		U60000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				U20000000000000000000001 /* OngakuDesktopUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		U90000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 500000000000000000000001 /* OngakuDesktop */;
+			targetProxy = U80000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		10000000000000000000004E /* InfoPlist.strings */ = {
@@ -647,6 +759,34 @@
 			};
 			name = Release;
 		};
+		UA0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = OngakuDesktop;
+			};
+			name = Debug;
+		};
+		UA0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+				TEST_TARGET_NAME = OngakuDesktop;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -673,6 +813,15 @@
 			buildConfigurations = (
 				DA0000000000000000000001 /* Debug */,
 				DA0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		UC00000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuDesktopUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				UA0000000000000000000001 /* Debug */,
+				UA0000000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -141,7 +141,9 @@ struct MobileContentView: View {
         if let transfer = sync.transfers.first {
             Section(String(localized: "mobile.latestTransfer")) {
                 HStack(spacing: 12) {
-                    if transfer.phase == .preparing || transfer.phase == .transferring || transfer.phase == .verifying {
+                    if transfer.phase == .transferring || transfer.phase == .paused {
+                        ProgressView(value: transfer.fractionCompleted)
+                    } else if transfer.phase == .preparing || transfer.phase == .verifying {
                         ProgressView()
                     } else {
                         Image(systemName: transfer.phase == .completed ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
@@ -153,6 +155,35 @@ struct MobileContentView: View {
                         Text(transferDescription(transfer.phase))
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        if transfer.phase == .transferring || transfer.phase == .paused {
+                            Text(transferProgressText(transfer))
+                                .font(.caption2.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    if transfer.phase == .transferring {
+                        Button {
+                            sync.pauseTransfer(transfer.id)
+                        } label: {
+                            Image(systemName: "pause.fill")
+                        }
+                        .accessibilityLabel(String(localized: "mobile.transfer.pause"))
+                    } else if transfer.phase == .paused {
+                        Button {
+                            sync.resumeTransfer(transfer.id)
+                        } label: {
+                            Image(systemName: "play.fill")
+                        }
+                        .accessibilityLabel(String(localized: "mobile.transfer.resume"))
+                    }
+                    if transfer.isActive {
+                        Button(role: .destructive) {
+                            sync.cancelTransfer(transfer.id)
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
+                        .accessibilityLabel(String(localized: "mobile.transfer.cancel"))
                     }
                 }
             }
@@ -225,10 +256,23 @@ struct MobileContentView: View {
         switch phase {
         case .preparing: String(localized: "mobile.transfer.preparing")
         case .transferring: String(localized: "mobile.transfer.transferring")
+        case .paused: String(localized: "mobile.transfer.paused")
         case .verifying: String(localized: "mobile.transfer.verifying")
         case .completed: String(localized: "mobile.transfer.completed")
+        case .cancelled: String(localized: "mobile.transfer.cancelled")
+        case .interrupted: String(localized: "mobile.transfer.interrupted")
+        case .insufficientStorage: String(localized: "mobile.transfer.insufficientStorage")
         case .failed(let message): message
         }
+    }
+
+    private func transferProgressText(_ transfer: DeviceTransferState) -> String {
+        String(
+            format: String(localized: "mobile.transfer.progress"),
+            Int((transfer.fractionCompleted * 100).rounded()),
+            ByteCountFormatter.string(fromByteCount: transfer.bytesTransferred, countStyle: .file),
+            ByteCountFormatter.string(fromByteCount: transfer.item.fileSize, countStyle: .file)
+        )
     }
 }
 

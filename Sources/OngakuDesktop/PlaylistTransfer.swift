@@ -15,6 +15,139 @@ enum PlaylistImportRowStatus: String, Sendable {
     case missing
 }
 
+enum AppleMusicPlaylistMatchStatus: String, Sendable {
+    case matched
+    case ambiguous
+    case missing
+    case duplicate
+}
+
+struct AppleMusicPlaylistMatch: Identifiable, Sendable {
+    let id = UUID()
+    var item: AppleMusicCatalogItem
+    var trackID: Track.ID?
+    var status: AppleMusicPlaylistMatchStatus
+}
+
+struct AppleMusicPlaylistConversionPreview: Sendable {
+    var name: String
+    var rows: [AppleMusicPlaylistMatch]
+
+    var matchedTrackIDs: [Track.ID] {
+        rows.compactMap { $0.status == .matched ? $0.trackID : nil }
+    }
+
+    var matchedCount: Int { rows.count { $0.status == .matched } }
+    var ambiguousCount: Int { rows.count { $0.status == .ambiguous } }
+    var missingCount: Int { rows.count { $0.status == .missing } }
+    var duplicateCount: Int { rows.count { $0.status == .duplicate } }
+}
+
+enum AppleMusicPlaylistConversionPlanner {
+    static func preview(
+        name: String,
+        entries: [AppleMusicCatalogItem],
+        tracks: [Track]
+    ) -> AppleMusicPlaylistConversionPreview {
+        var seenTrackIDs: Set<Track.ID> = []
+        let rows = entries.filter { $0.kind == .song }.map { item in
+            let matches = tracks.filter { track in
+                guard CatalogSearch.normalize(track.title)
+                        == CatalogSearch.normalize(item.title),
+                      CatalogSearch.normalize(track.artist)
+                        == CatalogSearch.normalize(item.subtitle),
+                      CatalogSearch.normalize(track.album)
+                        == CatalogSearch.normalize(item.detail) else { return false }
+                guard let duration = item.duration else { return true }
+                return abs(track.duration - duration) <= 3
+            }
+            guard matches.count == 1, let track = matches.first else {
+                return AppleMusicPlaylistMatch(
+                    item: item,
+                    trackID: nil,
+                    status: matches.isEmpty ? .missing : .ambiguous
+                )
+            }
+            let status: AppleMusicPlaylistMatchStatus = seenTrackIDs.insert(track.id).inserted
+                ? .matched
+                : .duplicate
+            return AppleMusicPlaylistMatch(item: item, trackID: track.id, status: status)
+        }
+        return AppleMusicPlaylistConversionPreview(name: name, rows: rows)
+    }
+}
+
+struct OngakuPlaylistAppleMusicMatch: Identifiable, Sendable {
+    let id = UUID()
+    var track: Track
+    var appleMusicItem: AppleMusicCatalogItem?
+    var status: AppleMusicPlaylistMatchStatus
+}
+
+struct OngakuPlaylistAppleMusicExportPreview: Sendable {
+    var playlist: Playlist
+    var rows: [OngakuPlaylistAppleMusicMatch]
+
+    var matchedItems: [AppleMusicCatalogItem] {
+        rows.compactMap { $0.status == .matched ? $0.appleMusicItem : nil }
+    }
+
+    var matchedCount: Int { rows.count { $0.status == .matched } }
+    var ambiguousCount: Int { rows.count { $0.status == .ambiguous } }
+    var missingCount: Int { rows.count { $0.status == .missing } }
+    var duplicateCount: Int { rows.count { $0.status == .duplicate } }
+}
+
+enum OngakuPlaylistAppleMusicExportPlanner {
+    static func preview(
+        playlist: Playlist,
+        tracks: [Track],
+        appleMusicSongs: [AppleMusicCatalogItem]
+    ) -> OngakuPlaylistAppleMusicExportPreview {
+        let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        var seenAppleMusicIDs: Set<String> = []
+        let rows = playlist.entries.compactMap { entry -> OngakuPlaylistAppleMusicMatch? in
+            guard let track = tracksByID[entry.trackID] else { return nil }
+            let matches = appleMusicSongs.filter { item in
+                guard item.kind == .song,
+                      CatalogSearch.normalize(item.title) == CatalogSearch.normalize(track.title),
+                      CatalogSearch.normalize(item.subtitle) == CatalogSearch.normalize(track.artist),
+                      CatalogSearch.normalize(item.detail) == CatalogSearch.normalize(track.album)
+                else { return false }
+                guard let duration = item.duration else { return true }
+                return abs(track.duration - duration) <= 3
+            }
+            guard matches.count == 1, let item = matches.first else {
+                return OngakuPlaylistAppleMusicMatch(
+                    track: track,
+                    appleMusicItem: nil,
+                    status: matches.isEmpty ? .missing : .ambiguous
+                )
+            }
+            let status: AppleMusicPlaylistMatchStatus = seenAppleMusicIDs
+                .insert(item.musicItemID).inserted ? .matched : .duplicate
+            return OngakuPlaylistAppleMusicMatch(
+                track: track,
+                appleMusicItem: item,
+                status: status
+            )
+        }
+        return OngakuPlaylistAppleMusicExportPreview(playlist: playlist, rows: rows)
+    }
+}
+
+struct AppleMusicPlaylistExportAuditEntry: Identifiable, Codable, Equatable, Sendable {
+    var id: UUID
+    var occurredAt: Date
+    var sourcePlaylistID: Playlist.ID
+    var sourcePlaylistName: String
+    var appleMusicPlaylistID: String?
+    var requestedTrackCount: Int
+    var addedTrackCount: Int
+    var failedTrackCount: Int
+    var failureDescription: String? = nil
+}
+
 struct PlaylistImportRow: Identifiable, Sendable {
     let id = UUID()
     var displayName: String
@@ -42,12 +175,14 @@ enum PlaylistTransferError: LocalizedError {
     case unsupportedFormat
     case unreadableText
     case invalidJSON
+    case emptyName
 
     var errorDescription: String? {
         switch self {
         case .unsupportedFormat: L10n.text("playlist.transfer.error.unsupported")
         case .unreadableText: L10n.text("playlist.transfer.error.unreadable")
         case .invalidJSON: L10n.text("playlist.transfer.error.invalidJSON")
+        case .emptyName: L10n.text("playlist.transfer.error.emptyName")
         }
     }
 }

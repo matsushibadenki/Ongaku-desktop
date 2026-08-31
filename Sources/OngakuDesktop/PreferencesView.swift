@@ -13,6 +13,7 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
     case appearance
     case playback
     case storage
+    case social
 
     var id: String { rawValue }
 
@@ -22,6 +23,7 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
         case .appearance: L10n.text("settings.sidebar.appearance")
         case .playback: L10n.text("settings.sidebar.playback")
         case .storage: L10n.text("settings.sidebar.storage")
+        case .social: L10n.text("settings.sidebar.social")
         }
     }
 
@@ -31,6 +33,7 @@ private enum PreferencesSection: String, CaseIterable, Identifiable {
         case .appearance: "circle.lefthalf.filled"
         case .playback: "play.circle"
         case .storage: "externaldrive"
+        case .social: "person.2.badge.gearshape"
         }
     }
 }
@@ -67,6 +70,8 @@ struct PreferencesView: View {
                     PlaybackSettingsView()
                 case .storage:
                     StorageSettingsView()
+                case .social:
+                    SocialPrivacySettingsView()
                 }
             }
             .padding(.horizontal, 24)
@@ -93,7 +98,7 @@ struct PreferencesView: View {
     }
 
     private var maximumHeight: CGFloat {
-        max(Self.minimumHeight, measuredContentHeight + Self.verticalContentPadding)
+        min(max(Self.minimumHeight, measuredContentHeight + Self.verticalContentPadding), 760)
     }
 }
 
@@ -211,6 +216,64 @@ private struct PlaybackSettingsView: View {
                     .toggleStyle(.switch)
                 }
 
+                Divider()
+
+                VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(L10n.text("settings.playback.signalPath.title"))
+                            .font(.headline)
+                        Text(L10n.text("settings.playback.signalPath.description"))
+                            .font(.callout)
+                            .foregroundStyle(AppTheme.secondaryInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    if let path = player.signalPathSnapshot {
+                        VStack(spacing: AppTheme.spaceSM) {
+                            signalPathRow(
+                                L10n.text("settings.playback.signalPath.source"),
+                                format(path.sourceSampleRate, channels: path.sourceChannelCount)
+                            )
+                            signalPathRow(
+                                L10n.text("settings.playback.signalPath.processing"),
+                                format(
+                                    path.processingSampleRate,
+                                    channels: path.processingChannelCount
+                                )
+                            )
+                            signalPathRow(
+                                L10n.text("settings.playback.signalPath.dsp"),
+                                dspDescription(path)
+                            )
+                            signalPathRow(
+                                L10n.text("settings.playback.signalPath.normalization"),
+                                normalizationDescription(path)
+                            )
+                            signalPathRow(
+                                L10n.text("settings.playback.signalPath.output"),
+                                format(path.outputSampleRate, channels: path.outputChannelCount)
+                            )
+                        }
+                        .padding(AppTheme.spaceMD)
+                        .background(AppTheme.raised, in: RoundedRectangle(cornerRadius: 8))
+
+                        Label(
+                            L10n.text("settings.playback.signalPath.sourceUnmodified"),
+                            systemImage: "checkmark.shield.fill"
+                        )
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.good)
+                        .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Label(
+                            L10n.text("settings.playback.signalPath.unavailable"),
+                            systemImage: "waveform"
+                        )
+                        .font(.callout)
+                        .foregroundStyle(AppTheme.secondaryInk)
+                    }
+                }
+
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.bottom, AppTheme.spaceMD)
@@ -224,6 +287,44 @@ private struct PlaybackSettingsView: View {
             }
         }
         .scrollIndicators(.automatic)
+    }
+
+    private func signalPathRow(_ title: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: AppTheme.spaceMD) {
+            Text(title)
+                .foregroundStyle(AppTheme.secondaryInk)
+            Spacer(minLength: AppTheme.spaceLG)
+            Text(value)
+                .multilineTextAlignment(.trailing)
+                .textSelection(.enabled)
+        }
+        .font(.callout)
+    }
+
+    private func format(_ sampleRate: Double, channels: UInt32) -> String {
+        let rate = sampleRate / 1_000
+        let rateText = abs(rate.rounded() - rate) < 0.01
+            ? String(format: "%.0f kHz", rate)
+            : String(format: "%.1f kHz", rate)
+        return L10n.format("settings.playback.signalPath.format", rateText, Int(channels))
+    }
+
+    private func dspDescription(_ path: AudioSignalPathSnapshot) -> String {
+        if path.effectsBypassed {
+            return L10n.text("settings.playback.signalPath.effectsBypassed")
+        }
+        if path.enabledEffects.isEmpty {
+            return L10n.text("settings.playback.signalPath.effectsNone")
+        }
+        return path.enabledEffects.map(\.displayName).joined(separator: " → ")
+    }
+
+    private func normalizationDescription(_ path: AudioSignalPathSnapshot) -> String {
+        guard path.normalizationMode != .off else {
+            return L10n.text("settings.playback.normalization.mode.off")
+        }
+        return player.loudnessAdjustmentDescription
+            ?? L10n.text("settings.playback.normalization.pending")
     }
 }
 

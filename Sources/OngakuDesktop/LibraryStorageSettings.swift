@@ -8,9 +8,35 @@ struct LibraryProfile: Codable, Identifiable, Hashable, Sendable {
     var mediaPath: String
     var isArchived: Bool
     var createdAt: Date
+    var externalRootPath: String? = nil
+    var externalBookmark: Data? = nil
+    var externalVolumeName: String? = nil
 
     var catalogURL: URL { URL(fileURLWithPath: catalogPath, isDirectory: true) }
     var mediaURL: URL { URL(fileURLWithPath: mediaPath, isDirectory: true) }
+    var externalRootURL: URL? {
+        externalRootPath.map { URL(fileURLWithPath: $0, isDirectory: true) }
+    }
+    var isExternal: Bool { externalRootPath != nil }
+}
+
+enum LibraryProfileConnectionState: Equatable, Sendable {
+    case connected
+    case disconnected(volumeName: String?)
+}
+
+enum ExternalLibraryError: LocalizedError, Equatable {
+    case invalidLocation
+    case markerMissing
+    case wrongLibrary
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidLocation: L10n.text("libraryProfile.external.error.invalidLocation")
+        case .markerMissing: L10n.text("libraryProfile.external.error.markerMissing")
+        case .wrongLibrary: L10n.text("libraryProfile.external.error.wrongLibrary")
+        }
+    }
 }
 
 @MainActor
@@ -24,10 +50,19 @@ final class LibraryProfileSettings: ObservableObject {
     @Published private(set) var activeLibraryID: LibraryProfile.ID {
         didSet { defaults.set(activeLibraryID.uuidString, forKey: Self.activeProfileKey) }
     }
+    @Published private(set) var activeLocationRevision = 0
 
     private let defaults: UserDefaults
     private let fileManager: FileManager
     private let librariesRootURL: URL
+    private var securityScopedProfileURLs: [LibraryProfile.ID: URL] = [:]
+
+    private struct ExternalLibraryMarker: Codable {
+        let libraryID: UUID
+        let createdAt: Date
+    }
+
+    private static let externalMarkerName = ".ongaku-library.json"
 
     init(
         defaultMediaURL: URL,
@@ -59,10 +94,22 @@ final class LibraryProfileSettings: ObservableObject {
         }
         let savedID = defaults.string(forKey: Self.activeProfileKey).flatMap(UUID.init(uuidString:))
         profiles = initialProfiles
-        activeLibraryID = initialProfiles.first(where: { $0.id == savedID && !$0.isArchived })?.id
+        activeLibraryID = initialProfiles.first(where: {
+            $0.id == savedID && !$0.isArchived && Self.isReachable($0, fileManager: fileManager)
+        })?.id
+            ?? initialProfiles.first(where: {
+                !$0.isArchived && Self.isReachable($0, fileManager: fileManager)
+            })?.id
             ?? initialProfiles.first(where: { !$0.isArchived })?.id
             ?? initialProfiles[0].id
+        resolveExternalBookmarks()
         persistProfiles()
+    }
+
+    deinit {
+        for url in securityScopedProfileURLs.values {
+            url.stopAccessingSecurityScopedResource()
+        }
     }
 
     var activeProfile: LibraryProfile {
@@ -96,9 +143,109 @@ final class LibraryProfileSettings: ObservableObject {
         return id
     }
 
-    func activate(_ id: LibraryProfile.ID) {
-        guard profiles.contains(where: { $0.id == id && !$0.isArchived }) else { return }
+    @discardableResult
+    func createExternalLibrary(
+        named proposedName: String,
+        in destinationDirectory: URL
+    ) throws -> LibraryProfile.ID {
+        let name = normalizedName(proposedName)
+        let id = UUID()
+        let parent = destinationDirectory.standardizedFileURL
+        let parentAccess = parent.startAccessingSecurityScopedResource()
+        defer { if parentAccess { parent.stopAccessingSecurityScopedResource() } }
+
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: parent.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            throw ExternalLibraryError.invalidLocation
+        }
+
+        let root = uniqueExternalRoot(in: parent, name: name)
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        try fileManager.createDirectory(at: catalog, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: media, withIntermediateDirectories: true)
+        let marker = ExternalLibraryMarker(libraryID: id, createdAt: .now)
+        try JSONEncoder().encode(marker).write(
+            to: root.appendingPathComponent(Self.externalMarkerName),
+            options: .atomic
+        )
+        let bookmark = try root.bookmarkData(
+            options: [.withSecurityScope],
+            includingResourceValuesForKeys: [.volumeNameKey, .volumeUUIDStringKey],
+            relativeTo: nil
+        )
+        let volumeName = try? root.resourceValues(forKeys: [.volumeNameKey]).volumeName
+        let didAccess = root.startAccessingSecurityScopedResource()
+        if didAccess { securityScopedProfileURLs[id] = root }
+        profiles.append(LibraryProfile(
+            id: id,
+            name: name,
+            catalogPath: catalog.path,
+            mediaPath: media.path,
+            isArchived: false,
+            createdAt: .now,
+            externalRootPath: root.path,
+            externalBookmark: bookmark,
+            externalVolumeName: volumeName
+        ))
         activeLibraryID = id
+        return id
+    }
+
+    func activate(_ id: LibraryProfile.ID) {
+        guard let profile = profiles.first(where: { $0.id == id && !$0.isArchived }),
+              connectionState(for: profile) == .connected else { return }
+        activeLibraryID = id
+    }
+
+    func connectionState(for profile: LibraryProfile) -> LibraryProfileConnectionState {
+        Self.isReachable(profile, fileManager: fileManager)
+            ? .connected
+            : .disconnected(volumeName: profile.externalVolumeName)
+    }
+
+    func reconnect(_ id: LibraryProfile.ID, to selectedRoot: URL) throws {
+        guard let index = profiles.firstIndex(where: { $0.id == id }),
+              profiles[index].isExternal else { throw ExternalLibraryError.wrongLibrary }
+        let root = selectedRoot.standardizedFileURL
+        let didAccess = root.startAccessingSecurityScopedResource()
+        do {
+            let markerURL = root.appendingPathComponent(Self.externalMarkerName)
+            guard fileManager.fileExists(atPath: markerURL.path) else {
+                throw ExternalLibraryError.markerMissing
+            }
+            let marker = try JSONDecoder().decode(
+                ExternalLibraryMarker.self,
+                from: Data(contentsOf: markerURL)
+            )
+            guard marker.libraryID == id else { throw ExternalLibraryError.wrongLibrary }
+            let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+            let media = root.appendingPathComponent("Media", isDirectory: true)
+            guard Self.requiredDirectoriesExist(catalog: catalog, media: media, fileManager: fileManager)
+            else { throw ExternalLibraryError.invalidLocation }
+            let bookmark = try root.bookmarkData(
+                options: [.withSecurityScope],
+                includingResourceValuesForKeys: [.volumeNameKey, .volumeUUIDStringKey],
+                relativeTo: nil
+            )
+            securityScopedProfileURLs[id]?.stopAccessingSecurityScopedResource()
+            if didAccess { securityScopedProfileURLs[id] = root }
+            profiles[index].catalogPath = catalog.path
+            profiles[index].mediaPath = media.path
+            profiles[index].externalRootPath = root.path
+            profiles[index].externalBookmark = bookmark
+            profiles[index].externalVolumeName = try? root.resourceValues(forKeys: [.volumeNameKey]).volumeName
+            if id == activeLibraryID { activeLocationRevision &+= 1 }
+        } catch {
+            if didAccess { root.stopAccessingSecurityScopedResource() }
+            throw error
+        }
+    }
+
+    func refreshExternalConnections() {
+        resolveExternalBookmarks()
+        objectWillChange.send()
     }
 
     func rename(_ id: LibraryProfile.ID, to proposedName: String) {
@@ -126,6 +273,78 @@ final class LibraryProfileSettings: ObservableObject {
     private func normalizedName(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? L10n.text("libraryProfile.untitled") : String(trimmed.prefix(80))
+    }
+
+    private func uniqueExternalRoot(in parent: URL, name: String) -> URL {
+        let invalid = CharacterSet(charactersIn: "/:")
+        let safeName = name.components(separatedBy: invalid).joined(separator: "-")
+        let base = parent.appendingPathComponent("Ongaku Library – \(safeName)", isDirectory: true)
+        guard fileManager.fileExists(atPath: base.path) else { return base }
+        for suffix in 2...999 {
+            let candidate = parent.appendingPathComponent(
+                "Ongaku Library – \(safeName) \(suffix)",
+                isDirectory: true
+            )
+            if !fileManager.fileExists(atPath: candidate.path) { return candidate }
+        }
+        return parent.appendingPathComponent("Ongaku Library – \(UUID().uuidString)", isDirectory: true)
+    }
+
+    private func resolveExternalBookmarks() {
+        for index in profiles.indices where profiles[index].isExternal {
+            guard let bookmark = profiles[index].externalBookmark else { continue }
+            var stale = false
+            guard let root = try? URL(
+                resolvingBookmarkData: bookmark,
+                options: [.withSecurityScope],
+                relativeTo: nil,
+                bookmarkDataIsStale: &stale
+            ) else { continue }
+            let standardizedRoot = root.standardizedFileURL
+            let catalog = standardizedRoot.appendingPathComponent("Catalog", isDirectory: true)
+            let media = standardizedRoot.appendingPathComponent("Media", isDirectory: true)
+            guard Self.requiredDirectoriesExist(
+                catalog: catalog,
+                media: media,
+                fileManager: fileManager
+            ) else { continue }
+            if securityScopedProfileURLs[profiles[index].id] == nil,
+               standardizedRoot.startAccessingSecurityScopedResource() {
+                securityScopedProfileURLs[profiles[index].id] = standardizedRoot
+            }
+            profiles[index].catalogPath = catalog.path
+            profiles[index].mediaPath = media.path
+            profiles[index].externalRootPath = standardizedRoot.path
+            if stale {
+                profiles[index].externalBookmark = try? standardizedRoot.bookmarkData(
+                    options: [.withSecurityScope],
+                    includingResourceValuesForKeys: [.volumeNameKey, .volumeUUIDStringKey],
+                    relativeTo: nil
+                )
+            }
+        }
+    }
+
+    private static func isReachable(_ profile: LibraryProfile, fileManager: FileManager) -> Bool {
+        guard profile.isExternal else { return true }
+        return requiredDirectoriesExist(
+            catalog: profile.catalogURL,
+            media: profile.mediaURL,
+            fileManager: fileManager
+        )
+    }
+
+    private static func requiredDirectoriesExist(
+        catalog: URL,
+        media: URL,
+        fileManager: FileManager
+    ) -> Bool {
+        var catalogIsDirectory: ObjCBool = false
+        var mediaIsDirectory: ObjCBool = false
+        return fileManager.fileExists(atPath: catalog.path, isDirectory: &catalogIsDirectory)
+            && catalogIsDirectory.boolValue
+            && fileManager.fileExists(atPath: media.path, isDirectory: &mediaIsDirectory)
+            && mediaIsDirectory.boolValue
     }
 
     private func persistProfiles() {

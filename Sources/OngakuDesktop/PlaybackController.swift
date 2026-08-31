@@ -3,6 +3,7 @@ import Accelerate
 import AppKit
 import Combine
 import Foundation
+import OSLog
 
 struct StereoLevels: Equatable, Sendable {
     var left: Double
@@ -843,6 +844,10 @@ func makeStereoMeterTapBlock(
 
 @MainActor
 final class PlaybackController: ObservableObject {
+    private static let signalPathLogger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "OngakuDesktop",
+        category: "AudioSignalPath"
+    )
     private static let automaticUpsamplingKey = "audio.automaticUpsampling"
     private static let effectSettingsKey = "audio.effectSettings.v1"
     private static let effectsBypassedKey = "audio.effectsBypassed"
@@ -861,7 +866,9 @@ final class PlaybackController: ObservableObject {
     }
     @Published private(set) var errorMessage: String?
     @Published private(set) var sourceSampleRate: Double = 0
+    @Published private(set) var sourceChannelCount: UInt32 = 0
     @Published private(set) var outputSampleRate: Double = 0
+    @Published private(set) var outputChannelCount: UInt32 = 0
     @Published private(set) var stereoLevels = StereoLevels.silent
     @Published private(set) var stereoSpectrum = StereoSpectrum.silent
     @Published private(set) var queueState = PlaybackQueueState()
@@ -900,6 +907,7 @@ final class PlaybackController: ObservableObject {
                 forKey: Self.loudnessNormalizationModeKey
             )
             applyPlaybackGains()
+            logSignalPath(reason: "normalization-mode-changed")
         }
     }
     @Published var loudnessTargetDBFS: Double {
@@ -914,12 +922,14 @@ final class PlaybackController: ObservableObject {
             }
             UserDefaults.standard.set(clamped, forKey: Self.loudnessTargetKey)
             applyPlaybackGains()
+            logSignalPath(reason: "normalization-target-changed")
         }
     }
     @Published var preventsClipping: Bool {
         didSet {
             UserDefaults.standard.set(preventsClipping, forKey: Self.preventsClippingKey)
             applyPlaybackGains()
+            logSignalPath(reason: "normalization-protection-changed")
         }
     }
 
@@ -1022,6 +1032,26 @@ final class PlaybackController: ObservableObject {
         effectsBypassed ? 0 : effectSettings.count(where: \.isEnabled)
     }
 
+    var signalPathSnapshot: AudioSignalPathSnapshot? {
+        guard sourceSampleRate > 0, sourceChannelCount > 0,
+              outputSampleRate > 0, outputChannelCount > 0 else { return nil }
+        let normalization = currentTrack.map { normalizationResult(for: $0) } ?? .unity
+        return AudioSignalPathSnapshot(
+            sourceSampleRate: sourceSampleRate,
+            sourceChannelCount: sourceChannelCount,
+            processingSampleRate: sourceSampleRate,
+            processingChannelCount: sourceChannelCount,
+            outputSampleRate: outputSampleRate,
+            outputChannelCount: outputChannelCount,
+            enabledEffects: effectsBypassed
+                ? [] : effectSettings.filter(\.isEnabled).map(\.kind),
+            effectsBypassed: effectsBypassed,
+            normalizationMode: loudnessNormalizationMode,
+            normalizationGainDB: normalization.gainDB,
+            normalizationLimitedByPeak: normalization.isLimitedByPeak
+        )
+    }
+
     var loudnessAdjustmentDescription: String? {
         guard loudnessNormalizationMode != .off, let currentTrack else { return nil }
         guard audioFeatures[currentTrack.id] != nil else {
@@ -1062,6 +1092,7 @@ final class PlaybackController: ObservableObject {
         effectsBypassed = bypassed
         UserDefaults.standard.set(bypassed, forKey: Self.effectsBypassedKey)
         effectSettings.forEach(applyEffectSetting)
+        logSignalPath(reason: "dsp-bypass-changed")
     }
 
     func effectSetting(for kind: RealtimeAudioEffectKind) -> RealtimeAudioEffectSetting {
@@ -1268,6 +1299,7 @@ final class PlaybackController: ObservableObject {
 
             audioFile = file
             sourceSampleRate = sourceRate
+            sourceChannelCount = file.processingFormat.channelCount
             outputSampleRate = configuration?.actualRate ?? sourceRate
             currentTrack = track
             primeTransitionAnalyses(startingWith: track)
@@ -1290,6 +1322,9 @@ final class PlaybackController: ObservableObject {
         } catch {
             stopCurrentPlayback()
             currentTrack = track
+            // Keep the persisted position even when a removable drive or network
+            // library is temporarily unavailable during process restoration.
+            elapsed = min(max(position, 0), max(track.duration, 0))
             isPlaying = false
             errorMessage = error.localizedDescription
             publishQueueState(force: true)
@@ -1455,8 +1490,10 @@ final class PlaybackController: ObservableObject {
         let hardwareFormat = engine.outputNode.inputFormat(forBus: 0)
         engine.connect(engine.mainMixerNode, to: engine.outputNode, format: hardwareFormat)
         outputSampleRate = hardwareFormat.sampleRate
+        outputChannelCount = hardwareFormat.channelCount
         installMeterTap()
         engine.prepare()
+        logSignalPath(reason: "engine-configured")
     }
 
     private func observeSystemAudioEvents() {
@@ -1545,6 +1582,7 @@ final class PlaybackController: ObservableObject {
                 ? outputManager.configureDefaultOutput(sourceRate: sourceRate)
                 : nil
             sourceSampleRate = sourceRate
+            sourceChannelCount = audioFile.processingFormat.channelCount
             outputSampleRate = configuration?.actualRate ?? sourceRate
 
             try configureEngine(for: audioFile)
@@ -1877,12 +1915,14 @@ final class PlaybackController: ObservableObject {
         playerNode.volume = normalizationResult(for: prepared.track).linearGain
         primeTransitionAnalyses(startingWith: prepared.track)
         sourceSampleRate = prepared.file.processingFormat.sampleRate
+        sourceChannelCount = prepared.file.processingFormat.channelCount
         scheduledStartFrame = prepared.scheduledStartFrame
         activeTrackNodeStartSampleTime = changesPlayerNode ? 0 : prepared.nodeStartSampleTime
         elapsed = currentElapsed()
         errorMessage = nil
         beginPlaybackSessionIfNeeded()
         publishQueueState(force: true)
+        logSignalPath(reason: "track-transition")
         prepareNextTrackIfNeeded()
     }
 
@@ -1900,6 +1940,8 @@ final class PlaybackController: ObservableObject {
         elapsed = 0
         sourceSampleRate = 0
         outputSampleRate = 0
+        sourceChannelCount = 0
+        outputChannelCount = 0
         clearAudioVisualization()
     }
 
@@ -2018,6 +2060,7 @@ final class PlaybackController: ObservableObject {
         mutation(&effectSettings[index])
         applyEffectSetting(effectSettings[index])
         persistEffectSettings()
+        logSignalPath(reason: "dsp-setting-changed")
     }
 
     private func applyEffectSetting(_ setting: RealtimeAudioEffectSetting) {
@@ -2094,5 +2137,10 @@ final class PlaybackController: ObservableObject {
             return String(format: "%.0f kHz", kilohertz)
         }
         return String(format: "%.1f kHz", kilohertz)
+    }
+
+    private func logSignalPath(reason: String) {
+        guard let line = signalPathSnapshot?.diagnosticLine else { return }
+        Self.signalPathLogger.info("reason=\(reason, privacy: .public) \(line, privacy: .public)")
     }
 }

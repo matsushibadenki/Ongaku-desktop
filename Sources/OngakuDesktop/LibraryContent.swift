@@ -1351,7 +1351,10 @@ private struct DuplicateLibraryView: View {
             }
             Button(L10n.text("common.cancel"), role: .cancel) { pendingGroup = nil }
         } message: {
-            Text(L10n.text("duplicates.confirm.message"))
+            Text(L10n.format(
+                "duplicates.confirm.message",
+                max((pendingGroup?.tracks.count ?? 1) - 1, 0)
+            ))
         }
         .alert(
             L10n.text("duplicates.error.title"),

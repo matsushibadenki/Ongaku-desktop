@@ -79,6 +79,7 @@ struct AppleMusicCatalogItem: Identifiable, Equatable, Sendable {
     let detail: String
     let artworkURL: URL?
     let destinationURL: URL?
+    let duration: TimeInterval?
     let playlistTrackType: String?
     let ratingResourceType: String?
     let groupTitle: String?
@@ -92,6 +93,7 @@ struct AppleMusicCatalogItem: Identifiable, Equatable, Sendable {
         detail: String,
         artworkURL: URL?,
         destinationURL: URL?,
+        duration: TimeInterval? = nil,
         playlistTrackType: String? = nil,
         ratingResourceType: String? = nil,
         groupTitle: String? = nil
@@ -104,6 +106,7 @@ struct AppleMusicCatalogItem: Identifiable, Equatable, Sendable {
         self.detail = detail
         self.artworkURL = artworkURL
         self.destinationURL = destinationURL
+        self.duration = duration
         self.playlistTrackType = playlistTrackType
         self.ratingResourceType = ratingResourceType ?? kind.catalogRatingType
         self.groupTitle = groupTitle
@@ -187,6 +190,36 @@ private enum AppleMusicServiceError: Error {
     }
 }
 
+struct AppleMusicAvailabilityPolicy: Equatable, Sendable {
+    let canBrowseCatalog: Bool
+    let canPlayCatalog: Bool
+    let canModifyCloudLibrary: Bool
+    let shouldOfferSubscription: Bool
+    let shouldOfferRetry: Bool
+    let localLibraryRemainsAvailable: Bool
+
+    static func resolve(
+        authorization: AppleMusicStoreController.AuthorizationState,
+        canPlayCatalogContent: Bool,
+        canBecomeSubscriber: Bool,
+        hasCloudLibraryEnabled: Bool,
+        hasRetryableFailure: Bool
+    ) -> Self {
+        let isAuthorized = authorization == .authorized
+        let remoteServiceAvailable = isAuthorized && !hasRetryableFailure
+        return Self(
+            canBrowseCatalog: remoteServiceAvailable,
+            canPlayCatalog: remoteServiceAvailable && canPlayCatalogContent,
+            canModifyCloudLibrary: remoteServiceAvailable && hasCloudLibraryEnabled,
+            shouldOfferSubscription: remoteServiceAvailable
+                && !canPlayCatalogContent
+                && canBecomeSubscriber,
+            shouldOfferRetry: isAuthorized && hasRetryableFailure,
+            localLibraryRemainsAvailable: true
+        )
+    }
+}
+
 struct ITunesStoreItem: Identifiable, Sendable, Decodable {
     let trackId: Int
     let trackName: String
@@ -215,6 +248,11 @@ private struct AppleMusicRatingsResponse: Decodable, Sendable {
     }
 
     let data: [Rating]
+}
+
+private struct AppleMusicPlaylistCreationResponse: Decodable, Sendable {
+    struct Resource: Decodable, Sendable { let id: String }
+    let data: [Resource]
 }
 
 actor ITunesStoreClient {
@@ -327,8 +365,10 @@ final class AppleMusicStoreController: ObservableObject {
     @Published private(set) var chartCityNames: [String] = []
     @Published private(set) var hasMoreDiscoveryChartItems = false
     @Published private(set) var isLoadingMoreDiscoveryCharts = false
+    @Published private(set) var playlistExportHistory: [AppleMusicPlaylistExportAuditEntry] = []
 
     private let storeClient: ITunesStoreClient
+    private let defaults: UserDefaults
     private var songsByID: [String: Song] = [:]
     private var albumsByID: [String: Album] = [:]
     private var playlistsByID: [String: MusicKit.Playlist] = [:]
@@ -350,10 +390,32 @@ final class AppleMusicStoreController: ObservableObject {
     private let discoveryChartPageSize = 12
 
     nonisolated static let replayURL = URL(string: "https://replay.music.apple.com/")!
+    private static let playlistExportHistoryKey = "appleMusic.playlistExportHistory.v1"
 
-    init(storeClient: ITunesStoreClient = ITunesStoreClient()) {
+    init(
+        storeClient: ITunesStoreClient = ITunesStoreClient(),
+        defaults: UserDefaults = .standard
+    ) {
         self.storeClient = storeClient
+        self.defaults = defaults
+        if let data = defaults.data(forKey: Self.playlistExportHistoryKey),
+           let history = try? JSONDecoder().decode(
+               [AppleMusicPlaylistExportAuditEntry].self,
+               from: data
+           ) {
+            playlistExportHistory = history
+        }
         refreshAuthorizationState()
+    }
+
+    var availabilityPolicy: AppleMusicAvailabilityPolicy {
+        AppleMusicAvailabilityPolicy.resolve(
+            authorization: authorization,
+            canPlayCatalogContent: canPlayCatalogContent,
+            canBecomeSubscriber: canBecomeSubscriber,
+            hasCloudLibraryEnabled: hasCloudLibraryEnabled,
+            hasRetryableFailure: canRetry
+        )
     }
 
     func retryLastOperation() async {
@@ -819,6 +881,7 @@ final class AppleMusicStoreController: ObservableObject {
                     detail: song.albumTitle ?? "",
                     artworkURL: song.artwork?.url(width: 180, height: 180),
                     destinationURL: song.url,
+                    duration: song.duration,
                     playlistTrackType: "library-songs",
                     ratingResourceType: "library-songs"
                 )
@@ -999,6 +1062,136 @@ final class AppleMusicStoreController: ObservableObject {
         } catch {
             message = Self.localizedServiceError(error)
             return false
+        }
+    }
+
+    func loadLibrarySongsForPlaylistExport() async -> [AppleMusicCatalogItem] {
+        guard authorization == .authorized else {
+            message = L10n.text("appleMusic.search.authorizationRequired")
+            return []
+        }
+        guard hasCloudLibraryEnabled else {
+            message = L10n.text("appleMusic.library.cloudRequired")
+            return []
+        }
+        isWorking = true
+        message = nil
+        defer { isWorking = false }
+        do {
+            var offset = 0
+            var result: [AppleMusicCatalogItem] = []
+            while true {
+                var request = MusicLibraryRequest<Song>()
+                request.limit = libraryPageSize
+                request.offset = offset
+                let response = try await request.response()
+                let page = response.items.map(Self.librarySongItem)
+                songsByID.merge(Dictionary(uniqueKeysWithValues: response.items.map {
+                    ($0.id.rawValue, $0)
+                })) { _, new in new }
+                result = Self.merging(result, with: page)
+                guard response.items.count == libraryPageSize else { break }
+                offset += libraryPageSize
+            }
+            librarySongItems = result
+            rebuildLibraryCatalog()
+            return result
+        } catch {
+            message = Self.localizedServiceError(error)
+            return []
+        }
+    }
+
+    func exportOngakuPlaylist(
+        sourcePlaylist: Playlist,
+        name rawName: String,
+        songs: [AppleMusicCatalogItem]
+    ) async -> AppleMusicPlaylistExportAuditEntry? {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !songs.isEmpty, hasCloudLibraryEnabled else { return nil }
+        isWorking = true
+        message = nil
+        defer { isWorking = false }
+
+        var playlistID: String?
+        var addedCount = 0
+        var failedCount = 0
+        var failureDescription: String?
+        do {
+            var request = URLRequest(url: URL(
+                string: "https://api.music.apple.com/v1/me/library/playlists"
+            )!)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try Self.playlistCreationBody(
+                name: name,
+                description: L10n.text("appleMusic.export.playlistDescription")
+            )
+            let response = try await MusicDataRequest(urlRequest: request).response()
+            try Self.validateStatus(response.urlResponse.statusCode, accepted: [201])
+            playlistID = try JSONDecoder().decode(
+                AppleMusicPlaylistCreationResponse.self,
+                from: response.data
+            ).data.first?.id
+            guard let playlistID else { throw AppleMusicServiceError.server }
+
+            let baseURL = URL(string: "https://api.music.apple.com/v1/me/library/playlists")!
+            for chunk in songs.chunked(into: 100) {
+                do {
+                    let url = baseURL
+                        .appendingPathComponent(playlistID)
+                        .appendingPathComponent("tracks")
+                    var trackRequest = URLRequest(url: url)
+                    trackRequest.httpMethod = "POST"
+                    trackRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    trackRequest.httpBody = try Self.playlistTracksBody(items: chunk)
+                    let trackResponse = try await MusicDataRequest(urlRequest: trackRequest)
+                        .response()
+                    try Self.validateStatus(
+                        trackResponse.urlResponse.statusCode,
+                        accepted: [204]
+                    )
+                    addedCount += chunk.count
+                } catch {
+                    failedCount += chunk.count
+                    failureDescription = failureDescription
+                        ?? Self.localizedServiceError(error)
+                }
+            }
+        } catch {
+            failedCount = songs.count
+            failureDescription = Self.localizedServiceError(error)
+        }
+
+        let audit = AppleMusicPlaylistExportAuditEntry(
+            id: UUID(),
+            occurredAt: .now,
+            sourcePlaylistID: sourcePlaylist.id,
+            sourcePlaylistName: sourcePlaylist.name,
+            appleMusicPlaylistID: playlistID,
+            requestedTrackCount: songs.count,
+            addedTrackCount: addedCount,
+            failedTrackCount: failedCount,
+            failureDescription: failureDescription
+        )
+        recordPlaylistExportAudit(audit)
+        if addedCount > 0 {
+            await loadLibraryPlaylists()
+        }
+        message = L10n.format(
+            failedCount == 0
+                ? "appleMusic.export.completed" : "appleMusic.export.partial",
+            addedCount,
+            failedCount
+        )
+        return audit
+    }
+
+    private func recordPlaylistExportAudit(_ entry: AppleMusicPlaylistExportAuditEntry) {
+        playlistExportHistory.insert(entry, at: 0)
+        playlistExportHistory = Array(playlistExportHistory.prefix(50))
+        if let data = try? JSONEncoder().encode(playlistExportHistory) {
+            defaults.set(data, forKey: Self.playlistExportHistoryKey)
         }
     }
 
@@ -1593,8 +1786,21 @@ final class AppleMusicStoreController: ObservableObject {
         if let serviceError = error as? AppleMusicServiceError {
             return L10n.text(serviceError.localizationKey)
         }
-        if let urlError = error as? URLError, urlError.code == .notConnectedToInternet {
-            return L10n.text("appleMusic.error.offline")
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .notConnectedToInternet,
+                 .networkConnectionLost,
+                 .cannotFindHost,
+                 .cannotConnectToHost,
+                 .dnsLookupFailed,
+                 .internationalRoamingOff,
+                 .dataNotAllowed:
+                return L10n.text("appleMusic.error.offline")
+            case .timedOut:
+                return L10n.text("appleMusic.error.server")
+            default:
+                break
+            }
         }
         return error.localizedDescription
     }
@@ -1803,6 +2009,7 @@ final class AppleMusicStoreController: ObservableObject {
             detail: song.albumTitle ?? "",
             artworkURL: song.artwork?.url(width: 180, height: 180),
             destinationURL: song.url,
+            duration: song.duration,
             playlistTrackType: "library-songs",
             ratingResourceType: "library-songs"
         )
@@ -1881,6 +2088,19 @@ final class AppleMusicStoreController: ObservableObject {
         ])
     }
 
+    nonisolated static func playlistTracksBody(
+        items: [AppleMusicCatalogItem]
+    ) throws -> Data {
+        try JSONSerialization.data(withJSONObject: [
+            "data": items.map { item in
+                [
+                    "id": item.musicItemID,
+                    "type": item.playlistTrackType ?? "library-songs",
+                ]
+            },
+        ])
+    }
+
     nonisolated static func favoriteRatingBody() throws -> Data {
         try JSONSerialization.data(withJSONObject: [
             "type": "rating",
@@ -1894,6 +2114,428 @@ private extension Array {
         guard size > 0 else { return [] }
         return stride(from: 0, to: count, by: size).map {
             Array(self[$0..<Swift.min($0 + size, count)])
+        }
+    }
+}
+
+private struct AppleMusicPlaylistConversionSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var library: LibraryStore
+    let preview: AppleMusicPlaylistConversionPreview
+    @State private var playlistName: String
+    @State private var selectedRowIDs: Set<UUID>
+    @State private var isImporting = false
+    @State private var errorMessage: String?
+
+    init(preview: AppleMusicPlaylistConversionPreview) {
+        self.preview = preview
+        _playlistName = State(initialValue: preview.name)
+        _selectedRowIDs = State(initialValue: Set(
+            preview.rows.filter { $0.status == .matched }.map(\.id)
+        ))
+    }
+
+    private var selectedTrackIDs: [Track.ID] {
+        preview.rows.compactMap { row in
+            guard row.status == .matched, selectedRowIDs.contains(row.id) else { return nil }
+            return row.trackID
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: AppTheme.spaceMD) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.text("appleMusic.conversion.title"))
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.text("appleMusic.conversion.description"))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Button(L10n.text("common.close")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(AppTheme.spaceLG)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                TextField(L10n.text("appleMusic.conversion.name"), text: $playlistName)
+                    .textFieldStyle(.roundedBorder)
+                Text(L10n.format(
+                    "appleMusic.conversion.summary",
+                    preview.matchedCount,
+                    preview.ambiguousCount,
+                    preview.missingCount,
+                    preview.duplicateCount
+                ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, AppTheme.spaceLG)
+            .padding(.vertical, AppTheme.spaceMD)
+
+            List(preview.rows) { row in
+                HStack(spacing: AppTheme.spaceMD) {
+                    Toggle("", isOn: selectionBinding(for: row))
+                        .labelsHidden()
+                        .disabled(row.status != .matched)
+                    Image(systemName: statusIcon(row.status))
+                        .foregroundStyle(statusColor(row.status))
+                        .frame(width: 22)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(row.item.title)
+                            .font(.headline)
+                        Text([row.item.subtitle, row.item.detail]
+                            .filter { !$0.isEmpty }
+                            .joined(separator: " · "))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(L10n.text("appleMusic.conversion.status.\(row.status.rawValue)"))
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(statusColor(row.status))
+                    }
+                    Spacer(minLength: AppTheme.spaceMD)
+                }
+                .padding(.vertical, AppTheme.spaceXS)
+            }
+            .scrollContentBackground(.hidden)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+                HStack {
+                    Text(L10n.format(
+                        "appleMusic.conversion.selected",
+                        selectedTrackIDs.count
+                    ))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button(L10n.text("common.cancel")) { dismiss() }
+                    Button {
+                        importPlaylist()
+                    } label: {
+                        if isImporting {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Text(L10n.text("appleMusic.conversion.create"))
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(
+                        selectedTrackIDs.isEmpty
+                            || playlistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            || isImporting
+                    )
+                }
+            }
+            .padding(AppTheme.spaceLG)
+        }
+        .frame(minWidth: 700, minHeight: 560)
+        .background(AppTheme.canvas)
+    }
+
+    private func selectionBinding(for row: AppleMusicPlaylistMatch) -> Binding<Bool> {
+        Binding(
+            get: { selectedRowIDs.contains(row.id) },
+            set: { selected in
+                if selected { selectedRowIDs.insert(row.id) }
+                else { selectedRowIDs.remove(row.id) }
+            }
+        )
+    }
+
+    private func importPlaylist() {
+        let trackIDs = selectedTrackIDs
+        isImporting = true
+        errorMessage = nil
+        Task {
+            do {
+                _ = try await library.createPlaylistFromAppleMusic(
+                    name: playlistName,
+                    trackIDs: trackIDs
+                )
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isImporting = false
+        }
+    }
+
+    private func statusIcon(_ status: AppleMusicPlaylistMatchStatus) -> String {
+        switch status {
+        case .matched: "checkmark.circle.fill"
+        case .ambiguous: "exclamationmark.triangle.fill"
+        case .missing: "questionmark.circle"
+        case .duplicate: "square.on.square"
+        }
+    }
+
+    private func statusColor(_ status: AppleMusicPlaylistMatchStatus) -> Color {
+        switch status {
+        case .matched: AppTheme.good
+        case .ambiguous: .orange
+        case .missing, .duplicate: .secondary
+        }
+    }
+}
+
+private struct OngakuPlaylistAppleMusicExportSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var controller: AppleMusicStoreController
+    @EnvironmentObject private var library: LibraryStore
+    @State private var selectedPlaylistID: Playlist.ID?
+    @State private var appleMusicSongs: [AppleMusicCatalogItem] = []
+    @State private var preview: OngakuPlaylistAppleMusicExportPreview?
+    @State private var selectedRowIDs: Set<UUID> = []
+    @State private var exportName = ""
+    @State private var isLoading = false
+    @State private var isExporting = false
+    @State private var latestResult: AppleMusicPlaylistExportAuditEntry?
+
+    private var regularPlaylists: [Playlist] {
+        library.playlists.filter { $0.smartDefinition == nil }
+    }
+
+    private var selectedItems: [AppleMusicCatalogItem] {
+        preview?.rows.compactMap { row in
+            guard row.status == .matched, selectedRowIDs.contains(row.id) else { return nil }
+            return row.appleMusicItem
+        } ?? []
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: AppTheme.spaceMD) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L10n.text("appleMusic.export.title"))
+                        .font(.title2.weight(.semibold))
+                    Text(L10n.text("appleMusic.export.description"))
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Button(L10n.text("common.close")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding(AppTheme.spaceLG)
+
+            Divider()
+
+            HStack(spacing: AppTheme.spaceMD) {
+                Picker(L10n.text("appleMusic.export.source"), selection: $selectedPlaylistID) {
+                    ForEach(regularPlaylists) { playlist in
+                        Text(playlist.name).tag(Optional(playlist.id))
+                    }
+                }
+                .frame(maxWidth: 300)
+                .onChange(of: selectedPlaylistID) { rebuildPreview() }
+
+                TextField(L10n.text("appleMusic.export.name"), text: $exportName)
+                    .textFieldStyle(.roundedBorder)
+
+                Button(L10n.text("appleMusic.export.reload"), systemImage: "arrow.clockwise") {
+                    loadSongs()
+                }
+                .disabled(isLoading || isExporting)
+            }
+            .padding(.horizontal, AppTheme.spaceLG)
+            .padding(.vertical, AppTheme.spaceMD)
+
+            if isLoading {
+                ProgressView(L10n.text("appleMusic.export.loading"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if let preview {
+                List(preview.rows) { row in
+                    HStack(spacing: AppTheme.spaceMD) {
+                        Toggle("", isOn: selectionBinding(for: row))
+                            .labelsHidden()
+                            .disabled(row.status != .matched)
+                        Image(systemName: statusIcon(row.status))
+                            .foregroundStyle(statusColor(row.status))
+                            .frame(width: 22)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(row.track.title)
+                                .font(.headline)
+                            Text([row.track.artist, row.track.album]
+                                .filter { !$0.isEmpty }
+                                .joined(separator: " · "))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(L10n.text("appleMusic.export.status.\(row.status.rawValue)"))
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(statusColor(row.status))
+                        }
+                        Spacer(minLength: AppTheme.spaceMD)
+                    }
+                    .padding(.vertical, AppTheme.spaceXS)
+                }
+                .scrollContentBackground(.hidden)
+            } else {
+                ContentUnavailableView(
+                    L10n.text("appleMusic.export.noPreview"),
+                    systemImage: "music.note.list"
+                )
+            }
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
+                if let preview {
+                    Text(L10n.format(
+                        "appleMusic.export.summary",
+                        preview.matchedCount,
+                        preview.ambiguousCount,
+                        preview.missingCount,
+                        preview.duplicateCount
+                    ))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let latestResult {
+                    Label(
+                        L10n.format(
+                            "appleMusic.export.result",
+                            latestResult.addedTrackCount,
+                            latestResult.failedTrackCount
+                        ),
+                        systemImage: latestResult.failedTrackCount == 0
+                            ? "checkmark.seal.fill" : "exclamationmark.triangle.fill"
+                    )
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(latestResult.failedTrackCount == 0 ? AppTheme.good : .orange)
+                    if let failureDescription = latestResult.failureDescription {
+                        Text(failureDescription)
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+                if !controller.playlistExportHistory.isEmpty {
+                    Text(L10n.text("appleMusic.export.history"))
+                        .font(.caption.weight(.semibold))
+                    ForEach(controller.playlistExportHistory.prefix(3)) { entry in
+                        Text(L10n.format(
+                            "appleMusic.export.historyRow",
+                            entry.sourcePlaylistName,
+                            entry.addedTrackCount,
+                            entry.failedTrackCount
+                        ))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                HStack {
+                    Text(L10n.format("appleMusic.export.selected", selectedItems.count))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button(L10n.text("common.cancel")) { dismiss() }
+                    Button {
+                        exportPlaylist()
+                    } label: {
+                        if isExporting {
+                            ProgressView().controlSize(.small)
+                        } else {
+                            Text(L10n.text("appleMusic.export.create"))
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(
+                        selectedItems.isEmpty
+                            || exportName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            || isLoading
+                            || isExporting
+                    )
+                }
+            }
+            .padding(AppTheme.spaceLG)
+        }
+        .frame(minWidth: 760, minHeight: 620)
+        .background(AppTheme.canvas)
+        .onAppear {
+            if selectedPlaylistID == nil {
+                selectedPlaylistID = regularPlaylists.first?.id
+                exportName = regularPlaylists.first?.name ?? ""
+            }
+            loadSongs()
+        }
+    }
+
+    private func loadSongs() {
+        isLoading = true
+        latestResult = nil
+        Task {
+            appleMusicSongs = await controller.loadLibrarySongsForPlaylistExport()
+            isLoading = false
+            rebuildPreview()
+        }
+    }
+
+    private func rebuildPreview() {
+        guard let playlist = regularPlaylists.first(where: { $0.id == selectedPlaylistID }) else {
+            preview = nil
+            selectedRowIDs = []
+            return
+        }
+        exportName = playlist.name
+        let newPreview = OngakuPlaylistAppleMusicExportPlanner.preview(
+            playlist: playlist,
+            tracks: library.tracks,
+            appleMusicSongs: appleMusicSongs
+        )
+        preview = newPreview
+        selectedRowIDs = Set(newPreview.rows.filter { $0.status == .matched }.map(\.id))
+        latestResult = nil
+    }
+
+    private func selectionBinding(for row: OngakuPlaylistAppleMusicMatch) -> Binding<Bool> {
+        Binding(
+            get: { selectedRowIDs.contains(row.id) },
+            set: { selected in
+                if selected { selectedRowIDs.insert(row.id) }
+                else { selectedRowIDs.remove(row.id) }
+            }
+        )
+    }
+
+    private func exportPlaylist() {
+        guard let playlist = regularPlaylists.first(where: { $0.id == selectedPlaylistID }) else {
+            return
+        }
+        let items = selectedItems
+        isExporting = true
+        Task {
+            latestResult = await controller.exportOngakuPlaylist(
+                sourcePlaylist: playlist,
+                name: exportName,
+                songs: items
+            )
+            isExporting = false
+        }
+    }
+
+    private func statusIcon(_ status: AppleMusicPlaylistMatchStatus) -> String {
+        switch status {
+        case .matched: "checkmark.circle.fill"
+        case .ambiguous: "exclamationmark.triangle.fill"
+        case .missing: "questionmark.circle"
+        case .duplicate: "square.on.square"
+        }
+    }
+
+    private func statusColor(_ status: AppleMusicPlaylistMatchStatus) -> Color {
+        switch status {
+        case .matched: AppTheme.good
+        case .ambiguous: .orange
+        case .missing, .duplicate: .secondary
         }
     }
 }
@@ -1914,6 +2556,7 @@ struct AppleMusicStoreView: View {
     @EnvironmentObject private var localPlayer: PlaybackController
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var controller: AppleMusicStoreController
+    @EnvironmentObject private var library: LibraryStore
     @State private var source: Source = .home
     @State private var query = ""
     @State private var isCreatingPlaylist = false
@@ -1922,6 +2565,8 @@ struct AppleMusicStoreView: View {
     @State private var libraryQuery = ""
     @State private var libraryFilter: AppleMusicLibraryFilter = .all
     @State private var isShowingPlaylistContents = false
+    @State private var isShowingPlaylistConversion = false
+    @State private var isShowingOngakuPlaylistExport = false
     @State private var selectedDiscoveryItem: AppleMusicCatalogItem?
     @State private var chartScope: AppleMusicChartScope = .cities
     @State private var selectedChartGenreID: String?
@@ -1946,6 +2591,7 @@ struct AppleMusicStoreView: View {
             footer
         }
         .frame(width: 900, height: 650)
+        .accessibilityIdentifier("apple-music.window")
         .background(AppTheme.canvas)
         .task {
             await controller.refresh()
@@ -1972,6 +2618,11 @@ struct AppleMusicStoreView: View {
         }
         .sheet(isPresented: $isCreatingPlaylist) {
             createPlaylistSheet
+        }
+        .sheet(isPresented: $isShowingOngakuPlaylistExport) {
+            OngakuPlaylistAppleMusicExportSheet()
+                .environmentObject(controller)
+                .environmentObject(library)
         }
         .sheet(isPresented: $isShowingPlaylistContents) {
             playlistContentsSheet
@@ -2396,6 +3047,16 @@ struct AppleMusicStoreView: View {
         }
         .frame(width: 760, height: 560)
         .background(AppTheme.canvas)
+        .sheet(isPresented: $isShowingPlaylistConversion) {
+            AppleMusicPlaylistConversionSheet(
+                preview: AppleMusicPlaylistConversionPlanner.preview(
+                    name: controller.playlistContentsTitle,
+                    entries: controller.playlistEntries,
+                    tracks: library.tracks
+                )
+            )
+            .environmentObject(library)
+        }
     }
 
     private func showDiscoveryDetails(_ item: AppleMusicCatalogItem) {
@@ -2508,6 +3169,18 @@ struct AppleMusicStoreView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(!controller.hasCloudLibraryEnabled)
+                Button {
+                    isShowingOngakuPlaylistExport = true
+                } label: {
+                    Label(
+                        L10n.text("appleMusic.export.open"),
+                        systemImage: "arrow.up.to.line"
+                    )
+                }
+                .disabled(
+                    !controller.hasCloudLibraryEnabled
+                        || library.playlists.allSatisfy { $0.smartDefinition != nil }
+                )
             }
             .padding(20)
 
@@ -2636,6 +3309,16 @@ struct AppleMusicStoreView: View {
                     .foregroundStyle(.secondary)
                 }
                 Spacer()
+                Button {
+                    isShowingPlaylistConversion = true
+                } label: {
+                    Label(
+                        L10n.text("appleMusic.conversion.toOngaku"),
+                        systemImage: "arrow.down.to.line"
+                    )
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(controller.isWorking || controller.playlistEntries.isEmpty)
                 Button(L10n.text("common.close")) {
                     isShowingPlaylistContents = false
                 }
@@ -2670,14 +3353,14 @@ struct AppleMusicStoreView: View {
         if source != .iTunesStore {
             HStack(spacing: 8) {
                 capabilityBadge(
-                    controller.canPlayCatalogContent,
+                    controller.availabilityPolicy.canPlayCatalog,
                     key: "appleMusic.capability.playback"
                 )
                 capabilityBadge(
-                    controller.hasCloudLibraryEnabled,
+                    controller.availabilityPolicy.canModifyCloudLibrary,
                     key: "appleMusic.capability.cloudLibrary"
                 )
-                if controller.canBecomeSubscriber {
+                if controller.availabilityPolicy.shouldOfferSubscription {
                     Text(L10n.text("appleMusic.capability.subscriptionAvailable"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -2916,6 +3599,7 @@ struct AppleMusicStoreView: View {
                 .foregroundStyle(.tertiary)
             Button(L10n.text("common.close")) { dismiss() }
                 .keyboardShortcut(.cancelAction)
+                .accessibilityIdentifier("apple-music.close")
         }
         .padding(16)
     }

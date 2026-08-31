@@ -33,6 +33,9 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
     private let lock = NSLock()
     private var localURLs: [UUID: URL] = [:]
     private var pendingResources: [UUID: DeviceSyncResourceAnnouncement] = [:]
+    private var transferProgresses: [UUID: Progress] = [:]
+    private var transferObservations: [UUID: NSKeyValueObservation] = [:]
+    private var terminalTransferActions: [UUID: DeviceTransferControlAction] = [:]
     private var invitationHandlers: [UUID: (Bool, MCSession?) -> Void] = [:]
     private var advertisingRetryWorkItem: DispatchWorkItem?
     private var isStarted = false
@@ -44,6 +47,7 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
     }
 
     deinit {
+        transferProgresses.values.forEach { $0.cancel() }
         advertiser.stopAdvertisingPeer()
         session.disconnect()
     }
@@ -123,6 +127,18 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
 
     func downloadFromMac(_ item: DeviceSyncItem) {
         send(.requestItem(item.id))
+    }
+
+    func pauseTransfer(_ id: UUID) {
+        applyTransferControl(.init(transferID: id, action: .pause), notifyPeer: true)
+    }
+
+    func resumeTransfer(_ id: UUID) {
+        applyTransferControl(.init(transferID: id, action: .resume), notifyPeer: true)
+    }
+
+    func cancelTransfer(_ id: UUID) {
+        applyTransferControl(.init(transferID: id, action: .cancel), notifyPeer: true)
     }
 
     func hasLocalCopy(of item: DeviceSyncItem) -> Bool {
@@ -208,12 +224,23 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
             item: item
         )))
         updateTransfer(id: transferID, phase: .transferring)
-        session.sendResource(at: url, withName: transferID.uuidString, toPeer: peer) { [weak self] error in
-            self?.updateTransfer(
-                id: transferID,
-                phase: error.map { .failed($0.localizedDescription) } ?? .completed
-            )
+        let progress = session.sendResource(at: url, withName: transferID.uuidString, toPeer: peer) { [weak self] error in
+            let terminalAction = self?.lock.withLock {
+                self?.terminalTransferActions.removeValue(forKey: transferID)
+            } ?? nil
+            self?.removeProgress(for: transferID)
+            if terminalAction == .cancel {
+                self?.updateTransfer(id: transferID, phase: .cancelled)
+            } else if terminalAction == .insufficientStorage {
+                self?.updateTransfer(id: transferID, phase: .insufficientStorage)
+            } else if let error {
+                self?.updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+            } else {
+                self?.updateTransferProgress(id: transferID, fraction: 1, completedBytes: item.fileSize)
+                self?.updateTransfer(id: transferID, phase: .completed)
+            }
         }
+        if let progress { observe(progress, transferID: transferID) }
     }
 
     private func handle(_ message: DeviceSyncMessage) {
@@ -225,6 +252,22 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
         case .requestItem(let id):
             sendLocalItem(id, direction: .phoneToMac)
         case .resource(let announcement):
+            guard Self.canReceive(announcement.item) else {
+                lock.withLock {
+                    terminalTransferActions[announcement.transferID] = .insufficientStorage
+                }
+                updateTransfer(DeviceTransferState(
+                    id: announcement.transferID,
+                    item: announcement.item,
+                    direction: announcement.direction,
+                    phase: .insufficientStorage
+                ))
+                send(.transferControl(.init(
+                    transferID: announcement.transferID,
+                    action: .insufficientStorage
+                )))
+                return
+            }
             lock.withLock { pendingResources[announcement.transferID] = announcement }
             updateTransfer(DeviceTransferState(
                 id: announcement.transferID,
@@ -232,22 +275,40 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
                 direction: announcement.direction,
                 phase: .transferring
             ))
+        case .transferControl(let control):
+            applyTransferControl(control, notifyPeer: false)
+        case .overlayReceipt:
+            // Receipts acknowledge phone-originated overlay changes on the Mac.
+            // The legacy companion target never applies them locally.
+            break
         case .error(let message):
             publishFailure(message)
         }
     }
 
     private func finishReceivedResource(name: String, temporaryURL: URL?, error: Error?) {
-        guard let transferID = UUID(uuidString: name),
-              let announcement = lock.withLock({ pendingResources.removeValue(forKey: transferID) }) else {
+        guard let transferID = UUID(uuidString: name) else { return }
+        guard let announcement = lock.withLock({ pendingResources.removeValue(forKey: transferID) }) else {
+            _ = lock.withLock { terminalTransferActions.removeValue(forKey: transferID) }
+            removeProgress(for: transferID)
+            return
+        }
+        if let terminalAction = lock.withLock({ terminalTransferActions.removeValue(forKey: transferID) }) {
+            updateTransfer(
+                id: transferID,
+                phase: terminalAction == .insufficientStorage ? .insufficientStorage : .cancelled
+            )
+            removeProgress(for: transferID)
             return
         }
         if let error {
             updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+            removeProgress(for: transferID)
             return
         }
         guard let temporaryURL else {
             updateTransfer(id: transferID, phase: .failed("Missing received file"))
+            removeProgress(for: transferID)
             return
         }
 
@@ -268,10 +329,13 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
                 lock.withLock { localURLs[storedItem.id] = destination }
                 Self.saveManifest(localItems)
                 updateTransfer(id: transferID, phase: .completed)
+                updateTransferProgress(id: transferID, fraction: 1, completedBytes: announcement.item.fileSize)
+                removeProgress(for: transferID)
                 sendManifestIfConnected()
             }
         } catch {
             updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+            removeProgress(for: transferID)
             send(.error(error.localizedDescription))
         }
     }
@@ -292,6 +356,82 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
             guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
             transfers[index].phase = phase
         }
+    }
+
+    private func updateTransferProgress(id: UUID, fraction: Double, completedBytes: Int64) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
+            transfers[index].updateProgress(fraction: fraction, completedBytes: completedBytes)
+        }
+    }
+
+    private func observe(_ progress: Progress, transferID: UUID) {
+        let observation = progress.observe(\.fractionCompleted, options: [.initial, .new]) { [weak self] value, _ in
+            self?.updateTransferProgress(
+                id: transferID,
+                fraction: value.fractionCompleted,
+                completedBytes: value.completedUnitCount
+            )
+        }
+        lock.withLock {
+            transferProgresses[transferID] = progress
+            transferObservations[transferID] = observation
+        }
+    }
+
+    private func removeProgress(for transferID: UUID) {
+        lock.withLock {
+            transferObservations.removeValue(forKey: transferID)?.invalidate()
+            transferProgresses.removeValue(forKey: transferID)
+        }
+    }
+
+    private func applyTransferControl(_ control: DeviceTransferControl, notifyPeer: Bool) {
+        let progress = lock.withLock { transferProgresses[control.transferID] }
+        switch control.action {
+        case .pause:
+            progress?.pause()
+            updateTransfer(id: control.transferID, phase: .paused)
+        case .resume:
+            progress?.resume()
+            updateTransfer(id: control.transferID, phase: .transferring)
+        case .cancel:
+            lock.withLock { terminalTransferActions[control.transferID] = .cancel }
+            progress?.cancel()
+            updateTransfer(id: control.transferID, phase: .cancelled)
+            removeProgress(for: control.transferID)
+        case .insufficientStorage:
+            lock.withLock { terminalTransferActions[control.transferID] = .insufficientStorage }
+            progress?.cancel()
+            updateTransfer(id: control.transferID, phase: .insufficientStorage)
+            removeProgress(for: control.transferID)
+        }
+        if notifyPeer { send(.transferControl(control)) }
+    }
+
+    private func interruptActiveTransfers() {
+        lock.withLock { Array(transferProgresses.values) }.forEach { $0.cancel() }
+        lock.withLock {
+            transferObservations.values.forEach { $0.invalidate() }
+            transferObservations.removeAll()
+            transferProgresses.removeAll()
+            pendingResources.removeAll()
+            terminalTransferActions.removeAll()
+        }
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            for index in transfers.indices where transfers[index].isActive {
+                transfers[index].phase = .interrupted
+            }
+        }
+    }
+
+    private static func canReceive(_ item: DeviceSyncItem) -> Bool {
+        guard let storage = deviceStorageInfo() else { return true }
+        return DeviceTransferCapacity.canReceive(
+            fileSize: item.fileSize,
+            availableBytes: storage.availableBytes
+        )
     }
 
     private func publishFailure(_ message: String) {
@@ -419,6 +559,7 @@ extension MobileSyncController: MCSessionDelegate {
             guard let self else { return }
             switch state {
             case .notConnected:
+                interruptActiveTransfers()
                 connectionState = isStarted ? .searching : .disconnected
                 remoteItems = []
                 if isStarted { scheduleAdvertisingRetry() }
@@ -448,7 +589,14 @@ extension MobileSyncController: MCSessionDelegate {
         didStartReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
         with progress: Progress
-    ) {}
+    ) {
+        guard let transferID = UUID(uuidString: resourceName) else { return }
+        if lock.withLock({ terminalTransferActions[transferID] }) != nil {
+            progress.cancel()
+            return
+        }
+        observe(progress, transferID: transferID)
+    }
 
     func session(
         _ session: MCSession,

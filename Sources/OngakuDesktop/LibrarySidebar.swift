@@ -55,6 +55,7 @@ struct LibrarySidebar: View {
     @State private var expandedFolderIDs: Set<PlaylistFolder.ID> = []
     @State private var errorMessage: String?
     @State private var isCreatingLibrary = false
+    @State private var isCreatingExternalLibrary = false
     @State private var isRenamingLibrary = false
     @State private var libraryNameDraft = ""
 
@@ -66,12 +67,9 @@ struct LibrarySidebar: View {
                         Button {
                             libraryProfiles.activate(profile.id)
                         } label: {
-                            if profile.id == libraryProfiles.activeLibraryID {
-                                Label(profile.name, systemImage: "checkmark")
-                            } else {
-                                Text(profile.name)
-                            }
+                            profileMenuLabel(profile)
                         }
+                        .disabled(libraryProfiles.connectionState(for: profile) != .connected)
                     }
                     Divider()
                     Button {
@@ -79,6 +77,26 @@ struct LibrarySidebar: View {
                         isCreatingLibrary = true
                     } label: {
                         Label(L10n.text("libraryProfile.create"), systemImage: "plus")
+                    }
+                    Button {
+                        libraryNameDraft = ""
+                        isCreatingExternalLibrary = true
+                    } label: {
+                        Label(
+                            L10n.text("libraryProfile.external.create"),
+                            systemImage: "externaldrive.badge.plus"
+                        )
+                    }
+                    let disconnected = libraryProfiles.availableProfiles.filter {
+                        $0.isExternal
+                            && libraryProfiles.connectionState(for: $0) != .connected
+                    }
+                    if !disconnected.isEmpty {
+                        Menu(L10n.text("libraryProfile.external.reconnect")) {
+                            ForEach(disconnected) { profile in
+                                Button(profile.name) { reconnect(profile) }
+                            }
+                        }
                     }
                     Button {
                         libraryNameDraft = libraryProfiles.activeProfile.name
@@ -292,6 +310,16 @@ struct LibrarySidebar: View {
         } message: {
             Text(L10n.text("libraryProfile.createDescription"))
         }
+        .alert(
+            L10n.text("libraryProfile.external.create"),
+            isPresented: $isCreatingExternalLibrary
+        ) {
+            TextField(L10n.text("libraryProfile.name"), text: $libraryNameDraft)
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+            Button(L10n.text("common.create")) { createExternalLibrary() }
+        } message: {
+            Text(L10n.text("libraryProfile.external.createDescription"))
+        }
         .alert(L10n.text("libraryProfile.rename"), isPresented: $isRenamingLibrary) {
             TextField(L10n.text("libraryProfile.name"), text: $libraryNameDraft)
             Button(L10n.text("common.cancel"), role: .cancel) {}
@@ -347,11 +375,25 @@ struct LibrarySidebar: View {
         } message: {
             Text(errorMessage ?? "")
         }
+        .onReceive(
+            NSWorkspace.shared.notificationCenter.publisher(
+                for: NSWorkspace.didMountNotification
+            )
+        ) { _ in
+            libraryProfiles.refreshExternalConnections()
+        }
+        .onReceive(
+            NSWorkspace.shared.notificationCenter.publisher(
+                for: NSWorkspace.didUnmountNotification
+            )
+        ) { _ in
+            libraryProfiles.refreshExternalConnections()
+        }
     }
 
     private var libraryProfileMenuLabel: some View {
         HStack(spacing: 6) {
-            Image(systemName: "books.vertical")
+            Image(systemName: activeProfileIcon)
                 .frame(width: 16)
             Text(libraryProfiles.activeProfile.name)
                 .lineLimit(1)
@@ -360,6 +402,66 @@ struct LibrarySidebar: View {
         }
         .foregroundStyle(Color.primary)
         .contentShape(Rectangle())
+    }
+
+    private var activeProfileIcon: String {
+        let profile = libraryProfiles.activeProfile
+        if libraryProfiles.connectionState(for: profile) != .connected {
+            return "externaldrive.badge.exclamationmark"
+        }
+        return profile.isExternal ? "externaldrive" : "books.vertical"
+    }
+
+    @ViewBuilder
+    private func profileMenuLabel(_ profile: LibraryProfile) -> some View {
+        if libraryProfiles.connectionState(for: profile) == .connected {
+            Label(
+                profile.name,
+                systemImage: profile.id == libraryProfiles.activeLibraryID
+                    ? "checkmark"
+                    : (profile.isExternal ? "externaldrive" : "books.vertical")
+            )
+        } else {
+            Label(
+                L10n.format("libraryProfile.external.disconnected", profile.name),
+                systemImage: "externaldrive.badge.exclamationmark"
+            )
+        }
+    }
+
+    private func createExternalLibrary() {
+        let panel = NSOpenPanel()
+        panel.title = L10n.text("libraryProfile.external.chooseDestination")
+        panel.prompt = L10n.text("common.choose")
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let destination = panel.url else { return }
+        do {
+            try libraryProfiles.createExternalLibrary(
+                named: libraryNameDraft,
+                in: destination
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func reconnect(_ profile: LibraryProfile) {
+        let panel = NSOpenPanel()
+        panel.title = L10n.format("libraryProfile.external.reconnectTitle", profile.name)
+        panel.message = L10n.text("libraryProfile.external.reconnectDescription")
+        panel.prompt = L10n.text("libraryProfile.external.reconnectAction")
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let root = panel.url else { return }
+        do {
+            try libraryProfiles.reconnect(profile.id, to: root)
+            libraryProfiles.activate(profile.id)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func playlistRow(_ playlist: Playlist) -> some View {

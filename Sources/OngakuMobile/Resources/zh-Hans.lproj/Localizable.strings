@@ -26,5 +26,13 @@
 "mobile.latestTransfer" = "最近传输";
 "mobile.transfer.preparing" = "正在准备…";
 "mobile.transfer.transferring" = "正在传输…";
+"mobile.transfer.paused" = "传输已暂停";
 "mobile.transfer.verifying" = "正在验证 SHA-256…";
 "mobile.transfer.completed" = "传输完成";
+"mobile.transfer.cancelled" = "传输已取消";
+"mobile.transfer.interrupted" = "连接结束，传输已中断";
+"mobile.transfer.insufficientStorage" = "可用空间不足";
+"mobile.transfer.progress" = "%d%% · %@ / %@";
+"mobile.transfer.pause" = "暂停传输";
+"mobile.transfer.resume" = "继续传输";
+"mobile.transfer.cancel" = "取消传输";

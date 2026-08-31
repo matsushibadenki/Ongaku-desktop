@@ -28,6 +28,7 @@ struct OngakuDesktopApp: App {
     @StateObject private var appearance: AppAppearanceSettings
     @StateObject private var meterSettings: PlayerMeterSettings
     @StateObject private var trackTableSettings: TrackTableSettings
+    @StateObject private var socialPrivacy: SocialPrivacySettings
     @StateObject private var windowPresentation = WindowPresentationController()
     @StateObject private var player: PlaybackController
     @StateObject private var appleMusicPlayback: AppleMusicPlaybackController
@@ -47,6 +48,7 @@ struct OngakuDesktopApp: App {
         _appearance = StateObject(wrappedValue: AppAppearanceSettings())
         _meterSettings = StateObject(wrappedValue: PlayerMeterSettings())
         _trackTableSettings = StateObject(wrappedValue: TrackTableSettings())
+        _socialPrivacy = StateObject(wrappedValue: SocialPrivacySettings())
         let player = PlaybackController()
         let appleMusicPlayback = AppleMusicPlaybackController()
         player.setExternalPlaybackStopHandler { [weak appleMusicPlayback] in
@@ -90,25 +92,47 @@ struct OngakuDesktopApp: App {
                 .environmentObject(appearance)
                 .environmentObject(meterSettings)
                 .environmentObject(trackTableSettings)
+                .environmentObject(socialPrivacy)
                 .environmentObject(phoneSync)
                 .environment(\.locale, language.selectedLanguage.locale ?? .current)
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
                 .task {
                     await library.load()
-                    phoneSync.updateLocalTracks(library.tracks)
+                    phoneSync.updateLocalTracks(
+                        library.tracks,
+                        playbackEvents: library.playbackEvents,
+                        playlists: library.playlists,
+                        displayTags: library.syncedDisplayTags
+                    )
                     phoneSync.start()
                     player.updateAudioFeatures(library.audioFeatures)
                     player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                 }
                 .onChange(of: library.contentRevision) {
-                    phoneSync.updateLocalTracks(library.tracks)
+                    phoneSync.updateLocalTracks(
+                        library.tracks,
+                        playbackEvents: library.playbackEvents,
+                        playlists: library.playlists,
+                        displayTags: library.syncedDisplayTags
+                    )
                     player.reconcilePlaybackQueue(with: library.tracks)
                 }
                 .onChange(of: library.audioFeatureRevision) {
                     player.updateAudioFeatures(library.audioFeatures)
                 }
                 .onChange(of: libraryProfiles.activeLibraryID) {
+                    let profile = libraryProfiles.activeProfile
+                    storage.activateProfileMediaDirectory(profile.mediaURL)
+                    Task {
+                        await library.switchLibrary(
+                            catalogURL: profile.catalogURL,
+                            mediaURL: profile.mediaURL
+                        )
+                        player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
+                    }
+                }
+                .onChange(of: libraryProfiles.activeLocationRevision) {
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
                     Task {

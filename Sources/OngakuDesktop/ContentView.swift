@@ -34,6 +34,7 @@ struct ContentView: View {
                 persistentPlayer
             }
         }
+        .accessibilityIdentifier("main.window")
         .background(AppTheme.canvas)
         .tint(AppTheme.accent)
         .dropDestination(for: URL.self) { urls, _ in
@@ -137,7 +138,12 @@ struct ContentView: View {
                     try? FileManager.default.removeItem(at: url)
                 }
             }
-            phoneSync.updateLocalTracks(library.tracks)
+            phoneSync.updateLocalTracks(
+                library.tracks,
+                playbackEvents: library.playbackEvents,
+                playlists: library.playlists,
+                displayTags: library.syncedDisplayTags
+            )
         }
         .toolbar {
             ToolbarItemGroup {
@@ -167,6 +173,7 @@ struct ContentView: View {
                 } label: {
                     Label(L10n.text("command.appleMusicStore"), systemImage: "apple.logo")
                 }
+                .accessibilityIdentifier("main.open-apple-music")
                 .help(L10n.text("toolbar.appleMusicStoreHelp"))
 
                 Button {
@@ -175,6 +182,7 @@ struct ContentView: View {
                     Label(L10n.text("deviceSync.title"), systemImage: "iphone.and.arrow.forward")
                 }
                 .keyboardShortcut("i", modifiers: [.command, .shift])
+                .accessibilityIdentifier("main.open-device-sync")
                 .help(L10n.text("deviceSync.toolbar.help"))
 
                 Button {

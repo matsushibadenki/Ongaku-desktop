@@ -1,0 +1,41 @@
+name: M0 quality gate
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: macos-15
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app
+
+      - name: Swift unit, localization, layout, and privacy tests
+        run: swift test
+
+      - name: M3 100,000-track cold-display and search budgets
+        run: >-
+          env ONGAKU_ENFORCE_M3_PERFORMANCE=1
+          swift test --filter m3PerformanceGate
+
+      - name: Compile macOS UI and accessibility audits
+        run: >-
+          xcodebuild build-for-testing
+          -project OngakuDesktop.xcodeproj
+          -scheme OngakuDesktop
+          -configuration Debug
+          -destination 'platform=macOS'
+          CODE_SIGNING_ALLOWED=NO
+
+      - name: iOS companion compile gate
+        run: >-
+          xcodebuild build
+          -project OngakuDesktop.xcodeproj
+          -target OngakuMobile
+          -configuration Debug
+          -sdk iphonesimulator
+          CODE_SIGNING_ALLOWED=NO

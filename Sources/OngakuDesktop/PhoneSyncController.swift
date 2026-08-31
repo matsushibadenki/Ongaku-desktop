@@ -15,11 +15,16 @@ struct USBMobileDevice: Identifiable, Equatable, Sendable {
 }
 
 final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable {
+    nonisolated static let auditHistoryDefaultsKey = "deviceSync.overlayAudit.v1"
     @Published private(set) var connectionState: DeviceSyncConnectionState = .disconnected
     @Published private(set) var discoveredPhones: [DiscoveredPhone] = []
     @Published private(set) var usbMobileDevices: [USBMobileDevice] = []
     @Published private(set) var remoteItems: [DeviceSyncItem] = []
     @Published private(set) var remoteStorageInfo: DeviceStorageInfo?
+    @Published private(set) var remoteOverlays: [DeviceSyncTrackOverlay] = []
+    @Published private(set) var remotePlaylistOverlays: [DeviceSyncPlaylistOverlay] = []
+    @Published private(set) var latestOverlayReceipt: DeviceSyncOverlayReceipt?
+    @Published private(set) var overlayAuditHistory: [DeviceSyncAuditEntry] = []
     @Published private(set) var transfers: [DeviceTransferState] = []
     @Published private(set) var isBulkSyncing = false
     @Published private(set) var bulkSyncTotalCount = 0
@@ -28,6 +33,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     @Published private(set) var bulkSyncCurrentTitle: String?
 
     var onVerifiedIncomingFile: ((URL) -> Void)?
+    var onReceivedOverlays: (([DeviceSyncTrackOverlay]) -> Void)?
 
     private let peerID = MCPeerID(displayName: Host.current().localizedName ?? "Mac")
     private lazy var session = MCSession(
@@ -41,11 +47,17 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     )
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private let defaults: UserDefaults
     private let lock = NSLock()
     private var peersByID: [String: MCPeerID] = [:]
     private var localItems: [UUID: DeviceSyncItem] = [:]
     private var localURLs: [UUID: URL] = [:]
+    private var localOverlays: [DeviceSyncTrackOverlay] = []
+    private var localPlaylistOverlays: [DeviceSyncPlaylistOverlay] = []
     private var pendingResources: [UUID: DeviceSyncResourceAnnouncement] = [:]
+    private var transferProgresses: [UUID: Progress] = [:]
+    private var transferObservations: [UUID: NSKeyValueObservation] = [:]
+    private var terminalTransferActions: [UUID: DeviceTransferControlAction] = [:]
     private var bulkUploadQueue: [UUID] = []
     private var bulkDownloadQueue: [UUID] = []
     private var bulkDownloadAwaitingSHA256: String?
@@ -60,16 +72,22 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private var automaticInvitationCooldowns: [String: Date] = [:]
     private var isStarted = false
 
-    override init() {
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         super.init()
         session.delegate = self
         browser.delegate = self
+        if let data = defaults.data(forKey: Self.auditHistoryDefaultsKey),
+           let history = try? decoder.decode([DeviceSyncAuditEntry].self, from: data) {
+            overlayAuditHistory = history
+        }
     }
 
     deinit {
         bulkOperationTimeoutWorkItem?.cancel()
         connectionAttemptTimeoutWorkItem?.cancel()
         usbDetectionTimer?.cancel()
+        transferProgresses.values.forEach { $0.cancel() }
         browser.stopBrowsingForPeers()
         session.disconnect()
     }
@@ -99,9 +117,18 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         resetBulkSync()
     }
 
-    func updateLocalTracks(_ tracks: [Track]) {
+    func updateLocalTracks(
+        _ tracks: [Track],
+        playbackEvents: [PlaybackEvent] = [],
+        playlists: [Playlist] = [],
+        displayTags: [Track.ID: [String]] = [:]
+    ) {
         var items: [UUID: DeviceSyncItem] = [:]
         var urls: [UUID: URL] = [:]
+        let statistics = PlaybackStatisticsResolver.statistics(
+            events: playbackEvents,
+            tracks: tracks
+        )
         for track in tracks where track.health == .verified {
             let item = DeviceSyncItem(
                 id: track.id,
@@ -116,11 +143,140 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             items[item.id] = item
             urls[item.id] = track.fileURL
         }
+        let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
+        let playlistOverlays = playlists.filter { $0.smartDefinition == nil }.map { playlist in
+            DeviceSyncPlaylistOverlay(
+                id: playlist.id,
+                name: playlist.name,
+                tracks: playlist.entries.compactMap { entry in
+                    guard let track = tracksByID[entry.trackID] else { return nil }
+                    return DeviceSyncTrackReference(
+                        sourceKey: "ongakuManaged:\(track.id.uuidString)",
+                        title: track.title,
+                        artist: track.artist,
+                        album: track.album,
+                        duration: track.duration
+                    )
+                },
+                createdAt: playlist.createdAt,
+                updatedAt: playlist.updatedAt
+            )
+        }
         lock.withLock {
             localItems = items
             localURLs = urls
+            localOverlays = tracks.map { track in
+                let trackStatistics = statistics[track.id] ?? TrackPlaybackStatistics()
+                return DeviceSyncTrackOverlay(
+                    sourceKey: "ongakuManaged:\(track.id.uuidString)",
+                    title: track.title,
+                    artist: track.artist,
+                    album: track.album,
+                    duration: track.duration,
+                    isFavorite: track.isFavorite,
+                    rating: track.rating,
+                    playCount: trackStatistics.playCount,
+                    skipCount: trackStatistics.skipCount,
+                    lastPlayedAt: trackStatistics.lastPlayedAt,
+                    displayTags: displayTags[track.id] ?? [],
+                    updatedAt: max(
+                        track.syncedOverlayUpdatedAt ?? .distantPast,
+                        trackStatistics.lastPlayedAt ?? track.addedAt
+                    )
+                )
+            }
+            localPlaylistOverlays = playlistOverlays
         }
         sendManifestIfConnected()
+    }
+
+    var overlayPreviews: [DeviceSyncOverlayPreview] {
+        let locals = lock.withLock { localOverlays }
+        return remoteOverlays.map { remote in
+            let matches = locals.filter { remote.matchesIdentity(of: $0) }
+            guard matches.count == 1, let local = matches.first else {
+                return DeviceSyncOverlayPreview(
+                    remote: remote,
+                    local: nil,
+                    localTrackID: nil,
+                    status: matches.isEmpty ? .unmatched : .ambiguous
+                )
+            }
+            let trackID = UUID(uuidString: local.sourceKey.split(separator: ":").last.map(String.init) ?? "")
+            return DeviceSyncOverlayPreview(
+                remote: remote,
+                local: local,
+                localTrackID: trackID,
+                status: remote.hasSameValues(as: local) ? .identical : .different
+            )
+        }.sorted {
+            $0.remote.title.localizedStandardCompare($1.remote.title) == .orderedAscending
+        }
+    }
+
+    func playlistPreviews(
+        tracks: [Track],
+        playlists: [Playlist]
+    ) -> [DeviceSyncPlaylistPreview] {
+        let localOverlays = tracks.map { track in
+            DeviceSyncTrackOverlay(
+                sourceKey: "ongakuManaged:\(track.id.uuidString)",
+                title: track.title,
+                artist: track.artist,
+                album: track.album,
+                duration: track.duration,
+                isFavorite: track.isFavorite,
+                rating: track.rating,
+                playCount: 0,
+                skipCount: 0,
+                lastPlayedAt: nil,
+                updatedAt: track.syncedOverlayUpdatedAt ?? track.addedAt
+            )
+        }
+        let trackIDsBySourceKey = Dictionary(uniqueKeysWithValues: zip(
+            localOverlays.map(\.sourceKey), tracks.map(\.id)
+        ))
+
+        return remotePlaylistOverlays.map { remote in
+            var matchedTrackIDs: [Track.ID] = []
+            var unmatchedTrackCount = 0
+            var ambiguousTrackCount = 0
+            for reference in remote.tracks {
+                let matches = localOverlays.filter { reference.matchesIdentity(of: $0) }
+                if matches.isEmpty {
+                    unmatchedTrackCount += 1
+                } else if matches.count > 1 {
+                    ambiguousTrackCount += 1
+                } else if let sourceKey = matches.first?.sourceKey,
+                          let trackID = trackIDsBySourceKey[sourceKey] {
+                    matchedTrackIDs.append(trackID)
+                }
+            }
+
+            let local = playlists.first(where: { $0.id == remote.id })
+            let hasTrackConflict = unmatchedTrackCount > 0 || ambiguousTrackCount > 0
+            let status: DeviceSyncPlaylistMatchStatus
+            if hasTrackConflict || local?.smartDefinition != nil {
+                status = .conflicted
+            } else if let local {
+                let localTrackIDs = local.entries.map(\.trackID)
+                status = local.name == remote.name && localTrackIDs == matchedTrackIDs
+                    ? .identical
+                    : .different
+            } else {
+                status = .new
+            }
+            return DeviceSyncPlaylistPreview(
+                remote: remote,
+                local: local,
+                matchedTrackIDs: matchedTrackIDs,
+                unmatchedTrackCount: unmatchedTrackCount,
+                ambiguousTrackCount: ambiguousTrackCount,
+                status: status
+            )
+        }.sorted {
+            $0.remote.name.localizedStandardCompare($1.remote.name) == .orderedAscending
+        }
     }
 
     func connect(to phone: DiscoveredPhone) {
@@ -133,6 +289,28 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             at: finderURL,
             configuration: NSWorkspace.OpenConfiguration()
         )
+    }
+
+    func sendOverlayReceipt(_ receipt: DeviceSyncOverlayReceipt) {
+        latestOverlayReceipt = receipt
+        send(.overlayReceipt(receipt))
+    }
+
+    func recordOverlayAudit(_ entry: DeviceSyncAuditEntry) {
+        overlayAuditHistory.insert(entry, at: 0)
+        overlayAuditHistory = Array(overlayAuditHistory.prefix(50))
+        persistOverlayAuditHistory()
+    }
+
+    func markOverlayAuditUndone(_ id: UUID) {
+        guard let index = overlayAuditHistory.firstIndex(where: { $0.id == id }) else { return }
+        overlayAuditHistory[index].isUndone = true
+        persistOverlayAuditHistory()
+    }
+
+    private func persistOverlayAuditHistory() {
+        guard let data = try? encoder.encode(overlayAuditHistory) else { return }
+        defaults.set(data, forKey: Self.auditHistoryDefaultsKey)
     }
 
     private func invite(_ phone: DiscoveredPhone, automatically: Bool) {
@@ -311,6 +489,18 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         send(.requestItem(item.id))
     }
 
+    func pauseTransfer(_ id: UUID) {
+        applyTransferControl(.init(transferID: id, action: .pause), notifyPeer: true)
+    }
+
+    func resumeTransfer(_ id: UUID) {
+        applyTransferControl(.init(transferID: id, action: .resume), notifyPeer: true)
+    }
+
+    func cancelTransfer(_ id: UUID) {
+        applyTransferControl(.init(transferID: id, action: .cancel), notifyPeer: true)
+    }
+
     func hasLocalCopy(of item: DeviceSyncItem) -> Bool {
         lock.withLock { localItems.values.contains(where: { $0.sha256 == item.sha256 }) }
     }
@@ -409,11 +599,15 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 
     private func sendManifestIfConnected() {
         guard !session.connectedPeers.isEmpty else { return }
-        let values = lock.withLock { Array(localItems.values) }
+        let values = lock.withLock {
+            (Array(localItems.values), localOverlays, localPlaylistOverlays)
+        }
         send(.manifest(DeviceSyncManifest(
             deviceName: peerID.displayName,
             generatedAt: .now,
-            items: values.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+            items: values.0.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending },
+            overlays: values.1,
+            playlistOverlays: values.2
         )))
     }
 
@@ -479,14 +673,24 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             item: item
         )))
         updateTransfer(id: transferID, phase: .transferring)
-        session.sendResource(at: url, withName: transferID.uuidString, toPeer: peer) { [weak self] error in
-            if let error {
+        let progress = session.sendResource(at: url, withName: transferID.uuidString, toPeer: peer) { [weak self] error in
+            let terminalAction = self?.lock.withLock {
+                self?.terminalTransferActions.removeValue(forKey: transferID)
+            } ?? nil
+            self?.removeProgress(for: transferID)
+            if terminalAction == .cancel {
+                self?.updateTransfer(id: transferID, phase: .cancelled)
+            } else if terminalAction == .insufficientStorage {
+                self?.updateTransfer(id: transferID, phase: .insufficientStorage)
+            } else if let error {
                 self?.updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
             } else {
+                self?.updateTransferProgress(id: transferID, fraction: 1, completedBytes: item.fileSize)
                 self?.updateTransfer(id: transferID, phase: .completed)
             }
             completion?(error)
         }
+        if let progress { observe(progress, transferID: transferID) }
     }
 
     private func handle(_ message: DeviceSyncMessage) {
@@ -495,10 +699,31 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             DispatchQueue.main.async { [weak self] in
                 self?.remoteItems = manifest.items
                 self?.remoteStorageInfo = manifest.storage
+                self?.remoteOverlays = manifest.overlays ?? []
+                self?.remotePlaylistOverlays = manifest.playlistOverlays ?? []
+                if let overlays = manifest.overlays, !overlays.isEmpty {
+                    self?.onReceivedOverlays?(overlays)
+                }
             }
         case .requestItem(let id):
             sendLocalItem(id, direction: .macToPhone)
         case .resource(let announcement):
+            guard Self.canReceive(announcement.item) else {
+                lock.withLock {
+                    terminalTransferActions[announcement.transferID] = .insufficientStorage
+                }
+                updateTransfer(DeviceTransferState(
+                    id: announcement.transferID,
+                    item: announcement.item,
+                    direction: announcement.direction,
+                    phase: .insufficientStorage
+                ))
+                send(.transferControl(.init(
+                    transferID: announcement.transferID,
+                    action: .insufficientStorage
+                )))
+                return
+            }
             lock.withLock { pendingResources[announcement.transferID] = announcement }
             updateTransfer(DeviceTransferState(
                 id: announcement.transferID,
@@ -506,24 +731,42 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
                 direction: announcement.direction,
                 phase: .transferring
             ))
+        case .transferControl(let control):
+            applyTransferControl(control, notifyPeer: false)
+        case .overlayReceipt(let receipt):
+            DispatchQueue.main.async { [weak self] in
+                self?.latestOverlayReceipt = receipt
+            }
         case .error(let message):
             publishFailure(message)
         }
     }
 
     private func finishReceivedResource(name: String, temporaryURL: URL?, error: Error?) {
-        guard let transferID = UUID(uuidString: name),
-              let announcement = lock.withLock({ pendingResources.removeValue(forKey: transferID) }) else {
+        guard let transferID = UUID(uuidString: name) else { return }
+        guard let announcement = lock.withLock({ pendingResources.removeValue(forKey: transferID) }) else {
+            _ = lock.withLock { terminalTransferActions.removeValue(forKey: transferID) }
+            removeProgress(for: transferID)
+            return
+        }
+        if let terminalAction = lock.withLock({ terminalTransferActions.removeValue(forKey: transferID) }) {
+            updateTransfer(
+                id: transferID,
+                phase: terminalAction == .insufficientStorage ? .insufficientStorage : .cancelled
+            )
+            removeProgress(for: transferID)
             return
         }
         if let error {
             updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+            removeProgress(for: transferID)
             completeBulkDownloadIfNeeded(announcement, error: error)
             return
         }
         guard let temporaryURL else {
             let error = CocoaError(.fileNoSuchFile)
             updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+            removeProgress(for: transferID)
             completeBulkDownloadIfNeeded(announcement, error: error)
             return
         }
@@ -545,12 +788,15 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             try? FileManager.default.removeItem(at: destination)
             try FileManager.default.copyItem(at: temporaryURL, to: destination)
             updateTransfer(id: transferID, phase: .completed)
+            updateTransferProgress(id: transferID, fraction: 1, completedBytes: announcement.item.fileSize)
+            removeProgress(for: transferID)
             DispatchQueue.main.async { [weak self] in
                 self?.onVerifiedIncomingFile?(destination)
             }
             completeBulkDownloadIfNeeded(announcement, error: nil)
         } catch {
             updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+            removeProgress(for: transferID)
             completeBulkDownloadIfNeeded(announcement, error: error)
             send(.error(error.localizedDescription))
         }
@@ -572,6 +818,86 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
             transfers[index].phase = phase
         }
+    }
+
+    private func updateTransferProgress(id: UUID, fraction: Double, completedBytes: Int64) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
+            transfers[index].updateProgress(fraction: fraction, completedBytes: completedBytes)
+        }
+    }
+
+    private func observe(_ progress: Progress, transferID: UUID) {
+        let observation = progress.observe(\.fractionCompleted, options: [.initial, .new]) { [weak self] value, _ in
+            self?.updateTransferProgress(
+                id: transferID,
+                fraction: value.fractionCompleted,
+                completedBytes: value.completedUnitCount
+            )
+        }
+        lock.withLock {
+            transferProgresses[transferID] = progress
+            transferObservations[transferID] = observation
+        }
+    }
+
+    private func removeProgress(for transferID: UUID) {
+        lock.withLock {
+            transferObservations.removeValue(forKey: transferID)?.invalidate()
+            transferProgresses.removeValue(forKey: transferID)
+        }
+    }
+
+    private func applyTransferControl(_ control: DeviceTransferControl, notifyPeer: Bool) {
+        let progress = lock.withLock { transferProgresses[control.transferID] }
+        switch control.action {
+        case .pause:
+            progress?.pause()
+            updateTransfer(id: control.transferID, phase: .paused)
+        case .resume:
+            progress?.resume()
+            updateTransfer(id: control.transferID, phase: .transferring)
+        case .cancel:
+            lock.withLock { terminalTransferActions[control.transferID] = .cancel }
+            progress?.cancel()
+            updateTransfer(id: control.transferID, phase: .cancelled)
+            removeProgress(for: control.transferID)
+        case .insufficientStorage:
+            lock.withLock { terminalTransferActions[control.transferID] = .insufficientStorage }
+            progress?.cancel()
+            updateTransfer(id: control.transferID, phase: .insufficientStorage)
+            removeProgress(for: control.transferID)
+        }
+        if notifyPeer { send(.transferControl(control)) }
+    }
+
+    private func interruptActiveTransfers() {
+        lock.withLock { Array(transferProgresses.values) }.forEach { $0.cancel() }
+        lock.withLock {
+            transferObservations.values.forEach { $0.invalidate() }
+            transferObservations.removeAll()
+            transferProgresses.removeAll()
+            pendingResources.removeAll()
+            terminalTransferActions.removeAll()
+        }
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            for index in transfers.indices where transfers[index].isActive {
+                transfers[index].phase = .interrupted
+            }
+        }
+    }
+
+    private static func canReceive(_ item: DeviceSyncItem) -> Bool {
+        let temporary = FileManager.default.temporaryDirectory
+        guard let values = try? temporary.resourceValues(forKeys: [
+            .volumeAvailableCapacityForImportantUsageKey,
+            .volumeAvailableCapacityKey,
+        ]) else { return true }
+        let available = values.volumeAvailableCapacityForImportantUsage
+            ?? values.volumeAvailableCapacity.map(Int64.init)
+        guard let available else { return true }
+        return DeviceTransferCapacity.canReceive(fileSize: item.fileSize, availableBytes: available)
     }
 
     private func publishFailure(_ message: String) {
@@ -631,6 +957,7 @@ extension PhoneSyncController: MCSessionDelegate {
             guard let self else { return }
             switch state {
             case .notConnected:
+                interruptActiveTransfers()
                 connectionAttemptTimeoutWorkItem?.cancel()
                 connectionAttemptTimeoutWorkItem = nil
                 connectionState = isStarted ? .searching : .disconnected
@@ -666,7 +993,14 @@ extension PhoneSyncController: MCSessionDelegate {
         didStartReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
         with progress: Progress
-    ) {}
+    ) {
+        guard let transferID = UUID(uuidString: resourceName) else { return }
+        if lock.withLock({ terminalTransferActions[transferID] }) != nil {
+            progress.cancel()
+            return
+        }
+        observe(progress, transferID: transferID)
+    }
 
     func session(
         _ session: MCSession,

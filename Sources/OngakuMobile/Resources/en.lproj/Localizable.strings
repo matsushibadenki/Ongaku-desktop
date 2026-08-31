@@ -26,5 +26,13 @@
 "mobile.latestTransfer" = "Latest transfer";
 "mobile.transfer.preparing" = "Preparing…";
 "mobile.transfer.transferring" = "Transferring…";
+"mobile.transfer.paused" = "Transfer paused";
 "mobile.transfer.verifying" = "Verifying SHA-256…";
 "mobile.transfer.completed" = "Transfer complete";
+"mobile.transfer.cancelled" = "Transfer cancelled";
+"mobile.transfer.interrupted" = "Transfer interrupted when the connection ended";
+"mobile.transfer.insufficientStorage" = "Not enough free space";
+"mobile.transfer.progress" = "%d%% · %@ of %@";
+"mobile.transfer.pause" = "Pause transfer";
+"mobile.transfer.resume" = "Resume transfer";
+"mobile.transfer.cancel" = "Cancel transfer";

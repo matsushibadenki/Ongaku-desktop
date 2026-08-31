@@ -224,6 +224,9 @@ struct Track: Identifiable, Codable, Hashable, Sendable {
     var discCount: Int?
     var isCompilation: Bool = false
     var playCount: Int = 0
+    var syncedSkipCount: Int = 0
+    var syncedLastPlayedAt: Date? = nil
+    var syncedOverlayUpdatedAt: Date? = nil
     var comments: String = ""
     var lyrics: TrackLyrics? = nil
     var musicBrainzReference: MusicBrainzReference? = nil
@@ -882,7 +885,11 @@ enum PlaybackStatisticsResolver {
         tracks: [Track] = []
     ) -> [Track.ID: TrackPlaybackStatistics] {
         var result = Dictionary(uniqueKeysWithValues: tracks.map {
-            ($0.id, TrackPlaybackStatistics(playCount: $0.playCount))
+            ($0.id, TrackPlaybackStatistics(
+                playCount: $0.playCount,
+                skipCount: $0.syncedSkipCount,
+                lastPlayedAt: $0.syncedLastPlayedAt
+            ))
         })
         for event in events {
             var statistics = result[event.trackID] ?? TrackPlaybackStatistics()
@@ -1355,6 +1362,9 @@ extension Track {
         case discCount
         case isCompilation
         case playCount
+        case syncedSkipCount
+        case syncedLastPlayedAt
+        case syncedOverlayUpdatedAt
         case comments
         case lyrics
         case musicBrainzReference
@@ -1405,6 +1415,9 @@ extension Track {
         discCount = try container.decodeIfPresent(Int.self, forKey: .discCount)
         isCompilation = try container.decodeIfPresent(Bool.self, forKey: .isCompilation) ?? false
         playCount = max(0, try container.decodeIfPresent(Int.self, forKey: .playCount) ?? 0)
+        syncedSkipCount = max(0, try container.decodeIfPresent(Int.self, forKey: .syncedSkipCount) ?? 0)
+        syncedLastPlayedAt = try container.decodeIfPresent(Date.self, forKey: .syncedLastPlayedAt)
+        syncedOverlayUpdatedAt = try container.decodeIfPresent(Date.self, forKey: .syncedOverlayUpdatedAt)
         comments = try container.decodeIfPresent(String.self, forKey: .comments) ?? ""
         lyrics = try container.decodeIfPresent(TrackLyrics.self, forKey: .lyrics)
         musicBrainzReference = try container.decodeIfPresent(
@@ -1438,30 +1451,37 @@ extension Track {
         try container.encode(title, forKey: .title)
         try container.encode(artist, forKey: .artist)
         try container.encode(album, forKey: .album)
-        try container.encode(artistSortName, forKey: .artistSortName)
-        try container.encode(albumSortName, forKey: .albumSortName)
-        try container.encode(albumArtist, forKey: .albumArtist)
-        try container.encode(albumArtistSortName, forKey: .albumArtistSortName)
-        try container.encode(composer, forKey: .composer)
-        try container.encode(composerSortName, forKey: .composerSortName)
-        try container.encode(grouping, forKey: .grouping)
-        try container.encode(genre, forKey: .genre)
-        try container.encode(participantCredits, forKey: .participantCredits)
-        try container.encode(workName, forKey: .workName)
-        try container.encode(movementName, forKey: .movementName)
+        if !artistSortName.isEmpty { try container.encode(artistSortName, forKey: .artistSortName) }
+        if !albumSortName.isEmpty { try container.encode(albumSortName, forKey: .albumSortName) }
+        if !albumArtist.isEmpty { try container.encode(albumArtist, forKey: .albumArtist) }
+        if !albumArtistSortName.isEmpty {
+            try container.encode(albumArtistSortName, forKey: .albumArtistSortName)
+        }
+        if !composer.isEmpty { try container.encode(composer, forKey: .composer) }
+        if !composerSortName.isEmpty { try container.encode(composerSortName, forKey: .composerSortName) }
+        if !grouping.isEmpty { try container.encode(grouping, forKey: .grouping) }
+        if !genre.isEmpty { try container.encode(genre, forKey: .genre) }
+        if !participantCredits.isEmpty {
+            try container.encode(participantCredits, forKey: .participantCredits)
+        }
+        if !workName.isEmpty { try container.encode(workName, forKey: .workName) }
+        if !movementName.isEmpty { try container.encode(movementName, forKey: .movementName) }
         try container.encodeIfPresent(movementNumber, forKey: .movementNumber)
         try container.encodeIfPresent(movementCount, forKey: .movementCount)
         try container.encodeIfPresent(beatsPerMinute, forKey: .beatsPerMinute)
-        try container.encode(copyright, forKey: .copyright)
-        try container.encode(isrc, forKey: .isrc)
+        if !copyright.isEmpty { try container.encode(copyright, forKey: .copyright) }
+        if !isrc.isEmpty { try container.encode(isrc, forKey: .isrc) }
         try container.encodeIfPresent(releaseYear, forKey: .releaseYear)
         try container.encodeIfPresent(trackNumber, forKey: .trackNumber)
         try container.encodeIfPresent(trackCount, forKey: .trackCount)
         try container.encodeIfPresent(discNumber, forKey: .discNumber)
         try container.encodeIfPresent(discCount, forKey: .discCount)
-        try container.encode(isCompilation, forKey: .isCompilation)
-        try container.encode(playCount, forKey: .playCount)
-        try container.encode(comments, forKey: .comments)
+        if isCompilation { try container.encode(true, forKey: .isCompilation) }
+        if playCount != 0 { try container.encode(playCount, forKey: .playCount) }
+        if syncedSkipCount != 0 { try container.encode(syncedSkipCount, forKey: .syncedSkipCount) }
+        try container.encodeIfPresent(syncedLastPlayedAt, forKey: .syncedLastPlayedAt)
+        try container.encodeIfPresent(syncedOverlayUpdatedAt, forKey: .syncedOverlayUpdatedAt)
+        if !comments.isEmpty { try container.encode(comments, forKey: .comments) }
         try container.encodeIfPresent(lyrics, forKey: .lyrics)
         try container.encodeIfPresent(musicBrainzReference, forKey: .musicBrainzReference)
         try container.encode(duration, forKey: .duration)
@@ -1473,10 +1493,12 @@ extension Track {
         try container.encode(health, forKey: .health)
         try container.encode(artistID, forKey: .artistID)
         try container.encode(albumID, forKey: .albumID)
-        try container.encode(isPinned, forKey: .isPinned)
-        try container.encode(isFavorite, forKey: .isFavorite)
-        try container.encode(rating, forKey: .rating)
-        try container.encode(isExcludedFromPlayback, forKey: .isExcludedFromPlayback)
+        if isPinned { try container.encode(true, forKey: .isPinned) }
+        if isFavorite { try container.encode(true, forKey: .isFavorite) }
+        if rating != 0 { try container.encode(rating, forKey: .rating) }
+        if isExcludedFromPlayback {
+            try container.encode(true, forKey: .isExcludedFromPlayback)
+        }
     }
 }
 

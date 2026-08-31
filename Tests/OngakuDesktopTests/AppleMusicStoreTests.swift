@@ -317,6 +317,62 @@ struct AppleMusicStoreTests {
         #expect(merged.map(\.id) == ["one", "two", "three"])
     }
 
+    @Test("Apple Music playlist conversion classifies matches without changing files")
+    func plansPlaylistConversion() {
+        func track(_ id: UUID, title: String, duration: TimeInterval) -> Track {
+            Track(
+                id: id,
+                title: title,
+                artist: "Ongaku Ensemble",
+                album: "Listening Room",
+                duration: duration,
+                fileSize: 1_024,
+                managedPath: "/tmp/\(id.uuidString).flac",
+                sha256: String(repeating: "a", count: 64),
+                addedAt: .distantPast,
+                health: .verified
+            )
+        }
+        func item(_ id: String, title: String, duration: TimeInterval) -> AppleMusicCatalogItem {
+            AppleMusicCatalogItem(
+                id: id,
+                musicItemID: id,
+                kind: .song,
+                title: title,
+                subtitle: "Ongaku Ensemble",
+                detail: "Listening Room",
+                artworkURL: nil,
+                destinationURL: nil,
+                duration: duration
+            )
+        }
+        let uniqueID = UUID()
+        let ambiguousOne = UUID()
+        let ambiguousTwo = UUID()
+        let unique = item("unique", title: "Night Record", duration: 245)
+        let preview = AppleMusicPlaylistConversionPlanner.preview(
+            name: "Night Focus",
+            entries: [
+                unique,
+                item("ambiguous", title: "Shared", duration: 200),
+                item("missing", title: "Missing", duration: 180),
+                unique,
+            ],
+            tracks: [
+                track(uniqueID, title: "Ｎｉｇｈｔ Record", duration: 247),
+                track(ambiguousOne, title: "Shared", duration: 200),
+                track(ambiguousTwo, title: "Shared", duration: 201),
+            ]
+        )
+
+        #expect(preview.rows.map(\.status) == [.matched, .ambiguous, .missing, .duplicate])
+        #expect(preview.matchedTrackIDs == [uniqueID])
+        #expect(preview.matchedCount == 1)
+        #expect(preview.ambiguousCount == 1)
+        #expect(preview.missingCount == 1)
+        #expect(preview.duplicateCount == 1)
+    }
+
     @Test("Apple Music HTTP failures are rejected while expected statuses pass")
     func validatesServiceStatuses() throws {
         try AppleMusicStoreController.validateStatus(204, accepted: [204])
@@ -329,6 +385,108 @@ struct AppleMusicStoreTests {
             }
             #expect(rejected)
         }
+    }
+
+    @Test("Ongaku playlist export preserves order and classifies unsafe matches")
+    func plansOngakuPlaylistExport() {
+        func track(_ id: UUID, title: String, duration: TimeInterval) -> Track {
+            Track(
+                id: id,
+                title: title,
+                artist: "Ongaku Ensemble",
+                album: "Listening Room",
+                duration: duration,
+                fileSize: 1_024,
+                managedPath: "/tmp/\(id.uuidString).flac",
+                sha256: String(repeating: "c", count: 64),
+                addedAt: .distantPast,
+                health: .verified
+            )
+        }
+        func item(_ id: String, title: String, duration: TimeInterval) -> AppleMusicCatalogItem {
+            AppleMusicCatalogItem(
+                id: "librarySong:\(id)",
+                musicItemID: id,
+                kind: .song,
+                title: title,
+                subtitle: "Ongaku Ensemble",
+                detail: "Listening Room",
+                artworkURL: nil,
+                destinationURL: nil,
+                duration: duration,
+                playlistTrackType: "library-songs"
+            )
+        }
+        let first = track(UUID(), title: "First", duration: 180)
+        let ambiguous = track(UUID(), title: "Shared", duration: 200)
+        let missing = track(UUID(), title: "Missing", duration: 220)
+        let playlist = Playlist(
+            name: "Export Order",
+            entries: [first, ambiguous, missing].map { PlaylistEntry(trackID: $0.id) }
+        )
+        let preview = OngakuPlaylistAppleMusicExportPlanner.preview(
+            playlist: playlist,
+            tracks: [first, ambiguous, missing],
+            appleMusicSongs: [
+                item("first", title: "First", duration: 181),
+                item("shared-1", title: "Shared", duration: 200),
+                item("shared-2", title: "Shared", duration: 201),
+            ]
+        )
+
+        #expect(preview.rows.map(\.status) == [.matched, .ambiguous, .missing])
+        #expect(preview.matchedItems.map(\.musicItemID) == ["first"])
+    }
+
+    @Test("Playlist export request preserves selected Apple Music song order")
+    func playlistExportRequestBody() throws {
+        func item(_ id: String) -> AppleMusicCatalogItem {
+            AppleMusicCatalogItem(
+                id: id,
+                musicItemID: id,
+                kind: .song,
+                title: id,
+                subtitle: "Artist",
+                detail: "Album",
+                artworkURL: nil,
+                destinationURL: nil,
+                playlistTrackType: "library-songs"
+            )
+        }
+        let data = try AppleMusicStoreController.playlistTracksBody(
+            items: [item("second"), item("first")]
+        )
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let rows = try #require(object["data"] as? [[String: String]])
+        #expect(rows == [
+            ["id": "second", "type": "library-songs"],
+            ["id": "first", "type": "library-songs"],
+        ])
+    }
+
+    @Test("Playlist export audit history survives controller recreation")
+    @MainActor
+    func restoresPlaylistExportHistory() throws {
+        let suiteName = "AppleMusicStoreTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let entry = AppleMusicPlaylistExportAuditEntry(
+            id: UUID(),
+            occurredAt: Date(timeIntervalSince1970: 1_725_000_000),
+            sourcePlaylistID: UUID(),
+            sourcePlaylistName: "Night Focus",
+            appleMusicPlaylistID: "p.test",
+            requestedTrackCount: 3,
+            addedTrackCount: 2,
+            failedTrackCount: 1
+        )
+        defaults.set(
+            try JSONEncoder().encode([entry]),
+            forKey: "appleMusic.playlistExportHistory.v1"
+        )
+
+        let controller = AppleMusicStoreController(defaults: defaults)
+        #expect(controller.playlistExportHistory == [entry])
     }
 
     @Test("Library filters include only their matching catalog kind")

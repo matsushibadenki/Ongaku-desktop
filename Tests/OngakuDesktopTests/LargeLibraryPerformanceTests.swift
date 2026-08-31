@@ -20,6 +20,54 @@ struct LargeLibraryPerformanceTests {
         #expect(document.tracks[19].artistID != document.tracks[20].artistID)
     }
 
+    @Test("M3 renders and searches a 100,000-track catalog within its budgets")
+    func m3PerformanceGate() async throws {
+        let document = LargeLibraryFixture.makeDocument()
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-M3-Performance-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(tracks: document.tracks)
+        let clock = ContinuousClock()
+
+        let presentationStart = clock.now
+        let loaded = try await LibraryRepository(rootURL: root).load().document
+        let visibleTracks = StandardLibraryResolver.tracks(
+            for: .songs,
+            tracks: loaded.tracks,
+            events: loaded.playbackEvents
+        )
+        let firstPage = Array(visibleTracks.prefix(100))
+        let presentationSeconds = seconds(presentationStart.duration(to: clock.now))
+
+        #expect(firstPage.count == 100)
+        #expect(firstPage.first?.id == document.tracks.first?.id)
+        let enforcesPerformanceBudget =
+            ProcessInfo.processInfo.environment["ONGAKU_ENFORCE_M3_PERFORMANCE"] == "1"
+        // The qualification benchmark separately records a 10-run p95 against
+        // the 2-second product goal. CI uses a wider cold-I/O regression ceiling
+        // because shared macOS runners have variable filesystem contention.
+        let presentationBudget = enforcesPerformanceBudget ? 4.0 : 10.0
+        #expect(
+            presentationSeconds < presentationBudget,
+            "Initial presentation took \(presentationSeconds)s"
+        )
+
+        let index = SQLiteCatalogPrototype(rootURL: root)
+        _ = try await index.migrate(document: document)
+
+        let queries = ["099999", "artist 0042", "album 00042", "楽曲 000100"]
+        var searchSamples: [Double] = []
+        for query in queries {
+            let start = clock.now
+            _ = try await index.search(query, limit: 200)
+            searchSamples.append(seconds(start.duration(to: clock.now)))
+        }
+        let searchP95 = percentile95(searchSamples)
+        let searchBudget = enforcesPerformanceBudget ? 0.300 : 2.0
+        #expect(searchP95 < searchBudget, "General search p95 took \(searchP95)s")
+    }
+
     @Test("Opt-in JSON persistence, cold-load, search, and grouping benchmark")
     func catalogBenchmark() async throws {
         guard ProcessInfo.processInfo.environment["ONGAKU_RUN_LARGE_LIBRARY_BENCHMARK"] == "1"
