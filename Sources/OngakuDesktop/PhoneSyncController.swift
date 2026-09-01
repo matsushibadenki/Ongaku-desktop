@@ -365,10 +365,10 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             let devices = Self.detectUSBMobileDevices()
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                let newlyConnected = usbMobileDevices.isEmpty && !devices.isEmpty
-                usbMobileDevices = devices
-                if newlyConnected, isStarted, session.connectedPeers.isEmpty {
-                    beginBrowsing()
+                let newlyConnected = self.usbMobileDevices.isEmpty && !devices.isEmpty
+                self.usbMobileDevices = devices
+                if newlyConnected, self.isStarted, self.session.connectedPeers.isEmpty {
+                    self.beginBrowsing()
                 }
             }
         }

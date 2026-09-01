@@ -1,5 +1,5 @@
 import AppKit
-import MusicKit
+@preconcurrency import MusicKit
 import SwiftUI
 
 enum AppleMusicCatalogItemKind: String, Sendable {
