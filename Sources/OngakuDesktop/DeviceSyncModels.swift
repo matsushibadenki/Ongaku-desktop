@@ -32,6 +32,7 @@ struct DeviceTransferState: Identifiable, Equatable, Sendable {
     var phase: Phase
     var fractionCompleted: Double = 0
     var bytesTransferred: Int64 = 0
+    var resumedFromCheckpoint = false
 
     var isActive: Bool {
         switch phase {
@@ -297,6 +298,10 @@ enum DeviceSyncMessage: Codable, Sendable {
     case requestItem(UUID)
     case resource(DeviceSyncResourceAnnouncement)
     case transferControl(DeviceTransferControl)
+    case chunkOffer(DeviceChunkTransferDescriptor)
+    case chunkRequest(DeviceChunkRequest)
+    case chunkPayload(DeviceChunkPayload)
+    case chunkCompletion(DeviceChunkCompletion)
     case overlayReceipt(DeviceSyncOverlayReceipt)
     case error(String)
 
@@ -306,6 +311,10 @@ enum DeviceSyncMessage: Codable, Sendable {
         case itemID
         case resource
         case transferControl
+        case chunkOffer
+        case chunkRequest
+        case chunkPayload
+        case chunkCompletion
         case overlayReceipt
         case message
     }
@@ -315,6 +324,10 @@ enum DeviceSyncMessage: Codable, Sendable {
         case requestItem
         case resource
         case transferControl
+        case chunkOffer
+        case chunkRequest
+        case chunkPayload
+        case chunkCompletion
         case overlayReceipt
         case error
     }
@@ -333,6 +346,22 @@ enum DeviceSyncMessage: Codable, Sendable {
         case .transferControl:
             self = .transferControl(
                 try container.decode(DeviceTransferControl.self, forKey: .transferControl)
+            )
+        case .chunkOffer:
+            self = .chunkOffer(
+                try container.decode(DeviceChunkTransferDescriptor.self, forKey: .chunkOffer)
+            )
+        case .chunkRequest:
+            self = .chunkRequest(
+                try container.decode(DeviceChunkRequest.self, forKey: .chunkRequest)
+            )
+        case .chunkPayload:
+            self = .chunkPayload(
+                try container.decode(DeviceChunkPayload.self, forKey: .chunkPayload)
+            )
+        case .chunkCompletion:
+            self = .chunkCompletion(
+                try container.decode(DeviceChunkCompletion.self, forKey: .chunkCompletion)
             )
         case .overlayReceipt:
             self = .overlayReceipt(
@@ -358,6 +387,18 @@ enum DeviceSyncMessage: Codable, Sendable {
         case .transferControl(let control):
             try container.encode(Kind.transferControl, forKey: .kind)
             try container.encode(control, forKey: .transferControl)
+        case .chunkOffer(let offer):
+            try container.encode(Kind.chunkOffer, forKey: .kind)
+            try container.encode(offer, forKey: .chunkOffer)
+        case .chunkRequest(let request):
+            try container.encode(Kind.chunkRequest, forKey: .kind)
+            try container.encode(request, forKey: .chunkRequest)
+        case .chunkPayload(let payload):
+            try container.encode(Kind.chunkPayload, forKey: .kind)
+            try container.encode(payload, forKey: .chunkPayload)
+        case .chunkCompletion(let completion):
+            try container.encode(Kind.chunkCompletion, forKey: .kind)
+            try container.encode(completion, forKey: .chunkCompletion)
         case .overlayReceipt(let receipt):
             try container.encode(Kind.overlayReceipt, forKey: .kind)
             try container.encode(receipt, forKey: .overlayReceipt)

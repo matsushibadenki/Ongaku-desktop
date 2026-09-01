@@ -1064,6 +1064,12 @@
 "deviceSync.transfer.insufficientStorage" = "「%@」を保存する空き容量がありません。";
 "deviceSync.transfer.failed" = "「%@」を転送できませんでした: %@";
 "deviceSync.transfer.progress" = "%d%% · %@ / %@";
+"deviceSync.transfer.resumedCheckpoint" = "前回検証済みのチャンクから再開しました。";
+"deviceSync.resume.summary" = "再開可能な転送 %d件・保存済み %@";
+"deviceSync.resume.description" = "再接続後に同じ曲をもう一度要求すると、最後に検証したチャンクから続けられます。30日を過ぎたチェックポイントは自動的に削除されます。";
+"deviceSync.resume.delete.title" = "再開用データを破棄しますか？";
+"deviceSync.resume.delete.message" = "転送途中のデータを削除します。ライブラリへ追加済みの曲には影響しません。";
+"deviceSync.resume.delete.action" = "途中データを破棄";
 "deviceSync.transfer.pause" = "転送を一時停止";
 "deviceSync.transfer.resume" = "転送を再開";
 "deviceSync.transfer.cancel" = "転送をキャンセル";

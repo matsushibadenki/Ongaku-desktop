@@ -26,6 +26,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     @Published private(set) var latestOverlayReceipt: DeviceSyncOverlayReceipt?
     @Published private(set) var overlayAuditHistory: [DeviceSyncAuditEntry] = []
     @Published private(set) var transfers: [DeviceTransferState] = []
+    @Published private(set) var resumableTransfers: [DeviceTransferCheckpointSummary] = []
     @Published private(set) var isBulkSyncing = false
     @Published private(set) var bulkSyncTotalCount = 0
     @Published private(set) var bulkSyncCompletedCount = 0
@@ -58,6 +59,11 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private var transferProgresses: [UUID: Progress] = [:]
     private var transferObservations: [UUID: NSKeyValueObservation] = [:]
     private var terminalTransferActions: [UUID: DeviceTransferControlAction] = [:]
+    private var outgoingChunkTransfers: [UUID: (DeviceChunkTransferDescriptor, URL)] = [:]
+    private var incomingChunkTransfers: [UUID: (DeviceChunkTransferDescriptor, DeviceTransferCheckpoint)] = [:]
+    private var pendingChunkRequests: [UUID: DeviceChunkRequest] = [:]
+    private var pausedChunkTransferIDs: Set<UUID> = []
+    private var chunkTransferCompletions: [UUID: @Sendable (Error?) -> Void] = [:]
     private var bulkUploadQueue: [UUID] = []
     private var bulkDownloadQueue: [UUID] = []
     private var bulkDownloadAwaitingSHA256: String?
@@ -68,6 +74,13 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private let usbDetectionQueue = DispatchQueue(
         label: "com.matsushibadenki.OngakuDesktop.usb-device-detection",
         qos: .utility
+    )
+    private let chunkTransferQueue = DispatchQueue(
+        label: "com.matsushibadenki.OngakuDesktop.chunk-transfer",
+        qos: .utility
+    )
+    private lazy var checkpointStore = DeviceTransferCheckpointStore(
+        directory: Self.checkpointDirectory
     )
     private var automaticInvitationCooldowns: [String: Date] = [:]
     private var isStarted = false
@@ -81,6 +94,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
            let history = try? decoder.decode([DeviceSyncAuditEntry].self, from: data) {
             overlayAuditHistory = history
         }
+        refreshResumableTransfers(removingStale: true)
     }
 
     deinit {
@@ -501,6 +515,15 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         applyTransferControl(.init(transferID: id, action: .cancel), notifyPeer: true)
     }
 
+    func discardResumableTransfers() {
+        guard !transfers.contains(where: \.isActive) else { return }
+        chunkTransferQueue.async { [weak self] in
+            guard let self else { return }
+            try? checkpointStore.removeAll()
+            refreshResumableTransfers()
+        }
+    }
+
     func hasLocalCopy(of item: DeviceSyncItem) -> Bool {
         lock.withLock { localItems.values.contains(where: { $0.sha256 == item.sha256 }) }
     }
@@ -649,13 +672,13 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private func sendLocalItem(
         _ id: UUID,
         direction: DeviceSyncDirection,
-        completion: ((Error?) -> Void)? = nil
+        completion: (@Sendable (Error?) -> Void)? = nil
     ) {
         let value = lock.withLock { () -> (DeviceSyncItem, URL)? in
             guard let item = localItems[id], let url = localURLs[id] else { return nil }
             return (item, url)
         }
-        guard let (item, url) = value, let peer = session.connectedPeers.first else {
+        guard let (item, url) = value, !session.connectedPeers.isEmpty else {
             completion?(CocoaError(.fileNoSuchFile))
             return
         }
@@ -667,30 +690,26 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             direction: direction,
             phase: .preparing
         ))
-        send(.resource(DeviceSyncResourceAnnouncement(
-            transferID: transferID,
-            direction: direction,
-            item: item
-        )))
-        updateTransfer(id: transferID, phase: .transferring)
-        let progress = session.sendResource(at: url, withName: transferID.uuidString, toPeer: peer) { [weak self] error in
-            let terminalAction = self?.lock.withLock {
-                self?.terminalTransferActions.removeValue(forKey: transferID)
-            } ?? nil
-            self?.removeProgress(for: transferID)
-            if terminalAction == .cancel {
-                self?.updateTransfer(id: transferID, phase: .cancelled)
-            } else if terminalAction == .insufficientStorage {
-                self?.updateTransfer(id: transferID, phase: .insufficientStorage)
-            } else if let error {
-                self?.updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
-            } else {
-                self?.updateTransferProgress(id: transferID, fraction: 1, completedBytes: item.fileSize)
-                self?.updateTransfer(id: transferID, phase: .completed)
+        chunkTransferQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                let descriptor = try DeviceChunkTransfer.descriptor(
+                    for: item,
+                    at: url,
+                    transferID: transferID,
+                    direction: direction
+                )
+                lock.withLock {
+                    outgoingChunkTransfers[transferID] = (descriptor, url)
+                    if let completion { chunkTransferCompletions[transferID] = completion }
+                }
+                updateTransfer(id: transferID, phase: .transferring)
+                send(.chunkOffer(descriptor))
+            } catch {
+                updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+                completion?(error)
             }
-            completion?(error)
         }
-        if let progress { observe(progress, transferID: transferID) }
     }
 
     private func handle(_ message: DeviceSyncMessage) {
@@ -733,6 +752,14 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             ))
         case .transferControl(let control):
             applyTransferControl(control, notifyPeer: false)
+        case .chunkOffer(let descriptor):
+            receiveChunkOffer(descriptor)
+        case .chunkRequest(let request):
+            sendRequestedChunk(request)
+        case .chunkPayload(let payload):
+            receiveChunk(payload)
+        case .chunkCompletion(let completion):
+            finishOutgoingChunkTransfer(completion)
         case .overlayReceipt(let receipt):
             DispatchQueue.main.async { [weak self] in
                 self?.latestOverlayReceipt = receipt
@@ -740,6 +767,226 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         case .error(let message):
             publishFailure(message)
         }
+    }
+
+    private func receiveChunkOffer(_ descriptor: DeviceChunkTransferDescriptor) {
+        chunkTransferQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                let checkpoint = try checkpointStore.prepare(for: descriptor)
+                let remainingBytes = max(0, descriptor.item.fileSize - checkpoint.completedBytes)
+                guard Self.canReceive(byteCount: remainingBytes) else {
+                    updateTransfer(DeviceTransferState(
+                        id: descriptor.transferID,
+                        item: descriptor.item,
+                        direction: descriptor.direction,
+                        phase: .insufficientStorage
+                    ))
+                    send(.transferControl(.init(
+                        transferID: descriptor.transferID,
+                        action: .insufficientStorage
+                    )))
+                    return
+                }
+                lock.withLock {
+                    incomingChunkTransfers[descriptor.transferID] = (descriptor, checkpoint)
+                }
+                publishCheckpoint(descriptor: descriptor, checkpoint: checkpoint)
+                updateTransfer(DeviceTransferState(
+                    id: descriptor.transferID,
+                    item: descriptor.item,
+                    direction: descriptor.direction,
+                    phase: checkpoint.isComplete ? .verifying : .transferring,
+                    fractionCompleted: descriptor.item.fileSize == 0
+                        ? 1
+                        : Double(checkpoint.completedBytes) / Double(descriptor.item.fileSize),
+                    bytesTransferred: checkpoint.completedBytes,
+                    resumedFromCheckpoint: checkpoint.completedBytes > 0
+                ))
+                if checkpoint.isComplete {
+                    finishIncomingChunkTransfer(descriptor: descriptor, checkpoint: checkpoint)
+                } else {
+                    requestMissingChunks(descriptor: descriptor, checkpoint: checkpoint)
+                }
+            } catch {
+                updateTransfer(DeviceTransferState(
+                    id: descriptor.transferID,
+                    item: descriptor.item,
+                    direction: descriptor.direction,
+                    phase: .failed(error.localizedDescription)
+                ))
+            }
+        }
+    }
+
+    private func requestMissingChunks(
+        descriptor: DeviceChunkTransferDescriptor,
+        checkpoint: DeviceTransferCheckpoint
+    ) {
+        send(.chunkRequest(.init(
+            transferID: descriptor.transferID,
+            missingIndexes: checkpoint.missingIndexes
+        )))
+    }
+
+    private func sendRequestedChunk(_ request: DeviceChunkRequest) {
+        chunkTransferQueue.async { [weak self] in
+            guard let self else { return }
+            let value = lock.withLock { outgoingChunkTransfers[request.transferID] }
+            guard let (descriptor, fileURL) = value,
+                  let index = request.missingIndexes.first,
+                  descriptor.chunkHashes.indices.contains(index) else { return }
+            if lock.withLock({ pausedChunkTransferIDs.contains(request.transferID) }) {
+                lock.withLock { pendingChunkRequests[request.transferID] = request }
+                return
+            }
+            do {
+                let payload = try DeviceChunkTransfer.payload(
+                    descriptor: descriptor,
+                    index: index,
+                    fileURL: fileURL
+                )
+                send(.chunkPayload(payload))
+                let completedCount = descriptor.chunkCount - request.missingIndexes.count + 1
+                let completedBytes = min(
+                    descriptor.item.fileSize,
+                    Int64(completedCount * descriptor.chunkSize)
+                )
+                updateTransferProgress(
+                    id: request.transferID,
+                    fraction: descriptor.chunkCount == 0
+                        ? 1
+                        : Double(completedCount) / Double(descriptor.chunkCount),
+                    completedBytes: completedBytes
+                )
+            } catch {
+                failChunkTransfer(request.transferID, error: error)
+            }
+        }
+    }
+
+    private func receiveChunk(_ payload: DeviceChunkPayload) {
+        chunkTransferQueue.async { [weak self] in
+            guard let self else { return }
+            do {
+                guard var value = lock.withLock({ incomingChunkTransfers[payload.transferID] }) else {
+                    throw DeviceChunkTransferError.checkpointMismatch
+                }
+                try checkpointStore.accept(
+                    payload,
+                    descriptor: value.0,
+                    checkpoint: &value.1
+                )
+                publishCheckpoint(descriptor: value.0, checkpoint: value.1)
+                lock.withLock { incomingChunkTransfers[payload.transferID] = value }
+                updateTransferProgress(
+                    id: payload.transferID,
+                    fraction: value.0.item.fileSize == 0
+                        ? 1
+                        : Double(value.1.completedBytes) / Double(value.0.item.fileSize),
+                    completedBytes: value.1.completedBytes
+                )
+                if value.1.isComplete {
+                    finishIncomingChunkTransfer(descriptor: value.0, checkpoint: value.1)
+                } else {
+                    requestMissingChunks(descriptor: value.0, checkpoint: value.1)
+                }
+            } catch {
+                failChunkTransfer(payload.transferID, error: error)
+            }
+        }
+    }
+
+    private func finishIncomingChunkTransfer(
+        descriptor: DeviceChunkTransferDescriptor,
+        checkpoint: DeviceTransferCheckpoint
+    ) {
+        updateTransfer(id: descriptor.transferID, phase: .verifying)
+        do {
+            let partial = try checkpointStore.finalizedFile(
+                descriptor: descriptor,
+                checkpoint: checkpoint
+            )
+            let incomingDirectory = FileManager.default.temporaryDirectory
+                .appendingPathComponent("OngakuIncoming", isDirectory: true)
+            try FileManager.default.createDirectory(
+                at: incomingDirectory,
+                withIntermediateDirectories: true
+            )
+            let safeFileName = URL(fileURLWithPath: descriptor.item.fileName).lastPathComponent
+            let destination = incomingDirectory.appendingPathComponent(
+                "\(descriptor.transferID.uuidString)-\(safeFileName)"
+            )
+            try? FileManager.default.removeItem(at: destination)
+            try FileManager.default.copyItem(at: partial, to: destination)
+            try checkpointStore.remove(forSHA256: descriptor.item.sha256)
+            refreshResumableTransfers()
+            _ = lock.withLock { incomingChunkTransfers.removeValue(forKey: descriptor.transferID) }
+            updateTransferProgress(
+                id: descriptor.transferID,
+                fraction: 1,
+                completedBytes: descriptor.item.fileSize
+            )
+            updateTransfer(id: descriptor.transferID, phase: .completed)
+            send(.chunkCompletion(.init(
+                transferID: descriptor.transferID,
+                sha256: descriptor.item.sha256
+            )))
+            DispatchQueue.main.async { [weak self] in
+                self?.onVerifiedIncomingFile?(destination)
+            }
+            completeBulkDownloadIfNeeded(.init(
+                transferID: descriptor.transferID,
+                direction: descriptor.direction,
+                item: descriptor.item
+            ), error: nil)
+        } catch {
+            failChunkTransfer(descriptor.transferID, error: error)
+            completeBulkDownloadIfNeeded(.init(
+                transferID: descriptor.transferID,
+                direction: descriptor.direction,
+                item: descriptor.item
+            ), error: error)
+        }
+    }
+
+    private func finishOutgoingChunkTransfer(_ completion: DeviceChunkCompletion) {
+        let value = lock.withLock {
+            let outgoing = outgoingChunkTransfers.removeValue(forKey: completion.transferID)
+            let callback = chunkTransferCompletions.removeValue(forKey: completion.transferID)
+            pendingChunkRequests.removeValue(forKey: completion.transferID)
+            pausedChunkTransferIDs.remove(completion.transferID)
+            return (outgoing, callback)
+        }
+        guard let descriptor = value.0?.0,
+              completion.sha256 == descriptor.item.sha256 else {
+            updateTransfer(
+                id: completion.transferID,
+                phase: .failed(DeviceChunkTransferError.finalHashMismatch.localizedDescription)
+            )
+            value.1?(DeviceChunkTransferError.finalHashMismatch)
+            return
+        }
+        updateTransferProgress(
+            id: completion.transferID,
+            fraction: 1,
+            completedBytes: descriptor.item.fileSize
+        )
+        updateTransfer(id: completion.transferID, phase: .completed)
+        value.1?(nil)
+    }
+
+    private func failChunkTransfer(_ transferID: UUID, error: Error) {
+        let callback = lock.withLock { () -> (@Sendable (Error?) -> Void)? in
+            outgoingChunkTransfers.removeValue(forKey: transferID)
+            incomingChunkTransfers.removeValue(forKey: transferID)
+            pendingChunkRequests.removeValue(forKey: transferID)
+            pausedChunkTransferIDs.remove(transferID)
+            return chunkTransferCompletions.removeValue(forKey: transferID)
+        }
+        updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
+        send(.transferControl(.init(transferID: transferID, action: .cancel)))
+        callback?(error)
     }
 
     private func finishReceivedResource(name: String, temporaryURL: URL?, error: Error?) {
@@ -782,8 +1029,9 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
                 at: incomingDirectory,
                 withIntermediateDirectories: true
             )
+            let safeFileName = URL(fileURLWithPath: announcement.item.fileName).lastPathComponent
             let destination = incomingDirectory.appendingPathComponent(
-                "\(transferID.uuidString)-\(announcement.item.fileName)"
+                "\(transferID.uuidString)-\(safeFileName)"
             )
             try? FileManager.default.removeItem(at: destination)
             try FileManager.default.copyItem(at: temporaryURL, to: destination)
@@ -852,21 +1100,47 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         let progress = lock.withLock { transferProgresses[control.transferID] }
         switch control.action {
         case .pause:
+            _ = lock.withLock { pausedChunkTransferIDs.insert(control.transferID) }
             progress?.pause()
             updateTransfer(id: control.transferID, phase: .paused)
         case .resume:
+            let pending = lock.withLock { () -> DeviceChunkRequest? in
+                pausedChunkTransferIDs.remove(control.transferID)
+                return pendingChunkRequests.removeValue(forKey: control.transferID)
+            }
             progress?.resume()
             updateTransfer(id: control.transferID, phase: .transferring)
+            if let pending { sendRequestedChunk(pending) }
         case .cancel:
-            lock.withLock { terminalTransferActions[control.transferID] = .cancel }
+            let chunkValue = lock.withLock { () -> ((DeviceChunkTransferDescriptor, DeviceTransferCheckpoint)?, (@Sendable (Error?) -> Void)?) in
+                terminalTransferActions[control.transferID] = .cancel
+                pausedChunkTransferIDs.remove(control.transferID)
+                pendingChunkRequests.removeValue(forKey: control.transferID)
+                outgoingChunkTransfers.removeValue(forKey: control.transferID)
+                let incoming = incomingChunkTransfers.removeValue(forKey: control.transferID)
+                let callback = chunkTransferCompletions.removeValue(forKey: control.transferID)
+                return (incoming, callback)
+            }
             progress?.cancel()
             updateTransfer(id: control.transferID, phase: .cancelled)
             removeProgress(for: control.transferID)
+            if let descriptor = chunkValue.0?.0 {
+                try? checkpointStore.remove(forSHA256: descriptor.item.sha256)
+                refreshResumableTransfers()
+            }
+            chunkValue.1?(CocoaError(.userCancelled))
         case .insufficientStorage:
-            lock.withLock { terminalTransferActions[control.transferID] = .insufficientStorage }
+            let callback = lock.withLock { () -> (@Sendable (Error?) -> Void)? in
+                terminalTransferActions[control.transferID] = .insufficientStorage
+                pausedChunkTransferIDs.remove(control.transferID)
+                pendingChunkRequests.removeValue(forKey: control.transferID)
+                outgoingChunkTransfers.removeValue(forKey: control.transferID)
+                return chunkTransferCompletions.removeValue(forKey: control.transferID)
+            }
             progress?.cancel()
             updateTransfer(id: control.transferID, phase: .insufficientStorage)
             removeProgress(for: control.transferID)
+            callback?(CocoaError(.fileWriteOutOfSpace))
         }
         if notifyPeer { send(.transferControl(control)) }
     }
@@ -879,6 +1153,11 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             transferProgresses.removeAll()
             pendingResources.removeAll()
             terminalTransferActions.removeAll()
+            outgoingChunkTransfers.removeAll()
+            incomingChunkTransfers.removeAll()
+            pendingChunkRequests.removeAll()
+            pausedChunkTransferIDs.removeAll()
+            chunkTransferCompletions.removeAll()
         }
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -889,6 +1168,10 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     }
 
     private static func canReceive(_ item: DeviceSyncItem) -> Bool {
+        canReceive(byteCount: item.fileSize)
+    }
+
+    private static func canReceive(byteCount: Int64) -> Bool {
         let temporary = FileManager.default.temporaryDirectory
         guard let values = try? temporary.resourceValues(forKeys: [
             .volumeAvailableCapacityForImportantUsageKey,
@@ -897,7 +1180,48 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         let available = values.volumeAvailableCapacityForImportantUsage
             ?? values.volumeAvailableCapacity.map(Int64.init)
         guard let available else { return true }
-        return DeviceTransferCapacity.canReceive(fileSize: item.fileSize, availableBytes: available)
+        return DeviceTransferCapacity.canReceive(fileSize: byteCount, availableBytes: available)
+    }
+
+    private static var checkpointDirectory: URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        return base
+            .appendingPathComponent("Ongaku", isDirectory: true)
+            .appendingPathComponent("TransferCheckpoints", isDirectory: true)
+    }
+
+    private func refreshResumableTransfers(removingStale: Bool = false) {
+        chunkTransferQueue.async { [weak self] in
+            guard let self else { return }
+            if removingStale {
+                _ = try? checkpointStore.removeStale(
+                    before: Date().addingTimeInterval(-30 * 24 * 60 * 60)
+                )
+            }
+            let summaries = (try? checkpointStore.summaries()) ?? []
+            DispatchQueue.main.async { [weak self] in
+                self?.resumableTransfers = summaries
+            }
+        }
+    }
+
+    private func publishCheckpoint(
+        descriptor: DeviceChunkTransferDescriptor,
+        checkpoint: DeviceTransferCheckpoint
+    ) {
+        let summary = DeviceTransferCheckpointSummary(
+            itemSHA256: checkpoint.itemSHA256,
+            title: checkpoint.itemTitle ?? descriptor.item.title,
+            fileSize: checkpoint.fileSize,
+            completedBytes: checkpoint.completedBytes,
+            updatedAt: checkpoint.updatedAt
+        )
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            resumableTransfers.removeAll { $0.id == summary.id }
+            resumableTransfers.append(summary)
+            resumableTransfers.sort { $0.updatedAt > $1.updatedAt }
+        }
     }
 
     private func publishFailure(_ message: String) {

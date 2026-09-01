@@ -80,6 +80,8 @@
 		200000000000000000000047 /* AudioSignalPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005B /* AudioSignalPath.swift */; };
 		200000000000000000000048 /* SocialPrivacySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005C /* SocialPrivacySettings.swift */; };
 		200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005D /* SocialPrivacySettingsView.swift */; };
+		20000000000000000000004A /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005E /* DeviceChunkTransfer.swift */; };
+		D2000000000000000000000B /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* DeviceChunkTransfer.swift */; };
 		200000000000000000000034 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
 		200000000000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Assets.xcassets */; };
 		20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000041 /* SQLiteCatalogPrototype.swift */; };
@@ -127,6 +129,8 @@
 		10000000000000000000005B /* AudioSignalPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSignalPath.swift; sourceTree = "<group>"; };
 		10000000000000000000005C /* SocialPrivacySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettings.swift; sourceTree = "<group>"; };
 		10000000000000000000005D /* SocialPrivacySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettingsView.swift; sourceTree = "<group>"; };
+		10000000000000000000005E /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceChunkTransfer.swift; sourceTree = "<group>"; };
+		D10000000000000000000016 /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceChunkTransfer.swift; sourceTree = "<group>"; };
 		D10000000000000000000001 /* OngakuMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuMobileApp.swift; sourceTree = "<group>"; };
 		D10000000000000000000002 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
 		D10000000000000000000003 /* MobileSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSyncController.swift; sourceTree = "<group>"; };
@@ -248,6 +252,7 @@
 				100000000000000000000054 /* SharedFolderMigrationView.swift */,
 				100000000000000000000055 /* MediaOrganizationView.swift */,
 				100000000000000000000056 /* DeviceSyncModels.swift */,
+				10000000000000000000005E /* DeviceChunkTransfer.swift */,
 				100000000000000000000057 /* PhoneSyncController.swift */,
 				100000000000000000000058 /* DeviceSyncView.swift */,
 				10000000000000000000004A /* AppleMusicStoreView.swift */,
@@ -305,6 +310,7 @@
 				D10000000000000000000002 /* MobileContentView.swift */,
 				D10000000000000000000003 /* MobileSyncController.swift */,
 				D1000000000000000000000B /* DeviceSyncModels.swift */,
+				D10000000000000000000016 /* DeviceChunkTransfer.swift */,
 				D10000000000000000000012 /* LibraryModels.swift */,
 				D10000000000000000000013 /* AudioFeatureAnalysis.swift */,
 				D10000000000000000000014 /* SharedMusicModels.swift */,
@@ -501,6 +507,7 @@
 				200000000000000000000040 /* SharedFolderMigrationView.swift in Sources */,
 				200000000000000000000041 /* MediaOrganizationView.swift in Sources */,
 				200000000000000000000042 /* DeviceSyncModels.swift in Sources */,
+				20000000000000000000004A /* DeviceChunkTransfer.swift in Sources */,
 				200000000000000000000043 /* PhoneSyncController.swift in Sources */,
 				200000000000000000000044 /* DeviceSyncView.swift in Sources */,
 				200000000000000000000033 /* AppleMusicStoreView.swift in Sources */,
@@ -554,6 +561,7 @@
 				D20000000000000000000002 /* MobileContentView.swift in Sources */,
 				D20000000000000000000003 /* MobileSyncController.swift in Sources */,
 				D20000000000000000000004 /* DeviceSyncModels.swift in Sources */,
+				D2000000000000000000000B /* DeviceChunkTransfer.swift in Sources */,
 				D20000000000000000000007 /* LibraryModels.swift in Sources */,
 				D20000000000000000000008 /* AudioFeatureAnalysis.swift in Sources */,
 				D20000000000000000000009 /* SharedMusicModels.swift in Sources */,

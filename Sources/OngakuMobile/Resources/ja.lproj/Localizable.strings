@@ -33,6 +33,13 @@
 "mobile.transfer.interrupted" = "接続が終了したため転送が中断されました";
 "mobile.transfer.insufficientStorage" = "空き容量が不足しています";
 "mobile.transfer.progress" = "%d%% · %@ / %@";
+"mobile.transfer.resumedCheckpoint" = "前回検証済みのチャンクから再開しました。";
+"mobile.cancel" = "キャンセル";
+"mobile.resume.title" = "再開可能な転送 %d件";
+"mobile.resume.description" = "再接続後に同じ曲を要求すると、検証済みのチャンクから続けられます。チェックポイントは30日後に失効します。";
+"mobile.resume.delete.title" = "再開用データを破棄しますか？";
+"mobile.resume.delete.message" = "転送途中のデータを削除します。ライブラリ内の曲には影響しません。";
+"mobile.resume.delete.action" = "途中データを破棄";
 "mobile.transfer.pause" = "転送を一時停止";
 "mobile.transfer.resume" = "転送を再開";
 "mobile.transfer.cancel" = "転送をキャンセル";

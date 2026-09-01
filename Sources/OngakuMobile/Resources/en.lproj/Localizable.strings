@@ -33,6 +33,13 @@
 "mobile.transfer.interrupted" = "Transfer interrupted when the connection ended";
 "mobile.transfer.insufficientStorage" = "Not enough free space";
 "mobile.transfer.progress" = "%d%% · %@ of %@";
+"mobile.transfer.resumedCheckpoint" = "Resumed from the last verified chunk.";
+"mobile.cancel" = "Cancel";
+"mobile.resume.title" = "%d resumable transfers";
+"mobile.resume.description" = "Request the same song after reconnecting to continue from its verified chunks. Checkpoints expire after 30 days.";
+"mobile.resume.delete.title" = "Discard resumable transfers?";
+"mobile.resume.delete.message" = "Partial transfer data will be deleted. Songs already in the library are not affected.";
+"mobile.resume.delete.action" = "Discard Partial Data";
 "mobile.transfer.pause" = "Pause transfer";
 "mobile.transfer.resume" = "Resume transfer";
 "mobile.transfer.cancel" = "Cancel transfer";

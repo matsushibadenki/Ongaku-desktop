@@ -16,6 +16,7 @@ struct DeviceSyncView: View {
     @State private var isShowingOverlayPreview = false
     @State private var isShowingPlaylistPreview = false
     @State private var isShowingOverlayAudit = false
+    @State private var isConfirmingCheckpointDeletion = false
 
     private static let mobileAppURL = URL(
         string: "https://apps.apple.com/jp/app/ongaku-%E9%99%90%E7%95%8C%E3%81%BE%E3%81%A7%E9%AB%98%E9%9F%B3%E8%B3%AA%E3%82%92%E6%B1%82%E3%82%81%E3%82%8B%E3%83%8F%E3%82%A4%E3%83%AC%E3%82%BE%E9%9F%B3%E6%A5%BD%E3%83%97%E3%83%AC%E3%83%BC%E3%83%A4%E3%83%BC/id6761979714"
@@ -105,6 +106,17 @@ struct DeviceSyncView: View {
             PlaylistSyncPreviewSheet()
                 .environmentObject(library)
                 .environmentObject(sync)
+        }
+        .alert(
+            L10n.text("deviceSync.resume.delete.title"),
+            isPresented: $isConfirmingCheckpointDeletion
+        ) {
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+            Button(L10n.text("deviceSync.resume.delete.action"), role: .destructive) {
+                sync.discardResumableTransfers()
+            }
+        } message: {
+            Text(L10n.text("deviceSync.resume.delete.message"))
         }
         .onAppear {
             sync.updateLocalTracks(
@@ -381,6 +393,10 @@ struct DeviceSyncView: View {
             .padding(.horizontal, AppTheme.spaceLG)
             .padding(.top, AppTheme.spaceMD)
 
+            if !sync.resumableTransfers.isEmpty {
+                resumableTransferCard
+            }
+
             if !sync.remoteOverlays.isEmpty {
                 Button {
                     isShowingOverlayPreview = true
@@ -465,6 +481,39 @@ struct DeviceSyncView: View {
                 individualSyncContent
             }
         }
+    }
+
+    private var resumableTransferCard: some View {
+        HStack(alignment: .center, spacing: AppTheme.spaceMD) {
+            Image(systemName: "arrow.clockwise.circle.fill")
+                .font(.title2)
+                .foregroundStyle(AppTheme.accent)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.format(
+                    "deviceSync.resume.summary",
+                    sync.resumableTransfers.count,
+                    ByteCountFormatter.string(
+                        fromByteCount: sync.resumableTransfers.reduce(0) { $0 + $1.completedBytes },
+                        countStyle: .file
+                    )
+                ))
+                    .font(.headline)
+                Text(L10n.text("deviceSync.resume.description"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: AppTheme.spaceMD)
+            Button(L10n.text("deviceSync.resume.delete.action"), role: .destructive) {
+                isConfirmingCheckpointDeletion = true
+            }
+            .disabled(sync.transfers.contains(where: \.isActive))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppTheme.spaceMD)
+        .background(AppTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, AppTheme.spaceLG)
+        .padding(.top, AppTheme.spaceSM)
     }
 
     private var individualSyncContent: some View {
@@ -1097,6 +1146,11 @@ struct DeviceSyncView: View {
                     Text(transferProgressText(transfer))
                         .font(.caption.monospacedDigit())
                         .foregroundStyle(.secondary)
+                    if transfer.resumedFromCheckpoint {
+                        Text(L10n.text("deviceSync.transfer.resumedCheckpoint"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             Spacer()

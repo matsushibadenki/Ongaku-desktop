@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct MobileContentView: View {
     @EnvironmentObject private var sync: MobileSyncController
     @State private var isImporting = false
+    @State private var isConfirmingCheckpointDeletion = false
 
     var body: some View {
         NavigationStack {
@@ -48,6 +49,18 @@ struct MobileContentView: View {
                 }
             } message: { request in
                 Text(String(format: String(localized: "mobile.pairing.message"), request.deviceName, request.pairingCode))
+            }
+            .confirmationDialog(
+                String(localized: "mobile.resume.delete.title"),
+                isPresented: $isConfirmingCheckpointDeletion,
+                titleVisibility: .visible
+            ) {
+                Button(String(localized: "mobile.resume.delete.action"), role: .destructive) {
+                    sync.discardResumableTransfers()
+                }
+                Button(String(localized: "mobile.cancel"), role: .cancel) {}
+            } message: {
+                Text(String(localized: "mobile.resume.delete.message"))
             }
         }
     }
@@ -159,6 +172,12 @@ struct MobileContentView: View {
                             Text(transferProgressText(transfer))
                                 .font(.caption2.monospacedDigit())
                                 .foregroundStyle(.secondary)
+                            if transfer.resumedFromCheckpoint {
+                                Text(String(localized: "mobile.transfer.resumedCheckpoint"))
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                     Spacer(minLength: 8)
@@ -186,6 +205,34 @@ struct MobileContentView: View {
                         .accessibilityLabel(String(localized: "mobile.transfer.cancel"))
                     }
                 }
+            }
+        }
+        if !sync.resumableTransfers.isEmpty {
+            Section {
+                ForEach(sync.resumableTransfers.prefix(3)) { checkpoint in
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text(checkpoint.title)
+                                .lineLimit(1)
+                            Spacer(minLength: 8)
+                            Text("\(Int((checkpoint.fractionCompleted * 100).rounded()))%")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                        }
+                        ProgressView(value: checkpoint.fractionCompleted)
+                    }
+                    .padding(.vertical, 2)
+                }
+                Text(String(localized: "mobile.resume.description"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button(String(localized: "mobile.resume.delete.action"), role: .destructive) {
+                    isConfirmingCheckpointDeletion = true
+                }
+                .disabled(sync.transfers.contains(where: \.isActive))
+            } header: {
+                Text(String(format: String(localized: "mobile.resume.title"), sync.resumableTransfers.count))
             }
         }
     }

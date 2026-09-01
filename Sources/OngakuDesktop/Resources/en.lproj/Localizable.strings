@@ -1064,6 +1064,12 @@
 "deviceSync.transfer.insufficientStorage" = "There isn’t enough free space for “%@”.";
 "deviceSync.transfer.failed" = "Could not transfer “%@”: %@";
 "deviceSync.transfer.progress" = "%d%% · %@ of %@";
+"deviceSync.transfer.resumedCheckpoint" = "Resumed from the last verified chunk.";
+"deviceSync.resume.summary" = "%d resumable transfers · %@ saved";
+"deviceSync.resume.description" = "Request the same song again after reconnecting to continue from its last verified chunk. Checkpoints older than 30 days are removed automatically.";
+"deviceSync.resume.delete.title" = "Discard resumable transfers?";
+"deviceSync.resume.delete.message" = "Partial transfer data will be deleted. Music already added to the library is not affected.";
+"deviceSync.resume.delete.action" = "Discard Partial Data";
 "deviceSync.transfer.pause" = "Pause transfer";
 "deviceSync.transfer.resume" = "Resume transfer";
 "deviceSync.transfer.cancel" = "Cancel transfer";

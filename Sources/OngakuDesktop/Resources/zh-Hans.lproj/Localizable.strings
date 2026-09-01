@@ -1064,6 +1064,12 @@
 "deviceSync.transfer.insufficientStorage" = "没有足够的可用空间来保存“%@”。";
 "deviceSync.transfer.failed" = "无法传输“%@”：%@";
 "deviceSync.transfer.progress" = "%d%% · %@ / %@";
+"deviceSync.transfer.resumedCheckpoint" = "已从上次验证的分块继续传输。";
+"deviceSync.resume.summary" = "%d 个可继续的传输 · 已保存 %@";
+"deviceSync.resume.description" = "重新连接后再次请求同一首歌曲，即可从上次验证的分块继续。超过 30 天的检查点会自动删除。";
+"deviceSync.resume.delete.title" = "丢弃可继续的传输吗？";
+"deviceSync.resume.delete.message" = "将删除未完成的传输数据，不会影响已加入资料库的歌曲。";
+"deviceSync.resume.delete.action" = "丢弃未完成数据";
 "deviceSync.transfer.pause" = "暂停传输";
 "deviceSync.transfer.resume" = "继续传输";
 "deviceSync.transfer.cancel" = "取消传输";
