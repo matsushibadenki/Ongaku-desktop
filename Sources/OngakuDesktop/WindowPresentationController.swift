@@ -72,21 +72,22 @@ final class WindowPresentationController: ObservableObject {
         isMiniPlayer = false
         updateMiniaturizeButtonHelp(in: window)
 
-        Task { @MainActor in
-            await Task.yield()
-            guard self.managedWindow === window, !self.isMiniPlayer else { return }
-            window.minSize = NSSize(width: 1, height: 1)
-            window.maxSize = NSSize(
-                width: CGFloat.greatestFiniteMagnitude,
-                height: CGFloat.greatestFiniteMagnitude
-            )
-            if self.wasResizable { window.styleMask.insert(.resizable) }
-            window.standardWindowButton(.zoomButton)?.isEnabled = self.zoomButtonWasEnabled
-            if let minSize = self.regularMinSize { window.minSize = minSize }
-            if let maxSize = self.regularMaxSize { window.maxSize = maxSize }
-            if let frame = self.regularFrame {
-                window.setFrame(frame, display: true, animate: true)
-            }
+        // Restore the window contract synchronously. A detached MainActor task can
+        // be delayed behind unrelated tests or UI work, leaving the window in a
+        // non-resizable mini-player state after `isMiniPlayer` is already false.
+        window.minSize = NSSize(width: 1, height: 1)
+        window.maxSize = NSSize(
+            width: CGFloat.greatestFiniteMagnitude,
+            height: CGFloat.greatestFiniteMagnitude
+        )
+        if wasResizable { window.styleMask.insert(.resizable) }
+        window.standardWindowButton(.zoomButton)?.isEnabled = zoomButtonWasEnabled
+        if let minSize = regularMinSize { window.minSize = minSize }
+        if let maxSize = regularMaxSize { window.maxSize = maxSize }
+        if let frame = regularFrame {
+            // Hidden windows (including unit-test windows) have no visible
+            // transition to animate and should restore deterministically.
+            window.setFrame(frame, display: true, animate: window.isVisible)
         }
     }
 

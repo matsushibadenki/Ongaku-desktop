@@ -167,7 +167,6 @@ struct ApplicationSettingsTests {
         #expect(window.standardWindowButton(.zoomButton)?.isEnabled == false)
 
         controller.toggleMiniPlayer(in: window)
-        try await Task.sleep(for: .milliseconds(220))
         #expect(!controller.isMiniPlayer)
         #expect(window.styleMask.contains(.resizable))
         #expect(abs(window.frame.width - originalWindowFrame.width) < 1)
