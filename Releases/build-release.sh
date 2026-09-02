@@ -202,6 +202,13 @@ if [[ $LOCAL_BUILD -eq 0 ]]; then
         --embed-release-notes \
         -o "$RELEASES_DIR/appcast.xml" \
         "$DIST_DIR"
+
+    # generate_appcast applies the current download prefix to every full archive
+    # present in DIST_DIR. Restore historical DMG URLs to their matching release
+    # tags while keeping newly generated delta URLs on the current release.
+    sed -i '' -E \
+        's#releases/download/v[^/]+/(OngakuDesktop-([0-9]+\.[0-9]+\.[0-9]+)-universal\.dmg)#releases/download/v\2/\1#g' \
+        "$RELEASES_DIR/appcast.xml"
 fi
 
 echo "Release artifact: $DMG_PATH"
