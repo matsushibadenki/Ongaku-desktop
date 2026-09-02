@@ -1,7 +1,9 @@
 @preconcurrency import MultipeerConnectivity
 import AppKit
 import Foundation
+#if !APP_STORE
 import IOKit
+#endif
 
 struct DiscoveredPhone: Identifiable, Equatable, Sendable {
     var id: String
@@ -358,6 +360,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     }
 
     private func startUSBDetection() {
+#if !APP_STORE
         guard usbDetectionTimer == nil else { return }
         let timer = DispatchSource.makeTimerSource(queue: usbDetectionQueue)
         timer.schedule(deadline: .now(), repeating: 2, leeway: .milliseconds(300))
@@ -374,6 +377,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         }
         usbDetectionTimer = timer
         timer.resume()
+#endif
     }
 
     private func stopUSBDetection() {
@@ -383,6 +387,9 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     }
 
     nonisolated private static func detectUSBMobileDevices() -> [USBMobileDevice] {
+#if APP_STORE
+        []
+#else
         guard let matching = IOServiceMatching("IOUSBHostDevice") else { return [] }
         var iterator: io_iterator_t = 0
         guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else {
@@ -413,8 +420,10 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             ))
         }
         return devices.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+#endif
     }
 
+#if !APP_STORE
     nonisolated private static func usbProperty(
         _ key: String,
         from service: io_registry_entry_t
@@ -426,6 +435,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             0
         )?.takeRetainedValue()
     }
+#endif
 
     func disconnect() {
         session.disconnect()

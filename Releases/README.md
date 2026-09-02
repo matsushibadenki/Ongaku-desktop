@@ -73,3 +73,52 @@ For a local Universal Binary DMG without Developer ID or notarization:
 ```
 
 Local DMGs are deliberately not added to the appcast and must not be published.
+
+## Mac App Store distribution
+
+The repository has two deliberately separate macOS distribution targets:
+
+- `OngakuDesktop` produces the Developer ID DMG distributed on GitHub. It keeps
+  Sparkle and the **Software Update…** command, and continues to use the signed
+  appcast for updates.
+- `OngakuDesktopAppStore` produces the sandboxed Mac App Store build. It does
+  not link or embed Sparkle, contains no Sparkle feed keys, and relies solely on
+  the Mac App Store for updates. Direct USB-device probing and audio-CD import
+  UI are excluded from this build; local-network iPhone sync and user-selected
+  audio-file access remain available through declared sandbox entitlements.
+
+The Store build uses the same bundle identifier, `com.ongaku.desktop`, so the
+App Store Connect record and Apple Developer identifier must use that exact ID.
+Create the app record once, accept any current agreements, and enable automatic
+signing for team `3WH28SSRZC` in Xcode. Then archive and upload an increasing
+build number:
+
+```sh
+./Releases/upload-app-store.sh 1.0.0 100
+```
+
+To produce and validate the signed archive without uploading it:
+
+```sh
+./Releases/upload-app-store.sh --archive-only 1.0.0 100
+```
+
+After fixing App Store Connect metadata or signing without rebuilding a
+validated archive, upload that exact archive with:
+
+```sh
+./Releases/upload-app-store.sh --upload-existing 1.0.0 100
+```
+
+The script creates a Universal Binary archive, verifies its signature and App
+Sandbox entitlement, and rejects any archive containing Sparkle or its update
+feed keys before upload. Xcode stores the resulting archive under
+`Releases/build/OngakuDesktop-AppStore-<version>-<build>.xcarchive`.
+
+App Review makes an exactly simultaneous first publication impossible to
+guarantee. Upload the Store build first, complete export-compliance, privacy,
+age-rating, screenshots, and review metadata, submit it for review, and choose
+manual release (or a scheduled release). When the approved Store version is
+ready for release, publish the matching GitHub DMG and appcast, then release the
+Store version. Never submit the Developer ID/Sparkle target to App Store
+Connect, and never publish the sandboxed Store archive as the GitHub DMG.

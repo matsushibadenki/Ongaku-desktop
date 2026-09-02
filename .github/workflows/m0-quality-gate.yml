@@ -34,6 +34,26 @@ jobs:
           -destination 'platform=macOS'
           CODE_SIGNING_ALLOWED=NO
 
+      - name: Compile Mac App Store sandbox variant
+        run: >-
+          xcodebuild build
+          -project OngakuDesktop.xcodeproj
+          -scheme OngakuDesktopAppStore
+          -configuration Release
+          -destination 'generic/platform=macOS'
+          -derivedDataPath "$RUNNER_TEMP/OngakuDesktop-AppStore"
+          CODE_SIGNING_ALLOWED=NO
+
+      - name: Verify Mac App Store variant excludes private updater
+        run: |
+          STORE_APP="$RUNNER_TEMP/OngakuDesktop-AppStore/Build/Products/Release/OngakuDesktop.app"
+          STORE_EXECUTABLE="$STORE_APP/Contents/MacOS/OngakuDesktop"
+          test -x "$STORE_EXECUTABLE"
+          test ! -d "$STORE_APP/Contents/Frameworks/Sparkle.framework"
+          ! otool -L "$STORE_EXECUTABLE" | grep -q Sparkle
+          ! /usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$STORE_APP/Contents/Info.plist" >/dev/null 2>&1
+          ! /usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$STORE_APP/Contents/Info.plist" >/dev/null 2>&1
+
       - name: iOS companion compile gate
         run: >-
           xcodebuild build

@@ -39,6 +39,10 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] 楽曲・アルバム・アーティスト単位の情報／画像編集、M4A・M4B・MP4へのタグ優先埋め込みと安全なカタログフォールバック
 - [Done] 英語、日本語、简体中文のローカライズ基盤
 - [Done] Universal Binary、Developer ID署名・公証済みDMG、Sparkle更新、macOS AppIcon
+- [Done] GitHub向けDeveloper ID／Sparkle版と、App Sandbox・Store更新専用のMac App Store版を別ターゲット・別Info.plist・別entitlementsで分離
+- [Done] Mac App Store版からSparkle、独自アップデート、直接USB検出、CD取り込み導線を除外し、CIでStore版のコンパイルとSparkle非混入を検査
+- [Next] App Store Connectのアプリ登録、提出情報・スクリーンショット・プライバシー回答を完成し、実署名Archiveをアップロードして審査へ提出
+- [Later] 審査承認済みStore版の手動／予約公開とGitHub DMG公開を同一リリース日に連携するリリース運用の自動化
 
 ### 直近の不足
 

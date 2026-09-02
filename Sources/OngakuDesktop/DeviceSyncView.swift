@@ -149,6 +149,7 @@ struct DeviceSyncView: View {
 
             Spacer(minLength: AppTheme.spaceMD)
 
+#if !APP_STORE
             if !sync.usbMobileDevices.isEmpty {
                 Menu {
                     Button(L10n.text("deviceSync.usb.openFinder"), systemImage: "folder") {
@@ -165,6 +166,7 @@ struct DeviceSyncView: View {
                 .menuStyle(.borderlessButton)
                 .fixedSize()
             }
+#endif
 
             if case .connected = sync.connectionState {
                 Button(L10n.text("deviceSync.disconnect")) {
@@ -208,10 +210,12 @@ struct DeviceSyncView: View {
                 mobileAppCard
                     .frame(maxWidth: 620)
 
+#if !APP_STORE
                 if !sync.usbMobileDevices.isEmpty {
                     usbConnectionCard
                         .frame(maxWidth: 620)
                 }
+#endif
             }
             .padding(AppTheme.spaceLG)
         default:
@@ -228,9 +232,11 @@ struct DeviceSyncView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 560, alignment: .leading)
 
+#if !APP_STORE
             if !sync.usbMobileDevices.isEmpty {
                 usbConnectionCard
             }
+#endif
 
             if let connectingPhoneName {
                 HStack(alignment: .top, spacing: AppTheme.spaceMD) {
@@ -346,6 +352,7 @@ struct DeviceSyncView: View {
         }
     }
 
+#if !APP_STORE
     private var usbConnectionCard: some View {
         HStack(alignment: .top, spacing: AppTheme.spaceMD) {
             Image(systemName: "cable.connector")
@@ -381,6 +388,7 @@ struct DeviceSyncView: View {
     private var usbDeviceNames: String {
         sync.usbMobileDevices.map(\.name).joined(separator: ", ")
     }
+#endif
 
     private var connectedContent: some View {
         VStack(spacing: 0) {

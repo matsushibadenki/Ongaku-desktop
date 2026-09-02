@@ -1,7 +1,10 @@
 import AppKit
 import SwiftUI
+#if !APP_STORE
 import Sparkle
+#endif
 
+#if !APP_STORE
 @MainActor
 final class SoftwareUpdateController: ObservableObject {
     let updaterController: SPUStandardUpdaterController
@@ -18,6 +21,7 @@ final class SoftwareUpdateController: ObservableObject {
         updaterController.checkForUpdates(nil)
     }
 }
+#endif
 
 @main
 struct OngakuDesktopApp: App {
@@ -35,7 +39,9 @@ struct OngakuDesktopApp: App {
     @StateObject private var appleMusicStore: AppleMusicStoreController
     @StateObject private var systemNowPlaying: SystemNowPlayingController
     @StateObject private var phoneSync = PhoneSyncController()
+#if !APP_STORE
     @StateObject private var softwareUpdater = SoftwareUpdateController()
+#endif
 
     init() {
         NSWindow.allowsAutomaticWindowTabbing = false
@@ -160,11 +166,13 @@ struct OngakuDesktopApp: App {
         .defaultSize(width: 1_320, height: 780)
         .windowResizability(.contentSize)
         .commands {
+#if !APP_STORE
             CommandGroup(after: .appInfo) {
                 Button(L10n.text("command.softwareUpdate")) {
                     softwareUpdater.checkForUpdates()
                 }
             }
+#endif
 
             CommandGroup(replacing: .newItem) {
                 Button(L10n.text("command.import")) {
@@ -172,10 +180,12 @@ struct OngakuDesktopApp: App {
                 }
                 .keyboardShortcut("o", modifiers: .command)
 
+#if !APP_STORE
                 Button(L10n.text("command.importCD")) {
                     NotificationCenter.default.post(name: .requestCDImport, object: nil)
                 }
                 .keyboardShortcut("o", modifiers: [.command, .shift])
+#endif
 
                 Button(L10n.text("command.importURL")) {
                     NotificationCenter.default.post(name: .requestURLImport, object: nil)

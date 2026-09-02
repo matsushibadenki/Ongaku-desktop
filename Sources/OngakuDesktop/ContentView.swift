@@ -61,10 +61,12 @@ struct ContentView: View {
             guard case .success(let urls) = result else { return }
             Task { await library.importFiles(urls) }
         }
+#if !APP_STORE
         .sheet(isPresented: $isImportingCD) {
             AudioCDImportView()
                 .environmentObject(library)
         }
+#endif
         .sheet(isPresented: $isImportingURL) {
             URLAudioImportView()
                 .environmentObject(library)
@@ -106,9 +108,11 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .requestImport)) { _ in
             isImporting = true
         }
+#if !APP_STORE
         .onReceive(NotificationCenter.default.publisher(for: .requestCDImport)) { _ in
             isImportingCD = true
         }
+#endif
         .onReceive(NotificationCenter.default.publisher(for: .requestURLImport)) { _ in
             isImportingURL = true
         }
@@ -154,12 +158,14 @@ struct ContentView: View {
                 }
                 .help(L10n.text("toolbar.importHelp"))
 
+#if !APP_STORE
                 Button {
                     isImportingCD = true
                 } label: {
                     Label(L10n.text("command.importCD"), systemImage: "opticaldisc")
                 }
                 .help(L10n.text("toolbar.importCDHelp"))
+#endif
 
                 Button {
                     isImportingURL = true
