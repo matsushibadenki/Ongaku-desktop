@@ -82,6 +82,15 @@ struct StereoLevelMeterTests {
         #expect(needle.position == 0.625)
     }
 
+    @Test("VU needle settles slowly after playback stops")
+    func vuNeedleStopMotion() {
+        #expect(VUMeterMotion.duration(isActive: false) > 0.5)
+        #expect(
+            VUMeterMotion.duration(isActive: false)
+                > VUMeterMotion.duration(isActive: true)
+        )
+    }
+
     @Test("VU readings are sampled densely enough for fine motion")
     func meterRefreshRate() {
         let throttle = StereoMeterThrottle()

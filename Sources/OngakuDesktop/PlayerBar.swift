@@ -48,7 +48,8 @@ struct PlayerBar: View {
                 ChannelVUMeterView(
                     channel: channel,
                     level: level,
-                    backlight: meterSettings.backlight.color
+                    backlight: meterSettings.backlight.color,
+                    isActive: player.isPlaying
                 )
             }
         }
@@ -218,6 +219,7 @@ struct ChannelVUMeterView: View {
     let channel: String
     let level: Double
     let backlight: Color
+    var isActive = true
 
     private let scaleMarks: [(decibels: Int, position: Double)] = [
         (-40, 0.00),
@@ -408,7 +410,10 @@ struct ChannelVUMeterView: View {
                 .animation(
                     reduceMotion
                         ? nil
-                        : .smooth(duration: 0.14, extraBounce: 0),
+                        : .smooth(
+                            duration: VUMeterMotion.duration(isActive: isActive),
+                            extraBounce: 0
+                        ),
                     value: needlePosition
                 )
         }
@@ -428,6 +433,15 @@ struct ChannelVUMeterView: View {
             x: pivot.x + (sin(angle) * radius),
             y: pivot.y - (cos(angle) * radius)
         )
+    }
+}
+
+enum VUMeterMotion {
+    static let trackingDuration: TimeInterval = 0.14
+    static let settlingDuration: TimeInterval = 0.65
+
+    static func duration(isActive: Bool) -> TimeInterval {
+        isActive ? trackingDuration : settlingDuration
     }
 }
 
