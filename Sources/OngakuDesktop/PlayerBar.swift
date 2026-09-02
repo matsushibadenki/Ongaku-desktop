@@ -208,46 +208,75 @@ struct PlayerBar: View {
     }
 }
 
+/* Hallmark · component: analog VU meter · genre: atmospheric · theme: vintage hi-fi
+ * states: idle · active · overload · reduced motion
+ * contrast: dark ink on warm illuminated dial
+ */
 struct ChannelVUMeterView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let channel: String
     let level: Double
     let backlight: Color
 
-    private let scaleValues = [-40, -20, -10, -7, -5, -3, 0, 3]
+    private let scaleMarks: [(decibels: Int, position: Double)] = [
+        (-40, 0.00),
+        (-30, 0.11),
+        (-20, 0.23),
+        (-10, 0.38),
+        (-7, 0.49),
+        (-5, 0.58),
+        (-3, 0.68),
+        (0, 0.84),
+        (3, 1.00),
+    ]
 
     var body: some View {
-        GeometryReader { proxy in
-            let size = proxy.size
+        GeometryReader { _ in
             ZStack {
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .fill(Color(red: 0.018, green: 0.025, blue: 0.032))
-
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(
-                        RadialGradient(
-                            colors: [
-                                backlight.opacity(0.50),
-                                backlight.opacity(0.19),
-                                Color.black.opacity(0.82)
-                            ],
-                            center: .bottom,
-                            startRadius: 2,
-                            endRadius: max(size.width * 0.56, 60)
+                        LinearGradient(
+                            colors: [MeterPalette.frameTop, MeterPalette.frameBottom],
+                            startPoint: .top,
+                            endPoint: .bottom
                         )
                     )
-                    .padding(3)
-                    .shadow(color: backlight.opacity(0.44), radius: 10)
 
-                dial(size: size)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    MeterPalette.dialTop,
+                                    MeterPalette.dialMiddle,
+                                    MeterPalette.dialBottom,
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
 
-                LinearGradient(
-                    colors: [Color.white.opacity(0.18), .clear, Color.black.opacity(0.20)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                .padding(3)
-                .allowsHitTesting(false)
+                    MeterLEDSpotlight(color: backlight)
+
+                    dial()
+
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.28), .clear, MeterPalette.glassShade],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .allowsHitTesting(false)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                .padding(4)
+
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .strokeBorder(MeterPalette.innerRim, lineWidth: 1)
+                    .padding(4)
+
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(MeterPalette.outerRim, lineWidth: 1)
             }
         }
         .accessibilityElement(children: .ignore)
@@ -255,69 +284,134 @@ struct ChannelVUMeterView: View {
         .accessibilityValue("\(Int((clampedLevel * 100).rounded()))%")
     }
 
-    private func dial(size: CGSize) -> some View {
-        Canvas { context, canvasSize in
-            let pivot = CGPoint(x: canvasSize.width / 2, y: canvasSize.height * 1.04)
-            let radius = min(canvasSize.width * 0.43, canvasSize.height * 1.03)
+    private func dial() -> some View {
+        ZStack {
+            Canvas { context, canvasSize in
+                // The physical hinge is deliberately below the window. SwiftUI clips the
+                // long needle and shallow arc to the wide meter aperture.
+                let geometry = VUMeterGeometry.layout(for: canvasSize)
+                let pivot = geometry.pivot
+                let scaleRadius = geometry.scaleRadius
+                let angleForPosition = { (position: Double) in
+                    geometry.angle(position: position)
+                }
 
-            for (index, decibels) in scaleValues.enumerated() {
-                let position = Double(index) / Double(scaleValues.count - 1)
-                let angle = meterAngle(position: position)
-                let outer = point(from: pivot, radius: radius, angle: angle)
-                let inner = point(
-                    from: pivot,
-                    radius: radius - (decibels >= 0 ? 10 : 7),
-                    angle: angle
-                )
-                var tick = Path()
-                tick.move(to: inner)
-                tick.addLine(to: outer)
-                context.stroke(
-                    tick,
-                    with: .color(decibels > 0 ? .red.opacity(0.90) : .white.opacity(0.74)),
-                    lineWidth: decibels == 0 ? 1.8 : 1
-                )
+                var outerArc = Path()
+                var innerArc = Path()
+                for index in 0...64 {
+                    let position = Double(index) / 64
+                    let angle = angleForPosition(position)
+                    let outerPoint = point(from: pivot, radius: scaleRadius, angle: angle)
+                    let innerPoint = point(from: pivot, radius: scaleRadius - 9, angle: angle)
+                    if index == 0 {
+                        outerArc.move(to: outerPoint)
+                        innerArc.move(to: innerPoint)
+                    } else {
+                        outerArc.addLine(to: outerPoint)
+                        innerArc.addLine(to: innerPoint)
+                    }
+                }
+                context.stroke(outerArc, with: .color(MeterPalette.scaleInk.opacity(0.72)), lineWidth: 1)
+                context.stroke(innerArc, with: .color(MeterPalette.scaleInk.opacity(0.52)), lineWidth: 0.75)
 
-                let labelPoint = point(from: pivot, radius: radius - 18, angle: angle)
-                let label = context.resolve(
-                    Text(decibels > 0 ? "+\(decibels)" : "\(decibels)")
-                        .font(.system(size: 7, weight: .semibold, design: .rounded))
-                        .foregroundStyle(decibels > 0 ? Color.red.opacity(0.95) : .white.opacity(0.78))
+                var overloadArc = Path()
+                for index in 0...18 {
+                    let position = 0.79 + (0.21 * Double(index) / 18)
+                    let arcPoint = point(
+                        from: pivot,
+                        radius: scaleRadius - 9,
+                        angle: angleForPosition(position)
+                    )
+                    if index == 0 {
+                        overloadArc.move(to: arcPoint)
+                    } else {
+                        overloadArc.addLine(to: arcPoint)
+                    }
+                }
+                context.stroke(overloadArc, with: .color(MeterPalette.overload.opacity(0.82)), lineWidth: 1.4)
+
+                for index in 0...32 {
+                    let position = Double(index) / 32
+                    let angle = angleForPosition(position)
+                    let outer = point(from: pivot, radius: scaleRadius, angle: angle)
+                    let inner = point(from: pivot, radius: scaleRadius - 4, angle: angle)
+                    var tick = Path()
+                    tick.move(to: inner)
+                    tick.addLine(to: outer)
+                    context.stroke(
+                        tick,
+                        with: .color(position >= 0.79
+                            ? MeterPalette.overload.opacity(0.72)
+                            : MeterPalette.scaleInk.opacity(0.54)),
+                        lineWidth: 0.65
+                    )
+                }
+
+                for mark in scaleMarks {
+                    let decibels = mark.decibels
+                    let position = mark.position
+                    let angle = angleForPosition(position)
+                    let outer = point(from: pivot, radius: scaleRadius + 1, angle: angle)
+                    let inner = point(
+                        from: pivot,
+                        radius: scaleRadius - (decibels >= 0 ? 11 : 8),
+                        angle: angle
+                    )
+                    var tick = Path()
+                    tick.move(to: inner)
+                    tick.addLine(to: outer)
+                    context.stroke(
+                        tick,
+                        with: .color(decibels > 0 ? MeterPalette.overload : MeterPalette.scaleInk),
+                        lineWidth: decibels == 0 ? 1.45 : 0.95
+                    )
+
+                    var labelPoint = point(from: pivot, radius: scaleRadius - 18, angle: angle)
+                    labelPoint.y = min(labelPoint.y, canvasSize.height - 8)
+                    let label = context.resolve(
+                        Text(decibels > 0 ? "+\(decibels)" : "\(decibels)")
+                            .font(.system(size: 6.5, weight: .semibold, design: .rounded))
+                            .foregroundStyle(decibels > 0 ? MeterPalette.overload : MeterPalette.scaleInk)
+                    )
+                    context.draw(label, at: labelPoint, anchor: .center)
+                }
+
+                let powerLabel = context.resolve(
+                    Text("POWER / WATTS")
+                        .font(.system(size: 5.5, weight: .bold, design: .rounded))
+                        .tracking(1.1)
+                        .foregroundStyle(MeterPalette.scaleInk.opacity(0.68))
                 )
-                context.draw(label, at: labelPoint, anchor: .center)
+                context.draw(powerLabel, at: CGPoint(x: pivot.x, y: 7), anchor: .center)
+
+                let vuLabel = context.resolve(
+                    Text("VU")
+                        .font(.system(size: 8, weight: .black, design: .rounded))
+                        .tracking(1.4)
+                        .foregroundStyle(MeterPalette.scaleInk.opacity(0.68))
+                )
+                context.draw(vuLabel, at: CGPoint(x: pivot.x, y: canvasSize.height * 0.64))
+
+                let channelLabel = context.resolve(
+                    Text(channel)
+                        .font(.system(size: 7, weight: .bold, design: .monospaced))
+                        .foregroundStyle(MeterPalette.scaleInk.opacity(0.72))
+                )
+                context.draw(
+                    channelLabel,
+                    at: CGPoint(x: canvasSize.width - 11, y: 9),
+                    anchor: .center
+                )
             }
 
-            let vuLabel = context.resolve(
-                Text("VU")
-                    .font(.system(size: 10, weight: .black, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.72))
-            )
-            context.draw(vuLabel, at: CGPoint(x: pivot.x, y: canvasSize.height * 0.45))
-
-            let channelLabel = context.resolve(
-                Text(channel)
-                    .font(.system(size: 8, weight: .bold, design: .monospaced))
-                    .foregroundStyle(Color.white.opacity(0.68))
-            )
-            context.draw(
-                channelLabel,
-                at: CGPoint(x: canvasSize.width - 14, y: 12),
-                anchor: .center
-            )
-
-            let needleAngle = meterAngle(position: needlePosition)
-            let needleEnd = point(from: pivot, radius: radius - 3, angle: needleAngle)
-            var needle = Path()
-            needle.move(to: pivot)
-            needle.addLine(to: needleEnd)
-            context.stroke(needle, with: .color(.black.opacity(0.72)), lineWidth: 4)
-            context.stroke(needle, with: .color(.white.opacity(0.96)), lineWidth: 1.35)
-
-            let hubRect = CGRect(x: pivot.x - 7, y: pivot.y - 7, width: 14, height: 14)
-            context.fill(Path(ellipseIn: hubRect), with: .color(.black.opacity(0.92)))
-            context.stroke(Path(ellipseIn: hubRect), with: .color(.white.opacity(0.35)), lineWidth: 1)
+            VUMeterNeedle(position: needlePosition)
+                .animation(
+                    reduceMotion
+                        ? nil
+                        : .smooth(duration: 0.14, extraBounce: 0),
+                    value: needlePosition
+                )
         }
-        .animation(.spring(response: 0.20, dampingFraction: 0.62), value: needlePosition)
     }
 
     private var clampedLevel: Double {
@@ -329,15 +423,167 @@ struct ChannelVUMeterView: View {
         return min(max((decibels + 40) / 43, 0), 1)
     }
 
-    private func meterAngle(position: Double) -> Double {
-        (-53 + (106 * position)) * .pi / 180
-    }
-
     private func point(from pivot: CGPoint, radius: CGFloat, angle: Double) -> CGPoint {
         CGPoint(
             x: pivot.x + (sin(angle) * radius),
             y: pivot.y - (cos(angle) * radius)
         )
+    }
+}
+
+enum VUMeterGeometry {
+    static let horizontalInset: CGFloat = 12
+    static let arcApexHeightRatio: CGFloat = 0.30
+    static let arcEndpointHeightRatio: CGFloat = 0.55
+    static let needleExtension: CGFloat = 6
+
+    static func layout(for size: CGSize) -> VUMeterLayout {
+        let apexY = size.height * arcApexHeightRatio
+        let endpointY = size.height * arcEndpointHeightRatio
+        let sagitta = max(endpointY - apexY, 1)
+        let halfChord = max((size.width / 2) - horizontalInset, 1)
+        let radius = ((halfChord * halfChord) + (sagitta * sagitta)) / (2 * sagitta)
+        let halfAngle = asin(min(halfChord / radius, 1))
+
+        return VUMeterLayout(
+            pivot: CGPoint(x: size.width / 2, y: apexY + radius),
+            scaleRadius: radius,
+            needleRadius: radius + needleExtension,
+            halfAngle: halfAngle
+        )
+    }
+}
+
+struct VUMeterLayout {
+    let pivot: CGPoint
+    let scaleRadius: CGFloat
+    let needleRadius: CGFloat
+    let halfAngle: Double
+
+    func angle(position: Double) -> Double {
+        -halfAngle + ((halfAngle * 2) * min(max(position, 0), 1))
+    }
+
+    func needleTip(position: Double) -> CGPoint {
+        let angle = angle(position: position)
+        return CGPoint(
+            x: pivot.x + (sin(angle) * needleRadius),
+            y: pivot.y - (cos(angle) * needleRadius)
+        )
+    }
+}
+
+struct VUMeterNeedle: View, @MainActor Animatable {
+    var position: Double
+
+    var animatableData: Double {
+        get { position }
+        set { position = newValue }
+    }
+
+    var body: some View {
+        Canvas { context, canvasSize in
+            let geometry = VUMeterGeometry.layout(for: canvasSize)
+            let needleEnd = geometry.needleTip(position: position)
+            var needle = Path()
+            needle.move(to: geometry.pivot)
+            needle.addLine(to: needleEnd)
+            context.stroke(needle, with: .color(MeterPalette.needleShadow), lineWidth: 3.2)
+            context.stroke(needle, with: .color(MeterPalette.needle), lineWidth: 1.15)
+        }
+    }
+}
+
+private enum MeterPalette {
+    static let frameTop = Color(red: 0.13, green: 0.12, blue: 0.10)
+    static let frameBottom = Color(red: 0.025, green: 0.027, blue: 0.026)
+    static let outerRim = Color.white.opacity(0.12)
+    static let innerRim = Color(red: 0.08, green: 0.065, blue: 0.045).opacity(0.72)
+    static let dialTop = Color(red: 0.95, green: 0.89, blue: 0.72)
+    static let dialMiddle = Color(red: 0.84, green: 0.75, blue: 0.56)
+    static let dialBottom = Color(red: 0.64, green: 0.52, blue: 0.34)
+    static let scaleInk = Color(red: 0.12, green: 0.105, blue: 0.08)
+    static let overload = Color(red: 0.56, green: 0.10, blue: 0.065)
+    static let needle = Color(red: 0.63, green: 0.12, blue: 0.07)
+    static let needleShadow = Color.black.opacity(0.58)
+    static let glassShade = Color.black.opacity(0.12)
+}
+
+private struct MeterLEDSpotlight: View {
+    let color: Color
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            // A broad, softly scattered beam reveals the paper texture without
+            // washing out the scale. Its emitter sits below the cropped window.
+            SpotlightCone(topWidthFraction: 0.84, sourceWidth: 7)
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: color.opacity(0.025), location: 0),
+                            .init(color: color.opacity(0.10), location: 0.54),
+                            .init(color: color.opacity(0.38), location: 1),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .blur(radius: 8)
+
+            // The narrower core gives the light a clear direction, like a small
+            // LED recessed under the faceplate rather than a generic gradient.
+            SpotlightCone(topWidthFraction: 0.34, sourceWidth: 3)
+                .fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: color.opacity(0.018), location: 0),
+                            .init(color: color.opacity(0.13), location: 0.58),
+                            .init(color: color.opacity(0.48), location: 1),
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .blur(radius: 2.8)
+
+            RadialGradient(
+                stops: [
+                    .init(color: Color.white.opacity(0.42), location: 0),
+                    .init(color: color.opacity(0.46), location: 0.08),
+                    .init(color: color.opacity(0.18), location: 0.34),
+                    .init(color: .clear, location: 1),
+                ],
+                center: .bottom,
+                startRadius: 0,
+                endRadius: 62
+            )
+
+            Capsule()
+                .fill(Color.white.opacity(0.78))
+                .frame(width: 12, height: 2)
+                .shadow(color: color.opacity(0.95), radius: 4)
+                .offset(y: 1)
+        }
+        .blendMode(.plusLighter)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct SpotlightCone: Shape {
+    let topWidthFraction: CGFloat
+    let sourceWidth: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let topHalfWidth = rect.width * topWidthFraction / 2
+        let sourceY = rect.maxY + 8
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX - sourceWidth / 2, y: sourceY))
+        path.addLine(to: CGPoint(x: rect.midX - topHalfWidth, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.midX + topHalfWidth, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.midX + sourceWidth / 2, y: sourceY))
+        path.closeSubpath()
+        return path
     }
 }
 

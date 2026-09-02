@@ -45,7 +45,7 @@ struct StereoLevelMeterTests {
         let renderer = ImageRenderer(
             content: ChannelVUMeterView(
                 channel: "L",
-                level: 0.76,
+                level: 0,
                 backlight: .cyan
             )
             .frame(width: 280, height: 80)
@@ -54,6 +54,59 @@ struct StereoLevelMeterTests {
 
         let image = try #require(renderer.nsImage)
         #expect(image.size == NSSize(width: 280, height: 80))
+    }
+
+    @Test("VU meter uses a shallow arc and keeps both needle extremes visible")
+    func vuMeterGeometry() {
+        for size in [CGSize(width: 280, height: 80), CGSize(width: 200, height: 80)] {
+            let geometry = VUMeterGeometry.layout(for: size)
+            let silentTip = geometry.needleTip(position: 0)
+            let overloadTip = geometry.needleTip(position: 1)
+
+            #expect(geometry.pivot.y > size.height)
+            #expect(geometry.scaleRadius > size.width)
+            #expect(geometry.halfAngle < 30 * .pi / 180)
+            #expect((0...size.width).contains(silentTip.x))
+            #expect((0..<size.height).contains(silentTip.y))
+            #expect((0...size.width).contains(overloadTip.x))
+            #expect((0..<size.height).contains(overloadTip.y))
+        }
+    }
+
+    @Test("VU needle exposes its position to SwiftUI animation")
+    @MainActor
+    func vuNeedleAnimation() {
+        var needle = VUMeterNeedle(position: 0)
+        needle.animatableData = 0.625
+
+        #expect(needle.position == 0.625)
+    }
+
+    @Test("VU readings are sampled densely enough for fine motion")
+    func meterRefreshRate() {
+        let throttle = StereoMeterThrottle()
+
+        #expect(throttle.shouldEmit(now: 1))
+        #expect(!throttle.shouldEmit(now: 1 + (1.0 / 120.0)))
+        #expect(throttle.shouldEmit(now: 1 + (1.0 / 60.0) + 0.000_001))
+        #expect(AudioVisualizationConfiguration.tapBufferSize == 1_024)
+    }
+
+    @Test("VU ballistics preserve small changes and release more gently")
+    func meterBallistics() {
+        let interval = 1.0 / 48.0
+        let smallChange = VUMeterBallistics.smoothed(
+            current: 0.50,
+            target: 0.52,
+            elapsed: interval
+        )
+        let attack = VUMeterBallistics.smoothed(current: 0.2, target: 0.8, elapsed: interval)
+        let release = VUMeterBallistics.smoothed(current: 0.8, target: 0.2, elapsed: interval)
+
+        #expect(smallChange > 0.50)
+        #expect(smallChange < 0.52)
+        #expect(attack - 0.2 > 0.8 - release)
+        #expect(release > 0.2)
     }
 
     @Test("Silence stays at the bottom of the meter")

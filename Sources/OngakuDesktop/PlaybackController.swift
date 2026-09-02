@@ -374,14 +374,44 @@ enum SpectrumMath {
     }
 }
 
+enum AudioVisualizationConfiguration {
+    static let tapBufferSize: AVAudioFrameCount = 1_024
+    static let maximumRefreshRate = 60.0
+}
+
+enum VUMeterBallistics {
+    // A real VU needle rises decisively and settles more slowly. Using time
+    // constants keeps that character stable when the audio callback cadence varies.
+    private static let attackTime: TimeInterval = 0.065
+    private static let releaseTime: TimeInterval = 0.22
+
+    nonisolated static func smoothed(
+        current: Double,
+        target: Double,
+        elapsed: TimeInterval
+    ) -> Double {
+        let clampedCurrent = min(max(current, 0), 1)
+        let clampedTarget = min(max(target, 0), 1)
+        let interval = min(max(elapsed, 1.0 / 240.0), 0.1)
+        let timeConstant = clampedTarget > clampedCurrent ? attackTime : releaseTime
+        let response = 1 - exp(-interval / timeConstant)
+        return clampedCurrent + ((clampedTarget - clampedCurrent) * response)
+    }
+}
+
 final class StereoMeterThrottle: @unchecked Sendable {
     private let lock = NSLock()
+    private let minimumInterval: TimeInterval
     private var lastEmission: TimeInterval = 0
+
+    init(maximumRefreshRate: Double = AudioVisualizationConfiguration.maximumRefreshRate) {
+        minimumInterval = 1 / max(maximumRefreshRate, 1)
+    }
 
     func shouldEmit(now: TimeInterval = ProcessInfo.processInfo.systemUptime) -> Bool {
         lock.lock()
         defer { lock.unlock() }
-        guard now - lastEmission >= 1.0 / 30.0 else { return false }
+        guard now - lastEmission >= minimumInterval else { return false }
         lastEmission = now
         return true
     }
@@ -959,6 +989,7 @@ final class PlaybackController: ObservableObject {
     private var crossfadeTimer: Timer?
     private var isMeterTapInstalled = false
     private let meterThrottle = StereoMeterThrottle()
+    private var lastMeterUpdateTime: TimeInterval?
     private var recoveryObservations = Set<AnyCancellable>()
     private var recoveryTask: Task<Void, Never>?
     private var recoveryState = PlaybackRecoveryState()
@@ -1622,7 +1653,7 @@ final class PlaybackController: ObservableObject {
         let tapBlock = makeStereoMeterTapBlock(throttle: meterThrottle, deliver: deliver)
         engine.mainMixerNode.installTap(
             onBus: 0,
-            bufferSize: 2_048,
+            bufferSize: AudioVisualizationConfiguration.tapBufferSize,
             format: nil,
             block: tapBlock
         )
@@ -1636,9 +1667,20 @@ final class PlaybackController: ObservableObject {
     }
 
     private func applyAudioVisualization(_ incoming: AudioVisualizationSnapshot) {
+        let now = ProcessInfo.processInfo.systemUptime
+        let elapsed = lastMeterUpdateTime.map { now - $0 } ?? (1.0 / 48.0)
+        lastMeterUpdateTime = now
         stereoLevels = StereoLevels(
-            left: smoothedMeterLevel(current: stereoLevels.left, target: incoming.levels.left),
-            right: smoothedMeterLevel(current: stereoLevels.right, target: incoming.levels.right)
+            left: VUMeterBallistics.smoothed(
+                current: stereoLevels.left,
+                target: incoming.levels.left,
+                elapsed: elapsed
+            ),
+            right: VUMeterBallistics.smoothed(
+                current: stereoLevels.right,
+                target: incoming.levels.right,
+                elapsed: elapsed
+            )
         )
         stereoSpectrum = StereoSpectrum(
             left: SpectrumMath.smoothed(
@@ -1652,14 +1694,10 @@ final class PlaybackController: ObservableObject {
         )
     }
 
-    private func smoothedMeterLevel(current: Double, target: Double) -> Double {
-        let response = target > current ? 0.72 : 0.24
-        return current + ((target - current) * response)
-    }
-
     private func clearAudioVisualization() {
         stereoLevels = .silent
         stereoSpectrum = .silent
+        lastMeterUpdateTime = nil
     }
 
     private func schedule(fromFrame frame: AVAudioFramePosition) {
