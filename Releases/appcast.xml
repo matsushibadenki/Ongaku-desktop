@@ -6,6 +6,56 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.5</title>
+            <pubDate>Wed, 02 Sep 2026 15:37:22 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.5</link>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>0.1.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.5
+
+## 日本語
+
+### 主な変更
+
+- アナログVUメーターを刷新しました。低い曲率のスケール、枠外の長い回転半径、LEDスポットライトにより、横長の表示でも針と目盛りを自然に見渡せます。
+- 針の追従処理を高密度化し、微細な音量変化を滑らかに表現します。停止時は余韻を残しながらゼロ位置へ戻ります。
+- ライブラリ管理を強化し、大規模ライブラリでの検索・整理、参照切れファイルの回復、メタデータ管理を改善しました。
+- Ongaku for iPhoneとの同期を強化し、個別・一括・双方向同期、再開可能な分割転送、プレイリスト転送、接続状態の案内を改善しました。
+- ミニプレーヤーのウインドウ復元を安定化し、自動品質チェックと性能ゲートを拡充しました。
+
+## English
+
+- Redesigned the analog VU meters with a shallower scale arc, longer off-frame needle radius, and focused LED illumination for a natural wide-format presentation.
+- Increased meter response fidelity for smooth, fine-grained musical movement, with a lingering return to zero after playback stops.
+- Expanded library management for large collections, including faster organization, missing-file recovery, and improved metadata handling.
+- Improved Ongaku for iPhone sync with selective, full-library, and two-way modes, resumable chunked transfers, playlist transfer, and clearer connection guidance.
+- Stabilized mini-player window restoration and expanded automated quality and performance gates.
+
+## 简体中文
+
+- 重新设计模拟VU表：采用更平缓的刻度弧线、更长且位于画框外的指针旋转半径，并强化LED聚光效果，使横向表盘更自然清晰。
+- 提高指针响应精度，细腻呈现微小的音乐动态；停止播放后，指针会带有余韵地缓慢回到零位。
+- 加强大型音乐资料库的搜索与整理、丢失文件恢复及元数据管理。
+- 改进与Ongaku iPhone版的同步，支持选择性、全资料库及双向同步、可恢复的分块传输、播放列表传输和更清晰的连接提示。
+- 提升迷你播放器窗口恢复的稳定性，并扩充自动质量检查与性能门禁。
+
+## 配布情報 / Distribution
+
+- macOS 14.0以降 / macOS 14.0 or later
+- Apple silicon（arm64）／Intel（x86_64）Universal Binary
+- Developer ID署名・Apple公証済み / Developer ID signed and Apple notarized
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.5/OngakuDesktop-0.1.5-universal.dmg" length="8363355" type="application/octet-stream" sparkle:edSignature="0tthgfdMCu4druk4R0czvqui1EaonIleG1WXcpMj6zXqJr7ZwDU7laCvuco+Rp1DuW4ybNco/8bt1ovk5afTCQ=="/>
+            <sparkle:deltas>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.5/OngakuDesktop6-5.delta" sparkle:deltaFrom="5" length="2104950" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="8ooUgoLj3NXUzZ3qJmyDWEqYlmEMIJ+yKoPwZH73hjbXo/q5ph12GeFZ+qmiqr2cLb8YkO7rjQh/uo6TsDE/AA=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.5/OngakuDesktop6-4.delta" sparkle:deltaFrom="4" length="2779306" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="+7As+G5FOcwSTTH5DY+Id3rOu43ACGQ0GDJTWlDw9fFNIjN/51Lw06wdfXZyumLxq2tlEWsAM07XtlP1B5JGAw=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.5/OngakuDesktop6-3.delta" sparkle:deltaFrom="3" length="3459414" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="0Jg9RpvUkheR1JtqRfMCVQ38bdVj7ftRb+P6fOAYGNOrp6NgJAqGJriMmtgnToMZfiiQim4CbsB4sLJyVWhNBA=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.5/OngakuDesktop6-2.delta" sparkle:deltaFrom="2" length="4308834" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="Kxdx0GT+sQ6LxR3pFw3MeSYhPLhrkQN21Cq4a8sP3diJGUTr54VndADLrHzyscaa3rioJ5Dc86wRv0M/ZQEeBQ=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.5/OngakuDesktop6-1.delta" sparkle:deltaFrom="1" length="4852754" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="t9e1188kQKMBCZmEUEVIeKLMmpKOjZspyUR/94tBAnxQux+oFucmoPsHFBuw4OveQ+biTYKVvxlHvPsgYzDuAQ=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.1.4</title>
             <pubDate>Sun, 30 Aug 2026 10:19:33 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.4</link>
@@ -14,19 +64,37 @@
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.4
 
-## 主な変更
+## 日本語
 
-- Ongaku for iPhoneとの柔軟な同期、容量上限、双方向同期、Macにない曲のダウンロードに対応しました。
-- iPhoneの自動検知、接続状態の案内、Appleの公開APIで可能な範囲のUSB検知を追加しました。
-- URL・CD取り込みと、Music/iTunes XML、Ongakuライブラリ、共有フォルダからの移行を強化しました。
-- 選択した曲ではなく一覧の先頭から再生される問題を修正しました。
-- メディア整理、参照切れファイルの再リンク、MusicBrainz情報、多言語表示を拡充しました。
+### 主な変更
 
-## 配布情報
+- Ongaku for iPhoneとの同期に対応しました。全曲、アーティスト、アルバム、曲単位の選択に加え、容量上限、双方向同期、Macにない曲のダウンロードを設定できます。
+- 同じネットワーク上のiPhoneを自動検知し、手動接続の状態と次に必要な操作を分かりやすく表示します。USB接続時も、Appleが公開する範囲で検知を補助します。
+- URLからの音源取り込み、強化されたCD取り込み、Music/iTunes XML、Ongakuライブラリ、共有フォルダからの安全な移行を追加しました。
+- 選択した曲ではなく一覧の先頭から再生される問題を修正し、選択状態と再生キューの一貫性を改善しました。
+- メディア整理、参照切れファイルの再リンク、MusicBrainz情報の取得、多言語表示を拡充しました。
 
-- macOS 14.0以降
+## English
+
+- Added flexible iPhone sync by library, artist, album, or track, including storage limits, two-way mirroring, and downloading tracks missing from the Mac.
+- Added automatic device discovery with clearer connection guidance and best-effort USB-assisted detection within Apple's supported APIs.
+- Added URL and enhanced CD import, plus safe migration from Music/iTunes XML, another Ongaku library, and shared folders.
+- Fixed playback starting from the first list item instead of the selected track.
+- Expanded media organization, missing-file recovery, MusicBrainz metadata, and localization.
+
+## 简体中文
+
+- 新增灵活的iPhone同步，可按整个资料库、艺人、专辑或单曲选择，并支持容量限制、双向同步及下载Mac中缺少的歌曲。
+- 新增自动设备发现、清晰的连接状态提示，以及在Apple公开API允许范围内的USB辅助检测。
+- 新增URL导入、增强的CD导入，以及从Music/iTunes XML、其他Ongaku资料库和共享文件夹安全迁移。
+- 修复播放时从列表第一首开始、而不是从所选歌曲开始的问题。
+- 改进媒体整理、丢失文件恢复、MusicBrainz元数据和多语言支持。
+
+## 配布情報 / Distribution
+
+- macOS 14.0以降 / macOS 14.0 or later
 - Apple silicon（arm64）／Intel（x86_64）Universal Binary
-- Developer ID署名・Apple公証済み
+- Developer ID署名・Apple公証済み / Developer ID signed and Apple notarized
 ]]></description>
             <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.4/OngakuDesktop-0.1.4-universal.dmg" length="7573508" type="application/octet-stream" sparkle:edSignature="j7rafdnPGP268F72F01ms8JgMcpc3zIKhCJh8wP485BA7VDjN1tYOa0L58nmTLqoAU+P5ygZ/QVPfD7WdrK5BQ=="/>
             <sparkle:deltas>
