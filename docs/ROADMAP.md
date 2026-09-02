@@ -353,6 +353,7 @@ Ongaku Mobileでは、iPhoneのミュージックライブラリと、Mac同期�
 - [Later] Finderの端末同期画面を開く導線と、端末向け書き出しプリセット
 - [Done] 既存のiOS用Ongakuアプリへ端末同期を統合し、アプリ内DocumentsのOngakuフォルダにある利用者管理音源を転送対象にする
 - [Done] Bonjour探索、暗号化必須のMultipeer Connectivity、端末上の確認コードを用いる明示承認ペアリングを実装し、非公開の端末同期APIを使用しない
+- [Done] Mac App Store版はiPhone側のAdvertiserへ接続するBrowserとして動作するため、不要な`com.apple.security.network.server`権限を削除し、ArchiveとCIで最小権限を検証する
 - [Done] 両アプリ起動中の自動検出・自動接続要求、iPhone全画面からの許可表示、要求の失効と連続表示抑制を実装
 - [Done] 公開IOKit情報によるUSB接続中のiPhone/iPad検知、状態表示、Finderファイル共有への導線を実装（音声転送は安全なローカルネットワークを使用）
 - [Done] iPhone/iPadとMacで安定ID、ファイルサイズ、更新日時、SHA-256を含むmanifestを交換し、チェックサムに基づく保有状態を差分表示する

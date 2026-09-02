@@ -54,6 +54,12 @@ jobs:
           ! /usr/libexec/PlistBuddy -c 'Print :SUFeedURL' "$STORE_APP/Contents/Info.plist" >/dev/null 2>&1
           ! /usr/libexec/PlistBuddy -c 'Print :SUPublicEDKey' "$STORE_APP/Contents/Info.plist" >/dev/null 2>&1
 
+      - name: Verify Mac App Store sandbox uses minimum network access
+        run: |
+          STORE_ENTITLEMENTS="Packaging/OngakuDesktopAppStore.entitlements"
+          test "$(plutil -extract 'com\.apple\.security\.network\.client' raw -o - "$STORE_ENTITLEMENTS")" = "true"
+          ! /usr/libexec/PlistBuddy -c 'Print :com.apple.security.network.server' "$STORE_ENTITLEMENTS" >/dev/null 2>&1
+
       - name: iOS companion compile gate
         run: >-
           xcodebuild build

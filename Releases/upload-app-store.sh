@@ -103,6 +103,12 @@ if [[ "$(plutil -extract 'com\.apple\.security\.app-sandbox' raw -o - "$ENTITLEM
     echo "Mac App Store archive is not sandboxed." >&2
     exit 1
 fi
+if /usr/libexec/PlistBuddy \
+    -c "Print :com.apple.security.network.server" \
+    "$ENTITLEMENTS_FILE" >/dev/null 2>&1; then
+    echo "Mac App Store archive unexpectedly includes the network server entitlement." >&2
+    exit 1
+fi
 
 echo "Mac App Store archive passed distribution checks: $ARCHIVE_PATH"
 echo "Architectures: $ARCHITECTURES"
