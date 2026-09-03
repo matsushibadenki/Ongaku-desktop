@@ -911,6 +911,10 @@
 "common.yes" = "是";
 "common.no" = "否";
 "metadataEditor.save" = "保存";
+"metadataEditor.organizationConfirmation.title" = "同时整理文件吗？";
+"metadataEditor.organizationConfirmation.message" = "艺术家或专辑名称已更改。可以将受影响的%d首歌曲移动到新的“艺术家/专辑”文件夹。外部引用的文件不会移动。";
+"metadataEditor.organizationConfirmation.move" = "保存并移动文件";
+"metadataEditor.organizationConfirmation.saveOnly" = "保存但不移动";
 "metadataEditor.error.trackNotFound" = "所选歌曲已不在资料库中。";
 "metadataEditor.artwork.title" = "缩略图";
 "metadataEditor.artist.photo.title" = "艺人照片";

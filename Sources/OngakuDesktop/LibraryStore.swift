@@ -1839,6 +1839,21 @@ final class LibraryStore: ObservableObject {
     }
 
     @discardableResult
+    func organizeManagedMediaAfterMetadataChange(
+        trackIDs: Set<Track.ID>
+    ) async throws -> MediaOrganizationSummary {
+        let destination = await repository.currentMediaDirectoryURL()
+        let preview = try await repository.planMediaOrganization(
+            tracks: tracks,
+            destinationRootURL: destination
+        ).restricted(to: trackIDs)
+        guard preview.moveCount > 0 else {
+            return MediaOrganizationSummary(moved: 0, updatedTracks: 0)
+        }
+        return try await executeMediaOrganization(preview)
+    }
+
+    @discardableResult
     func executeMediaOrganization(
         _ preview: MediaOrganizationPreview
     ) async throws -> MediaOrganizationSummary {

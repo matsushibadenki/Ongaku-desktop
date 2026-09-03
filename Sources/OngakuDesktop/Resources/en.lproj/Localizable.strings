@@ -911,6 +911,10 @@
 "common.yes" = "Yes";
 "common.no" = "No";
 "metadataEditor.save" = "Save";
+"metadataEditor.organizationConfirmation.title" = "Organize the files too?";
+"metadataEditor.organizationConfirmation.message" = "The artist or album name has changed. The %d affected tracks can be moved into their new Artist/Album folders. Externally referenced files will not be moved.";
+"metadataEditor.organizationConfirmation.move" = "Save and Move Files";
+"metadataEditor.organizationConfirmation.saveOnly" = "Save Without Moving";
 "metadataEditor.error.trackNotFound" = "The selected song is no longer in the library.";
 "metadataEditor.artwork.title" = "Artwork";
 "metadataEditor.artist.photo.title" = "Artist Photo";

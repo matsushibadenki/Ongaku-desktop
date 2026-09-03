@@ -204,6 +204,7 @@ struct MetadataEditorView: View {
     @State private var selectedMusicBrainzReference: MusicBrainzReference?
     @State private var isSearchingMusicBrainz = false
     @State private var isShowingMusicBrainzCandidates = false
+    @State private var isShowingFileOrganizationConfirmation = false
 
     init(target: MetadataEditTarget) {
         self.target = target
@@ -296,7 +297,11 @@ struct MetadataEditorView: View {
                 Button(L10n.text("common.cancel")) { dismiss() }
                     .keyboardShortcut(.cancelAction)
                 Button {
-                    Task { await save() }
+                    if fileOrganizationTrackIDs.isEmpty {
+                        Task { await save() }
+                    } else {
+                        isShowingFileOrganizationConfirmation = true
+                    }
                 } label: {
                     if isSaving { ProgressView().controlSize(.small) }
                     else { Text(L10n.text("metadataEditor.save")) }
@@ -331,6 +336,25 @@ struct MetadataEditorView: View {
                     onUse: applyMusicBrainzCandidate
                 )
             }
+        }
+        .confirmationDialog(
+            L10n.text("metadataEditor.organizationConfirmation.title"),
+            isPresented: $isShowingFileOrganizationConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.text("metadataEditor.organizationConfirmation.move")) {
+                let trackIDs = fileOrganizationTrackIDs
+                Task { await save(organizing: trackIDs) }
+            }
+            Button(L10n.text("metadataEditor.organizationConfirmation.saveOnly")) {
+                Task { await save() }
+            }
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n.format(
+                "metadataEditor.organizationConfirmation.message",
+                fileOrganizationTrackIDs.count
+            ))
         }
     }
 
@@ -821,7 +845,7 @@ struct MetadataEditorView: View {
     }
 
     @MainActor
-    private func save() async {
+    private func save(organizing trackIDs: Set<Track.ID> = []) async {
         guard canSave else { return }
         isSaving = true
         errorMessage = nil
@@ -857,10 +881,36 @@ struct MetadataEditorView: View {
                 try await persistArtworkChange()
                 library.noteArtworkChanged()
             }
+            if !trackIDs.isEmpty {
+                try await library.organizeManagedMediaAfterMetadataChange(trackIDs: trackIDs)
+            }
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
             isSaving = false
+        }
+    }
+
+    private var fileOrganizationTrackIDs: Set<Track.ID> {
+        let artist = form.artist.trimmedForMetadata
+        let album = form.album.trimmedForMetadata
+        switch target {
+        case .track(let track):
+            return track.artist == artist && track.album == album ? [] : [track.id]
+        case .tracks(let tracks):
+            let changesArtist = selectedBulkFields.contains(.artist)
+            let changesAlbum = selectedBulkFields.contains(.album)
+            guard changesArtist || changesAlbum else { return [] }
+            return Set(tracks.compactMap { track in
+                let artistChanged = changesArtist && track.artist != artist
+                let albumChanged = changesAlbum && track.album != album
+                return artistChanged || albumChanged ? track.id : nil
+            })
+        case .album(_, let originalAlbum, let originalArtist, let tracks):
+            guard originalArtist != artist || originalAlbum != album else { return [] }
+            return Set(tracks.map(\.id))
+        case .artist(_, let originalArtist, let trackIDs):
+            return originalArtist == artist ? [] : Set(trackIDs)
         }
     }
 

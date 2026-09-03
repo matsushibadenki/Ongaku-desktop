@@ -4,6 +4,64 @@ import Testing
 
 @Suite("Catalog metadata editing")
 struct MetadataEditingTests {
+    @Test("Confirmed artist and album edits move only affected managed files")
+    @MainActor
+    func organizesAffectedFilesAfterMetadataEdit() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let oldDirectory = media.appendingPathComponent(
+            "Old Artist/Old Album",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(
+            at: oldDirectory,
+            withIntermediateDirectories: true
+        )
+        let editedSource = oldDirectory.appendingPathComponent("Edited.mp3")
+        let untouchedSource = oldDirectory.appendingPathComponent("Untouched.mp3")
+        try Data("edited audio".utf8).write(to: editedSource)
+        try Data("untouched audio".utf8).write(to: untouchedSource)
+
+        let edited = Track(
+            id: UUID(), title: "Edited", artist: "Old Artist", album: "Old Album",
+            duration: 1, fileSize: 12, managedPath: editedSource.path,
+            sha256: try LibraryRepository.sha256(of: editedSource),
+            addedAt: .now, health: .verified
+        )
+        let untouched = Track(
+            id: UUID(), title: "Untouched", artist: "Old Artist", album: "Old Album",
+            duration: 1, fileSize: 15, managedPath: untouchedSource.path,
+            sha256: try LibraryRepository.sha256(of: untouchedSource),
+            addedAt: .now, health: .verified
+        )
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: [edited, untouched]))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        try await store.updateTrackMetadata(
+            id: edited.id,
+            title: edited.title,
+            artist: "New Artist",
+            album: "New Album"
+        )
+        let summary = try await store.organizeManagedMediaAfterMetadataChange(
+            trackIDs: [edited.id]
+        )
+
+        let destination = media.appendingPathComponent("New Artist/New Album/Edited.mp3")
+        #expect(summary.moved == 1)
+        #expect(summary.updatedTracks == 1)
+        #expect(store.tracks.first { $0.id == edited.id }?.fileURL == destination)
+        #expect(FileManager.default.fileExists(atPath: destination.path))
+        #expect(!FileManager.default.fileExists(atPath: editedSource.path))
+        #expect(store.tracks.first { $0.id == untouched.id }?.fileURL == untouchedSource)
+        #expect(FileManager.default.fileExists(atPath: untouchedSource.path))
+    }
+
     @Test("Song, album, and artist edits persist without changing unsupported files")
     @MainActor
     func editsPersistAtomically() async throws {

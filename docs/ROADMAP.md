@@ -232,6 +232,7 @@ Ongaku Mobileでは、iPhoneのミュージックライブラリと、Mac同期�
 ### M3 — ライブラリ管理（10週間）— [Done]
 
 - [Done] 任意の複数楽曲に対するチェック式の一括メタデータ編集、混在値表示、変更プレビュー、対応音声ファイルへのタグ埋め込み
+- [Done] アーティスト名／アルバム名の保存時に確認を表示し、承認された管理ファイルだけを新しいArtist／Albumディレクトリへチェックサム検証・ロールバック付きで移動
 - [Done] 歌詞の表示・編集、LRC読み込み、複数タイムスタンプとoffset対応、再生位置への追従、行クリックによるシーク
 - [Done] [LRCLIB API](https://lrclib.net/docs)の`/api/get`による曲名・アーティスト・アルバム・再生時間の完全一致取得と、`/api/search`による候補検索
 - [Done] LRCLIBの`plainLyrics`／`syncedLyrics`／`instrumental`を統一歌詞モデルへ変換し、取得元、LRCLIB ID、取得日時、手動修正の有無とともにカタログへ保存してオフライン表示

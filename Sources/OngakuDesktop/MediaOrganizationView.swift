@@ -28,6 +28,21 @@ struct MediaOrganizationPreview: Sendable {
     var unchangedCount: Int { items.count { $0.status == .unchanged } }
     var externalCount: Int { items.count { $0.status == .external } }
     var unavailableCount: Int { items.count { $0.status == .unavailable } }
+
+    func restricted(to trackIDs: Set<Track.ID>) -> MediaOrganizationPreview {
+        guard !trackIDs.isEmpty else {
+            return MediaOrganizationPreview(
+                sourceRootURL: sourceRootURL,
+                destinationRootURL: destinationRootURL,
+                items: []
+            )
+        }
+        return MediaOrganizationPreview(
+            sourceRootURL: sourceRootURL,
+            destinationRootURL: destinationRootURL,
+            items: items.filter { !trackIDs.isDisjoint(with: $0.trackIDs) }
+        )
+    }
 }
 
 struct MediaOrganizationSummary: Sendable {

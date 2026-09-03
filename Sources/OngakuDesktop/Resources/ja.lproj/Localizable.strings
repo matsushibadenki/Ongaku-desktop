@@ -911,6 +911,10 @@
 "common.yes" = "はい";
 "common.no" = "いいえ";
 "metadataEditor.save" = "保存";
+"metadataEditor.organizationConfirmation.title" = "ファイルも整理しますか？";
+"metadataEditor.organizationConfirmation.message" = "アーティスト名またはアルバム名が変更されました。対象の%d曲を新しい「アーティスト／アルバム」フォルダへ移動できます。外部参照ファイルは移動しません。";
+"metadataEditor.organizationConfirmation.move" = "保存してファイルを移動";
+"metadataEditor.organizationConfirmation.saveOnly" = "移動せずに保存";
 "metadataEditor.error.trackNotFound" = "選択した楽曲はライブラリに存在しません。";
 "metadataEditor.artwork.title" = "サムネイル";
 "metadataEditor.artist.photo.title" = "アーティスト写真";
