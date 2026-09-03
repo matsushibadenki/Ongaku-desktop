@@ -180,6 +180,9 @@ struct M0QualityGateTests {
 
         #expect(labelReferenceCount == 2)
         #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .opacity(0)"))
+        #expect(sidebar.contains("Rectangle()\n                        .fill(.clear)"))
+        #expect(sidebar.contains(".overlay(alignment: .leading)"))
+        #expect(sidebar.contains("libraryProfileMenuLabel\n                        .allowsHitTesting(false)"))
     }
 
     private static func stringsTable(named name: String, locale: String) throws -> [String: String] {

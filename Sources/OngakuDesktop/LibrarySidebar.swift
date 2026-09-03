@@ -123,10 +123,17 @@ struct LibrarySidebar: View {
                         }
                     }
                 } label: {
-                    libraryProfileMenuLabel
+                    Rectangle()
+                        .fill(.clear)
+                        .frame(height: 20)
+                        .contentShape(Rectangle())
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
+                .overlay(alignment: .leading) {
+                    libraryProfileMenuLabel
+                        .allowsHitTesting(false)
+                }
                 .accessibilityLabel(libraryProfiles.activeProfile.name)
             }
 
