@@ -22,17 +22,19 @@ struct ContentView: View {
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
     var body: some View {
-        VStack(spacing: 0) {
-            if meterSettings.barPosition == .top {
-                persistentPlayer
-            }
-
+        Group {
             navigationContent
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            if meterSettings.barPosition == .bottom {
-                persistentPlayer
-            }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if meterSettings.barPosition == .top {
+                        persistentPlayer
+                    }
+                }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if meterSettings.barPosition == .bottom {
+                        persistentPlayer
+                    }
+                }
         }
         .accessibilityIdentifier("main.window")
         .background(AppTheme.canvas)
@@ -223,6 +225,7 @@ struct ContentView: View {
     private var persistentPlayer: some View {
         PlayerBar()
             .fixedSize(horizontal: false, vertical: true)
+            .layoutPriority(1)
     }
 
     private var navigationContent: some View {

@@ -152,6 +152,15 @@ struct M0QualityGateTests {
         #expect(appleMusic.contains(".keyboardShortcut(.cancelAction)"))
     }
 
+    @Test("The persistent player reserves space outside scrollable library content")
+    func persistentPlayerLayoutContract() throws {
+        let content = try Self.source("ContentView.swift")
+
+        #expect(content.contains(".safeAreaInset(edge: .top, spacing: 0)"))
+        #expect(content.contains(".safeAreaInset(edge: .bottom, spacing: 0)"))
+        #expect(content.contains(".layoutPriority(1)"))
+    }
+
     @Test("The active library menu renders a single visible label")
     func activeLibraryMenuHasOneLabelLayer() throws {
         let sidebar = try Self.source("LibrarySidebar.swift")
