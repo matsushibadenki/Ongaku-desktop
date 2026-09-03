@@ -182,8 +182,10 @@ struct M0QualityGateTests {
         #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .opacity(0)"))
         #expect(sidebar.contains("libraryProfileMenuLabel\n                        .hidden()"))
         #expect(sidebar.contains(".accessibilityHidden(true)"))
+        #expect(sidebar.contains(".frame(minWidth: 170, alignment: .leading)"))
         #expect(sidebar.contains(".overlay(alignment: .leading)"))
         #expect(sidebar.contains("libraryProfileMenuLabel\n                        .allowsHitTesting(false)"))
+        #expect(sidebar.contains(".lineLimit(1)\n                .layoutPriority(1)"))
     }
 
     @Test("The Pro effects rack reserves clearance above the persistent player")

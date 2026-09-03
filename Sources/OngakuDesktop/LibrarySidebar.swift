@@ -129,6 +129,7 @@ struct LibrarySidebar: View {
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
+                .frame(minWidth: 170, alignment: .leading)
                 .overlay(alignment: .leading) {
                     libraryProfileMenuLabel
                         .allowsHitTesting(false)
@@ -398,6 +399,7 @@ struct LibrarySidebar: View {
                 .frame(width: 16)
             Text(libraryProfiles.activeProfile.name)
                 .lineLimit(1)
+                .layoutPriority(1)
             Image(systemName: "chevron.down")
                 .font(.caption2.weight(.semibold))
         }
