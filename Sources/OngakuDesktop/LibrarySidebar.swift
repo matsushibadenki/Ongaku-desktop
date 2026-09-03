@@ -400,7 +400,7 @@ struct LibrarySidebar: View {
             Image(systemName: "chevron.down")
                 .font(.caption2.weight(.semibold))
         }
-        .foregroundStyle(Color.primary)
+        .foregroundStyle(AppTheme.ink)
         .contentShape(Rectangle())
     }
 
