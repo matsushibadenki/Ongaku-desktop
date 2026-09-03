@@ -4,7 +4,6 @@ import UniformTypeIdentifiers
 struct TrackInspector: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
-    @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var lyricsEditorTrack: Track?
     @State private var relinkTrackID: Track.ID?
     @State private var isChoosingRelinkFile = false
@@ -35,12 +34,6 @@ struct TrackInspector: View {
                         }
                     }
                     .padding(AppTheme.spaceLG)
-                    .padding(
-                        .bottom,
-                        meterSettings.barPosition == .bottom
-                            ? AppTheme.bottomPlayerClearance
-                            : 0
-                    )
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } else {

@@ -170,13 +170,15 @@ struct M0QualityGateTests {
         let sidebar = try Self.source("LibrarySidebar.swift")
         let inspector = try Self.source("TrackInspector.swift")
 
-        #expect(content.contains(".safeAreaInset(edge: .top, spacing: 0)"))
-        #expect(content.contains(".safeAreaInset(edge: .bottom, spacing: 0)"))
+        #expect(content.contains("private var playerAwareLayout: some View"))
+        #expect(content.contains("if meterSettings.barPosition == .top"))
+        #expect(content.contains("if meterSettings.barPosition == .bottom"))
+        #expect(content.contains("VStack(spacing: 0)"))
         #expect(content.contains(".layoutPriority(1)"))
-        #expect(sidebar.contains("meterSettings.barPosition == .bottom"))
-        #expect(sidebar.contains("Color.clear.frame(height: AppTheme.bottomPlayerClearance)"))
-        #expect(inspector.contains("meterSettings.barPosition == .bottom"))
-        #expect(inspector.contains("? AppTheme.bottomPlayerClearance"))
+        #expect(!content.contains(".safeAreaInset(edge: .top, spacing: 0)"))
+        #expect(!content.contains(".safeAreaInset(edge: .bottom, spacing: 0)"))
+        #expect(!sidebar.contains("Color.clear.frame(height: AppTheme.bottomPlayerClearance)"))
+        #expect(!inspector.contains("AppTheme.bottomPlayerClearance"))
     }
 
     @Test("The settings scene injects every environment object required by its sections")

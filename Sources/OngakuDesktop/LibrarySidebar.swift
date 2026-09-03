@@ -46,7 +46,6 @@ private enum SmartPlaylistEditorTarget: Identifiable {
 struct LibrarySidebar: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var libraryProfiles: LibraryProfileSettings
-    @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @State private var playlistEditorTarget: PlaylistEditorTarget?
     @State private var playlistPendingDeletion: Playlist?
     @State private var folderEditorTarget: PlaylistFolderEditorTarget?
@@ -226,12 +225,7 @@ struct LibrarySidebar: View {
         .scrollContentBackground(.hidden)
         .background(AppTheme.sidebar)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 0) {
-                librarySummary
-                if meterSettings.barPosition == .bottom {
-                    Color.clear.frame(height: AppTheme.bottomPlayerClearance)
-                }
-            }
+            librarySummary
         }
         .navigationTitle("Ongaku")
         .sheet(item: $playlistEditorTarget) { target in
