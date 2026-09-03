@@ -207,6 +207,9 @@ struct M0QualityGateTests {
         #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .opacity(0)"))
         #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .hidden()"))
         #expect(sidebar.contains(".lineLimit(1)\n                .layoutPriority(1)"))
+        #expect(sidebar.contains("@Environment(\\.colorScheme) private var colorScheme"))
+        #expect(sidebar.contains(".foregroundStyle(activeLibraryLabelColor)"))
+        #expect(sidebar.contains("colorScheme == .dark ? .white : .black"))
     }
 
     @Test("The Pro effects rack reserves clearance above the persistent player")

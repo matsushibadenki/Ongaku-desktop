@@ -44,6 +44,7 @@ private enum SmartPlaylistEditorTarget: Identifiable {
 }
 
 struct LibrarySidebar: View {
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var libraryProfiles: LibraryProfileSettings
     @State private var playlistEditorTarget: PlaylistEditorTarget?
@@ -345,8 +346,12 @@ struct LibrarySidebar: View {
             Image(systemName: "chevron.down")
                 .font(.caption2.weight(.semibold))
         }
-        .foregroundStyle(AppTheme.ink)
+        .foregroundStyle(activeLibraryLabelColor)
         .contentShape(Rectangle())
+    }
+
+    private var activeLibraryLabelColor: Color {
+        colorScheme == .dark ? .white : .black
     }
 
     private var activeProfileIcon: String {
