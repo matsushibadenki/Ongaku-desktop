@@ -123,10 +123,9 @@ struct LibrarySidebar: View {
                         }
                     }
                 } label: {
-                    Rectangle()
-                        .fill(.clear)
-                        .frame(height: 20)
-                        .contentShape(Rectangle())
+                    libraryProfileMenuLabel
+                        .hidden()
+                        .accessibilityHidden(true)
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)

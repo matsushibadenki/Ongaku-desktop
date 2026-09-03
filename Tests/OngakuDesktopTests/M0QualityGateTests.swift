@@ -178,9 +178,10 @@ struct M0QualityGateTests {
             separatedBy: "libraryProfileMenuLabel"
         ).count - 1
 
-        #expect(labelReferenceCount == 2)
+        #expect(labelReferenceCount == 3)
         #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .opacity(0)"))
-        #expect(sidebar.contains("Rectangle()\n                        .fill(.clear)"))
+        #expect(sidebar.contains("libraryProfileMenuLabel\n                        .hidden()"))
+        #expect(sidebar.contains(".accessibilityHidden(true)"))
         #expect(sidebar.contains(".overlay(alignment: .leading)"))
         #expect(sidebar.contains("libraryProfileMenuLabel\n                        .allowsHitTesting(false)"))
     }
