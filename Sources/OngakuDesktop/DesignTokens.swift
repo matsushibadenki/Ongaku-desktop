@@ -75,6 +75,7 @@ enum AppTheme {
     static let spaceMD: CGFloat = 16
     static let spaceLG: CGFloat = 24
     static let spaceXL: CGFloat = 40
+    static let bottomPlayerClearance: CGFloat = 128
 
     private static func adaptive(light: ThemeRGB, dark: ThemeRGB) -> Color {
         Color(nsColor: adaptiveNSColor(light: light, dark: dark))

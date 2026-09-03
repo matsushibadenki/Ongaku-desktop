@@ -155,10 +155,16 @@ struct M0QualityGateTests {
     @Test("The persistent player reserves space outside scrollable library content")
     func persistentPlayerLayoutContract() throws {
         let content = try Self.source("ContentView.swift")
+        let sidebar = try Self.source("LibrarySidebar.swift")
+        let inspector = try Self.source("TrackInspector.swift")
 
         #expect(content.contains(".safeAreaInset(edge: .top, spacing: 0)"))
         #expect(content.contains(".safeAreaInset(edge: .bottom, spacing: 0)"))
         #expect(content.contains(".layoutPriority(1)"))
+        #expect(sidebar.contains("meterSettings.barPosition == .bottom"))
+        #expect(sidebar.contains("Color.clear.frame(height: AppTheme.bottomPlayerClearance)"))
+        #expect(inspector.contains("meterSettings.barPosition == .bottom"))
+        #expect(inspector.contains("? AppTheme.bottomPlayerClearance"))
     }
 
     @Test("The settings scene injects every environment object required by its sections")
@@ -193,8 +199,9 @@ struct M0QualityGateTests {
     func proEffectsRackReservesPlayerClearance() throws {
         let effectsRack = try Self.source("EffectsRackView.swift")
 
-        #expect(effectsRack.contains("private let proPlayerClearance: CGFloat = 128"))
-        #expect(effectsRack.contains("selectedTab == .pro ? proPlayerClearance : AppTheme.spaceLG"))
+        #expect(effectsRack.contains(
+            "selectedTab == .pro ? AppTheme.bottomPlayerClearance : AppTheme.spaceLG"
+        ))
     }
 
     private static func stringsTable(named name: String, locale: String) throws -> [String: String] {

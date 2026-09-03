@@ -9,8 +9,6 @@ struct EffectsRackView: View {
     @EnvironmentObject private var player: PlaybackController
     @State private var selectedTab: AudioEffectPageTab = .basic
 
-    private let proPlayerClearance: CGFloat = 128
-
     private var visibleKinds: [RealtimeAudioEffectKind] {
         let allowed = AudioEffectModuleRegistry.activeKinds(for: selectedTab)
         return AudioEffectModuleRegistry.activeKinds.filter(allowed.contains)
@@ -38,7 +36,7 @@ struct EffectsRackView: View {
             .padding(.horizontal, AppTheme.spaceLG)
             .padding(
                 .bottom,
-                selectedTab == .pro ? proPlayerClearance : AppTheme.spaceLG
+                selectedTab == .pro ? AppTheme.bottomPlayerClearance : AppTheme.spaceLG
             )
         }
         .onAppear {
