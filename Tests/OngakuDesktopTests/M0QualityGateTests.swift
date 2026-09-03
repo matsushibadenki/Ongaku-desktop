@@ -153,15 +153,24 @@ struct M0QualityGateTests {
         #expect(appleMusic.contains(".keyboardShortcut(.cancelAction)"))
     }
 
-    @Test("The toolbar import and relink actions share one file importer presenter")
-    func mainFileImporterHasOnePresenter() throws {
+    @Test("The toolbar import and relink actions use reliable native open panels")
+    func mainFileImporterUsesNativePanels() throws {
         let content = try Self.source("ContentView.swift")
-        let presenterCount = content.components(separatedBy: ".fileImporter(").count - 1
+        let musicPanelCallCount = content.components(
+            separatedBy: "presentMusicImportPanel()"
+        ).count - 1
+        let relinkPanelCallCount = content.components(
+            separatedBy: "presentRelinkSearchPanel()"
+        ).count - 1
 
-        #expect(presenterCount == 1)
-        #expect(content.contains("presentFileImporter(.music)"))
-        #expect(content.contains("presentFileImporter(.relinkSearch)"))
-        #expect(content.contains("switch fileImporterMode"))
+        #expect(!content.contains(".fileImporter("))
+        #expect(musicPanelCallCount == 3)
+        #expect(relinkPanelCallCount == 2)
+        #expect(content.contains("private func presentMusicImportPanel()"))
+        #expect(content.contains("private func presentRelinkSearchPanel()"))
+        #expect(content.contains("panel.allowedContentTypes = [.audio]"))
+        #expect(content.contains("panel.allowedContentTypes = [.folder]"))
+        #expect(content.contains("panel.runModal() == .OK"))
     }
 
     @Test("The persistent player reserves space outside scrollable library content")

@@ -1,21 +1,6 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
-
-private enum MainFileImporterMode {
-    case music
-    case relinkSearch
-
-    var allowedContentTypes: [UTType] {
-        switch self {
-        case .music: [.audio]
-        case .relinkSearch: [.folder]
-        }
-    }
-
-    var allowsMultipleSelection: Bool {
-        self == .music
-    }
-}
 
 struct ContentView: View {
     @Environment(\.undoManager) private var undoManager
@@ -24,8 +9,6 @@ struct ContentView: View {
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @EnvironmentObject private var phoneSync: PhoneSyncController
-    @State private var fileImporterMode: MainFileImporterMode = .music
-    @State private var isFileImporterPresented = false
     @State private var isImportingCD = false
     @State private var isImportingURL = false
     @State private var isMigratingLibrary = false
@@ -58,19 +41,6 @@ struct ContentView: View {
             }
         }
         .animation(.easeOut(duration: 0.15), value: isDropTargeted)
-        .fileImporter(
-            isPresented: $isFileImporterPresented,
-            allowedContentTypes: fileImporterMode.allowedContentTypes,
-            allowsMultipleSelection: fileImporterMode.allowsMultipleSelection
-        ) { result in
-            guard case .success(let urls) = result else { return }
-            switch fileImporterMode {
-            case .music:
-                Task { await library.importFiles(urls) }
-            case .relinkSearch:
-                Task { await library.relinkMissingFiles(searching: urls) }
-            }
-        }
 #if !APP_STORE
         .sheet(isPresented: $isImportingCD) {
             AudioCDImportView()
@@ -108,7 +78,7 @@ struct ContentView: View {
                 .environmentObject(phoneSync)
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestImport)) { _ in
-            presentFileImporter(.music)
+            presentMusicImportPanel()
         }
 #if !APP_STORE
         .onReceive(NotificationCenter.default.publisher(for: .requestCDImport)) { _ in
@@ -154,7 +124,7 @@ struct ContentView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    presentFileImporter(.music)
+                    presentMusicImportPanel()
                 } label: {
                     Label(L10n.text("command.import"), systemImage: "plus")
                 }
@@ -207,7 +177,7 @@ struct ContentView: View {
                 )
 
                 Button {
-                    presentFileImporter(.relinkSearch)
+                    presentRelinkSearchPanel()
                 } label: {
                     Label(L10n.text("relink.searchFolder"), systemImage: "folder.badge.questionmark")
                 }
@@ -223,9 +193,32 @@ struct ContentView: View {
         .toolbarBackground(.visible, for: .windowToolbar)
     }
 
-    private func presentFileImporter(_ mode: MainFileImporterMode) {
-        fileImporterMode = mode
-        isFileImporterPresented = true
+    private func presentMusicImportPanel() {
+        let panel = NSOpenPanel()
+        panel.title = L10n.text("command.import")
+        panel.prompt = L10n.text("common.choose")
+        panel.allowedContentTypes = [.audio]
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+
+        guard panel.runModal() == .OK else { return }
+        let urls = panel.urls
+        guard !urls.isEmpty else { return }
+        Task { await library.importFiles(urls) }
+    }
+
+    private func presentRelinkSearchPanel() {
+        let panel = NSOpenPanel()
+        panel.title = L10n.text("relink.searchFolder")
+        panel.prompt = L10n.text("common.choose")
+        panel.allowedContentTypes = [.folder]
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+
+        guard panel.runModal() == .OK, let directory = panel.url else { return }
+        Task { await library.relinkMissingFiles(searching: [directory]) }
     }
 
     private var persistentPlayer: some View {
