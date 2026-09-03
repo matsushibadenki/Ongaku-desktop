@@ -152,6 +152,17 @@ struct M0QualityGateTests {
         #expect(appleMusic.contains(".keyboardShortcut(.cancelAction)"))
     }
 
+    @Test("The active library menu renders a single visible label")
+    func activeLibraryMenuHasOneLabelLayer() throws {
+        let sidebar = try Self.source("LibrarySidebar.swift")
+        let labelReferenceCount = sidebar.components(
+            separatedBy: "libraryProfileMenuLabel"
+        ).count - 1
+
+        #expect(labelReferenceCount == 2)
+        #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .opacity(0)"))
+    }
+
     private static func stringsTable(named name: String, locale: String) throws -> [String: String] {
         let url = resourceRoot
             .appendingPathComponent("\(locale).lproj", isDirectory: true)

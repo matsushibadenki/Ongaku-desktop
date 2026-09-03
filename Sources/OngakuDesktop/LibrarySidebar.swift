@@ -124,14 +124,9 @@ struct LibrarySidebar: View {
                     }
                 } label: {
                     libraryProfileMenuLabel
-                        .opacity(0)
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
-                .overlay(alignment: .leading) {
-                    libraryProfileMenuLabel
-                        .allowsHitTesting(false)
-                }
                 .accessibilityLabel(libraryProfiles.activeProfile.name)
             }
 
