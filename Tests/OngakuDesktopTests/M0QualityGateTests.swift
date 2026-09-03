@@ -139,6 +139,7 @@ struct M0QualityGateTests {
         let appleMusic = try Self.source("AppleMusicStoreView.swift")
 
         #expect(content.contains(".accessibilityIdentifier(\"main.window\")"))
+        #expect(content.contains(".accessibilityIdentifier(\"main.import-music\")"))
         #expect(content.contains(".accessibilityIdentifier(\"main.open-device-sync\")"))
         #expect(content.contains(".accessibilityIdentifier(\"main.open-apple-music\")"))
         #expect(content.contains(".keyboardShortcut(\"i\", modifiers: [.command, .shift])"))
@@ -150,6 +151,17 @@ struct M0QualityGateTests {
         #expect(appleMusic.contains(".accessibilityIdentifier(\"apple-music.close\")"))
         #expect(appleMusic.contains(".keyboardShortcut(.defaultAction)"))
         #expect(appleMusic.contains(".keyboardShortcut(.cancelAction)"))
+    }
+
+    @Test("The toolbar import and relink actions share one file importer presenter")
+    func mainFileImporterHasOnePresenter() throws {
+        let content = try Self.source("ContentView.swift")
+        let presenterCount = content.components(separatedBy: ".fileImporter(").count - 1
+
+        #expect(presenterCount == 1)
+        #expect(content.contains("presentFileImporter(.music)"))
+        #expect(content.contains("presentFileImporter(.relinkSearch)"))
+        #expect(content.contains("switch fileImporterMode"))
     }
 
     @Test("The persistent player reserves space outside scrollable library content")

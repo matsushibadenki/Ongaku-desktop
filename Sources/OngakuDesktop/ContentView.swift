@@ -1,6 +1,22 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+private enum MainFileImporterMode {
+    case music
+    case relinkSearch
+
+    var allowedContentTypes: [UTType] {
+        switch self {
+        case .music: [.audio]
+        case .relinkSearch: [.folder]
+        }
+    }
+
+    var allowsMultipleSelection: Bool {
+        self == .music
+    }
+}
+
 struct ContentView: View {
     @Environment(\.undoManager) private var undoManager
     @EnvironmentObject private var library: LibraryStore
@@ -8,7 +24,8 @@ struct ContentView: View {
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @EnvironmentObject private var phoneSync: PhoneSyncController
-    @State private var isImporting = false
+    @State private var fileImporterMode: MainFileImporterMode = .music
+    @State private var isFileImporterPresented = false
     @State private var isImportingCD = false
     @State private var isImportingURL = false
     @State private var isMigratingLibrary = false
@@ -17,7 +34,6 @@ struct ContentView: View {
     @State private var isOrganizingMedia = false
     @State private var isShowingAppleMusicStore = false
     @State private var isShowingDeviceSync = false
-    @State private var isRelinkSearching = false
     @State private var isDropTargeted = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
 
@@ -56,12 +72,17 @@ struct ContentView: View {
         }
         .animation(.easeOut(duration: 0.15), value: isDropTargeted)
         .fileImporter(
-            isPresented: $isImporting,
-            allowedContentTypes: [.audio],
-            allowsMultipleSelection: true
+            isPresented: $isFileImporterPresented,
+            allowedContentTypes: fileImporterMode.allowedContentTypes,
+            allowsMultipleSelection: fileImporterMode.allowsMultipleSelection
         ) { result in
             guard case .success(let urls) = result else { return }
-            Task { await library.importFiles(urls) }
+            switch fileImporterMode {
+            case .music:
+                Task { await library.importFiles(urls) }
+            case .relinkSearch:
+                Task { await library.relinkMissingFiles(searching: urls) }
+            }
         }
 #if !APP_STORE
         .sheet(isPresented: $isImportingCD) {
@@ -99,16 +120,8 @@ struct ContentView: View {
                 .environmentObject(library)
                 .environmentObject(phoneSync)
         }
-        .fileImporter(
-            isPresented: $isRelinkSearching,
-            allowedContentTypes: [.folder],
-            allowsMultipleSelection: false
-        ) { result in
-            guard case .success(let urls) = result else { return }
-            Task { await library.relinkMissingFiles(searching: urls) }
-        }
         .onReceive(NotificationCenter.default.publisher(for: .requestImport)) { _ in
-            isImporting = true
+            presentFileImporter(.music)
         }
 #if !APP_STORE
         .onReceive(NotificationCenter.default.publisher(for: .requestCDImport)) { _ in
@@ -154,10 +167,11 @@ struct ContentView: View {
         .toolbar {
             ToolbarItemGroup {
                 Button {
-                    isImporting = true
+                    presentFileImporter(.music)
                 } label: {
                     Label(L10n.text("command.import"), systemImage: "plus")
                 }
+                .accessibilityIdentifier("main.import-music")
                 .help(L10n.text("toolbar.importHelp"))
 
 #if !APP_STORE
@@ -206,7 +220,7 @@ struct ContentView: View {
                 )
 
                 Button {
-                    isRelinkSearching = true
+                    presentFileImporter(.relinkSearch)
                 } label: {
                     Label(L10n.text("relink.searchFolder"), systemImage: "folder.badge.questionmark")
                 }
@@ -220,6 +234,11 @@ struct ContentView: View {
         }
         .toolbarBackground(AppTheme.windowBar, for: .windowToolbar)
         .toolbarBackground(.visible, for: .windowToolbar)
+    }
+
+    private func presentFileImporter(_ mode: MainFileImporterMode) {
+        fileImporterMode = mode
+        isFileImporterPresented = true
     }
 
     private var persistentPlayer: some View {
