@@ -1,3 +1,5 @@
+@preconcurrency import AVFoundation
+import Foundation
 import Testing
 @testable import OngakuDesktop
 
@@ -26,5 +28,28 @@ struct PlaybackRecoveryTests {
             state.requestAfterWake()
                 == PlaybackRecoveryRequest(position: 0, shouldResume: false)
         )
+    }
+
+    @Test("Audio engine configuration notifications safely reach the main actor")
+    @MainActor
+    func configurationChangesHopToMainActor() async throws {
+        let player = PlaybackController()
+        let engine = try #require(
+            Mirror(reflecting: player).children.first { $0.label == "engine" }?.value
+                as? AVAudioEngine
+        )
+
+        await withCheckedContinuation { continuation in
+            DispatchQueue(label: "test.audio-engine-configuration").async {
+                NotificationCenter.default.post(
+                    name: .AVAudioEngineConfigurationChange,
+                    object: engine
+                )
+                continuation.resume()
+            }
+        }
+        try await Task.sleep(for: .milliseconds(50))
+
+        #expect(player.errorMessage == nil)
     }
 }

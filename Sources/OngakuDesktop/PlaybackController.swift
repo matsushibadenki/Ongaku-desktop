@@ -1532,26 +1532,25 @@ final class PlaybackController: ObservableObject {
             for: .AVAudioEngineConfigurationChange,
             object: engine
         )
+        // AVAudioEngine posts this notification from its private engine queue.
+        // Deliver it to the main queue before entering this MainActor-isolated closure.
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.scheduleAudioEngineRecovery()
-            }
+            self?.scheduleAudioEngineRecovery()
         }
         .store(in: &recoveryObservations)
 
         NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.willSleepNotification)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    self?.prepareForSystemSleep()
-                }
+                self?.prepareForSystemSleep()
             }
             .store(in: &recoveryObservations)
 
         NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didWakeNotification)
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    self?.recoverAfterSystemWake()
-                }
+                self?.recoverAfterSystemWake()
             }
             .store(in: &recoveryObservations)
     }
