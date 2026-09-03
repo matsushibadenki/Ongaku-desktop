@@ -31,4 +31,27 @@ struct AlbumTitleGroupingTests {
     func ordersMiscellaneousLast() {
         #expect(AlbumTitleGrouping.ordered(["#", "B", "A"], locale: locale) == ["A", "B", "#"])
     }
+
+    @Test("Albums with the same title keep a deterministic artist order")
+    func ordersSameNamedAlbumsByArtistAndID() throws {
+        let firstID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000001"))
+        let secondID = try #require(UUID(uuidString: "00000000-0000-0000-0000-000000000002"))
+        let albums = [
+            (name: "不明なアルバム", artist: "yamataizo", id: secondID),
+            (name: "不明なアルバム", artist: "Adrien Koo", id: firstID),
+        ]
+
+        let ordered = albums.sorted {
+            AlbumDisplayOrdering.areInIncreasingOrder(
+                lhsName: $0.name,
+                lhsArtist: $0.artist,
+                lhsID: $0.id,
+                rhsName: $1.name,
+                rhsArtist: $1.artist,
+                rhsID: $1.id
+            )
+        }
+
+        #expect(ordered.map(\.artist) == ["Adrien Koo", "yamataizo"])
+    }
 }

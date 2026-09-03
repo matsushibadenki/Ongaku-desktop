@@ -1585,7 +1585,16 @@ private struct AlbumGroup: Identifiable {
                 tracks: group
             )
         }
-        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        .sorted {
+            AlbumDisplayOrdering.areInIncreasingOrder(
+                lhsName: $0.name,
+                lhsArtist: $0.artist,
+                lhsID: $0.id,
+                rhsName: $1.name,
+                rhsArtist: $1.artist,
+                rhsID: $1.id
+            )
+        }
     }
 }
 
@@ -1640,6 +1649,29 @@ enum AlbumTitleGrouping {
             return lhs.compare(rhs, options: [.caseInsensitive, .diacriticInsensitive], locale: locale)
                 == .orderedAscending
         }
+    }
+}
+
+enum AlbumDisplayOrdering {
+    static func areInIncreasingOrder(
+        lhsName: String,
+        lhsArtist: String,
+        lhsID: UUID,
+        rhsName: String,
+        rhsArtist: String,
+        rhsID: UUID
+    ) -> Bool {
+        let nameComparison = lhsName.localizedStandardCompare(rhsName)
+        if nameComparison != .orderedSame {
+            return nameComparison == .orderedAscending
+        }
+
+        let artistComparison = lhsArtist.localizedStandardCompare(rhsArtist)
+        if artistComparison != .orderedSame {
+            return artistComparison == .orderedAscending
+        }
+
+        return lhsID.uuidString < rhsID.uuidString
     }
 }
 
