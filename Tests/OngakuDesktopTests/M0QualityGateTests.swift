@@ -161,6 +161,16 @@ struct M0QualityGateTests {
         #expect(content.contains(".layoutPriority(1)"))
     }
 
+    @Test("The settings scene injects every environment object required by its sections")
+    func settingsSceneEnvironmentContract() throws {
+        let app = try Self.source("OngakuDesktopApp.swift")
+        let settingsScene = try #require(app.components(separatedBy: "Settings {").last)
+
+        #expect(settingsScene.contains(".environmentObject(socialPrivacy)"))
+        #expect(settingsScene.contains(".environmentObject(phoneSync)"))
+        #expect(settingsScene.contains(".environmentObject(library)"))
+    }
+
     @Test("The active library menu renders a single visible label")
     func activeLibraryMenuHasOneLabelLayer() throws {
         let sidebar = try Self.source("LibrarySidebar.swift")

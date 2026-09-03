@@ -267,6 +267,7 @@ struct OngakuDesktopApp: App {
                 .environmentObject(appearance)
                 .environmentObject(meterSettings)
                 .environmentObject(trackTableSettings)
+                .environmentObject(socialPrivacy)
                 .environmentObject(phoneSync)
                 .id(language.selectedLanguage.rawValue)
         }
