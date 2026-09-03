@@ -16,6 +16,26 @@ struct USBMobileDevice: Identifiable, Equatable, Sendable {
     var name: String
 }
 
+struct NearbyBrowserLifecycle: Equatable, Sendable {
+    private(set) var isBrowsing = false
+
+    mutating func startIfNeeded(controllerIsStarted: Bool, hasConnectedPeers: Bool) -> Bool {
+        guard controllerIsStarted, !hasConnectedPeers, !isBrowsing else { return false }
+        isBrowsing = true
+        return true
+    }
+
+    mutating func stopIfNeeded() -> Bool {
+        guard isBrowsing else { return false }
+        isBrowsing = false
+        return true
+    }
+
+    mutating func markStartFailed() {
+        isBrowsing = false
+    }
+}
+
 final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable {
     nonisolated static let auditHistoryDefaultsKey = "deviceSync.overlayAudit.v1"
     @Published private(set) var connectionState: DeviceSyncConnectionState = .disconnected
@@ -85,6 +105,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         directory: Self.checkpointDirectory
     )
     private var automaticInvitationCooldowns: [String: Date] = [:]
+    private var browserLifecycle = NearbyBrowserLifecycle()
     private var isStarted = false
 
     init(defaults: UserDefaults = .standard) {
@@ -104,7 +125,9 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         connectionAttemptTimeoutWorkItem?.cancel()
         usbDetectionTimer?.cancel()
         transferProgresses.values.forEach { $0.cancel() }
-        browser.stopBrowsingForPeers()
+        if browserLifecycle.stopIfNeeded() {
+            browser.stopBrowsingForPeers()
+        }
         session.disconnect()
     }
 
@@ -123,7 +146,9 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         discoveryRetryWorkItem = nil
         connectionAttemptTimeoutWorkItem?.cancel()
         connectionAttemptTimeoutWorkItem = nil
-        browser.stopBrowsingForPeers()
+        if browserLifecycle.stopIfNeeded() {
+            browser.stopBrowsingForPeers()
+        }
         session.disconnect()
         connectionState = .disconnected
         discoveredPhones = []
@@ -649,7 +674,10 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         if session.connectedPeers.isEmpty {
             connectionState = .searching
         }
-        browser.stopBrowsingForPeers()
+        guard browserLifecycle.startIfNeeded(
+            controllerIsStarted: isStarted,
+            hasConnectedPeers: !session.connectedPeers.isEmpty
+        ) else { return }
         browser.startBrowsingForPeers()
         scheduleDiscoveryRetry()
     }
@@ -661,9 +689,12 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
                   isStarted,
                   session.connectedPeers.isEmpty,
                   discoveredPhones.isEmpty else { return }
-            browser.stopBrowsingForPeers()
-            browser.startBrowsingForPeers()
-            scheduleDiscoveryRetry()
+            discoveryRetryWorkItem = nil
+            // MCNearbyServiceBrowser keeps searching after it starts. Repeatedly
+            // cancelling and restarting its underlying Bonjour browser can race
+            // CoreFoundation's run-loop source teardown and crash in _BrowserCancel.
+            guard !browserLifecycle.isBrowsing else { return }
+            beginBrowsing()
         }
         discoveryRetryWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 4, execute: workItem)
@@ -1280,7 +1311,13 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
     }
 
     func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-        publishFailure(error.localizedDescription)
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            browserLifecycle.markStartFailed()
+            guard isStarted else { return }
+            connectionState = .failed(error.localizedDescription)
+            scheduleDiscoveryRetry()
+        }
     }
 }
 

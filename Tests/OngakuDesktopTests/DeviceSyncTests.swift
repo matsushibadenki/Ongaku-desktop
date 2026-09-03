@@ -4,6 +4,51 @@ import Testing
 
 @Suite("Device sync protocol")
 struct DeviceSyncTests {
+    @Test("Bonjour discovery starts and stops at most once per lifecycle transition")
+    func nearbyBrowserLifecycleIsIdempotent() {
+        var lifecycle = NearbyBrowserLifecycle()
+
+        let startWhileStopped = lifecycle.startIfNeeded(
+            controllerIsStarted: false,
+            hasConnectedPeers: false
+        )
+        #expect(!startWhileStopped)
+        let initialStart = lifecycle.startIfNeeded(
+            controllerIsStarted: true,
+            hasConnectedPeers: false
+        )
+        #expect(initialStart)
+        #expect(lifecycle.isBrowsing)
+        let duplicateStart = lifecycle.startIfNeeded(
+            controllerIsStarted: true,
+            hasConnectedPeers: false
+        )
+        #expect(!duplicateStart)
+        let initialStop = lifecycle.stopIfNeeded()
+        #expect(initialStop)
+        #expect(!lifecycle.isBrowsing)
+        let duplicateStop = lifecycle.stopIfNeeded()
+        #expect(!duplicateStop)
+        let startWhileConnected = lifecycle.startIfNeeded(
+            controllerIsStarted: true,
+            hasConnectedPeers: true
+        )
+        #expect(!startWhileConnected)
+
+        let retryStart = lifecycle.startIfNeeded(
+            controllerIsStarted: true,
+            hasConnectedPeers: false
+        )
+        #expect(retryStart)
+        lifecycle.markStartFailed()
+        #expect(!lifecycle.isBrowsing)
+        let recoveryStart = lifecycle.startIfNeeded(
+            controllerIsStarted: true,
+            hasConnectedPeers: false
+        )
+        #expect(recoveryStart)
+    }
+
     @Test("Manifest messages preserve transfer metadata")
     func manifestRoundTrip() throws {
         let item = makeItem()
