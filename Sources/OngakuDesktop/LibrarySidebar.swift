@@ -123,13 +123,13 @@ struct LibrarySidebar: View {
                         }
                     }
                 } label: {
-                    libraryProfileMenuLabel
-                        .hidden()
-                        .accessibilityHidden(true)
+                    Rectangle()
+                        .fill(.clear)
+                        .frame(width: 170, height: 20)
+                        .contentShape(Rectangle())
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
-                .frame(minWidth: 170, alignment: .leading)
                 .overlay(alignment: .leading) {
                     libraryProfileMenuLabel
                         .allowsHitTesting(false)
