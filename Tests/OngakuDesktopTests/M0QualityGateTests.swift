@@ -186,6 +186,14 @@ struct M0QualityGateTests {
         #expect(sidebar.contains("libraryProfileMenuLabel\n                        .allowsHitTesting(false)"))
     }
 
+    @Test("The Pro effects rack reserves clearance above the persistent player")
+    func proEffectsRackReservesPlayerClearance() throws {
+        let effectsRack = try Self.source("EffectsRackView.swift")
+
+        #expect(effectsRack.contains("private let proPlayerClearance: CGFloat = 128"))
+        #expect(effectsRack.contains("selectedTab == .pro ? proPlayerClearance : AppTheme.spaceLG"))
+    }
+
     private static func stringsTable(named name: String, locale: String) throws -> [String: String] {
         let url = resourceRoot
             .appendingPathComponent("\(locale).lproj", isDirectory: true)
