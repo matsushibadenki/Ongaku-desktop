@@ -221,17 +221,7 @@ struct ChannelVUMeterView: View {
     let backlight: Color
     var isActive = true
 
-    private let scaleMarks: [(decibels: Int, position: Double)] = [
-        (-40, 0.00),
-        (-30, 0.11),
-        (-20, 0.23),
-        (-10, 0.38),
-        (-7, 0.49),
-        (-5, 0.58),
-        (-3, 0.68),
-        (0, 0.84),
-        (3, 1.00),
-    ]
+    private let scaleMarks = VUMeterCalibration.scaleMarks
 
     var body: some View {
         GeometryReader { _ in
@@ -424,8 +414,7 @@ struct ChannelVUMeterView: View {
     }
 
     private var needlePosition: Double {
-        let decibels = (clampedLevel * 60) - 60
-        return min(max((decibels + 40) / 43, 0), 1)
+        VUMeterCalibration.needlePosition(forNormalizedRMS: clampedLevel)
     }
 
     private func point(from pivot: CGPoint, radius: CGFloat, angle: Double) -> CGPoint {
@@ -433,6 +422,44 @@ struct ChannelVUMeterView: View {
             x: pivot.x + (sin(angle) * radius),
             y: pivot.y - (cos(angle) * radius)
         )
+    }
+}
+
+enum VUMeterCalibration {
+    /// Conventional alignment: a -18 dBFS RMS program signal reads 0 VU.
+    static let referenceDBFS = -18.0
+    static let floorDBFS = -60.0
+    static let scaleMarks: [(decibels: Int, position: Double)] = [
+        (-40, 0.00),
+        (-30, 0.11),
+        (-20, 0.23),
+        (-10, 0.38),
+        (-7, 0.49),
+        (-5, 0.58),
+        (-3, 0.68),
+        (0, 0.84),
+        (3, 1.00),
+    ]
+
+    static func needlePosition(forNormalizedRMS level: Double) -> Double {
+        let clampedLevel = min(max(level, 0), 1)
+        let dbfs = (clampedLevel * -floorDBFS) + floorDBFS
+        return position(forVUDecibels: dbfs - referenceDBFS)
+    }
+
+    private static func position(forVUDecibels decibels: Double) -> Double {
+        guard let first = scaleMarks.first, let last = scaleMarks.last else { return 0 }
+        guard decibels > Double(first.decibels) else { return first.position }
+        guard decibels < Double(last.decibels) else { return last.position }
+
+        for (lower, upper) in zip(scaleMarks, scaleMarks.dropFirst()) {
+            let lowerDB = Double(lower.decibels)
+            let upperDB = Double(upper.decibels)
+            guard decibels >= lowerDB, decibels <= upperDB else { continue }
+            let progress = (decibels - lowerDB) / (upperDB - lowerDB)
+            return lower.position + ((upper.position - lower.position) * progress)
+        }
+        return last.position
     }
 }
 

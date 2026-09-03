@@ -273,7 +273,7 @@
 "common.retry" = "重试";
 "toolbar.verifyHelp" = "验证所有受管理音乐文件是否被更改或损坏";
 "sidebar.library" = "资料库";
-"libraryProfile.section" = "资料库";
+"libraryProfile.section" = "当前资料库";
 "libraryProfile.defaultName" = "主资料库";
 "libraryProfile.untitled" = "未命名资料库";
 "libraryProfile.name" = "资料库名称";

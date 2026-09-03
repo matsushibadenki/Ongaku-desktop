@@ -128,6 +128,13 @@ struct StereoLevelMeterTests {
         #expect(StereoLevelMath.normalizedRMS([Float](repeating: 1, count: 128)) == 1)
     }
 
+    @Test("VU calibration maps -18 dBFS RMS to the 0 VU mark")
+    func vuCalibration() {
+        // StereoLevelMath maps -60...0 dBFS into 0...1, so -18 dBFS is 0.70.
+        #expect(VUMeterCalibration.needlePosition(forNormalizedRMS: 0.70) == 0.84)
+        #expect(VUMeterCalibration.needlePosition(forNormalizedRMS: 1) == 1)
+    }
+
     @Test("A quieter signal produces a lower reading")
     func relativeLevel() {
         let quiet = StereoLevelMath.normalizedRMS([Float](repeating: 0.01, count: 128))

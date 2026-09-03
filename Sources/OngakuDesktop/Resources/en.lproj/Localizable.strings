@@ -273,7 +273,7 @@
 "common.retry" = "Retry";
 "toolbar.verifyHelp" = "Verify the integrity of all managed music files";
 "sidebar.library" = "Library";
-"libraryProfile.section" = "Libraries";
+"libraryProfile.section" = "Active Library";
 "libraryProfile.defaultName" = "Main Library";
 "libraryProfile.untitled" = "Untitled Library";
 "libraryProfile.name" = "Library name";

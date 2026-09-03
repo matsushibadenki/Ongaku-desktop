@@ -273,7 +273,7 @@
 "common.retry" = "再試行";
 "toolbar.verifyHelp" = "管理中の音楽ファイルが変更・破損していないか検証します";
 "sidebar.library" = "ライブラリ";
-"libraryProfile.section" = "ライブラリ";
+"libraryProfile.section" = "使用中のライブラリ";
 "libraryProfile.defaultName" = "メインライブラリ";
 "libraryProfile.untitled" = "名称未設定のライブラリ";
 "libraryProfile.name" = "ライブラリ名";

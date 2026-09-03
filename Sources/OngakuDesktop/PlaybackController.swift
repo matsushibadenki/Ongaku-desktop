@@ -892,7 +892,7 @@ final class PlaybackController: ObservableObject {
     @Published private(set) var isPlaying = false
     @Published private(set) var elapsed: TimeInterval = 0
     @Published var volume: Double = 0.8 {
-        didSet { sourceMixerNode.outputVolume = Float(volume) }
+        didSet { outputGainNode.outputVolume = Float(volume) }
     }
     @Published private(set) var errorMessage: String?
     @Published private(set) var sourceSampleRate: Double = 0
@@ -969,6 +969,9 @@ final class PlaybackController: ObservableObject {
     private let primaryPlayerNode = AVAudioPlayerNode()
     private let secondaryPlayerNode = AVAudioPlayerNode()
     private let sourceMixerNode = AVAudioMixerNode()
+    // Keeps the metering point after DSP but before the user-facing output gain.
+    private let meterTapNode = AVAudioMixerNode()
+    private let outputGainNode = AVAudioMixerNode()
     private var activePlayerIndex = 0
     private var playerNode: AVAudioPlayerNode {
         activePlayerIndex == 0 ? primaryPlayerNode : secondaryPlayerNode
@@ -1044,11 +1047,13 @@ final class PlaybackController: ObservableObject {
         engine.attach(primaryPlayerNode)
         engine.attach(secondaryPlayerNode)
         engine.attach(sourceMixerNode)
+        engine.attach(meterTapNode)
+        engine.attach(outputGainNode)
         effectPipeline.forEach { $0.attach(to: engine) }
         effectSettings.forEach(applyEffectSetting)
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
-        sourceMixerNode.outputVolume = Float(volume)
+        outputGainNode.outputVolume = Float(volume)
         observeSystemAudioEvents()
     }
 
@@ -1490,6 +1495,8 @@ final class PlaybackController: ObservableObject {
         engine.disconnectNodeOutput(primaryPlayerNode)
         engine.disconnectNodeOutput(secondaryPlayerNode)
         engine.disconnectNodeOutput(sourceMixerNode)
+        engine.disconnectNodeOutput(meterTapNode)
+        engine.disconnectNodeOutput(outputGainNode)
         for effect in effectPipeline {
             effect.nodes.forEach { engine.disconnectNodeOutput($0) }
         }
@@ -1517,7 +1524,10 @@ final class PlaybackController: ObservableObject {
             effect.connectInternalNodes(engine: engine, format: file.processingFormat)
             upstream = effect.outputNode
         }
-        engine.connect(upstream, to: engine.mainMixerNode, format: file.processingFormat)
+        // Meter the processed program signal before the app's listening-volume gain.
+        engine.connect(upstream, to: meterTapNode, format: file.processingFormat)
+        engine.connect(meterTapNode, to: outputGainNode, format: file.processingFormat)
+        engine.connect(outputGainNode, to: engine.mainMixerNode, format: file.processingFormat)
         let hardwareFormat = engine.outputNode.inputFormat(forBus: 0)
         engine.connect(engine.mainMixerNode, to: engine.outputNode, format: hardwareFormat)
         outputSampleRate = hardwareFormat.sampleRate
@@ -1650,7 +1660,7 @@ final class PlaybackController: ObservableObject {
             }
         }
         let tapBlock = makeStereoMeterTapBlock(throttle: meterThrottle, deliver: deliver)
-        engine.mainMixerNode.installTap(
+        meterTapNode.installTap(
             onBus: 0,
             bufferSize: AudioVisualizationConfiguration.tapBufferSize,
             format: nil,
@@ -1661,7 +1671,7 @@ final class PlaybackController: ObservableObject {
 
     private func removeMeterTapIfNeeded() {
         guard isMeterTapInstalled else { return }
-        engine.mainMixerNode.removeTap(onBus: 0)
+        meterTapNode.removeTap(onBus: 0)
         isMeterTapInstalled = false
     }
 
