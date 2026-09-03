@@ -171,20 +171,21 @@ struct M0QualityGateTests {
         #expect(settingsScene.contains(".environmentObject(library)"))
     }
 
-    @Test("The active library menu renders a single visible label")
-    func activeLibraryMenuHasOneLabelLayer() throws {
+    @Test("The active library selector uses a visible button and dedicated popover")
+    func activeLibrarySelectorUsesDedicatedPopover() throws {
         let sidebar = try Self.source("LibrarySidebar.swift")
         let labelReferenceCount = sidebar.components(
             separatedBy: "libraryProfileMenuLabel"
         ).count - 1
 
         #expect(labelReferenceCount == 2)
-        #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .opacity(0)"))
-        #expect(sidebar.contains("Rectangle()\n                        .fill(.clear)"))
-        #expect(sidebar.contains(".frame(width: 170, height: 20)"))
+        #expect(sidebar.contains("isShowingLibraryProfilePopover.toggle()"))
+        #expect(sidebar.contains("libraryProfileMenuLabel\n                        .frame(width: 170"))
         #expect(sidebar.contains(".contentShape(Rectangle())"))
-        #expect(sidebar.contains(".overlay(alignment: .leading)"))
-        #expect(sidebar.contains("libraryProfileMenuLabel\n                        .allowsHitTesting(false)"))
+        #expect(sidebar.contains(".popover(isPresented: $isShowingLibraryProfilePopover"))
+        #expect(sidebar.contains("private var libraryProfilePopover: some View"))
+        #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .opacity(0)"))
+        #expect(!sidebar.contains("libraryProfileMenuLabel\n                        .hidden()"))
         #expect(sidebar.contains(".lineLimit(1)\n                .layoutPriority(1)"))
     }
 

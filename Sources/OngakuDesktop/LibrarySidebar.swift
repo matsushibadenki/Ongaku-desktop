@@ -57,82 +57,22 @@ struct LibrarySidebar: View {
     @State private var isCreatingLibrary = false
     @State private var isCreatingExternalLibrary = false
     @State private var isRenamingLibrary = false
+    @State private var isShowingLibraryProfilePopover = false
     @State private var libraryNameDraft = ""
 
     var body: some View {
         List(selection: sidebarSelection) {
             Section(L10n.text("libraryProfile.section")) {
-                Menu {
-                    ForEach(libraryProfiles.availableProfiles) { profile in
-                        Button {
-                            libraryProfiles.activate(profile.id)
-                        } label: {
-                            profileMenuLabel(profile)
-                        }
-                        .disabled(libraryProfiles.connectionState(for: profile) != .connected)
-                    }
-                    Divider()
-                    Button {
-                        libraryNameDraft = ""
-                        isCreatingLibrary = true
-                    } label: {
-                        Label(L10n.text("libraryProfile.create"), systemImage: "plus")
-                    }
-                    Button {
-                        libraryNameDraft = ""
-                        isCreatingExternalLibrary = true
-                    } label: {
-                        Label(
-                            L10n.text("libraryProfile.external.create"),
-                            systemImage: "externaldrive.badge.plus"
-                        )
-                    }
-                    let disconnected = libraryProfiles.availableProfiles.filter {
-                        $0.isExternal
-                            && libraryProfiles.connectionState(for: $0) != .connected
-                    }
-                    if !disconnected.isEmpty {
-                        Menu(L10n.text("libraryProfile.external.reconnect")) {
-                            ForEach(disconnected) { profile in
-                                Button(profile.name) { reconnect(profile) }
-                            }
-                        }
-                    }
-                    Button {
-                        libraryNameDraft = libraryProfiles.activeProfile.name
-                        isRenamingLibrary = true
-                    } label: {
-                        Label(L10n.text("libraryProfile.rename"), systemImage: "pencil")
-                    }
-                    if libraryProfiles.availableProfiles.count > 1 {
-                        Menu(L10n.text("libraryProfile.archive")) {
-                            ForEach(libraryProfiles.availableProfiles.filter {
-                                $0.id != libraryProfiles.activeLibraryID
-                            }) { profile in
-                                Button(profile.name) { libraryProfiles.archive(profile.id) }
-                            }
-                        }
-                    }
-                    if !libraryProfiles.archivedProfiles.isEmpty {
-                        Menu(L10n.text("libraryProfile.archived")) {
-                            ForEach(libraryProfiles.archivedProfiles) { profile in
-                                Button(L10n.format("libraryProfile.unarchive", profile.name)) {
-                                    libraryProfiles.unarchive(profile.id)
-                                }
-                            }
-                        }
-                    }
+                Button {
+                    isShowingLibraryProfilePopover.toggle()
                 } label: {
-                    Rectangle()
-                        .fill(.clear)
-                        .frame(width: 170, height: 20)
+                    libraryProfileMenuLabel
+                        .frame(width: 170, alignment: .leading)
                         .contentShape(Rectangle())
                 }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .overlay(alignment: .leading) {
-                    libraryProfileMenuLabel
-                        .allowsHitTesting(false)
+                .buttonStyle(.plain)
+                .popover(isPresented: $isShowingLibraryProfilePopover, arrowEdge: .trailing) {
+                    libraryProfilePopover
                 }
                 .accessibilityLabel(libraryProfiles.activeProfile.name)
             }
@@ -413,6 +353,116 @@ struct LibrarySidebar: View {
             return "externaldrive.badge.exclamationmark"
         }
         return profile.isExternal ? "externaldrive" : "books.vertical"
+    }
+
+    private var libraryProfilePopover: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(libraryProfiles.availableProfiles) { profile in
+                    Button {
+                        libraryProfiles.activate(profile.id)
+                        isShowingLibraryProfilePopover = false
+                    } label: {
+                        profileMenuLabel(profile)
+                            .frame(width: 220, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(libraryProfiles.connectionState(for: profile) != .connected)
+                }
+
+                Divider().padding(.vertical, 3)
+
+                libraryProfileAction(
+                    L10n.text("libraryProfile.create"),
+                    systemImage: "plus"
+                ) {
+                    isShowingLibraryProfilePopover = false
+                    libraryNameDraft = ""
+                    isCreatingLibrary = true
+                }
+                libraryProfileAction(
+                    L10n.text("libraryProfile.external.create"),
+                    systemImage: "externaldrive.badge.plus"
+                ) {
+                    isShowingLibraryProfilePopover = false
+                    libraryNameDraft = ""
+                    isCreatingExternalLibrary = true
+                }
+                libraryProfileAction(
+                    L10n.text("libraryProfile.rename"),
+                    systemImage: "pencil"
+                ) {
+                    isShowingLibraryProfilePopover = false
+                    libraryNameDraft = libraryProfiles.activeProfile.name
+                    isRenamingLibrary = true
+                }
+
+                let disconnected = libraryProfiles.availableProfiles.filter {
+                    $0.isExternal && libraryProfiles.connectionState(for: $0) != .connected
+                }
+                if !disconnected.isEmpty {
+                    libraryProfileGroupTitle(L10n.text("libraryProfile.external.reconnect"))
+                    ForEach(disconnected) { profile in
+                        libraryProfileAction(profile.name, systemImage: "externaldrive.badge.plus") {
+                            isShowingLibraryProfilePopover = false
+                            reconnect(profile)
+                        }
+                    }
+                }
+
+                let archivable = libraryProfiles.availableProfiles.filter {
+                    $0.id != libraryProfiles.activeLibraryID
+                }
+                if !archivable.isEmpty {
+                    libraryProfileGroupTitle(L10n.text("libraryProfile.archive"))
+                    ForEach(archivable) { profile in
+                        libraryProfileAction(profile.name, systemImage: "archivebox") {
+                            libraryProfiles.archive(profile.id)
+                        }
+                    }
+                }
+
+                if !libraryProfiles.archivedProfiles.isEmpty {
+                    libraryProfileGroupTitle(L10n.text("libraryProfile.archived"))
+                    ForEach(libraryProfiles.archivedProfiles) { profile in
+                        libraryProfileAction(
+                            L10n.format("libraryProfile.unarchive", profile.name),
+                            systemImage: "arrow.uturn.backward"
+                        ) {
+                            libraryProfiles.unarchive(profile.id)
+                        }
+                    }
+                }
+            }
+            .padding(AppTheme.spaceXS)
+        }
+        .frame(width: 252)
+        .frame(maxHeight: 480)
+    }
+
+    private func libraryProfileAction(
+        _ title: String,
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .lineLimit(1)
+                .frame(width: 220, alignment: .leading)
+                .padding(.vertical, 5)
+                .padding(.horizontal, 6)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(AppTheme.ink)
+    }
+
+    private func libraryProfileGroupTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(AppTheme.secondaryInk)
+            .padding(.horizontal, 6)
+            .padding(.top, AppTheme.spaceXS)
     }
 
     @ViewBuilder
