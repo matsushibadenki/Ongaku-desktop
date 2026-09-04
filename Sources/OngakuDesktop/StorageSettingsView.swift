@@ -339,6 +339,7 @@ struct StorageSettingsView: View {
 
   private var sourceIcon: String {
     switch storage.source {
+    case .musicDirectory: "music.note.house"
     case .automaticAppleMusic: "music.note"
     case .selectedAppleMusicLibrary: "music.note.list"
     case .applicationSupport: "internaldrive"

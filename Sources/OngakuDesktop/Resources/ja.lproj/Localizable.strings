@@ -723,6 +723,7 @@
 "settings.storage.error.dropFolderOnly" = "音楽ファイルではなく、音楽が入ったフォルダをドロップしてください。";
 "settings.storage.automatic" = "自動設定に戻す";
 "settings.storage.source.appleMusic" = "Apple Musicの設定から自動的に読み込みました";
+"settings.storage.source.musicDirectory" = "ミュージックフォルダ内のOngaku用フォルダに保存します";
 "settings.storage.source.selectedAppleMusicLibrary" = "選択したApple Musicライブラリから読み込みました";
 "settings.storage.source.default" = "Ongaku標準のApplication Support内に保存します";
 "settings.storage.source.custom" = "選択した保存先を使用しています";

@@ -6,6 +6,30 @@ import Testing
 
 @Suite("Application settings")
 struct ApplicationSettingsTests {
+    @Test("A completely fresh install stores managed music under the Music directory")
+    @MainActor
+    func freshInstallMusicDirectoryDefault() {
+        let suiteName = "OngakuDesktopTests.FreshStorage.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let music = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Fresh Music", isDirectory: true)
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let settings = LibraryStorageSettings(
+            defaults: defaults,
+            freshMusicDirectoryURL: music
+        )
+
+        #expect(
+            settings.mediaDirectoryURL
+                == music.appendingPathComponent(
+                    "Ongaku Desktop/Ongaku Media",
+                    isDirectory: true
+                ).standardizedFileURL
+        )
+        #expect(settings.source == .musicDirectory)
+    }
+
     @Test("Appearance selection persists and system mode clears the override")
     @MainActor
     func appearancePersistence() {
@@ -100,11 +124,12 @@ struct ApplicationSettingsTests {
         #expect(settings.availableProfiles.count == 2)
 
         let restored = LibraryProfileSettings(
-            defaultMediaURL: media,
+            defaultMediaURL: root.appendingPathComponent("New Default Must Be Ignored"),
             defaults: defaults,
             applicationSupportURL: root
         )
         #expect(restored.activeLibraryID == mainID)
+        #expect(restored.activeProfile.mediaURL == media.standardizedFileURL)
         #expect(restored.profiles.first { $0.id == secondID }?.name == "Classical Archive")
     }
 
@@ -223,7 +248,11 @@ struct ApplicationSettingsTests {
         #expect(settings.mediaDirectoryURL == selected.standardizedFileURL)
         #expect(!FileManager.default.fileExists(atPath: selected.appendingPathComponent("Ongaku Media").path))
 
-        let restored = LibraryStorageSettings(defaults: defaults)
+        let unrelatedNewDefault = root.appendingPathComponent("Different Music", isDirectory: true)
+        let restored = LibraryStorageSettings(
+            defaults: defaults,
+            freshMusicDirectoryURL: unrelatedNewDefault
+        )
         #expect(restored.mediaDirectoryURL == selected.standardizedFileURL)
     }
 }

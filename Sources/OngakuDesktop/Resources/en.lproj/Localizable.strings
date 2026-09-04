@@ -723,6 +723,7 @@
 "settings.storage.error.dropFolderOnly" = "Drop a folder containing music, not an individual music file.";
 "settings.storage.automatic" = "Use Automatic Location";
 "settings.storage.source.appleMusic" = "Automatically loaded from Apple Music settings";
+"settings.storage.source.musicDirectory" = "Using Ongaku's folder in your Music directory";
 "settings.storage.source.selectedAppleMusicLibrary" = "Loaded from the selected Apple Music library";
 "settings.storage.source.default" = "Using Ongaku's default Application Support location";
 "settings.storage.source.custom" = "Using your selected location";

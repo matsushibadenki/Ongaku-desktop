@@ -355,6 +355,7 @@ final class LibraryProfileSettings: ObservableObject {
 }
 
 enum LibraryStorageSource: String {
+    case musicDirectory
     case automaticAppleMusic
     case selectedAppleMusicLibrary
     case applicationSupport
@@ -362,6 +363,7 @@ enum LibraryStorageSource: String {
 
     var localizationKey: String {
         switch self {
+        case .musicDirectory: "settings.storage.source.musicDirectory"
         case .automaticAppleMusic: "settings.storage.source.appleMusic"
         case .selectedAppleMusicLibrary: "settings.storage.source.selectedAppleMusicLibrary"
         case .applicationSupport: "settings.storage.source.default"
@@ -494,13 +496,26 @@ final class LibraryStorageSettings: ObservableObject {
     private let fileManager: FileManager
     private var securityScopedURL: URL?
 
-    init(defaults: UserDefaults = .standard, fileManager: FileManager = .default) {
+    init(
+        defaults: UserDefaults = .standard,
+        fileManager: FileManager = .default,
+        freshMusicDirectoryURL: URL? = nil
+    ) {
         self.defaults = defaults
         self.fileManager = fileManager
 
         let savedSource = defaults.string(forKey: Self.sourceKey)
             .flatMap(LibraryStorageSource.init(rawValue:))
-        if savedSource == .selectedAppleMusicLibrary {
+        if !Self.hasPersistedConfiguration(defaults: defaults) {
+            let freshDirectory = Self.freshDefaultMediaDirectory(
+                fileManager: fileManager,
+                musicDirectoryURL: freshMusicDirectoryURL
+            )
+            mediaDirectoryURL = freshDirectory
+            source = .musicDirectory
+            defaults.set(freshDirectory.path, forKey: Self.pathKey)
+            defaults.set(LibraryStorageSource.musicDirectory.rawValue, forKey: Self.sourceKey)
+        } else if savedSource == .selectedAppleMusicLibrary {
             // Migrate the earlier behavior that incorrectly used Apple Music's
             // Media folder as Ongaku's managed-copy destination.
             mediaDirectoryURL = Self.defaultMediaDirectory(fileManager: fileManager)
@@ -601,8 +616,12 @@ final class LibraryStorageSettings: ObservableObject {
     }
 
     func activateProfileMediaDirectory(_ url: URL) {
-        mediaDirectoryURL = url.standardizedFileURL
-        source = .applicationSupport
+        let profileURL = url.standardizedFileURL
+        let locationChanged = mediaDirectoryURL.standardizedFileURL != profileURL
+        mediaDirectoryURL = profileURL
+        if locationChanged {
+            source = .applicationSupport
+        }
     }
 
     private static func managedDirectory(in parent: URL) -> URL {
@@ -612,6 +631,31 @@ final class LibraryStorageSettings: ObservableObject {
     private static func defaultMediaDirectory(fileManager: FileManager) -> URL {
         fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("Ongaku Desktop/Ongaku Media", isDirectory: true)
+    }
+
+    private static func freshDefaultMediaDirectory(
+        fileManager: FileManager,
+        musicDirectoryURL: URL?
+    ) -> URL {
+        let musicDirectory = musicDirectoryURL
+            ?? fileManager.urls(for: .musicDirectory, in: .userDomainMask).first
+            ?? fileManager.homeDirectoryForCurrentUser
+                .appendingPathComponent("Music", isDirectory: true)
+        return musicDirectory
+            .appendingPathComponent("Ongaku Desktop/Ongaku Media", isDirectory: true)
+            .standardizedFileURL
+    }
+
+    private static func hasPersistedConfiguration(defaults: UserDefaults) -> Bool {
+        [
+            bookmarkKey,
+            pathKey,
+            sourceKey,
+            musicLibraryPathKey,
+            musicLibraryMediaPathKey,
+            LibraryProfileSettings.profilesKey,
+            LibraryProfileSettings.activeProfileKey,
+        ].contains { defaults.object(forKey: $0) != nil }
     }
 
     private static func savedParentURL(defaults: UserDefaults) -> URL? {

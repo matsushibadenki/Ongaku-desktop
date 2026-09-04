@@ -723,6 +723,7 @@
 "settings.storage.error.dropFolderOnly" = "请拖放包含音乐的文件夹，而不是单个音乐文件。";
 "settings.storage.automatic" = "使用自动位置";
 "settings.storage.source.appleMusic" = "已自动从Apple Music设置中读取";
+"settings.storage.source.musicDirectory" = "存储在音乐目录中的Ongaku文件夹内";
 "settings.storage.source.selectedAppleMusicLibrary" = "已从所选Apple Music资料库读取";
 "settings.storage.source.default" = "使用Ongaku默认的Application Support位置";
 "settings.storage.source.custom" = "正在使用所选位置";
