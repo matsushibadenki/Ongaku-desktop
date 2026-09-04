@@ -45,8 +45,13 @@ struct PreferencesView: View {
 
     @EnvironmentObject private var language: AppLanguageSettings
     @EnvironmentObject private var appearance: AppAppearanceSettings
+    @ObservedObject private var socialPrivacy: SocialPrivacySettings
     @State private var selection: PreferencesSection = .general
     @State private var measuredContentHeight: CGFloat = 0
+
+    init(socialPrivacy: SocialPrivacySettings) {
+        self.socialPrivacy = socialPrivacy
+    }
 
     var body: some View {
         HStack(spacing: 0) {
@@ -71,7 +76,7 @@ struct PreferencesView: View {
                 case .storage:
                     StorageSettingsView()
                 case .social:
-                    SocialPrivacySettingsView()
+                    SocialPrivacySettingsView(social: socialPrivacy)
                 }
             }
             .padding(.horizontal, 24)

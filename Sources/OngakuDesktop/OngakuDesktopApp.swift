@@ -258,7 +258,7 @@ struct OngakuDesktopApp: App {
         }
 
         Settings {
-            PreferencesView()
+            PreferencesView(socialPrivacy: socialPrivacy)
                 .environmentObject(library)
                 .environmentObject(player)
                 .environmentObject(storage)
@@ -267,7 +267,6 @@ struct OngakuDesktopApp: App {
                 .environmentObject(appearance)
                 .environmentObject(meterSettings)
                 .environmentObject(trackTableSettings)
-                .environmentObject(socialPrivacy)
                 .environmentObject(phoneSync)
                 .id(language.selectedLanguage.rawValue)
         }

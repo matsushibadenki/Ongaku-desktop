@@ -2,13 +2,17 @@ import SwiftUI
 
 struct SocialPrivacySettingsView: View {
     @EnvironmentObject private var library: LibraryStore
-    @EnvironmentObject private var social: SocialPrivacySettings
+    @ObservedObject private var social: SocialPrivacySettings
     @State private var inviteeProfileID = ""
     @State private var selectedPlaylistID: Playlist.ID?
     @State private var selectedRole: SocialCollaboratorRole = .editor
     @State private var blockedProfileDraft = ""
     @State private var errorMessage: String?
     @State private var confirmsDeletion = false
+
+    init(social: SocialPrivacySettings) {
+        self.social = social
+    }
 
     var body: some View {
         ScrollView {

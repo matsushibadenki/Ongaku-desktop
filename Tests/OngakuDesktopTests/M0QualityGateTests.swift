@@ -190,14 +190,22 @@ struct M0QualityGateTests {
         #expect(!inspector.contains("AppTheme.bottomPlayerClearance"))
     }
 
-    @Test("The settings scene injects every environment object required by its sections")
+    @Test("The settings scene passes crash-critical social state explicitly")
     func settingsSceneEnvironmentContract() throws {
         let app = try Self.source("OngakuDesktopApp.swift")
+        let preferences = try Self.source("PreferencesView.swift")
+        let social = try Self.source("SocialPrivacySettingsView.swift")
         let settingsScene = try #require(app.components(separatedBy: "Settings {").last)
 
-        #expect(settingsScene.contains(".environmentObject(socialPrivacy)"))
+        #expect(settingsScene.contains("PreferencesView(socialPrivacy: socialPrivacy)"))
+        #expect(!settingsScene.contains("PreferencesView()"))
+        #expect(!settingsScene.contains(".environmentObject(socialPrivacy)"))
         #expect(settingsScene.contains(".environmentObject(phoneSync)"))
         #expect(settingsScene.contains(".environmentObject(library)"))
+        #expect(preferences.contains("@ObservedObject private var socialPrivacy"))
+        #expect(preferences.contains("SocialPrivacySettingsView(social: socialPrivacy)"))
+        #expect(social.contains("@ObservedObject private var social"))
+        #expect(!social.contains("@EnvironmentObject private var social"))
     }
 
     @Test("The active library selector uses a visible button and dedicated popover")
