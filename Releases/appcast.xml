@@ -6,6 +6,51 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.6</title>
+            <pubDate>Fri, 04 Sep 2026 14:16:27 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.6</link>
+            <sparkle:version>7</sparkle:version>
+            <sparkle:shortVersionString>0.1.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.6
+
+## 日本語
+
+- ローカル楽曲の再生経路を安定化し、選択した曲を正しく再生できるよう修正しました。
+- ライブラリ登録後にファイルが移動・削除された場合、再生時に欠損を検知して再リンクへ案内します。
+- 歌詞・アルバムアートの完全一致がない場合、曲名またはアルバム名から近い候補を検索し、判断材料となるヒントとともに表示します。
+- Apple Musicプレーヤーを必要になるまで初期化しないことで、ローカル再生への干渉と接続待ちを抑えました。
+
+## English
+
+- Stabilized local audio playback so the selected track starts reliably.
+- Detects files moved or removed after library registration and offers a clear path to relink them.
+- When lyrics or artwork have no exact match, searches by title or album and presents close candidates with matching hints.
+- Defers Apple Music player initialization until needed, reducing interference and connection delays during local playback.
+
+## 简体中文
+
+- 稳定本地音频播放，确保可靠地播放所选歌曲。
+- 当资料库中的文件被移动或删除时，在播放时检测缺失状态并引导重新关联。
+- 歌词或封面没有完全匹配时，按歌曲名或专辑名搜索相近候选，并显示匹配提示。
+- 仅在需要时初始化Apple Music播放器，减少对本地播放的干扰和连接等待。
+
+## 配布情報 / Distribution
+
+- macOS 14.0以降 / macOS 14.0 or later
+- Apple silicon（arm64）／Intel（x86_64）Universal Binary
+- Developer ID署名・Apple公証済み / Developer ID signed and Apple notarized
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.6/OngakuDesktop-0.1.6-universal.dmg" length="8567348" type="application/octet-stream" sparkle:edSignature="UgZv3D/Z2UVKw+KVQT1k9QTKHLnuEOouBlVtDN+5KeE5ETIW3zZi0FK7lVbIxu3neni9F29P5Vf/Qt56bkPuCg=="/>
+            <sparkle:deltas>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.6/OngakuDesktop7-6.delta" sparkle:deltaFrom="6" length="1577922" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="wpjkk0dI/mV6Ty3StVm2jg2c/1tFLl6PW8QvFZrR5MFv5sSzZiw3YZnr3To0hsHV8rDrTImlcNsFTu2+pMbuCA=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.6/OngakuDesktop7-5.delta" sparkle:deltaFrom="5" length="2602802" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="jIhXMVpEx+zfPzzEoJbAaIzfkttNaYYKnoTgD5lUnVYPJB3lC6Y3pfG8FClVyUSh34MjjmPpXQKlGDgxierJBg=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.6/OngakuDesktop7-4.delta" sparkle:deltaFrom="4" length="3180954" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="y7WdfRfEkI8lLYTZ1kIkAlP7QmnenAOaoXSHMv0U3jrq/nvxnaOIUvUSFvqPTXxsgHWbjDNGcoKkbu4emp8pDw=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.6/OngakuDesktop7-3.delta" sparkle:deltaFrom="3" length="3735886" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="FnlYzp2p3XQYQMdrMtItbc1/tsAOv7nRmjcXnquYDFSw6yoN4Wc0VYf7Zc5Z/jxQrUYG4y73mWqojYjKHYGqBA=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.6/OngakuDesktop7-2.delta" sparkle:deltaFrom="2" length="4488370" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="6iGVe5w85s4PNs3nLCOoCjyXt/QEpMvlHHUDBiXkssFoywEH+coXqNnt9EHvbY2VxTJ2r7Rf49SZOiT8G4DrBg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.1.5</title>
             <pubDate>Wed, 02 Sep 2026 15:37:22 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.5</link>
