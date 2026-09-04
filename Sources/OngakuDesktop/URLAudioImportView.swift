@@ -311,6 +311,8 @@ struct URLAudioImportView: View {
     @State private var urlText = ""
     @State private var isImporting = false
     @State private var errorMessage: String?
+    @State private var pendingDownload: DownloadedAudioImport?
+    @State private var requiredMetadata: RequiredImportMetadataDraft?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -329,8 +331,31 @@ struct URLAudioImportView: View {
             TextField("https://example.com/song.flac", text: $urlText)
                 .textFieldStyle(.roundedBorder)
                 .accessibilityLabel(L10n.text("urlImport.url"))
-                .disabled(isImporting)
+                .disabled(isImporting || pendingDownload != nil)
                 .onSubmit { Task { await importAudio() } }
+
+            if let draft = requiredMetadata {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(L10n.text("import.requiredMetadata.urlMessage"))
+                        .font(.callout.weight(.semibold))
+                    if draft.requiresArtist {
+                        TextField(
+                            L10n.text("import.requiredMetadata.artistPlaceholder"),
+                            text: requiredMetadataBinding(\.artist)
+                        )
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    if draft.requiresAlbum {
+                        TextField(
+                            L10n.text("import.requiredMetadata.albumPlaceholder"),
+                            text: requiredMetadataBinding(\.album)
+                        )
+                        .textFieldStyle(.roundedBorder)
+                    }
+                }
+                .padding(14)
+                .background(AppTheme.raised, in: RoundedRectangle(cornerRadius: 12))
+            }
 
             Label(L10n.text("urlImport.security"), systemImage: "lock.shield")
                 .font(.caption)
@@ -352,30 +377,46 @@ struct URLAudioImportView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button(L10n.text("common.cancel"), role: .cancel) { dismiss() }
+                Button(L10n.text("common.cancel"), role: .cancel) {
+                    cleanupPendingDownload()
+                    dismiss()
+                }
                     .keyboardShortcut(.cancelAction)
                     .disabled(isImporting)
                 Button(L10n.text("urlImport.action")) { Task { await importAudio() } }
                     .keyboardShortcut(.defaultAction)
                     .disabled(urlText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        || isImporting)
+                        || isImporting || requiredMetadata?.isComplete == false)
             }
         }
         .padding(24)
         .frame(width: 560)
         .background(AppTheme.canvas)
         .interactiveDismissDisabled(isImporting)
+        .onDisappear { cleanupPendingDownload() }
     }
 
     private func importAudio() async {
+        if let pendingDownload, let requiredMetadata {
+            await importDownloadedAudio(pendingDownload, metadata: requiredMetadata)
+            return
+        }
         isImporting = true
         errorMessage = nil
         do {
             let download = try await URLAudioImportService.shared.download(from: urlText)
-            let root = download.fileURL.deletingLastPathComponent()
-            defer { try? FileManager.default.removeItem(at: root) }
+            let drafts = await library.requiredImportMetadata(for: [download.fileURL])
+            if let draft = drafts.first {
+                pendingDownload = download
+                requiredMetadata = draft
+                isImporting = false
+                return
+            }
             let previousCount = library.tracks.count
             await library.importFiles([download.fileURL])
+            try? FileManager.default.removeItem(
+                at: download.fileURL.deletingLastPathComponent()
+            )
             if library.tracks.count > previousCount {
                 dismiss()
             } else {
@@ -386,5 +427,46 @@ struct URLAudioImportView: View {
             errorMessage = error.localizedDescription
         }
         isImporting = false
+    }
+
+    private func importDownloadedAudio(
+        _ download: DownloadedAudioImport,
+        metadata: RequiredImportMetadataDraft
+    ) async {
+        guard metadata.isComplete else { return }
+        isImporting = true
+        errorMessage = nil
+        let previousCount = library.tracks.count
+        await library.importFiles(
+            [download.fileURL],
+            requiredMetadataOverrides: [metadata.id: metadata]
+        )
+        cleanupPendingDownload()
+        if library.tracks.count > previousCount {
+            dismiss()
+        } else {
+            errorMessage = library.lastIssues.first?.message
+                ?? L10n.text("urlImport.error.importFailed")
+        }
+        isImporting = false
+    }
+
+    private func requiredMetadataBinding(
+        _ keyPath: WritableKeyPath<RequiredImportMetadataDraft, String>
+    ) -> Binding<String> {
+        Binding(
+            get: { requiredMetadata?[keyPath: keyPath] ?? "" },
+            set: { value in requiredMetadata?[keyPath: keyPath] = value }
+        )
+    }
+
+    private func cleanupPendingDownload() {
+        if let pendingDownload {
+            try? FileManager.default.removeItem(
+                at: pendingDownload.fileURL.deletingLastPathComponent()
+            )
+        }
+        pendingDownload = nil
+        requiredMetadata = nil
     }
 }

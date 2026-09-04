@@ -278,6 +278,28 @@ actor LibraryRepository {
 
     func currentMediaDirectoryURL() -> URL { mediaURL }
 
+    func requiredImportMetadata(for sourceURLs: [URL]) async -> [RequiredImportMetadataDraft] {
+        var drafts: [RequiredImportMetadataDraft] = []
+        for source in sourceURLs {
+            let didAccess = source.startAccessingSecurityScopedResource()
+            let metadata = await Self.readMetadata(
+                from: source,
+                fallbackName: source.deletingPathExtension().lastPathComponent
+            )
+            if didAccess { source.stopAccessingSecurityScopedResource() }
+            guard metadata.requiresArtist || metadata.requiresAlbum else { continue }
+            drafts.append(RequiredImportMetadataDraft(
+                sourceURL: source,
+                title: metadata.title,
+                artist: metadata.requiresArtist ? "" : metadata.artist,
+                album: metadata.requiresAlbum ? "" : metadata.album,
+                requiresArtist: metadata.requiresArtist,
+                requiresAlbum: metadata.requiresAlbum
+            ))
+        }
+        return drafts
+    }
+
     func planMediaOrganization(
         tracks: [Track],
         destinationRootURL: URL
@@ -581,7 +603,8 @@ actor LibraryRepository {
         _ sourceURLs: [URL],
         existing: [Track],
         reportDuplicates: Bool = true,
-        metadataOverrides: [String: AudioCDImportRequest] = [:]
+        metadataOverrides: [String: AudioCDImportRequest] = [:],
+        requiredMetadataOverrides: [String: RequiredImportMetadataDraft] = [:]
     ) async -> ImportResult {
         do { try prepareDirectories() } catch {
             return ImportResult(imported: [], issues: sourceURLs.map {
@@ -637,9 +660,10 @@ actor LibraryRepository {
 
                 let metadata = await Self.readMetadata(from: staged, fallbackName: source.deletingPathExtension().lastPathComponent)
                 let metadataOverride = metadataOverrides[source.standardizedFileURL.path]
+                let requiredOverride = requiredMetadataOverrides[source.standardizedFileURL.path]
                 let title = metadataOverride?.title ?? metadata.title
-                let artist = metadataOverride?.artist ?? metadata.artist
-                let album = metadataOverride?.album ?? metadata.album
+                let artist = metadataOverride?.artist ?? requiredOverride?.artist ?? metadata.artist
+                let album = metadataOverride?.album ?? requiredOverride?.album ?? metadata.album
                 let albumArtist = metadataOverride?.albumArtist ?? metadata.albumArtist
                 let releaseYear = metadataOverride?.releaseYear ?? metadata.releaseYear
                 let isrc = metadataOverride?.isrc ?? metadata.isrc
@@ -1514,7 +1538,9 @@ actor LibraryRepository {
         isCompilation: Bool,
         comments: String,
         lyrics: TrackLyrics?,
-        duration: TimeInterval
+        duration: TimeInterval,
+        requiresArtist: Bool,
+        requiresAlbum: Bool
     ) {
         let asset = AVURLAsset(url: url)
         let duration = (try? await asset.load(.duration)).map { CMTimeGetSeconds($0) } ?? 0
@@ -1571,10 +1597,14 @@ actor LibraryRepository {
         ]) ?? ""
         let embeddedLyrics = (try? await asset.load(.lyrics))?
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        let embeddedArtist = (await string(for: .commonIdentifierArtist) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let embeddedAlbum = (await string(for: .commonIdentifierAlbumName) ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         return (
             await string(for: .commonIdentifierTitle) ?? parsed.title,
-            await string(for: .commonIdentifierArtist) ?? parsed.artist,
-            await string(for: .commonIdentifierAlbumName) ?? L10n.text("metadata.unknownAlbum"),
+            embeddedArtist.isEmpty ? parsed.artist : embeddedArtist,
+            embeddedAlbum.isEmpty ? L10n.text("metadata.unknownAlbum") : embeddedAlbum,
             await string(for: .id3MetadataPerformerSortOrder) ?? "",
             await string(for: .id3MetadataAlbumSortOrder) ?? "",
             await string(for: .iTunesMetadataAlbumArtist) ?? "",
@@ -1599,7 +1629,9 @@ actor LibraryRepository {
             embeddedLyrics.flatMap { text in
                 text.isEmpty ? nil : TrackLyrics(plainText: text, source: .embedded)
             },
-            duration.isFinite ? max(0, duration) : 0
+            duration.isFinite ? max(0, duration) : 0,
+            embeddedArtist.isEmpty,
+            embeddedAlbum.isEmpty
         )
     }
 

@@ -944,8 +944,22 @@ struct LibraryRepositoryTests {
         )
         let store = LibraryStore(repository: repository)
 
-        // The direct file overlaps with the folder and must still be imported only once.
+        // Files without embedded artist/album metadata must not be silently placed in
+        // fallback folders, even when their filename looks descriptive.
         await store.importDroppedItems([droppedFolder, first, ignored])
+        #expect(store.tracks.isEmpty)
+
+        // The direct file overlaps with the folder and must still be imported only once.
+        let sourceURLs = await store.audioFiles(inDroppedItems: [droppedFolder, first, ignored])
+        let drafts = await store.requiredImportMetadata(for: sourceURLs)
+        let completedDrafts = drafts.map { draft in
+            var completed = draft
+            completed.artist = "Artist"
+            completed.album = "Drop Album"
+            return completed
+        }
+        let overrides = Dictionary(uniqueKeysWithValues: completedDrafts.map { ($0.id, $0) })
+        await store.importFiles(sourceURLs, requiredMetadataOverrides: overrides)
 
         #expect(store.tracks.count == 2)
         #expect(Set(store.tracks.map(\.title)) == Set(["First", "Second"]))

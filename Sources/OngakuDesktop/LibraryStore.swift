@@ -1402,11 +1402,43 @@ final class LibraryStore: ObservableObject {
         }
     }
 
-    func importFiles(_ urls: [URL]) async {
+    func requiredImportMetadata(for urls: [URL]) async -> [RequiredImportMetadataDraft] {
+        await repository.requiredImportMetadata(for: urls)
+    }
+
+    func importFiles(
+        _ urls: [URL],
+        requiredMetadataOverrides: [String: RequiredImportMetadataDraft] = [:]
+    ) async {
         guard !urls.isEmpty else { return }
         activity = .importing
         lastIssues = []
-        let result = await repository.importFiles(urls, existing: tracks)
+        let normalizedOverrides = requiredMetadataOverrides.mapValues { draft in
+            var normalized = draft
+            normalized.artist = draft.artist.trimmingCharacters(in: .whitespacesAndNewlines)
+            normalized.album = draft.album.trimmingCharacters(in: .whitespacesAndNewlines)
+            return normalized
+        }
+        let required = await repository.requiredImportMetadata(for: urls)
+        let unresolved = required.filter { draft in
+            guard let override = normalizedOverrides[draft.id] else { return true }
+            return override.artist.isEmpty || override.album.isEmpty
+        }
+        guard unresolved.isEmpty else {
+            lastIssues = unresolved.map {
+                ImportIssue(
+                    fileName: $0.sourceURL.lastPathComponent,
+                    message: L10n.text("import.requiredMetadata.issue")
+                )
+            }
+            activity = .failed(L10n.format("import.issueCount", unresolved.count))
+            return
+        }
+        let result = await repository.importFiles(
+            urls,
+            existing: tracks,
+            requiredMetadataOverrides: normalizedOverrides
+        )
         tracks.append(contentsOf: result.imported)
         tracks.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
         contentRevision &+= 1
@@ -1429,6 +1461,20 @@ final class LibraryStore: ObservableObject {
         guard !requests.isEmpty else { return 0 }
         activity = .importing
         lastIssues = []
+        let unresolved = requests.filter {
+            $0.artist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || $0.album.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        guard unresolved.isEmpty else {
+            lastIssues = unresolved.map {
+                ImportIssue(
+                    fileName: $0.sourceURL.lastPathComponent,
+                    message: L10n.text("import.requiredMetadata.issue")
+                )
+            }
+            activity = .failed(L10n.format("import.issueCount", unresolved.count))
+            return 0
+        }
         let overrides = Dictionary(
             uniqueKeysWithValues: requests.map {
                 ($0.sourceURL.standardizedFileURL.path, $0)
@@ -1998,6 +2044,17 @@ final class LibraryStore: ObservableObject {
         }
 
         await importFiles(sourceURLs)
+    }
+
+    func audioFiles(inDroppedItems urls: [URL]) async -> [URL] {
+        guard !urls.isEmpty else { return [] }
+        let accessedURLs = urls.filter { $0.startAccessingSecurityScopedResource() }
+        defer {
+            for url in accessedURLs { url.stopAccessingSecurityScopedResource() }
+        }
+        return await Task.detached(priority: .userInitiated) {
+            Self.resolveDroppedAudioFiles(urls)
+        }.value
     }
 
     func importAppleMusicMediaFolder(

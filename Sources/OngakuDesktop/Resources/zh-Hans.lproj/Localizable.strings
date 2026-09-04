@@ -524,6 +524,14 @@
 "import.issueCount" = "有%d个文件需要检查。";
 "metadata.unknownArtist" = "未知艺人";
 "metadata.unknownAlbum" = "未知专辑";
+"import.requiredMetadata.title" = "输入歌曲信息";
+"import.requiredMetadata.message" = "部分文件没有艺人或专辑名称。请输入缺失信息，以便将音乐整理到正确的文件夹中。";
+"import.requiredMetadata.artistPlaceholder" = "艺人名称（必填）";
+"import.requiredMetadata.albumPlaceholder" = "专辑名称（必填）";
+"import.requiredMetadata.import" = "使用此信息添加";
+"import.requiredMetadata.issue" = "必须输入艺人名称和专辑名称。";
+"import.requiredMetadata.cdMessage" = "请为所有所选歌曲输入艺人和专辑名称。";
+"import.requiredMetadata.urlMessage" = "下载的文件缺少歌曲信息，请填写必填项。";
 "health.verified" = "已验证";
 "health.unchecked" = "未验证";
 "health.missing" = "文件丢失";

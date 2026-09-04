@@ -524,6 +524,14 @@
 "import.issueCount" = "%d件のファイルを確認してください。";
 "metadata.unknownArtist" = "不明なアーティスト";
 "metadata.unknownAlbum" = "不明なアルバム";
+"import.requiredMetadata.title" = "楽曲情報を入力してください";
+"import.requiredMetadata.message" = "アーティスト名またはアルバム名が記録されていないファイルがあります。正しい保存先に整理するため、不足している項目を入力してください。";
+"import.requiredMetadata.artistPlaceholder" = "アーティスト名（必須）";
+"import.requiredMetadata.albumPlaceholder" = "アルバム名（必須）";
+"import.requiredMetadata.import" = "入力内容で登録";
+"import.requiredMetadata.issue" = "アーティスト名とアルバム名の入力が必要です。";
+"import.requiredMetadata.cdMessage" = "選択した全曲のアーティスト名とアルバム名を入力してください。";
+"import.requiredMetadata.urlMessage" = "ダウンロードしたファイルに楽曲情報がないため、必須項目を入力してください。";
 "health.verified" = "検証済み";
 "health.unchecked" = "未検証";
 "health.missing" = "見つかりません";

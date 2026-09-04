@@ -326,6 +326,17 @@ struct AudioCDImportView: View {
         musicBrainzReleases.first { $0.id == selectedReleaseID }
     }
 
+    private var hasRequiredMetadata: Bool {
+        guard !album.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let disc = selectedDisc else { return false }
+        let globalArtist = artist.trimmingCharacters(in: .whitespacesAndNewlines)
+        return disc.tracks.filter { selectedTrackIDs.contains($0.id) }.allSatisfy { track in
+            let trackArtist = (trackArtists[track.id] ?? track.artist)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return !trackArtist.isEmpty || !globalArtist.isEmpty
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -461,6 +472,15 @@ struct AudioCDImportView: View {
                         .foregroundStyle(.red)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                if !selectedTrackIDs.isEmpty && !hasRequiredMetadata {
+                    Label(
+                        L10n.text("import.requiredMetadata.cdMessage"),
+                        systemImage: "exclamationmark.circle"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
             .padding(20)
         } else {
@@ -483,7 +503,10 @@ struct AudioCDImportView: View {
                 .keyboardShortcut(.cancelAction)
             Button(L10n.text("cd.import.action")) { Task { await importSelection() } }
                 .keyboardShortcut(.defaultAction)
-                .disabled(selectedDisc == nil || selectedTrackIDs.isEmpty || isImporting)
+                .disabled(
+                    selectedDisc == nil || selectedTrackIDs.isEmpty
+                        || !hasRequiredMetadata || isImporting
+                )
             if isImporting { ProgressView().controlSize(.small) }
         }
         .padding(20)
@@ -516,7 +539,7 @@ struct AudioCDImportView: View {
         titles = Dictionary(uniqueKeysWithValues: disc.tracks.map { ($0.id, $0.title) })
         trackArtists = Dictionary(uniqueKeysWithValues: disc.tracks.map { ($0.id, $0.artist) })
         artist = disc.tracks.first(where: { !$0.artist.isEmpty })?.artist ?? ""
-        album = disc.tracks.first(where: { !$0.album.isEmpty })?.album ?? disc.name
+        album = disc.tracks.first(where: { !$0.album.isEmpty })?.album ?? ""
         musicBrainzReleases = []
         selectedReleaseID = nil
         appliedReleaseID = nil
@@ -624,6 +647,10 @@ struct AudioCDImportView: View {
 
     private func importSelection() async {
         guard let disc = selectedDisc else { return }
+        guard hasRequiredMetadata else {
+            errorMessage = L10n.text("import.requiredMetadata.cdMessage")
+            return
+        }
         isImporting = true
         errorMessage = nil
         let temporaryRoot = FileManager.default.temporaryDirectory
@@ -639,8 +666,6 @@ struct AudioCDImportView: View {
             return
         }
         defer { try? FileManager.default.removeItem(at: temporaryRoot) }
-        let fallbackArtist = L10n.text("metadata.unknownArtist")
-        let fallbackAlbum = L10n.text("metadata.unknownAlbum")
         let cleanArtist = artist.trimmingCharacters(in: .whitespacesAndNewlines)
         let cleanAlbum = album.trimmingCharacters(in: .whitespacesAndNewlines)
         let chosenFormat = importFormat
@@ -677,9 +702,9 @@ struct AudioCDImportView: View {
                 sourceURL: outputURL,
                 title: cleanTitle.isEmpty ? L10n.format("cd.track.defaultTitle", track.number) : cleanTitle,
                 artist: perTrackArtist.isEmpty
-                    ? (cleanArtist.isEmpty ? fallbackArtist : cleanArtist)
+                    ? cleanArtist
                     : perTrackArtist,
-                album: cleanAlbum.isEmpty ? fallbackAlbum : cleanAlbum,
+                album: cleanAlbum,
                 albumArtist: release?.artist,
                 releaseYear: release?.releaseYear,
                 isrc: trackReferences[track.id]?.isrc,

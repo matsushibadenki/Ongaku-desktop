@@ -2,6 +2,13 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+private struct PendingRequiredMetadataImport: Identifiable {
+    let id = UUID()
+    let sourceURLs: [URL]
+    let drafts: [RequiredImportMetadataDraft]
+    let cleanupURLs: [URL]
+}
+
 struct ContentView: View {
     @Environment(\.undoManager) private var undoManager
     @EnvironmentObject private var library: LibraryStore
@@ -19,6 +26,8 @@ struct ContentView: View {
     @State private var isShowingDeviceSync = false
     @State private var isDropTargeted = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var pendingRequiredMetadataImport: PendingRequiredMetadataImport?
+    @State private var deferredImportCleanupURLs: [URL] = []
 
     var body: some View {
         playerAwareLayout
@@ -27,7 +36,10 @@ struct ContentView: View {
         .tint(AppTheme.accent)
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }
-            Task { await library.importDroppedItems(urls) }
+            Task {
+                let sourceURLs = await library.audioFiles(inDroppedItems: urls)
+                await prepareFilesForImport(sourceURLs)
+            }
             return true
         } isTargeted: { isTargeted in
             isDropTargeted = isTargeted
@@ -77,6 +89,20 @@ struct ContentView: View {
                 .environmentObject(library)
                 .environmentObject(phoneSync)
         }
+        .sheet(item: $pendingRequiredMetadataImport, onDismiss: {
+            cleanupImportedSources(deferredImportCleanupURLs)
+            deferredImportCleanupURLs = []
+        }) { request in
+            RequiredImportMetadataView(drafts: request.drafts) { drafts in
+                deferredImportCleanupURLs = []
+                pendingRequiredMetadataImport = nil
+                importReviewedFiles(
+                    request.sourceURLs,
+                    drafts: drafts,
+                    cleanupURLs: request.cleanupURLs
+                )
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .requestImport)) { _ in
             presentMusicImportPanel()
         }
@@ -110,8 +136,7 @@ struct ContentView: View {
             library.undoManager = undoManager
             phoneSync.onVerifiedIncomingFile = { url in
                 Task { @MainActor in
-                    await library.importFiles([url])
-                    try? FileManager.default.removeItem(at: url)
+                    await prepareFilesForImport([url], cleanupURLs: [url])
                 }
             }
             phoneSync.updateLocalTracks(
@@ -205,7 +230,42 @@ struct ContentView: View {
         guard panel.runModal() == .OK else { return }
         let urls = panel.urls
         guard !urls.isEmpty else { return }
-        Task { await library.importFiles(urls) }
+        Task { await prepareFilesForImport(urls) }
+    }
+
+    private func prepareFilesForImport(
+        _ urls: [URL],
+        cleanupURLs: [URL] = []
+    ) async {
+        guard !urls.isEmpty else { return }
+        let drafts = await library.requiredImportMetadata(for: urls)
+        guard !drafts.isEmpty else {
+            await library.importFiles(urls)
+            cleanupImportedSources(cleanupURLs)
+            return
+        }
+        pendingRequiredMetadataImport = PendingRequiredMetadataImport(
+            sourceURLs: urls,
+            drafts: drafts,
+            cleanupURLs: cleanupURLs
+        )
+        deferredImportCleanupURLs = cleanupURLs
+    }
+
+    private func importReviewedFiles(
+        _ urls: [URL],
+        drafts: [RequiredImportMetadataDraft],
+        cleanupURLs: [URL]
+    ) {
+        let overrides = Dictionary(uniqueKeysWithValues: drafts.map { ($0.id, $0) })
+        Task {
+            await library.importFiles(urls, requiredMetadataOverrides: overrides)
+            cleanupImportedSources(cleanupURLs)
+        }
+    }
+
+    private func cleanupImportedSources(_ urls: [URL]) {
+        for url in urls { try? FileManager.default.removeItem(at: url) }
     }
 
     private func presentRelinkSearchPanel() {
@@ -282,6 +342,94 @@ struct ContentView: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(L10n.text("dropImport.title"))
         .accessibilityHint(L10n.text("dropImport.subtitle"))
+    }
+}
+
+private struct RequiredImportMetadataView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var drafts: [RequiredImportMetadataDraft]
+    let onImport: ([RequiredImportMetadataDraft]) -> Void
+
+    init(
+        drafts: [RequiredImportMetadataDraft],
+        onImport: @escaping ([RequiredImportMetadataDraft]) -> Void
+    ) {
+        _drafts = State(initialValue: drafts)
+        self.onImport = onImport
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L10n.text("import.requiredMetadata.title"))
+                    .font(.title2.bold())
+                Text(L10n.text("import.requiredMetadata.message"))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(20)
+
+            Divider()
+
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    ForEach($drafts) { $draft in
+                        VStack(alignment: .leading, spacing: 10) {
+                            Label(draft.sourceURL.lastPathComponent, systemImage: "music.note")
+                                .font(.headline)
+                                .lineLimit(1)
+                                .help(draft.sourceURL.path)
+
+                            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
+                                if draft.requiresArtist {
+                                    GridRow {
+                                        Text(L10n.text("metadataEditor.field.artist"))
+                                            .foregroundStyle(.secondary)
+                                        TextField(
+                                            L10n.text("import.requiredMetadata.artistPlaceholder"),
+                                            text: $draft.artist
+                                        )
+                                        .textFieldStyle(.roundedBorder)
+                                    }
+                                }
+                                if draft.requiresAlbum {
+                                    GridRow {
+                                        Text(L10n.text("metadataEditor.field.album"))
+                                            .foregroundStyle(.secondary)
+                                        TextField(
+                                            L10n.text("import.requiredMetadata.albumPlaceholder"),
+                                            text: $draft.album
+                                        )
+                                        .textFieldStyle(.roundedBorder)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(14)
+                        .background(AppTheme.raised, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .padding(20)
+            }
+
+            Divider()
+
+            HStack {
+                Spacer()
+                Button(L10n.text("common.cancel"), role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button(L10n.text("import.requiredMetadata.import")) {
+                    onImport(drafts)
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(!drafts.allSatisfy(\.isComplete))
+            }
+            .padding(20)
+        }
+        .frame(width: 580)
+        .frame(minHeight: 360, maxHeight: 680)
+        .background(AppTheme.canvas)
     }
 }
 

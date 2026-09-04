@@ -524,6 +524,14 @@
 "import.issueCount" = "%d files need review.";
 "metadata.unknownArtist" = "Unknown Artist";
 "metadata.unknownAlbum" = "Unknown Album";
+"import.requiredMetadata.title" = "Enter Song Information";
+"import.requiredMetadata.message" = "Some files do not contain an artist or album name. Enter the missing information so the music is organized in the correct folders.";
+"import.requiredMetadata.artistPlaceholder" = "Artist name (required)";
+"import.requiredMetadata.albumPlaceholder" = "Album name (required)";
+"import.requiredMetadata.import" = "Add with This Information";
+"import.requiredMetadata.issue" = "An artist name and album name are required.";
+"import.requiredMetadata.cdMessage" = "Enter an artist and album name for every selected song.";
+"import.requiredMetadata.urlMessage" = "The downloaded file has missing song information. Complete the required fields.";
 "health.verified" = "Verified";
 "health.unchecked" = "Not verified";
 "health.missing" = "Missing";

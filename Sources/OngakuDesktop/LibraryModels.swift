@@ -1520,6 +1520,21 @@ struct ImportResult: Sendable {
     var issues: [ImportIssue]
 }
 
+struct RequiredImportMetadataDraft: Identifiable, Sendable {
+    var id: String { sourceURL.standardizedFileURL.path }
+    let sourceURL: URL
+    let title: String
+    var artist: String
+    var album: String
+    let requiresArtist: Bool
+    let requiresAlbum: Bool
+
+    var isComplete: Bool {
+        !artist.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !album.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+}
+
 struct AudioCDImportRequest: Sendable {
     let sourceURL: URL
     let title: String
