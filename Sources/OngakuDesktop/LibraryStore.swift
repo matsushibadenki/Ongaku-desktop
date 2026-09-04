@@ -654,6 +654,105 @@ final class LibraryStore: ObservableObject {
         return removedCount
     }
 
+    func deleteTracks(
+        _ trackIDs: Set<Track.ID>,
+        moveFilesToTrash: Bool
+    ) async throws -> TrackDeletionResult {
+        guard !trackIDs.isEmpty else {
+            return TrackDeletionResult(
+                removedCount: 0,
+                trashedFileCount: 0,
+                retainedFileCount: 0,
+                failedFileNames: []
+            )
+        }
+        let removedTracks = tracks.filter { trackIDs.contains($0.id) }
+        guard !removedTracks.isEmpty else {
+            return TrackDeletionResult(
+                removedCount: 0,
+                trashedFileCount: 0,
+                retainedFileCount: 0,
+                failedFileNames: []
+            )
+        }
+        let removedIDs = Set(removedTracks.map(\.id))
+        let updatedTracks = tracks.filter { !removedIDs.contains($0.id) }
+        let updatedPlaylists = playlists.map { playlist in
+            guard playlist.smartDefinition == nil else { return playlist }
+            var updated = playlist
+            let previousCount = updated.entries.count
+            updated.entries.removeAll { removedIDs.contains($0.trackID) }
+            if updated.entries.count != previousCount { updated.updatedAt = .now }
+            return updated
+        }
+        let updatedEvents = playbackEvents.filter { !removedIDs.contains($0.trackID) }
+        var updatedQueue = playbackQueue
+        if var queue = updatedQueue {
+            queue.trackIDs.removeAll { removedIDs.contains($0) }
+            if let currentTrackID = queue.currentTrackID, removedIDs.contains(currentTrackID) {
+                queue.currentTrackID = nil
+                queue.position = 0
+            }
+            updatedQueue = queue
+        }
+
+        playbackQueueSaveTask?.cancel()
+        cancelAudioFeatureAnalysis()
+        let document = LibraryDocument(
+            updatedAt: .now,
+            tracks: updatedTracks,
+            libraryID: libraryID,
+            createdAt: libraryCreatedAt,
+            playlists: updatedPlaylists,
+            playlistFolders: playlistFolders,
+            playbackEvents: updatedEvents,
+            playbackQueue: updatedQueue
+        )
+        do {
+            try await repository.save(document: document)
+            tracks = updatedTracks
+            playlists = updatedPlaylists
+            playbackEvents = updatedEvents
+            playbackQueue = updatedQueue
+            selectedTrackIDs.subtract(removedIDs)
+            if let selectedTrackID, removedIDs.contains(selectedTrackID) {
+                self.selectedTrackID = self.selectedTrackIDs.first
+            }
+            audioFeatures = audioFeatures.filter { !removedIDs.contains($0.key) }
+            syncedDisplayTags = syncedDisplayTags.filter { !removedIDs.contains($0.key) }
+            try? await audioFeatureCache.save(audioFeatures)
+            try? saveDeviceSyncTags()
+            contentRevision &+= 1
+            audioFeatureRevision &+= 1
+            scheduleSearchIndexSynchronization(document: document)
+
+            var trashResult = (trashed: 0, retained: removedTracks.count, failures: [String]())
+            if moveFilesToTrash {
+                trashResult = await repository.trashFiles(
+                    removedTracks: removedTracks,
+                    retainedTracks: updatedTracks,
+                    includesExternalReferences: true
+                )
+            }
+            let result = TrackDeletionResult(
+                removedCount: removedTracks.count,
+                trashedFileCount: trashResult.trashed,
+                retainedFileCount: trashResult.retained,
+                failedFileNames: trashResult.failures
+            )
+            activity = trashResult.failures.isEmpty
+                ? .notice(L10n.format("libraryDeletion.status.removed", result.removedCount))
+                : .failed(L10n.format(
+                    "libraryDeletion.status.trashFailed",
+                    trashResult.failures.count
+                ))
+            return result
+        } catch {
+            activity = .failed(error.localizedDescription)
+            throw error
+        }
+    }
+
     func playlistsContaining(trackIDs: Set<Track.ID>) -> [Playlist] {
         guard !trackIDs.isEmpty else { return [] }
         let statistics = PlaybackStatisticsResolver.statistics(events: playbackEvents, tracks: tracks)

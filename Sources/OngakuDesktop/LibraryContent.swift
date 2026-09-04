@@ -146,6 +146,17 @@ private struct TrackPlaylistContextActions: View {
     }
 }
 
+private struct LibraryDeletionRequest: Identifiable {
+    enum Scope {
+        case tracks
+        case album(String)
+    }
+
+    let id = UUID()
+    let scope: Scope
+    let tracks: [Track]
+}
+
 struct LibraryContent: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
@@ -163,6 +174,8 @@ struct LibraryContent: View {
     @State private var metadataEditTarget: MetadataEditTarget?
     @State private var isShowingFilters = false
     @State private var unifiedSearchTask: Task<Void, Never>?
+    @State private var pendingDeletion: LibraryDeletionRequest?
+    @State private var deletionErrorMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -201,6 +214,35 @@ struct LibraryContent: View {
         .sheet(item: $metadataEditTarget) { target in
             MetadataEditorView(target: target)
                 .environmentObject(library)
+        }
+        .confirmationDialog(
+            deletionDialogTitle,
+            isPresented: Binding(
+                get: { pendingDeletion != nil },
+                set: { if !$0 { pendingDeletion = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(L10n.text("libraryDeletion.action.libraryOnly"), role: .destructive) {
+                performPendingDeletion(moveFilesToTrash: false)
+            }
+            Button(L10n.text("libraryDeletion.action.trashFiles"), role: .destructive) {
+                performPendingDeletion(moveFilesToTrash: true)
+            }
+            Button(L10n.text("common.cancel"), role: .cancel) { pendingDeletion = nil }
+        } message: {
+            Text(deletionDialogMessage)
+        }
+        .alert(
+            L10n.text("libraryDeletion.error.title"),
+            isPresented: Binding(
+                get: { deletionErrorMessage != nil },
+                set: { if !$0 { deletionErrorMessage = nil } }
+            )
+        ) {
+            Button(L10n.text("common.ok")) { deletionErrorMessage = nil }
+        } message: {
+            Text(deletionErrorMessage ?? "")
         }
         .onChange(of: library.selectedSection) { _, section in
             restoreSavedSortOrder(for: section)
@@ -438,13 +480,16 @@ struct LibraryContent: View {
                     album: album,
                     onBack: { selectedAlbumID = nil },
                     onEditTrack: editTrack,
-                    onEditAlbum: editAlbum
+                    onEditAlbum: editAlbum,
+                    onDeleteTracks: requestTrackDeletion,
+                    onDeleteAlbum: requestAlbumDeletion
                 )
             } else {
                 AlbumGrid(
                     albums: albums,
                     selectedAlbumID: $selectedAlbumID,
-                    onEditAlbum: editAlbum
+                    onEditAlbum: editAlbum,
+                    onDeleteAlbum: requestAlbumDeletion
                 )
             }
         case .artists:
@@ -458,7 +503,9 @@ struct LibraryContent: View {
                     },
                     onEditTrack: editTrack,
                     onEditAlbum: editAlbum,
-                    onEditArtist: editArtist
+                    onEditArtist: editArtist,
+                    onDeleteTracks: requestTrackDeletion,
+                    onDeleteAlbum: requestAlbumDeletion
                 )
             } else {
                 ArtistBrowser(
@@ -1019,6 +1066,86 @@ struct LibraryContent: View {
             }
             Divider()
             Button(L10n.text("track.reveal")) { library.reveal(track) }
+            Divider()
+            Button(role: .destructive) {
+                requestTrackDeletion(selectedTracks)
+            } label: {
+                Label(
+                    L10n.text(selectedTracks.count > 1
+                        ? "libraryDeletion.menu.tracks" : "libraryDeletion.menu.track"),
+                    systemImage: "trash"
+                )
+            }
+            if let album = albums.first(where: { $0.id == track.albumID }) {
+                Button(role: .destructive) {
+                    requestAlbumDeletion(album)
+                } label: {
+                    Label(L10n.text("libraryDeletion.menu.album"), systemImage: "trash")
+                }
+            }
+        }
+    }
+
+    private var deletionDialogTitle: String {
+        guard let pendingDeletion else { return "" }
+        switch pendingDeletion.scope {
+        case .tracks:
+            return L10n.text("libraryDeletion.confirm.tracks.title")
+        case .album(let name):
+            return L10n.format("libraryDeletion.confirm.album.title", name)
+        }
+    }
+
+    private var deletionDialogMessage: String {
+        guard let pendingDeletion else { return "" }
+        switch pendingDeletion.scope {
+        case .tracks:
+            return L10n.format(
+                "libraryDeletion.confirm.tracks.message",
+                pendingDeletion.tracks.count
+            )
+        case .album(let name):
+            return L10n.format(
+                "libraryDeletion.confirm.album.message",
+                name,
+                pendingDeletion.tracks.count
+            )
+        }
+    }
+
+    private func requestTrackDeletion(_ tracks: [Track]) {
+        guard !tracks.isEmpty else { return }
+        pendingDeletion = LibraryDeletionRequest(scope: .tracks, tracks: tracks)
+    }
+
+    private func requestAlbumDeletion(_ album: AlbumGroup) {
+        guard !album.tracks.isEmpty else { return }
+        pendingDeletion = LibraryDeletionRequest(
+            scope: .album(album.name),
+            tracks: album.tracks
+        )
+    }
+
+    private func performPendingDeletion(moveFilesToTrash: Bool) {
+        guard let request = pendingDeletion else { return }
+        pendingDeletion = nil
+        let ids = Set(request.tracks.map(\.id))
+        Task {
+            do {
+                let result = try await library.deleteTracks(
+                    ids,
+                    moveFilesToTrash: moveFilesToTrash
+                )
+                player.reconcilePlaybackQueue(with: library.tracks)
+                if !result.failedFileNames.isEmpty {
+                    deletionErrorMessage = L10n.format(
+                        "libraryDeletion.error.files",
+                        result.failedFileNames.joined(separator: ", ")
+                    )
+                }
+            } catch {
+                deletionErrorMessage = error.localizedDescription
+            }
         }
     }
 
@@ -1685,6 +1812,7 @@ private struct AlbumGrid: View {
     let albums: [AlbumGroup]
     @Binding var selectedAlbumID: AlbumGroup.ID?
     let onEditAlbum: (AlbumGroup) -> Void
+    let onDeleteAlbum: (AlbumGroup) -> Void
 
     var body: some View {
         ScrollView {
@@ -1779,6 +1907,12 @@ private struct AlbumGrid: View {
             Button(L10n.text("metadataEditor.album.menu")) {
                 onEditAlbum(album)
             }
+            Divider()
+            Button(role: .destructive) {
+                onDeleteAlbum(album)
+            } label: {
+                Label(L10n.text("libraryDeletion.menu.album"), systemImage: "trash")
+            }
         }
     }
 }
@@ -1791,6 +1925,8 @@ private struct AlbumDetail: View {
     let onBack: () -> Void
     let onEditTrack: (Track) -> Void
     let onEditAlbum: (AlbumGroup) -> Void
+    let onDeleteTracks: ([Track]) -> Void
+    let onDeleteAlbum: (AlbumGroup) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -1923,6 +2059,17 @@ private struct AlbumDetail: View {
                 Button(L10n.text("metadataEditor.album.menu")) { onEditAlbum(album) }
                 Divider()
                 Button(L10n.text("track.reveal")) { library.reveal(track) }
+                Divider()
+                Button(role: .destructive) {
+                    onDeleteTracks([track])
+                } label: {
+                    Label(L10n.text("libraryDeletion.menu.track"), systemImage: "trash")
+                }
+                Button(role: .destructive) {
+                    onDeleteAlbum(album)
+                } label: {
+                    Label(L10n.text("libraryDeletion.menu.album"), systemImage: "trash")
+                }
             }
         } primaryAction: { selection in
             guard let track = album.sortedTracks.first(where: { selection.contains($0.id) }) else {
@@ -2103,6 +2250,8 @@ private struct ArtistDetail: View {
     let onEditTrack: (Track) -> Void
     let onEditAlbum: (AlbumGroup) -> Void
     let onEditArtist: (ArtistGroup) -> Void
+    let onDeleteTracks: ([Track]) -> Void
+    let onDeleteAlbum: (AlbumGroup) -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -2213,6 +2362,15 @@ private struct ArtistDetail: View {
                             Button(L10n.text("metadataEditor.album.menu")) {
                                 onEditAlbum(album)
                             }
+                            Divider()
+                            Button(role: .destructive) {
+                                onDeleteAlbum(album)
+                            } label: {
+                                Label(
+                                    L10n.text("libraryDeletion.menu.album"),
+                                    systemImage: "trash"
+                                )
+                            }
                         }
                     }
                 }
@@ -2294,6 +2452,19 @@ private struct ArtistDetail: View {
                     }
                     Divider()
                     Button(L10n.text("track.reveal")) { library.reveal(track) }
+                    Divider()
+                    Button(role: .destructive) {
+                        onDeleteTracks([track])
+                    } label: {
+                        Label(L10n.text("libraryDeletion.menu.track"), systemImage: "trash")
+                    }
+                    if let album = artist.albums.first(where: { $0.id == track.albumID }) {
+                        Button(role: .destructive) {
+                            onDeleteAlbum(album)
+                        } label: {
+                            Label(L10n.text("libraryDeletion.menu.album"), systemImage: "trash")
+                        }
+                    }
                 }
             } primaryAction: { selection in
                 guard let track = artist.sortedTracks.first(where: { selection.contains($0.id) }) else {

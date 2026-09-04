@@ -268,6 +268,13 @@ struct DuplicateResolutionResult: Sendable {
     let failedFileNames: [String]
 }
 
+struct TrackDeletionResult: Sendable {
+    let removedCount: Int
+    let trashedFileCount: Int
+    let retainedFileCount: Int
+    let failedFileNames: [String]
+}
+
 enum DuplicateTrackAnalyzer {
     nonisolated static func groups(in tracks: [Track]) -> [DuplicateTrackGroup] {
         guard tracks.count > 1 else { return [] }

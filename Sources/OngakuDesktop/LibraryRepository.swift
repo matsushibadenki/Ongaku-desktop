@@ -426,6 +426,18 @@ actor LibraryRepository {
         removedTracks: [Track],
         retainedTracks: [Track]
     ) -> (trashed: Int, retained: Int, failures: [String]) {
+        trashFiles(
+            removedTracks: removedTracks,
+            retainedTracks: retainedTracks,
+            includesExternalReferences: false
+        )
+    }
+
+    func trashFiles(
+        removedTracks: [Track],
+        retainedTracks: [Track],
+        includesExternalReferences: Bool
+    ) -> (trashed: Int, retained: Int, failures: [String]) {
         let retainedPaths = Set(retainedTracks.map { $0.fileURL.standardizedFileURL.path })
         let uniqueURLs = Dictionary(
             removedTracks.map { ($0.fileURL.standardizedFileURL.path, $0.fileURL.standardizedFileURL) },
@@ -436,11 +448,17 @@ actor LibraryRepository {
         var retained = 0
         var failures: [String] = []
         for url in uniqueURLs {
-            guard isInside(url, directory: mediaURL), !retainedPaths.contains(url.path) else {
+            guard !retainedPaths.contains(url.path) else {
+                retained += 1
+                continue
+            }
+            guard includesExternalReferences || isInside(url, directory: mediaURL) else {
                 retained += 1
                 continue
             }
             guard fileManager.fileExists(atPath: url.path) else { continue }
+            let didAccess = url.startAccessingSecurityScopedResource()
+            defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
             do {
                 try fileManager.trashItem(at: url, resultingItemURL: nil)
                 trashed += 1

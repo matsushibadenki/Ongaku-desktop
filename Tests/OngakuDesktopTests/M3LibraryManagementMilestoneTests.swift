@@ -51,6 +51,65 @@ struct M3LibraryManagementMilestoneTests {
         #expect(FileManager.default.fileExists(atPath: externalURL.path))
     }
 
+    @Test("Song deletion keeps catalog relationships consistent and honors both file choices")
+    @MainActor
+    func deletesSongsWithExplicitFilePolicy() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-M3-Song-Deletion-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let media = root.appendingPathComponent("Ongaku Media", isDirectory: true)
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+
+        let keepFile = media.appendingPathComponent("keep.m4a")
+        let trashFile = media.appendingPathComponent("trash.m4a")
+        try Data("keep".utf8).write(to: keepFile)
+        try Data("trash".utf8).write(to: trashFile)
+        let keep = makeTrack(url: keepFile, hash: "keep")
+        let trash = makeTrack(url: trashFile, hash: "trash")
+        let playlist = Playlist(
+            name: "Album",
+            entries: [PlaylistEntry(trackID: keep.id), PlaylistEntry(trackID: trash.id)]
+        )
+        let repository = LibraryRepository(rootURL: root, mediaURL: media)
+        try await repository.save(document: LibraryDocument(
+            tracks: [keep, trash],
+            playlists: [playlist],
+            playbackEvents: [
+                PlaybackEvent(trackID: keep.id, kind: .completed),
+                PlaybackEvent(trackID: trash.id, kind: .completed),
+            ],
+            playbackQueue: PlaybackQueueState(
+                trackIDs: [keep.id, trash.id],
+                currentTrackID: trash.id,
+                position: 12
+            )
+        ))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        let first = try await store.deleteTracks([keep.id], moveFilesToTrash: false)
+        #expect(first.removedCount == 1)
+        #expect(first.trashedFileCount == 0)
+        #expect(FileManager.default.fileExists(atPath: keepFile.path))
+        #expect(store.playlists[0].entries.map(\.trackID) == [trash.id])
+        #expect(store.playbackEvents.map(\.trackID) == [trash.id])
+
+        let second = try await store.deleteTracks([trash.id], moveFilesToTrash: true)
+        #expect(second.removedCount == 1)
+        #expect(second.trashedFileCount == 1)
+        #expect(!FileManager.default.fileExists(atPath: trashFile.path))
+        #expect(store.tracks.isEmpty)
+        #expect(store.playlists[0].entries.isEmpty)
+        #expect(store.playbackEvents.isEmpty)
+        #expect(store.playbackQueue?.trackIDs.isEmpty == true)
+        #expect(store.playbackQueue?.currentTrackID == nil)
+
+        let restored = try await LibraryRepository(rootURL: root, mediaURL: media).load().document
+        #expect(restored.tracks.isEmpty)
+        #expect(restored.playlists[0].entries.isEmpty)
+        #expect(restored.playbackEvents.isEmpty)
+    }
+
     private func makeTrack(url: URL, hash: String) -> Track {
         Track(
             id: UUID(), title: url.deletingPathExtension().lastPathComponent,
