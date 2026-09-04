@@ -155,7 +155,7 @@
 "appleMusic.replay.help" = "Open your official Apple Music Replay listening insights.";
 "appleMusic.authorization.title" = "Apple Music Access";
 "appleMusic.authorization.message" = "Catalog search and cloud-library additions require Apple Music access. Your local library is unaffected.";
-"appleMusic.authorization.action" = "Allow Access";
+"appleMusic.authorization.action" = "Continue";
 "appleMusic.authorization.settings" = "Open System Settings";
 "appleMusic.authorization.notDetermined" = "Permission has not been requested";
 "appleMusic.authorization.denied" = "Access is denied";

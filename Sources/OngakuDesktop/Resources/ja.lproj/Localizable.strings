@@ -155,7 +155,7 @@
 "appleMusic.replay.help" = "Apple公式のApple Music Replay再生インサイトを開きます。";
 "appleMusic.authorization.title" = "Apple Musicへのアクセス";
 "appleMusic.authorization.message" = "カタログ検索とクラウドライブラリへの追加には、Apple Musicへのアクセス許可が必要です。ローカルライブラリには影響しません。";
-"appleMusic.authorization.action" = "アクセスを許可";
+"appleMusic.authorization.action" = "続行";
 "appleMusic.authorization.settings" = "システム設定を開く";
 "appleMusic.authorization.notDetermined" = "まだ許可を確認していません";
 "appleMusic.authorization.denied" = "アクセスが拒否されています";

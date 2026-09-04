@@ -155,7 +155,7 @@
 "appleMusic.replay.help" = "打开Apple官方的Apple Music Replay收听洞察。";
 "appleMusic.authorization.title" = "Apple Music访问权限";
 "appleMusic.authorization.message" = "目录搜索和添加到云音乐资料库需要Apple Music访问权限。您的本地资料库不会受到影响。";
-"appleMusic.authorization.action" = "允许访问";
+"appleMusic.authorization.action" = "继续";
 "appleMusic.authorization.settings" = "打开系统设置";
 "appleMusic.authorization.notDetermined" = "尚未请求权限";
 "appleMusic.authorization.denied" = "访问被拒绝";
