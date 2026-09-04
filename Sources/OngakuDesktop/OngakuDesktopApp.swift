@@ -158,6 +158,9 @@ struct OngakuDesktopApp: App {
                 .onReceive(player.playbackEventPublisher) { event in
                     Task { await library.recordPlaybackEvent(event) }
                 }
+                .onReceive(player.missingTrackPublisher) { trackID in
+                    Task { await library.handleMissingPlaybackFile(id: trackID) }
+                }
                 .onAppear {
                     systemNowPlaying.activate()
                 }

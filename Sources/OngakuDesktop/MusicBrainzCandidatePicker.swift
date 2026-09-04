@@ -123,6 +123,12 @@ struct MusicBrainzCandidatePicker: View {
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(AppTheme.secondaryInk)
             }
+            if let hint = matchHint(candidate) {
+                Label(hint, systemImage: "lightbulb.fill")
+                    .font(.caption2)
+                    .foregroundStyle(AppTheme.warning)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(AppTheme.spaceSM)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -265,6 +271,17 @@ struct MusicBrainzCandidatePicker: View {
         if confidence >= 0.85 { return AppTheme.good }
         if confidence >= 0.65 { return AppTheme.warning }
         return AppTheme.secondaryInk
+    }
+
+    private func matchHint(_ candidate: MusicBrainzCandidate) -> String? {
+        switch candidate.matchKind {
+        case .titleHint:
+            L10n.format("musicbrainz.hint.title", referenceTrack.title)
+        case .albumHint:
+            L10n.format("musicbrainz.hint.album", referenceTrack.album)
+        case .isrc, .metadata:
+            nil
+        }
     }
 
     @MainActor

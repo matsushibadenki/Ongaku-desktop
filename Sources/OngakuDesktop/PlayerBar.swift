@@ -727,10 +727,8 @@ struct PlayerTransportControls: View {
             .buttonBorderShape(.circle)
             .controlSize(compact ? .small : .regular)
             .disabled(
-                appleMusicPlayback.isWorking
-                    || (player.currentTrack == nil
-                        && playableTrack == nil
-                        && appleMusicPlayback.currentItem == nil)
+                (appleMusicPlayback.isWorking && !hasLocalPlaybackCandidate)
+                    || (!hasLocalPlaybackCandidate && appleMusicPlayback.currentItem == nil)
             )
             .keyboardShortcut(.space, modifiers: [])
             .help(L10n.text(isPlaying ? "player.pause" : "track.play"))
@@ -755,21 +753,39 @@ struct PlayerTransportControls: View {
     }
 
     private func primaryPlaybackAction() {
+        if let selectedTrack = PlaybackStartResolver.selectedTrackToStart(
+            currentTrackID: player.currentTrack?.id,
+            selectedTrack: library.selectedTrack
+        ) {
+            if appleMusicPlayback.currentItem != nil {
+                appleMusicPlayback.stopForLocalPlayback()
+            }
+            playSelectedTrack(selectedTrack)
+            return
+        }
+
+        if player.currentTrack != nil {
+            if appleMusicPlayback.currentItem != nil {
+                appleMusicPlayback.stopForLocalPlayback()
+            }
+            player.togglePlayback()
+            return
+        }
+
+        if let playableTrack {
+            if appleMusicPlayback.currentItem != nil {
+                appleMusicPlayback.stopForLocalPlayback()
+            }
+            playSelectedTrack(playableTrack)
+            return
+        }
+
         if appleMusicPlayback.currentItem != nil {
             if appleMusicPlayback.isPlaying {
                 appleMusicPlayback.pause()
             } else {
                 Task { await appleMusicPlayback.resume() }
             }
-        } else if let selectedTrack = PlaybackStartResolver.selectedTrackToStart(
-            currentTrackID: player.currentTrack?.id,
-            selectedTrack: library.selectedTrack
-        ) {
-            playSelectedTrack(selectedTrack)
-        } else if player.currentTrack != nil {
-            player.togglePlayback()
-        } else if let playableTrack {
-            playSelectedTrack(playableTrack)
         }
     }
 
@@ -790,6 +806,10 @@ struct PlayerTransportControls: View {
 
     private var playableTrack: Track? {
         library.selectedTrack ?? library.filteredTracks.first ?? library.tracks.first
+    }
+
+    private var hasLocalPlaybackCandidate: Bool {
+        player.currentTrack != nil || playableTrack != nil
     }
 }
 

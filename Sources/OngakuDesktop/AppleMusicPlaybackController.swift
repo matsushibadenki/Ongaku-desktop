@@ -111,7 +111,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     @Published private(set) var elapsed: TimeInterval = 0
     @Published private(set) var isQueueEditing = false
 
-    private let player = ApplicationMusicPlayer.shared
+    private var player: ApplicationMusicPlayer?
     private var queueObservation: AnyCancellable?
     private var playerStateObservation: AnyCancellable?
     private var progressTask: Task<Void, Never>?
@@ -122,9 +122,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     var duration: TimeInterval { currentQueueItem?.duration ?? 0 }
     var canRetry: Bool { retryOperation != nil && errorMessage != nil }
 
-    init() {
-        observePlayerState()
-    }
+    init() {}
 
     func play(
         item: AppleMusicCatalogItem,
@@ -132,6 +130,7 @@ final class AppleMusicPlaybackController: ObservableObject {
         suspendingLocalPlayback: () -> Void
     ) async {
         suspendingLocalPlayback()
+        let player = activatePlayer()
         player.stop()
         currentItem = item
         state.begin(itemID: item.musicItemID)
@@ -140,7 +139,7 @@ final class AppleMusicPlaybackController: ObservableObject {
 
         do {
             player.queue = queue
-            observeQueue()
+            observeQueue(player)
             refreshQueueSnapshot()
             try await player.play()
             state.didStart()
@@ -154,7 +153,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func pause() {
-        guard state.isPlaying else { return }
+        guard state.isPlaying, let player else { return }
         player.pause()
         state.didPause()
         refreshProgress()
@@ -162,7 +161,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func resume() async {
-        guard let currentItem, !state.isWorking else { return }
+        guard let currentItem, let player, !state.isWorking else { return }
         state.begin(itemID: currentItem.musicItemID)
         do {
             try await player.play()
@@ -179,7 +178,7 @@ final class AppleMusicPlaybackController: ObservableObject {
 
     func stopForLocalPlayback() {
         guard currentItem != nil || state.isPlaying else { return }
-        player.stop()
+        player?.stop()
         currentItem = nil
         state.didStop()
         errorMessage = nil
@@ -192,7 +191,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func playPrevious() async {
-        guard currentItem != nil, !state.isWorking else { return }
+        guard currentItem != nil, let player, !state.isWorking else { return }
         do {
             try await player.skipToPreviousEntry()
             refreshQueueSnapshot()
@@ -205,7 +204,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func playNext() async {
-        guard currentItem != nil, !state.isWorking else { return }
+        guard currentItem != nil, let player, !state.isWorking else { return }
         do {
             try await player.skipToNextEntry()
             refreshQueueSnapshot()
@@ -218,7 +217,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func seek(to position: TimeInterval) {
-        guard currentItem != nil else { return }
+        guard currentItem != nil, let player else { return }
         player.playbackTime = max(position, 0)
         refreshProgress()
     }
@@ -227,7 +226,7 @@ final class AppleMusicPlaybackController: ObservableObject {
         _ playableItem: PlayableItem,
         position: MusicPlayer.Queue.EntryInsertionPosition
     ) async {
-        guard currentItem != nil, !isQueueEditing else { return }
+        guard currentItem != nil, let player, !isQueueEditing else { return }
         isQueueEditing = true
         retryOperation = nil
         defer { isQueueEditing = false }
@@ -241,7 +240,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func playQueueItem(id: String) async {
-        guard currentItem != nil,
+        guard currentItem != nil, let player,
               let entry = player.queue.entries.first(where: { $0.id == id }) else { return }
         player.queue.currentEntry = entry
         do {
@@ -273,6 +272,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func moveQueueItems(fromOffsets offsets: IndexSet, toOffset destination: Int) {
+        guard let player else { return }
         let reorderedItems = AppleMusicQueueEditor.moving(
             queueItems,
             fromOffsets: offsets,
@@ -305,7 +305,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     func removeQueueItems(ids: Set<String>) {
-        guard !isQueueEditing else { return }
+        guard let player, !isQueueEditing else { return }
         let retainedItems = AppleMusicQueueEditor.removing(
             queueItems,
             ids: ids,
@@ -334,7 +334,18 @@ final class AppleMusicPlaybackController: ObservableObject {
         state.currentItemID == item.musicItemID
     }
 
-    private func observeQueue() {
+    private func activatePlayer() -> ApplicationMusicPlayer {
+        if let player {
+            return player
+        }
+
+        let player = ApplicationMusicPlayer.shared
+        self.player = player
+        observePlayerState(player)
+        return player
+    }
+
+    private func observeQueue(_ player: ApplicationMusicPlayer) {
         queueObservation = player.queue.objectWillChange
             .sink { [weak self] _ in
                 Task { @MainActor [weak self] in
@@ -344,7 +355,7 @@ final class AppleMusicPlaybackController: ObservableObject {
             }
     }
 
-    private func observePlayerState() {
+    private func observePlayerState(_ player: ApplicationMusicPlayer) {
         playerStateObservation = player.state.objectWillChange
             .sink { [weak self] _ in
                 Task { @MainActor [weak self] in
@@ -355,7 +366,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     private func synchronizePlaybackStatus() {
-        guard currentItem != nil else { return }
+        guard currentItem != nil, let player else { return }
         switch player.state.playbackStatus {
         case .playing, .seekingForward, .seekingBackward:
             state.didStart()
@@ -371,6 +382,12 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     private func refreshQueueSnapshot() {
+        guard let player else {
+            queueItems = []
+            currentQueueItem = nil
+            elapsed = 0
+            return
+        }
         let currentEntryID = player.queue.currentEntry?.id
         let allItems = player.queue.entries.map { entry in
             AppleMusicQueueItem(
@@ -394,6 +411,10 @@ final class AppleMusicPlaybackController: ObservableObject {
     }
 
     private func refreshProgress() {
+        guard let player else {
+            elapsed = 0
+            return
+        }
         elapsed = min(max(player.playbackTime, 0), max(duration, 0))
     }
 

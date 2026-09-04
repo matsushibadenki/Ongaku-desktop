@@ -3,6 +3,13 @@ import CryptoKit
 import Foundation
 
 struct MusicBrainzCandidate: Identifiable, Equatable, Sendable {
+    enum MatchKind: Equatable, Sendable {
+        case isrc
+        case metadata
+        case titleHint
+        case albumHint
+    }
+
     let recordingID: String
     let releaseID: String
     let releaseGroupID: String?
@@ -23,6 +30,7 @@ struct MusicBrainzCandidate: Identifiable, Equatable, Sendable {
     let isrc: String?
     let confidence: Double
     let durationDifference: TimeInterval?
+    let matchKind: MatchKind
 
     var id: String { "\(recordingID):\(releaseID)" }
 
@@ -200,14 +208,22 @@ actor MusicBrainzService {
         } else {
             response = RecordingSearchResponse(recordings: [])
         }
-        var result = Self.expand(response, against: track)
+        var result = Self.expand(response, against: track, matchKind: .isrc)
         if result.isEmpty {
             response = try await musicBrainzJSON(from: Self.searchURL(for: track))
-            result = Self.expand(response, against: track)
+            result = Self.expand(response, against: track, matchKind: .metadata)
         }
         if result.isEmpty {
             response = try await musicBrainzJSON(from: Self.searchURL(for: track, includesAlbum: false))
-            result = Self.expand(response, against: track)
+            result = Self.expand(response, against: track, matchKind: .metadata)
+        }
+        if result.isEmpty {
+            response = try await musicBrainzJSON(from: Self.titleOnlySearchURL(for: track))
+            result += Self.expand(response, against: track, matchKind: .titleHint)
+                .filter { Self.isUsefulFallback($0, for: track) }
+            response = try await musicBrainzJSON(from: Self.albumOnlySearchURL(for: track))
+            result += Self.expand(response, against: track, matchKind: .albumHint)
+                .filter { Self.isUsefulFallback($0, for: track) }
         }
         let unique = Dictionary(grouping: result, by: \.id).compactMap { _, matches in
             matches.max(by: { $0.confidence < $1.confidence })
@@ -277,6 +293,27 @@ actor MusicBrainzService {
         )!
         components.queryItems = [
             URLQueryItem(name: "query", value: terms.joined(separator: " AND ")),
+            URLQueryItem(name: "fmt", value: "json"),
+            URLQueryItem(name: "limit", value: "20")
+        ]
+        return components.url!
+    }
+
+    nonisolated static func titleOnlySearchURL(for track: Track) -> URL {
+        recordingSearchURL(query: "recording:\"\(escapeLucene(track.title))\"")
+    }
+
+    nonisolated static func albumOnlySearchURL(for track: Track) -> URL {
+        recordingSearchURL(query: "release:\"\(escapeLucene(track.album))\"")
+    }
+
+    nonisolated private static func recordingSearchURL(query: String) -> URL {
+        var components = URLComponents(
+            url: baseURL.appendingPathComponent("recording/"),
+            resolvingAgainstBaseURL: false
+        )!
+        components.queryItems = [
+            URLQueryItem(name: "query", value: query),
             URLQueryItem(name: "fmt", value: "json"),
             URLQueryItem(name: "limit", value: "20")
         ]
@@ -383,7 +420,8 @@ actor MusicBrainzService {
     private nonisolated static func makeCandidate(
         recording: RecordingSearchResponse.Recording,
         release: RecordingSearchResponse.Release,
-        track: Track
+        track: Track,
+        matchKind: MusicBrainzCandidate.MatchKind
     ) -> MusicBrainzCandidate {
         let recordingCredit = creditedArtist(recording.artistCredit)
         let releaseCredit = creditedArtist(release.artistCredit ?? recording.artistCredit)
@@ -435,7 +473,8 @@ actor MusicBrainzService {
             discCount: release.mediumCount,
             isrc: recording.isrcs?.first,
             confidence: confidence,
-            durationDifference: durationDifference
+            durationDifference: durationDifference,
+            matchKind: matchKind
         )
     }
 
@@ -488,12 +527,32 @@ actor MusicBrainzService {
 
     private nonisolated static func expand(
         _ response: RecordingSearchResponse,
-        against track: Track
+        against track: Track,
+        matchKind: MusicBrainzCandidate.MatchKind
     ) -> [MusicBrainzCandidate] {
         response.recordings.flatMap { recording in
             (recording.releases ?? []).map { release in
-                makeCandidate(recording: recording, release: release, track: track)
+                makeCandidate(
+                    recording: recording,
+                    release: release,
+                    track: track,
+                    matchKind: matchKind
+                )
             }
+        }
+    }
+
+    nonisolated static func isUsefulFallback(
+        _ candidate: MusicBrainzCandidate,
+        for track: Track
+    ) -> Bool {
+        switch candidate.matchKind {
+        case .titleHint:
+            similarity(candidate.title, track.title) >= 0.55
+        case .albumHint:
+            similarity(candidate.album, track.album) >= 0.55
+        case .isrc, .metadata:
+            true
         }
     }
 

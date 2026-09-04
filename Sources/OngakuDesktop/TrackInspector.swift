@@ -693,6 +693,10 @@ private struct LRCLIBCandidatePicker: View {
                             .foregroundStyle(AppTheme.ink)
                         if candidate.matchKind == .exact {
                             badge("lrclib.match.exact", color: AppTheme.good)
+                        } else if candidate.matchKind == .titleHint {
+                            badge("lrclib.match.titleHint", color: AppTheme.warning)
+                        } else if candidate.matchKind == .albumHint {
+                            badge("lrclib.match.albumHint", color: AppTheme.warning)
                         }
                         if candidate.record.syncedLyrics != nil {
                             badge("lrclib.format.synced", color: AppTheme.accent)
@@ -709,6 +713,12 @@ private struct LRCLIBCandidatePicker: View {
                         .font(.caption)
                         .foregroundStyle(AppTheme.secondaryInk)
                         .lineLimit(1)
+                    if let hint = matchHint(candidate) {
+                        Label(hint, systemImage: "lightbulb.fill")
+                            .font(.caption2)
+                            .foregroundStyle(AppTheme.warning)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
 
                 Spacer(minLength: AppTheme.spaceSM)
@@ -756,6 +766,17 @@ private struct LRCLIBCandidatePicker: View {
 
     private func durationDifferenceText(_ difference: TimeInterval) -> String {
         L10n.format("lrclib.durationDifference", difference)
+    }
+
+    private func matchHint(_ candidate: LRCLIBCandidate) -> String? {
+        switch candidate.matchKind {
+        case .titleHint:
+            L10n.format("lrclib.hint.title", track.title)
+        case .albumHint:
+            L10n.format("lrclib.hint.album", track.album)
+        case .exact, .search:
+            nil
+        }
     }
 }
 

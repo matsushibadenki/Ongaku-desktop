@@ -1,4 +1,5 @@
 import AVFoundation
+import Combine
 import Foundation
 import Testing
 @testable import OngakuDesktop
@@ -103,6 +104,23 @@ struct M1PlaybackMilestoneTests {
         #expect(player.elapsed == 37.5)
         #expect(player.queueState.position == 37.5)
         #expect(player.errorMessage != nil)
+    }
+
+    @Test("Starting a stale library entry reports its missing file")
+    @MainActor
+    func reportsFileRemovedAfterLibraryRegistration() {
+        var track = Self.makeTracks()[0]
+        track.health = .verified
+        let player = PlaybackController()
+        var reportedIDs: [Track.ID] = []
+        let observation = player.missingTrackPublisher.sink { reportedIDs.append($0) }
+
+        player.play(track)
+
+        #expect(reportedIDs == [track.id])
+        #expect(player.isPlaying == false)
+        #expect(player.errorMessage != nil)
+        withExtendedLifetime(observation) {}
     }
 
     private static func makeTracks(fileURL: URL? = nil) -> [Track] {

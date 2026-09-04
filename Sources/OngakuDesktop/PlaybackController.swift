@@ -892,7 +892,7 @@ final class PlaybackController: ObservableObject {
     @Published private(set) var isPlaying = false
     @Published private(set) var elapsed: TimeInterval = 0
     @Published var volume: Double = 0.8 {
-        didSet { outputGainNode.outputVolume = Float(volume) }
+        didSet { sourceMixerNode.outputVolume = Float(volume) }
     }
     @Published private(set) var errorMessage: String?
     @Published private(set) var sourceSampleRate: Double = 0
@@ -964,14 +964,12 @@ final class PlaybackController: ObservableObject {
     }
 
     let playbackEventPublisher = PassthroughSubject<PlaybackEvent, Never>()
+    let missingTrackPublisher = PassthroughSubject<Track.ID, Never>()
 
     private let engine = AVAudioEngine()
     private let primaryPlayerNode = AVAudioPlayerNode()
     private let secondaryPlayerNode = AVAudioPlayerNode()
     private let sourceMixerNode = AVAudioMixerNode()
-    // Keeps the metering point after DSP but before the user-facing output gain.
-    private let meterTapNode = AVAudioMixerNode()
-    private let outputGainNode = AVAudioMixerNode()
     private var activePlayerIndex = 0
     private var playerNode: AVAudioPlayerNode {
         activePlayerIndex == 0 ? primaryPlayerNode : secondaryPlayerNode
@@ -1047,13 +1045,11 @@ final class PlaybackController: ObservableObject {
         engine.attach(primaryPlayerNode)
         engine.attach(secondaryPlayerNode)
         engine.attach(sourceMixerNode)
-        engine.attach(meterTapNode)
-        engine.attach(outputGainNode)
         effectPipeline.forEach { $0.attach(to: engine) }
         effectSettings.forEach(applyEffectSetting)
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
-        outputGainNode.outputVolume = Float(volume)
+        sourceMixerNode.outputVolume = Float(volume)
         observeSystemAudioEvents()
     }
 
@@ -1168,6 +1164,7 @@ final class PlaybackController: ObservableObject {
 
     func play(_ track: Track) {
         usesOngakuMixTransitions = false
+        guard reportPlaybackReadiness(for: track) else { return }
         playQueuedTrack(track)
     }
 
@@ -1179,6 +1176,7 @@ final class PlaybackController: ObservableObject {
         }
         usesOngakuMixTransitions = false
         queueUndoStack.removeAll()
+        guard reportPlaybackReadiness(for: track) else { return }
         playQueuedTrack(track)
     }
 
@@ -1195,6 +1193,7 @@ final class PlaybackController: ObservableObject {
         self.audioFeatures = audioFeatures
         usesOngakuMixTransitions = true
         queueUndoStack.removeAll()
+        guard reportPlaybackReadiness(for: track) else { return }
         playQueuedTrack(track)
     }
 
@@ -1204,12 +1203,63 @@ final class PlaybackController: ObservableObject {
     }
 
     private func playQueuedTrack(_ track: Track) {
+        guard reportPlaybackReadiness(for: track) else { return }
         externalPlaybackStopHandler?()
         finishPlaybackSession(kind: .skipped)
         if !playbackQueue.contains(where: { $0.id == track.id }) {
             playbackQueue.append(track)
         }
         load(track, position: 0, autoplay: true)
+    }
+
+    private func reportPlaybackReadiness(for track: Track) -> Bool {
+        if let issue = playbackReadinessMessage(for: track) {
+            if currentTrack?.id != track.id {
+                stopCurrentPlayback()
+            }
+            errorMessage = issue
+            publishQueueState(force: true)
+            return false
+        }
+        return true
+    }
+
+    private func playbackReadinessMessage(for track: Track) -> String? {
+        if track.isExcludedFromPlayback {
+            return L10n.format(
+                "player.playbackUnavailable",
+                track.title,
+                L10n.text("player.playback.reason.excluded")
+            )
+        }
+
+        let fileURL = track.fileURL.standardizedFileURL
+        if !FileManager.default.fileExists(atPath: fileURL.path) {
+            missingTrackPublisher.send(track.id)
+            return L10n.format(
+                "player.playbackUnavailable",
+                track.title,
+                L10n.text("player.playback.reason.missing")
+            )
+        }
+
+        if track.health == .missing {
+            return L10n.format(
+                "player.playbackUnavailable",
+                track.title,
+                L10n.text("player.playback.reason.missing")
+            )
+        }
+
+        if track.health == .unreadable {
+            return L10n.format(
+                "player.playbackUnavailable",
+                track.title,
+                L10n.text("player.playback.reason.unreadable")
+            )
+        }
+
+        return nil
     }
 
     func restorePlaybackQueue(_ savedState: PlaybackQueueState?, tracks: [Track]) {
@@ -1325,8 +1375,17 @@ final class PlaybackController: ObservableObject {
 
     private func load(_ track: Track, position: TimeInterval, autoplay: Bool) {
         do {
+            if let readinessError = playbackReadinessMessage(for: track) {
+                throw NSError(
+                    domain: "Ongaku.Desktop.Playback",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: readinessError]
+                )
+            }
+
             stopCurrentPlayback()
-            let file = try AVAudioFile(forReading: track.fileURL)
+            let fileURL = track.fileURL.standardizedFileURL
+            let file = try AVAudioFile(forReading: fileURL)
             suppressConfigurationRecovery()
             let sourceRate = file.processingFormat.sampleRate
             let configuration = automaticUpsampling
@@ -1362,7 +1421,15 @@ final class PlaybackController: ObservableObject {
             // library is temporarily unavailable during process restoration.
             elapsed = min(max(position, 0), max(track.duration, 0))
             isPlaying = false
-            errorMessage = error.localizedDescription
+            if let readinessError = playbackReadinessMessage(for: track) {
+                errorMessage = readinessError
+            } else {
+                errorMessage = L10n.format(
+                    "player.playbackUnavailable",
+                    track.title,
+                    L10n.format("player.playback.reason.openFailed", error.localizedDescription)
+                )
+            }
             publishQueueState(force: true)
         }
     }
@@ -1379,7 +1446,14 @@ final class PlaybackController: ObservableObject {
     }
 
     func togglePlayback() {
-        guard audioFile != nil else { return }
+        guard let currentTrack else { return }
+        guard reportPlaybackReadiness(for: currentTrack) else { return }
+
+        if audioFile == nil {
+            load(currentTrack, position: elapsed, autoplay: true)
+            return
+        }
+
         if isPlaying {
             elapsed = currentElapsed()
             stopPlayerNodes()
@@ -1495,8 +1569,6 @@ final class PlaybackController: ObservableObject {
         engine.disconnectNodeOutput(primaryPlayerNode)
         engine.disconnectNodeOutput(secondaryPlayerNode)
         engine.disconnectNodeOutput(sourceMixerNode)
-        engine.disconnectNodeOutput(meterTapNode)
-        engine.disconnectNodeOutput(outputGainNode)
         for effect in effectPipeline {
             effect.nodes.forEach { engine.disconnectNodeOutput($0) }
         }
@@ -1524,10 +1596,7 @@ final class PlaybackController: ObservableObject {
             effect.connectInternalNodes(engine: engine, format: file.processingFormat)
             upstream = effect.outputNode
         }
-        // Meter the processed program signal before the app's listening-volume gain.
-        engine.connect(upstream, to: meterTapNode, format: file.processingFormat)
-        engine.connect(meterTapNode, to: outputGainNode, format: file.processingFormat)
-        engine.connect(outputGainNode, to: engine.mainMixerNode, format: file.processingFormat)
+        engine.connect(upstream, to: engine.mainMixerNode, format: file.processingFormat)
         let hardwareFormat = engine.outputNode.inputFormat(forBus: 0)
         engine.connect(engine.mainMixerNode, to: engine.outputNode, format: hardwareFormat)
         outputSampleRate = hardwareFormat.sampleRate
@@ -1660,7 +1729,7 @@ final class PlaybackController: ObservableObject {
             }
         }
         let tapBlock = makeStereoMeterTapBlock(throttle: meterThrottle, deliver: deliver)
-        meterTapNode.installTap(
+        engine.mainMixerNode.installTap(
             onBus: 0,
             bufferSize: AudioVisualizationConfiguration.tapBufferSize,
             format: nil,
@@ -1671,7 +1740,7 @@ final class PlaybackController: ObservableObject {
 
     private func removeMeterTapIfNeeded() {
         guard isMeterTapInstalled else { return }
-        meterTapNode.removeTap(onBus: 0)
+        engine.mainMixerNode.removeTap(onBus: 0)
         isMeterTapInstalled = false
     }
 

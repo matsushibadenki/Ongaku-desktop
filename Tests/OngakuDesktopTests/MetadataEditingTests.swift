@@ -433,6 +433,16 @@ struct MetadataEditingTests {
         #expect(search.queryItems?.contains {
             $0.name == "track_name" && $0.value == "A Song & More"
         } == true)
+        let titleOnly = try #require(URLComponents(
+            url: LRCLIBService.titleOnlySearchURL(for: track),
+            resolvingAgainstBaseURL: false
+        ))
+        #expect(titleOnly.queryItems?.map(\.name) == ["track_name"])
+        let albumOnly = try #require(URLComponents(
+            url: LRCLIBService.albumOnlySearchURL(for: track),
+            resolvingAgainstBaseURL: false
+        ))
+        #expect(albumOnly.queryItems?.map(\.name) == ["album_name"])
     }
 
     @Test("LRCLIB confidence rewards matching metadata and duration")
@@ -467,6 +477,12 @@ struct MetadataEditingTests {
         let unrelatedScore = LRCLIBService.evaluate(unrelated, against: track).confidence
         #expect(matchingScore > 0.95)
         #expect(unrelatedScore < 0.25)
+        let titleHint = LRCLIBService.evaluate(
+            matching,
+            against: track,
+            matchKind: .titleHint
+        )
+        #expect(LRCLIBService.isUsefulFallback(titleHint, for: track))
     }
 
     @Test("LRCLIB synchronized results retain source identity")
@@ -521,6 +537,16 @@ struct MetadataEditingTests {
         #expect(relaxedQuery?.contains("recording:") == true)
         #expect(relaxedQuery?.contains("artist:") == true)
         #expect(relaxedQuery?.contains("release:") == false)
+        let titleHintQuery = URLComponents(
+            url: MusicBrainzService.titleOnlySearchURL(for: track),
+            resolvingAgainstBaseURL: false
+        )?.queryItems?.first(where: { $0.name == "query" })?.value
+        #expect(titleHintQuery == "recording:\"Song \\\"One\\\"\"")
+        let albumHintQuery = URLComponents(
+            url: MusicBrainzService.albumOnlySearchURL(for: track),
+            resolvingAgainstBaseURL: false
+        )?.queryItems?.first(where: { $0.name == "query" })?.value
+        #expect(albumHintQuery == "release:\"Album / One\"")
         #expect(
             MusicBrainzService.coverArtURL(for: "release-id").path
                 == "/release/release-id"

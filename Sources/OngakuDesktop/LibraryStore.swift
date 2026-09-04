@@ -2197,6 +2197,30 @@ final class LibraryStore: ObservableObject {
         }
     }
 
+    func handleMissingPlaybackFile(id: Track.ID) async {
+        guard let index = tracks.firstIndex(where: { $0.id == id }) else { return }
+        let track = tracks[index]
+        guard !FileManager.default.fileExists(atPath: track.fileURL.standardizedFileURL.path) else {
+            return
+        }
+
+        guard tracks[index].health != .missing else {
+            activity = .notice(L10n.format("status.playbackMissingDetected", track.title))
+            return
+        }
+        tracks[index].health = .missing
+        tracks[index].lastVerifiedAt = .now
+        contentRevision &+= 1
+
+        do {
+            try await repository.save(tracks: tracks)
+            scheduleSearchIndexSynchronization(document: currentDocument())
+            activity = .notice(L10n.format("status.playbackMissingDetected", track.title))
+        } catch {
+            activity = .failed(error.localizedDescription)
+        }
+    }
+
     private func persistRelinkedTracks(_ updated: [Track]) async throws {
         try await repository.save(tracks: updated)
         tracks = updated

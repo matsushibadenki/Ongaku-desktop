@@ -53,6 +53,8 @@ struct LRCLIBCandidate: Identifiable, Equatable, Sendable {
     enum MatchKind: Equatable, Sendable {
         case exact
         case search
+        case titleHint
+        case albumHint
     }
 
     let record: LRCLIBRecord
@@ -127,6 +129,24 @@ actor LRCLIBService {
             candidatesByID[record.id] = candidate
         }
 
+        if candidatesByID.isEmpty {
+            let fallbackSearches: [(URL, LRCLIBCandidate.MatchKind)] = [
+                (Self.titleOnlySearchURL(for: track), .titleHint),
+                (Self.albumOnlySearchURL(for: track), .albumHint)
+            ]
+            for (url, matchKind) in fallbackSearches {
+                for record in try await search(url: url) where record.hasUsableLyrics {
+                    let candidate = Self.evaluate(record, against: track, matchKind: matchKind)
+                    guard Self.isUsefulFallback(candidate, for: track) else { continue }
+                    if let existing = candidatesByID[record.id],
+                       existing.confidence >= candidate.confidence {
+                        continue
+                    }
+                    candidatesByID[record.id] = candidate
+                }
+            }
+        }
+
         return candidatesByID.values.sorted {
             if $0.confidence != $1.confidence { return $0.confidence > $1.confidence }
             if $0.durationDifference != $1.durationDifference {
@@ -176,15 +196,27 @@ actor LRCLIBService {
     }
 
     nonisolated static func searchURL(for track: Track) -> URL {
+        searchURL(queryItems: [
+            URLQueryItem(name: "track_name", value: track.title),
+            URLQueryItem(name: "artist_name", value: track.artist),
+            URLQueryItem(name: "album_name", value: track.album)
+        ])
+    }
+
+    nonisolated static func titleOnlySearchURL(for track: Track) -> URL {
+        searchURL(queryItems: [URLQueryItem(name: "track_name", value: track.title)])
+    }
+
+    nonisolated static func albumOnlySearchURL(for track: Track) -> URL {
+        searchURL(queryItems: [URLQueryItem(name: "album_name", value: track.album)])
+    }
+
+    nonisolated private static func searchURL(queryItems: [URLQueryItem]) -> URL {
         var components = URLComponents(
             url: baseURL.appendingPathComponent("search"),
             resolvingAgainstBaseURL: false
         )!
-        components.queryItems = [
-            URLQueryItem(name: "track_name", value: track.title),
-            URLQueryItem(name: "artist_name", value: track.artist),
-            URLQueryItem(name: "album_name", value: track.album)
-        ]
+        components.queryItems = queryItems
         return components.url!
     }
 
@@ -199,12 +231,30 @@ actor LRCLIBService {
     }
 
     private func search(track: Track) async throws -> [LRCLIBRecord] {
-        let (data, response) = try await request(Self.searchURL(for: track))
+        try await search(url: Self.searchURL(for: track))
+    }
+
+    private func search(url: URL) async throws -> [LRCLIBRecord] {
+        let (data, response) = try await request(url)
         guard response.statusCode == 200 else {
             throw LRCLIBError.serviceUnavailable(response.statusCode)
         }
         do { return try JSONDecoder().decode([LRCLIBRecord].self, from: data) }
         catch { throw LRCLIBError.invalidResponse }
+    }
+
+    nonisolated static func isUsefulFallback(
+        _ candidate: LRCLIBCandidate,
+        for track: Track
+    ) -> Bool {
+        switch candidate.matchKind {
+        case .titleHint:
+            similarity(candidate.record.trackName, track.title) >= 0.55
+        case .albumHint:
+            similarity(candidate.record.albumName, track.album) >= 0.55
+        case .exact, .search:
+            true
+        }
     }
 
     private func request(_ url: URL, retryingAfterRateLimit: Bool = true) async throws
