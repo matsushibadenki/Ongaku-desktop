@@ -204,7 +204,15 @@ struct MetadataEditorView: View {
     @State private var selectedMusicBrainzReference: MusicBrainzReference?
     @State private var isSearchingMusicBrainz = false
     @State private var isShowingMusicBrainzCandidates = false
+    @State private var artistImageCandidates: [ArtistImageCandidate] = []
+    @State private var selectedArtistImageCandidate: ArtistImageCandidate?
+    @State private var existingArtistAttribution: ArtistArtworkAttribution?
+    @State private var isSearchingArtistImages = false
+    @State private var isShowingArtistImageCandidates = false
     @State private var isShowingFileOrganizationConfirmation = false
+    @State private var isShowingOverwriteConfirmation = false
+    @State private var organizationConflictCount = 0
+    @State private var pendingOrganizationTrackIDs: Set<Track.ID> = []
 
     init(target: MetadataEditTarget) {
         self.target = target
@@ -320,6 +328,10 @@ struct MetadataEditorView: View {
             Task {
                 hasCustomArtwork = await ArtworkResolver.shared
                     .customArtworkData(for: sourceArtworkSubject) != nil
+                if isArtist {
+                    existingArtistAttribution = await ArtworkResolver.shared
+                        .artistArtworkAttribution(for: sourceArtworkSubject)
+                }
             }
         }
         .fileImporter(
@@ -336,6 +348,13 @@ struct MetadataEditorView: View {
                     onUse: applyMusicBrainzCandidate
                 )
             }
+        }
+        .sheet(isPresented: $isShowingArtistImageCandidates) {
+            ArtistImageCandidatePicker(
+                artistName: form.artist.trimmedForMetadata,
+                candidates: artistImageCandidates,
+                onUse: applyArtistImageCandidate
+            )
         }
         .confirmationDialog(
             L10n.text("metadataEditor.organizationConfirmation.title"),
@@ -354,6 +373,24 @@ struct MetadataEditorView: View {
             Text(L10n.format(
                 "metadataEditor.organizationConfirmation.message",
                 fileOrganizationTrackIDs.count
+            ))
+        }
+        .confirmationDialog(
+            L10n.text("metadataEditor.overwriteConfirmation.title"),
+            isPresented: $isShowingOverwriteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.text("metadataEditor.overwriteConfirmation.replace"), role: .destructive) {
+                Task { await completePendingOrganization(collisionPolicy: .replace) }
+            }
+            Button(L10n.text("metadataEditor.overwriteConfirmation.keepBoth")) {
+                Task { await completePendingOrganization(collisionPolicy: .keepBoth) }
+            }
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n.format(
+                "metadataEditor.overwriteConfirmation.message",
+                organizationConflictCount
             ))
         }
     }
@@ -782,16 +819,57 @@ struct MetadataEditorView: View {
             }
             .frame(width: 144)
 
+            if isArtist {
+                Button {
+                    Task { await searchArtistImages() }
+                } label: {
+                    if isSearchingArtistImages {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Label(L10n.text("artistImage.search"), systemImage: "sparkle.magnifyingglass")
+                    }
+                }
+                .disabled(isSearchingArtistImages || form.artist.trimmedForMetadata.isEmpty)
+                .frame(width: 144)
+            }
+
             Button(L10n.text("metadataEditor.artwork.remove")) {
                 selectedArtworkData = nil
                 selectedArtworkImage = nil
+                selectedArtistImageCandidate = nil
+                existingArtistAttribution = nil
                 shouldRemoveCustomArtwork = true
             }
             .buttonStyle(.plain)
             .foregroundStyle(AppTheme.secondaryInk)
             .disabled(!hasCustomArtwork && selectedArtworkData == nil)
             .frame(width: 144)
+
+            if isArtist, let attribution = displayedArtistAttribution {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.text(attribution.source.titleKey))
+                        .font(.caption.weight(.semibold))
+                    if let credit = attribution.attribution, !credit.isEmpty {
+                        Text(credit)
+                            .font(.caption2)
+                            .lineLimit(2)
+                    }
+                    if let license = attribution.licenseName, !license.isEmpty {
+                        Text(license)
+                            .font(.caption2)
+                    }
+                }
+                .foregroundStyle(AppTheme.secondaryInk)
+                .frame(width: 144, alignment: .leading)
+            }
         }
+    }
+
+    private var displayedArtistAttribution: ArtistArtworkAttribution? {
+        if let selectedArtistImageCandidate {
+            return ArtistArtworkAttribution(candidate: selectedArtistImageCandidate)
+        }
+        return existingArtistAttribution
     }
 
     private var targetTracks: [Track] {
@@ -837,6 +915,8 @@ struct MetadataEditorView: View {
             }
             selectedArtworkData = data
             selectedArtworkImage = image
+            selectedArtistImageCandidate = nil
+            existingArtistAttribution = nil
             shouldRemoveCustomArtwork = false
             errorMessage = nil
         } catch {
@@ -885,6 +965,31 @@ struct MetadataEditorView: View {
                 try await library.organizeManagedMediaAfterMetadataChange(trackIDs: trackIDs)
             }
             dismiss()
+        } catch LibraryRepository.RepositoryError.mediaOrganizationConflict(let count) {
+            pendingOrganizationTrackIDs = trackIDs
+            organizationConflictCount = count
+            isShowingOverwriteConfirmation = true
+            isSaving = false
+        } catch {
+            errorMessage = error.localizedDescription
+            isSaving = false
+        }
+    }
+
+    @MainActor
+    private func completePendingOrganization(
+        collisionPolicy: MediaOrganizationCollisionPolicy
+    ) async {
+        guard !pendingOrganizationTrackIDs.isEmpty else { return }
+        isSaving = true
+        errorMessage = nil
+        do {
+            try await library.organizeManagedMediaAfterMetadataChange(
+                trackIDs: pendingOrganizationTrackIDs,
+                collisionPolicy: collisionPolicy
+            )
+            pendingOrganizationTrackIDs = []
+            dismiss()
         } catch {
             errorMessage = error.localizedDescription
             isSaving = false
@@ -916,10 +1021,18 @@ struct MetadataEditorView: View {
 
     private func persistArtworkChange() async throws {
         if let selectedArtworkData {
-            try await ArtworkResolver.shared.registerCustomArtwork(
-                selectedArtworkData,
-                for: destinationArtworkSubject
-            )
+            if isArtist, let selectedArtistImageCandidate {
+                try await ArtworkResolver.shared.registerArtistArtwork(
+                    selectedArtworkData,
+                    candidate: selectedArtistImageCandidate,
+                    for: destinationArtworkSubject
+                )
+            } else {
+                try await ArtworkResolver.shared.registerCustomArtwork(
+                    selectedArtworkData,
+                    for: destinationArtworkSubject
+                )
+            }
             if sourceArtworkSubject != destinationArtworkSubject {
                 try await ArtworkResolver.shared.removeCustomArtwork(for: sourceArtworkSubject)
             }
@@ -1038,6 +1151,33 @@ struct MetadataEditorView: View {
             selectedArtworkImage = image
             shouldRemoveCustomArtwork = false
         }
+        errorMessage = nil
+    }
+
+    @MainActor
+    private func searchArtistImages() async {
+        let artist = form.artist.trimmedForMetadata
+        guard !artist.isEmpty else { return }
+        isSearchingArtistImages = true
+        errorMessage = nil
+        let candidates = await ArtworkResolver.shared.artistImageCandidates(for: artist)
+        artistImageCandidates = candidates
+        if candidates.isEmpty {
+            errorMessage = L10n.text("artistImage.noResults")
+        } else {
+            isShowingArtistImageCandidates = true
+        }
+        isSearchingArtistImages = false
+    }
+
+    @MainActor
+    private func applyArtistImageCandidate(_ candidate: ArtistImageCandidate, data: Data) {
+        guard let image = NSImage(data: data) else { return }
+        selectedArtistImageCandidate = candidate
+        existingArtistAttribution = nil
+        selectedArtworkData = data
+        selectedArtworkImage = image
+        shouldRemoveCustomArtwork = false
         errorMessage = nil
     }
 }

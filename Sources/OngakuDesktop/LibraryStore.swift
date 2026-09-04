@@ -32,6 +32,16 @@ enum AudioFeatureAnalysisPowerPolicy {
     }
 }
 
+enum TrackFileAvailability {
+    nonisolated static func reconciledHealth(
+        fileExists: Bool,
+        currentHealth: FileHealth
+    ) -> FileHealth {
+        guard fileExists else { return .missing }
+        return currentHealth == .missing ? .unchecked : currentHealth
+    }
+}
+
 @MainActor
 final class LibraryStore: ObservableObject {
     enum SearchBackendStatus: Equatable {
@@ -42,8 +52,19 @@ final class LibraryStore: ObservableObject {
 
     enum MetadataEditError: LocalizedError {
         case trackNotFound
+        case mediaOrganizationUnavailable(Int)
+        case mediaOrganizationPathMismatch(String)
 
-        var errorDescription: String? { L10n.text("metadataEditor.error.trackNotFound") }
+        var errorDescription: String? {
+            switch self {
+            case .trackNotFound:
+                L10n.text("metadataEditor.error.trackNotFound")
+            case .mediaOrganizationUnavailable(let count):
+                L10n.format("metadataEditor.error.mediaOrganizationUnavailable", count)
+            case .mediaOrganizationPathMismatch(let fileName):
+                L10n.format("metadataEditor.error.mediaOrganizationPathMismatch", fileName)
+            }
+        }
     }
 
     enum DuplicateResolutionError: LocalizedError {
@@ -117,7 +138,7 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var indexedSearchQuery: String?
 
     private var repository: LibraryRepository
-    private let deviceSyncTagsURL: URL
+    private var deviceSyncTagsURL: URL
     private var audioFeatureCache: AudioFeatureCache
     private var searchIndex: SQLiteCatalogPrototype
     private var libraryID = UUID()
@@ -130,6 +151,7 @@ final class LibraryStore: ObservableObject {
     private var isAudioFeatureAnalysisUserPaused = false
     private var duplicateGroupCacheRevision = -1
     private var duplicateGroupCache: [DuplicateTrackGroup] = []
+    private var lastFileAvailabilityScanAt: Date?
     weak var undoManager: UndoManager?
 
     init(
@@ -1234,6 +1256,7 @@ final class LibraryStore: ObservableObject {
         audioFeatureAnalysisTask = nil
         audioFeatureAnalysisGeneration = UUID()
         repository = LibraryRepository(rootURL: catalogURL, mediaURL: mediaURL)
+        deviceSyncTagsURL = catalogURL.appendingPathComponent("device-sync-tags-v1.json")
         audioFeatureCache = AudioFeatureCache(rootURL: catalogURL)
         searchIndex = SQLiteCatalogPrototype(rootURL: catalogURL)
         tracks = []
@@ -1985,32 +2008,56 @@ final class LibraryStore: ObservableObject {
 
     @discardableResult
     func organizeManagedMediaAfterMetadataChange(
-        trackIDs: Set<Track.ID>
+        trackIDs: Set<Track.ID>,
+        collisionPolicy: MediaOrganizationCollisionPolicy = .stop
     ) async throws -> MediaOrganizationSummary {
         let destination = await repository.currentMediaDirectoryURL()
         let preview = try await repository.planMediaOrganization(
             tracks: tracks,
             destinationRootURL: destination
         ).restricted(to: trackIDs)
-        guard preview.moveCount > 0 else {
+        guard preview.unavailableCount == 0 else {
+            throw MetadataEditError.mediaOrganizationUnavailable(preview.unavailableCount)
+        }
+        guard preview.moveCount + preview.conflictCount > 0 else {
             return MediaOrganizationSummary(moved: 0, updatedTracks: 0)
         }
-        return try await executeMediaOrganization(preview)
+        return try await executeMediaOrganization(preview, collisionPolicy: collisionPolicy)
     }
 
     @discardableResult
     func executeMediaOrganization(
-        _ preview: MediaOrganizationPreview
+        _ preview: MediaOrganizationPreview,
+        collisionPolicy: MediaOrganizationCollisionPolicy = .stop
     ) async throws -> MediaOrganizationSummary {
         activity = .importing
         do {
             let result = try await repository.executeMediaOrganization(
                 document: currentDocument(),
-                preview: preview
+                preview: preview,
+                collisionPolicy: collisionPolicy
             )
-            tracks = result.document.tracks
+            let persistedDocument = try await repository.load().document
+            let persistedTracksByID = Dictionary(
+                uniqueKeysWithValues: persistedDocument.tracks.map { ($0.id, $0) }
+            )
+            for item in preview.items where item.status == .move || item.status == .conflict {
+                let persistedPaths = Set(item.trackIDs.compactMap {
+                    persistedTracksByID[$0]?.fileURL.standardizedFileURL.path
+                })
+                guard persistedPaths.count == 1,
+                      let persistedPath = persistedPaths.first,
+                      FileManager.default.fileExists(atPath: persistedPath),
+                      item.status == .conflict
+                        || persistedPath == item.destinationURL.standardizedFileURL.path else {
+                    throw MetadataEditError.mediaOrganizationPathMismatch(
+                        item.destinationURL.lastPathComponent
+                    )
+                }
+            }
+            tracks = persistedDocument.tracks
             contentRevision &+= 1
-            scheduleSearchIndexSynchronization(document: result.document)
+            scheduleSearchIndexSynchronization(document: persistedDocument)
             activity = .notice(L10n.format(
                 "status.mediaOrganizationComplete",
                 result.summary.moved,
@@ -2159,6 +2206,66 @@ final class LibraryStore: ObservableObject {
                 ))
                 : .idle
         } catch {
+            activity = .failed(error.localizedDescription)
+        }
+    }
+
+    /// Performs a lightweight existence scan without hashing every file. This
+    /// keeps externally deleted or disconnected files visibly marked while the
+    /// full Verify command remains responsible for content-integrity checks.
+    func refreshFileAvailability(force: Bool = false) async {
+        if !force, let lastFileAvailabilityScanAt,
+           Date.now.timeIntervalSince(lastFileAvailabilityScanAt) < 5 {
+            return
+        }
+        lastFileAvailabilityScanAt = .now
+        let snapshot = tracks.map { ($0.id, $0.managedPath, $0.health) }
+        guard !snapshot.isEmpty else { return }
+
+        let reconciled = await Task.detached(priority: .utility) {
+            let fileManager = FileManager.default
+            return snapshot.map { id, path, health in
+                (
+                    id: id,
+                    path: path,
+                    previousHealth: health,
+                    health: TrackFileAvailability.reconciledHealth(
+                        fileExists: fileManager.fileExists(atPath: path),
+                        currentHealth: health
+                    )
+                )
+            }
+        }.value
+
+        let availabilityByID = Dictionary(uniqueKeysWithValues: reconciled.map { ($0.id, $0) })
+        let previous = tracks
+        var newlyMissingCount = 0
+        var didChange = false
+        for index in tracks.indices {
+            guard let availability = availabilityByID[tracks[index].id],
+                  tracks[index].managedPath == availability.path,
+                  tracks[index].health == availability.previousHealth,
+                  tracks[index].health != availability.health else { continue }
+            if availability.health == .missing { newlyMissingCount += 1 }
+            tracks[index].health = availability.health
+            tracks[index].lastVerifiedAt = .now
+            didChange = true
+        }
+        guard didChange else { return }
+
+        contentRevision &+= 1
+        do {
+            try await repository.save(tracks: tracks)
+            scheduleSearchIndexSynchronization(document: currentDocument())
+            if newlyMissingCount > 0 {
+                activity = .notice(L10n.format(
+                    "status.missingFilesDetected",
+                    newlyMissingCount
+                ))
+            }
+        } catch {
+            tracks = previous
+            contentRevision &+= 1
             activity = .failed(error.localizedDescription)
         }
     }
@@ -2440,19 +2547,17 @@ final class LibraryStore: ObservableObject {
         guard !indices.isEmpty, indices.count == ids.count else {
             throw MetadataEditError.trackNotFound
         }
-        let originalArtist = updated[indices[0]].artist
-        let destinationArtistID = tracks.first(where: {
-            !ids.contains($0.id) && $0.artist == metadata.artist
-        })?.artistID ?? UUID()
         for index in indices {
             updated[index].apply(metadata, includesTrackSpecificValues: false)
             if let musicBrainzReference {
                 updated[index].musicBrainzReference = musicBrainzReference.albumReference
             }
-            if metadata.artist != originalArtist {
-                updated[index].artistID = destinationArtistID
-            }
         }
+        reconcileMetadataIdentity(
+            in: &updated,
+            changedTrackIDs: ids,
+            fields: [.artist, .album]
+        )
         try await persistMetadataUpdate(updated, changedTrackIDs: ids, artwork: artwork)
     }
 
@@ -2505,6 +2610,11 @@ final class LibraryStore: ObservableObject {
         for index in indices {
             updated[index].artist = artist
         }
+        reconcileMetadataIdentity(
+            in: &updated,
+            changedTrackIDs: ids,
+            fields: [.artist]
+        )
         try await persistMetadataUpdate(updated, changedTrackIDs: ids)
     }
 

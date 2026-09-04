@@ -17,6 +17,41 @@ struct LibraryRepositoryTests {
         return url
     }
 
+    @Test("A copied portable library relinks managed tracks on the new Mac")
+    func copiedPortableLibraryRelinksTracks() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Copied-Library-\(UUID().uuidString)")
+        let oldMedia = root.appendingPathComponent("Old Mac/Ongaku Media", isDirectory: true)
+        let oldCatalog = PortableLibraryStorage(mediaURL: oldMedia).rootURL
+        let oldSong = oldMedia.appendingPathComponent("Artist/Album/Song.mp3")
+        let newMedia = root.appendingPathComponent("New Mac/My Music", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(
+            at: oldSong.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let audio = Data("portable audio fixture".utf8)
+        try audio.write(to: oldSong)
+        let track = Track(
+            id: UUID(), title: "Song", artist: "Artist", album: "Album",
+            duration: 10, fileSize: Int64(audio.count), managedPath: oldSong.path,
+            sha256: try LibraryRepository.sha256(of: oldSong), addedAt: .now, health: .verified
+        )
+        try await LibraryRepository(rootURL: oldCatalog, mediaURL: oldMedia).save(tracks: [track])
+        try FileManager.default.createDirectory(
+            at: newMedia.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.copyItem(at: oldMedia, to: newMedia)
+        try FileManager.default.removeItem(at: oldMedia)
+
+        let newCatalog = PortableLibraryStorage(mediaURL: newMedia).rootURL
+        let loaded = try await LibraryRepository(rootURL: newCatalog, mediaURL: newMedia).load().document
+        let restored = try #require(loaded.tracks.first)
+        #expect(restored.fileURL == newMedia.appendingPathComponent("Artist/Album/Song.mp3"))
+        #expect(restored.health == .verified)
+    }
+
     @Test("Resolving duplicates transfers catalog references without deleting files")
     @MainActor
     func resolvesDuplicateRegistrations() async throws {
@@ -1622,6 +1657,68 @@ struct LibraryRepositoryTests {
         #expect(store.tracks.map(\.managedPath) == tracks.map(\.managedPath))
         #expect(!FileManager.default.fileExists(
             atPath: catalog.appendingPathComponent("media-organization-journal-v1.json").path
+        ))
+    }
+
+    @Test("A failed replacement restores both source and overwritten destination files")
+    @MainActor
+    func rollsBackOverwrittenMediaOrganizationDestination() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let destinationDirectory = media.appendingPathComponent("Artist/Album")
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: destinationDirectory,
+            withIntermediateDirectories: true
+        )
+
+        var tracks: [Track] = []
+        var sources: [URL] = []
+        var destinations: [URL] = []
+        var existingDestinationData: [Data] = []
+        for name in ["A.mp3", "B.mp3"] {
+            let source = media.appendingPathComponent(name)
+            let destination = destinationDirectory.appendingPathComponent(name)
+            let sourceData = Data("source-\(name)".utf8)
+            let destinationData = Data("destination-\(name)".utf8)
+            try sourceData.write(to: source)
+            try destinationData.write(to: destination)
+            sources.append(source)
+            destinations.append(destination)
+            existingDestinationData.append(destinationData)
+            tracks.append(Track(
+                id: UUID(), title: name, artist: "Artist", album: "Album",
+                duration: 1, fileSize: Int64(sourceData.count), managedPath: source.path,
+                sha256: try LibraryRepository.sha256(of: source),
+                addedAt: .now, health: .verified
+            ))
+        }
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: tracks))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: media)
+        #expect(preview.conflictCount == 2)
+
+        try Data("changed after planning".utf8).write(to: sources[1])
+        do {
+            _ = try await store.executeMediaOrganization(
+                preview,
+                collisionPolicy: .replace
+            )
+            Issue.record("The changed source should fail checksum verification")
+        } catch {}
+
+        #expect(sources.allSatisfy { FileManager.default.fileExists(atPath: $0.path) })
+        #expect(try Data(contentsOf: sources[0]) == Data("source-A.mp3".utf8))
+        #expect(try Data(contentsOf: destinations[0]) == existingDestinationData[0])
+        #expect(try Data(contentsOf: destinations[1]) == existingDestinationData[1])
+        #expect(store.tracks.map(\.managedPath) == tracks.map(\.managedPath))
+        #expect(!FileManager.default.fileExists(
+            atPath: catalog.appendingPathComponent("Media Organization Backups").path
         ))
     }
 

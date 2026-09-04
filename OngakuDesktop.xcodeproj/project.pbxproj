@@ -81,6 +81,7 @@
 		200000000000000000000048 /* SocialPrivacySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005C /* SocialPrivacySettings.swift */; };
 		200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005D /* SocialPrivacySettingsView.swift */; };
 		20000000000000000000004A /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005E /* DeviceChunkTransfer.swift */; };
+		20000000000000000000004B /* ArtistImageCandidatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005F /* ArtistImageCandidatePicker.swift */; };
 		D2000000000000000000000B /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* DeviceChunkTransfer.swift */; };
 		200000000000000000000034 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
 		200000000000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Assets.xcassets */; };
@@ -130,6 +131,7 @@
 		10000000000000000000005C /* SocialPrivacySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettings.swift; sourceTree = "<group>"; };
 		10000000000000000000005D /* SocialPrivacySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettingsView.swift; sourceTree = "<group>"; };
 		10000000000000000000005E /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceChunkTransfer.swift; sourceTree = "<group>"; };
+		10000000000000000000005F /* ArtistImageCandidatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistImageCandidatePicker.swift; sourceTree = "<group>"; };
 		D10000000000000000000016 /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceChunkTransfer.swift; sourceTree = "<group>"; };
 		D10000000000000000000001 /* OngakuMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuMobileApp.swift; sourceTree = "<group>"; };
 		D10000000000000000000002 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 				100000000000000000000046 /* LRCLIBService.swift */,
 				100000000000000000000047 /* MusicBrainzService.swift */,
 				100000000000000000000048 /* MusicBrainzCandidatePicker.swift */,
+				10000000000000000000005F /* ArtistImageCandidatePicker.swift */,
 				100000000000000000000049 /* AudioCDImportView.swift */,
 				100000000000000000000051 /* URLAudioImportView.swift */,
 				100000000000000000000052 /* LegacyLibraryMigrationView.swift */,
@@ -545,6 +548,7 @@
 				20000000000000000000002F /* LRCLIBService.swift in Sources */,
 				200000000000000000000030 /* MusicBrainzService.swift in Sources */,
 				200000000000000000000031 /* MusicBrainzCandidatePicker.swift in Sources */,
+				20000000000000000000004B /* ArtistImageCandidatePicker.swift in Sources */,
 				200000000000000000000032 /* AudioCDImportView.swift in Sources */,
 				200000000000000000000037 /* URLAudioImportView.swift in Sources */,
 				200000000000000000000038 /* LegacyLibraryMigrationView.swift in Sources */,
@@ -615,6 +619,7 @@
 				20000000000000000000002F /* LRCLIBService.swift in Sources */,
 				200000000000000000000030 /* MusicBrainzService.swift in Sources */,
 				200000000000000000000031 /* MusicBrainzCandidatePicker.swift in Sources */,
+				20000000000000000000004B /* ArtistImageCandidatePicker.swift in Sources */,
 				200000000000000000000032 /* AudioCDImportView.swift in Sources */,
 				200000000000000000000037 /* URLAudioImportView.swift in Sources */,
 				200000000000000000000038 /* LegacyLibraryMigrationView.swift in Sources */,

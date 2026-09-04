@@ -33,6 +33,7 @@ actor LibraryRepository {
         var destinationPath: String
         var expectedSHA256: String
         var moved: Bool
+        var replacedDestinationBackupPath: String?
     }
 
     private struct MediaOrganizationJournal: Codable {
@@ -153,6 +154,8 @@ actor LibraryRepository {
         case copyVerificationFailed(String)
         case sourceIsNotRegularFile(String)
         case relinkFingerprintMismatch(String)
+        case mediaOrganizationConflict(Int)
+        case mediaOrganizationAmbiguousConflict(String)
 
         var errorDescription: String? {
             switch self {
@@ -164,6 +167,10 @@ actor LibraryRepository {
                 L10n.format("library.error.sourceIsNotRegularFile", file)
             case .relinkFingerprintMismatch(let file):
                 L10n.format("library.error.relinkFingerprintMismatch", file)
+            case .mediaOrganizationConflict(let count):
+                L10n.format("library.error.mediaOrganizationConflict", count)
+            case .mediaOrganizationAmbiguousConflict(let file):
+                L10n.format("library.error.mediaOrganizationAmbiguousConflict", file)
             }
         }
     }
@@ -175,15 +182,23 @@ actor LibraryRepository {
 
     init(rootURL: URL? = nil, mediaURL: URL? = nil, fileManager: FileManager = .default) {
         self.fileManager = fileManager
-        let resolvedRoot: URL
-        if let rootURL {
-            resolvedRoot = rootURL
+        let resolvedMedia: URL
+        if let mediaURL {
+            resolvedMedia = mediaURL
+        } else if let rootURL {
+            // Preserve the explicit-root initializer contract used by imports,
+            // migrations, and isolated repositories.
+            resolvedMedia = rootURL.appendingPathComponent("Ongaku Media", isDirectory: true)
         } else {
-            let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            resolvedRoot = support.appendingPathComponent("Ongaku Desktop", isDirectory: true)
+            resolvedMedia = fileManager.urls(for: .musicDirectory, in: .userDomainMask)
+                .first?
+                .appendingPathComponent("Ongaku Desktop/Ongaku Media", isDirectory: true)
+                ?? fileManager.homeDirectoryForCurrentUser
+                    .appendingPathComponent("Music/Ongaku Desktop/Ongaku Media", isDirectory: true)
         }
+        let resolvedRoot = rootURL ?? PortableLibraryStorage(mediaURL: resolvedMedia).rootURL
         self.rootURL = resolvedRoot
-        self.mediaURL = mediaURL ?? resolvedRoot.appendingPathComponent("Ongaku Media", isDirectory: true)
+        self.mediaURL = resolvedMedia
     }
 
     private var incomingURL: URL { rootURL.appendingPathComponent("Incoming", isDirectory: true) }
@@ -235,6 +250,11 @@ actor LibraryRepository {
         var document = decoded.document
         try reconcileMediaOrganizationJournal(with: document.tracks)
         let recovery = try recoverImports(into: &document)
+        let relocated = relocateFilesAfterPortableLibraryMove(in: document.tracks)
+        if relocated.relinkedTrackCount > 0 {
+            document.tracks = relocated.tracks
+            document.updatedAt = .now
+        }
         if let sourceSchemaVersion = decoded.migratedFromSchemaVersion {
             if let decodedSourceURL {
                 try archivePreMigrationManifest(
@@ -245,7 +265,7 @@ actor LibraryRepository {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: false)
             try encoder.encode(document).write(to: backupURL, options: [.atomic])
-        } else if recovery.recovered > 0 || recoveredFromBackup {
+        } else if recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0 {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: !recoveredFromBackup)
         }
@@ -338,16 +358,16 @@ actor LibraryRepository {
                 .appendingPathComponent(Self.safePathComponent(representative.artist), isDirectory: true)
                 .appendingPathComponent(Self.safePathComponent(representative.album), isDirectory: true)
             let proposed = directory.appendingPathComponent(Self.safePathComponent(source.lastPathComponent))
-            let destination = uniqueOrganizationDestination(
-                proposed: proposed,
-                source: source,
-                hash: hash,
-                reservedPaths: &reservedPaths
-            )
+            let proposedPath = proposed.standardizedFileURL.path
+            let sourcePath = source.standardizedFileURL.path
+            let hasConflict = proposedPath != sourcePath
+                && (reservedPaths.contains(proposedPath)
+                    || fileManager.fileExists(atPath: proposedPath))
+            reservedPaths.insert(proposedPath)
             items.append(MediaOrganizationItem(
                 trackIDs: matchingTracks.map(\.id), sourceURL: source,
-                destinationURL: destination, expectedSHA256: hash,
-                status: source.path == destination.path ? .unchanged : .move
+                destinationURL: proposed, expectedSHA256: hash,
+                status: sourcePath == proposedPath ? .unchanged : (hasConflict ? .conflict : .move)
             ))
         }
         return MediaOrganizationPreview(
@@ -359,16 +379,57 @@ actor LibraryRepository {
 
     func executeMediaOrganization(
         document: LibraryDocument,
-        preview: MediaOrganizationPreview
+        preview: MediaOrganizationPreview,
+        collisionPolicy: MediaOrganizationCollisionPolicy = .stop
     ) throws -> (document: LibraryDocument, summary: MediaOrganizationSummary) {
         try prepareDirectories()
-        let moves = preview.items.filter { $0.status == .move }
+        let conflicts = preview.items.filter { $0.status == .conflict }
+        if !conflicts.isEmpty, collisionPolicy == .stop {
+            throw RepositoryError.mediaOrganizationConflict(conflicts.count)
+        }
+        var reservedPaths = Set(preview.items.filter { $0.status == .move }.map {
+            $0.destinationURL.standardizedFileURL.path
+        })
+        var moves = preview.items.filter { $0.status == .move }
+        for var item in conflicts {
+            switch collisionPolicy {
+            case .stop:
+                break
+            case .keepBoth:
+                item.destinationURL = uniqueOrganizationDestination(
+                    proposed: item.destinationURL,
+                    source: item.sourceURL,
+                    hash: item.expectedSHA256,
+                    reservedPaths: &reservedPaths
+                )
+            case .replace:
+                let path = item.destinationURL.standardizedFileURL.path
+                guard !reservedPaths.contains(path) else {
+                    throw RepositoryError.mediaOrganizationAmbiguousConflict(
+                        item.destinationURL.lastPathComponent
+                    )
+                }
+                reservedPaths.insert(path)
+            }
+            moves.append(item)
+        }
+        let backupRoot = rootURL.appendingPathComponent(
+            "Media Organization Backups",
+            isDirectory: true
+        )
         var journal = MediaOrganizationJournal(entries: moves.map {
             MediaOrganizationJournalEntry(
                 sourcePath: $0.sourceURL.path,
                 destinationPath: $0.destinationURL.path,
                 expectedSHA256: $0.expectedSHA256,
-                moved: false
+                moved: false,
+                replacedDestinationBackupPath: collisionPolicy == .replace
+                    && $0.status == .conflict
+                    && fileManager.fileExists(atPath: $0.destinationURL.path)
+                    ? backupRoot.appendingPathComponent(
+                        "\(UUID().uuidString)-\($0.destinationURL.lastPathComponent)"
+                    ).path
+                    : nil
             )
         })
         try persistMediaOrganizationJournal(journal)
@@ -384,6 +445,16 @@ actor LibraryRepository {
                     at: destination.deletingLastPathComponent(),
                     withIntermediateDirectories: true
                 )
+                if let backupPath = journal.entries[index].replacedDestinationBackupPath {
+                    let backup = URL(fileURLWithPath: backupPath)
+                    try fileManager.createDirectory(
+                        at: backup.deletingLastPathComponent(),
+                        withIntermediateDirectories: true
+                    )
+                    try fileManager.moveItem(at: destination, to: backup)
+                    journal.updatedAt = .now
+                    try persistMediaOrganizationJournal(journal)
+                }
                 try fileManager.moveItem(at: source, to: destination)
                 journal.entries[index].moved = true
                 guard try Self.sha256(of: destination) == journal.entries[index].expectedSHA256 else {
@@ -409,6 +480,7 @@ actor LibraryRepository {
             updated.updatedAt = .now
             try persistDocument(updated, backUpReadablePrimary: true)
             currentDocument = updated
+            removeMediaOrganizationBackups(journal)
             try clearMediaOrganizationJournal()
             mediaURL = preview.destinationRootURL.standardizedFileURL
             return (
@@ -420,6 +492,7 @@ actor LibraryRepository {
             )
         } catch {
             rollbackMediaOrganizationJournal(journal)
+            removeMediaOrganizationBackups(journal)
             try? clearMediaOrganizationJournal()
             throw error
         }
@@ -971,6 +1044,29 @@ actor LibraryRepository {
         )
     }
 
+    /// Absolute paths in older catalogs refer to the previous Mac. Once the
+    /// portable folder has been copied, resolve only missing entries against
+    /// the new media root and require the original size and SHA-256 before
+    /// changing a path.
+    private func relocateFilesAfterPortableLibraryMove(in tracks: [Track]) -> FileRelinkResult {
+        var candidates = tracks
+        var hasMissingPath = false
+        for index in candidates.indices
+            where !fileManager.fileExists(atPath: candidates[index].managedPath) {
+            candidates[index].health = .missing
+            hasMissingPath = true
+        }
+        guard hasMissingPath else {
+            return FileRelinkResult(
+                tracks: tracks,
+                scannedFileCount: 0,
+                relinkedTrackCount: 0,
+                issueCount: 0
+            )
+        }
+        return relinkMissingFiles(in: candidates, searching: [mediaURL])
+    }
+
     nonisolated static func sha256(of url: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
@@ -1485,7 +1581,12 @@ actor LibraryRepository {
                 && fileManager.fileExists(atPath: destination.path)
                 && (try? Self.sha256(of: destination)) == $0.expectedSHA256
         }
-        if !committed { rollbackMediaOrganizationJournal(journal) }
+        if committed {
+            removeMediaOrganizationBackups(journal)
+        } else {
+            rollbackMediaOrganizationJournal(journal)
+            removeMediaOrganizationBackups(journal)
+        }
         try clearMediaOrganizationJournal()
     }
 
@@ -1493,15 +1594,41 @@ actor LibraryRepository {
         for entry in journal.entries.reversed() {
             let source = URL(fileURLWithPath: entry.sourcePath)
             let destination = URL(fileURLWithPath: entry.destinationPath)
-            guard !fileManager.fileExists(atPath: source.path),
-                  fileManager.fileExists(atPath: destination.path),
-                  (try? Self.sha256(of: destination)) == entry.expectedSHA256 else { continue }
-            try? fileManager.createDirectory(
-                at: source.deletingLastPathComponent(),
-                withIntermediateDirectories: true
-            )
-            try? fileManager.moveItem(at: destination, to: source)
+            if !fileManager.fileExists(atPath: source.path),
+               fileManager.fileExists(atPath: destination.path),
+               (try? Self.sha256(of: destination)) == entry.expectedSHA256 {
+                try? fileManager.createDirectory(
+                    at: source.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try? fileManager.moveItem(at: destination, to: source)
+            }
+            if let backupPath = entry.replacedDestinationBackupPath {
+                let backup = URL(fileURLWithPath: backupPath)
+                if fileManager.fileExists(atPath: backup.path) {
+                    if fileManager.fileExists(atPath: destination.path) {
+                        try? fileManager.removeItem(at: destination)
+                    }
+                    try? fileManager.createDirectory(
+                        at: destination.deletingLastPathComponent(),
+                        withIntermediateDirectories: true
+                    )
+                    try? fileManager.moveItem(at: backup, to: destination)
+                }
+            }
         }
+    }
+
+    private func removeMediaOrganizationBackups(_ journal: MediaOrganizationJournal) {
+        for entry in journal.entries {
+            guard let path = entry.replacedDestinationBackupPath else { continue }
+            try? fileManager.removeItem(at: URL(fileURLWithPath: path))
+        }
+        let directory = rootURL.appendingPathComponent(
+            "Media Organization Backups",
+            isDirectory: true
+        )
+        try? fileManager.removeItem(at: directory)
     }
 
     private nonisolated static func safePathComponent(_ value: String) -> String {

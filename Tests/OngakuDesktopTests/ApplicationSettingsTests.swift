@@ -6,6 +6,63 @@ import Testing
 
 @Suite("Application settings")
 struct ApplicationSettingsTests {
+    @Test("Legacy catalog and artwork move beside managed music")
+    func portableLibraryMigration() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Portable-\(UUID().uuidString)", isDirectory: true)
+        let support = root.appendingPathComponent("Application Support", isDirectory: true)
+        let caches = root.appendingPathComponent("Caches", isDirectory: true)
+        let legacy = support.appendingPathComponent("Ongaku Desktop", isDirectory: true)
+        let media = root.appendingPathComponent("Music", isDirectory: true)
+        let custom = legacy.appendingPathComponent("Custom Artwork", isDirectory: true)
+        let downloaded = caches.appendingPathComponent("Ongaku Desktop/Artwork", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: custom, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: downloaded, withIntermediateDirectories: true)
+        try Data("catalog".utf8).write(to: legacy.appendingPathComponent("library-v1.json"))
+        try Data("custom".utf8).write(to: custom.appendingPathComponent("artist.artwork"))
+        try Data("downloaded".utf8).write(to: downloaded.appendingPathComponent("album.artwork"))
+
+        let portable = try PortableLibraryStorage.migrateLegacyStateIfNeeded(
+            from: legacy,
+            to: media,
+            applicationSupportURL: support,
+            cachesURL: caches
+        )
+
+        #expect(portable == media.appendingPathComponent("Ongaku Library Data"))
+        #expect(FileManager.default.fileExists(atPath: portable.appendingPathComponent("library-v1.json").path))
+        #expect(FileManager.default.fileExists(atPath: portable.appendingPathComponent("Artwork/Custom/artist.artwork").path))
+        #expect(FileManager.default.fileExists(atPath: portable.appendingPathComponent("Artwork/Downloaded/album.artwork").path))
+        #expect(!FileManager.default.fileExists(atPath: legacy.appendingPathComponent("library-v1.json").path))
+        #expect(!FileManager.default.fileExists(atPath: custom.appendingPathComponent("artist.artwork").path))
+        #expect(!FileManager.default.fileExists(atPath: downloaded.appendingPathComponent("album.artwork").path))
+    }
+
+    @Test("Existing portable data is never overwritten by legacy migration")
+    func portableMigrationPreservesDestination() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Portable-Collision-\(UUID().uuidString)")
+        let legacy = root.appendingPathComponent("Legacy", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let portableManifest = media
+            .appendingPathComponent("Ongaku Library Data", isDirectory: true)
+            .appendingPathComponent("library-v1.json")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: legacy, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: portableManifest.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try Data("legacy".utf8).write(to: legacy.appendingPathComponent("library-v1.json"))
+        try Data("portable".utf8).write(to: portableManifest)
+
+        _ = try PortableLibraryStorage.migrateLegacyStateIfNeeded(from: legacy, to: media)
+
+        #expect(try Data(contentsOf: portableManifest) == Data("portable".utf8))
+        #expect(FileManager.default.fileExists(atPath: legacy.appendingPathComponent("library-v1.json").path))
+    }
+
     @Test("A completely fresh install stores managed music under the Music directory")
     @MainActor
     func freshInstallMusicDirectoryDefault() {
@@ -111,6 +168,10 @@ struct ApplicationSettingsTests {
             defaultMediaURL: media,
             defaults: defaults,
             applicationSupportURL: root
+        )
+        #expect(
+            settings.activeProfile.catalogURL
+                == media.appendingPathComponent("Ongaku Library Data", isDirectory: true)
         )
         let mainID = settings.activeLibraryID
         let secondID = try settings.createLibrary(named: "Classical")

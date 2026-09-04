@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import Testing
+@testable import OngakuDesktop
 
 @Suite("M0 UI, accessibility, localization, and privacy gate")
 struct M0QualityGateTests {
@@ -153,6 +154,17 @@ struct M0QualityGateTests {
         #expect(appleMusic.contains(".keyboardShortcut(.cancelAction)"))
     }
 
+    @Test("Missing managed files remain prominent in every song table")
+    func missingFileIndicatorsStayVisible() throws {
+        let content = try Self.source("LibraryContent.swift")
+        #expect(content.contains("private struct MissingFileBadge: View"))
+        #expect(content.contains("library.missingFile.badge"))
+        #expect(
+            content.components(separatedBy: "MissingFileBadge()").count - 1 >= 3,
+            "The main, album, and artist song tables must all show the missing-file badge"
+        )
+    }
+
     @Test("The toolbar import and relink actions use reliable native open panels")
     func mainFileImporterUsesNativePanels() throws {
         let content = try Self.source("ContentView.swift")
@@ -182,12 +194,36 @@ struct M0QualityGateTests {
         #expect(content.contains("private var playerAwareLayout: some View"))
         #expect(content.contains("if meterSettings.barPosition == .top"))
         #expect(content.contains("if meterSettings.barPosition == .bottom"))
+        #expect(content.contains("GeometryReader { proxy in"))
+        #expect(content.contains("PlayerBar.navigationHeight(in: proxy.size.height)"))
         #expect(content.contains("VStack(spacing: 0)"))
-        #expect(content.contains(".layoutPriority(1)"))
+        #expect(content.contains(".layoutPriority(2)"))
+        #expect(content.contains("minHeight: navigationHeight"))
+        #expect(content.contains("maxHeight: navigationHeight"))
+        #expect(content.contains(".clipped()"))
         #expect(!content.contains(".safeAreaInset(edge: .top, spacing: 0)"))
         #expect(!content.contains(".safeAreaInset(edge: .bottom, spacing: 0)"))
         #expect(!sidebar.contains("Color.clear.frame(height: AppTheme.bottomPlayerClearance)"))
         #expect(!inspector.contains("AppTheme.bottomPlayerClearance"))
+    }
+
+    @Test("A short window always reserves the complete persistent player height")
+    func shortWindowPlayerHeightContract() {
+        #expect(PlayerBar.layoutHeight == 106)
+        #expect(PlayerBar.navigationHeight(in: 620) == 514)
+        #expect(PlayerBar.navigationHeight(in: 180) == 74)
+        #expect(PlayerBar.navigationHeight(in: 80) == 0)
+    }
+
+    @Test("Album and artist details become vertically scrollable in short windows")
+    func shortWindowDetailScrollingContract() throws {
+        let libraryContent = try Self.source("LibraryContent.swift")
+        #expect(libraryContent.contains("if proxy.size.height < 480"))
+        #expect(libraryContent.contains("albumDetailContent(compact: true)"))
+        #expect(libraryContent.contains("if proxy.size.height < 520"))
+        #expect(libraryContent.contains("artistDetailContent(compact: true)"))
+        #expect(libraryContent.contains("trackTable.frame(height: 220)"))
+        #expect(libraryContent.contains("trackTable.frame(height: 240)"))
     }
 
     @Test("The settings scene passes crash-critical social state explicitly")

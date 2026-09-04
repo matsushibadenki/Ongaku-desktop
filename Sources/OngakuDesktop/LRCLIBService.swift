@@ -52,6 +52,7 @@ struct LRCLIBRecord: Codable, Identifiable, Equatable, Sendable {
 struct LRCLIBCandidate: Identifiable, Equatable, Sendable {
     enum MatchKind: Equatable, Sendable {
         case exact
+        case titleAlbumMatch
         case search
         case titleHint
         case albumHint
@@ -122,38 +123,29 @@ actor LRCLIBService {
         }
 
         for record in try await search(track: track) where record.hasUsableLyrics {
-            let candidate = Self.evaluate(record, against: track, matchKind: .search)
-            if let existing = candidatesByID[record.id], existing.confidence >= candidate.confidence {
-                continue
-            }
-            candidatesByID[record.id] = candidate
+            Self.merge(
+                Self.evaluate(record, against: track, matchKind: .search),
+                into: &candidatesByID
+            )
+        }
+
+        for record in try await search(url: Self.titleOnlySearchURL(for: track))
+            where record.hasUsableLyrics {
+            let candidate = Self.evaluate(record, against: track, matchKind: .titleHint)
+            guard Self.isUsefulFallback(candidate, for: track) else { continue }
+            Self.merge(candidate, into: &candidatesByID)
         }
 
         if candidatesByID.isEmpty {
-            let fallbackSearches: [(URL, LRCLIBCandidate.MatchKind)] = [
-                (Self.titleOnlySearchURL(for: track), .titleHint),
-                (Self.albumOnlySearchURL(for: track), .albumHint)
-            ]
-            for (url, matchKind) in fallbackSearches {
-                for record in try await search(url: url) where record.hasUsableLyrics {
-                    let candidate = Self.evaluate(record, against: track, matchKind: matchKind)
-                    guard Self.isUsefulFallback(candidate, for: track) else { continue }
-                    if let existing = candidatesByID[record.id],
-                       existing.confidence >= candidate.confidence {
-                        continue
-                    }
-                    candidatesByID[record.id] = candidate
-                }
+            for record in try await search(url: Self.albumOnlySearchURL(for: track))
+                where record.hasUsableLyrics {
+                let candidate = Self.evaluate(record, against: track, matchKind: .albumHint)
+                guard Self.isUsefulFallback(candidate, for: track) else { continue }
+                Self.merge(candidate, into: &candidatesByID)
             }
         }
 
-        return candidatesByID.values.sorted {
-            if $0.confidence != $1.confidence { return $0.confidence > $1.confidence }
-            if $0.durationDifference != $1.durationDifference {
-                return $0.durationDifference < $1.durationDifference
-            }
-            return $0.record.id < $1.record.id
-        }
+        return Self.orderedCandidates(Array(candidatesByID.values))
         .prefix(Self.maximumCandidates)
         .map { $0 }
     }
@@ -173,12 +165,61 @@ actor LRCLIBService {
             titleScore * 0.38 + artistScore * 0.32 + albumScore * 0.12
                 + durationScore * 0.18
         )
+        let resolvedMatchKind: LRCLIBCandidate.MatchKind
+        if matchKind == .exact {
+            resolvedMatchKind = .exact
+        } else if titleScore == 1, albumScore == 1 {
+            resolvedMatchKind = .titleAlbumMatch
+        } else if titleScore == 1 || matchKind == .titleHint {
+            resolvedMatchKind = .titleHint
+        } else {
+            resolvedMatchKind = matchKind
+        }
         return LRCLIBCandidate(
             record: record,
             confidence: confidence,
             durationDifference: durationDifference,
-            matchKind: matchKind
+            matchKind: resolvedMatchKind
         )
+    }
+
+    nonisolated static func orderedCandidates(
+        _ candidates: [LRCLIBCandidate]
+    ) -> [LRCLIBCandidate] {
+        candidates.sorted {
+            let lhsPriority = matchPriority($0.matchKind)
+            let rhsPriority = matchPriority($1.matchKind)
+            if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
+            if $0.confidence != $1.confidence { return $0.confidence > $1.confidence }
+            if $0.durationDifference != $1.durationDifference {
+                return $0.durationDifference < $1.durationDifference
+            }
+            return $0.record.id < $1.record.id
+        }
+    }
+
+    nonisolated private static func merge(
+        _ candidate: LRCLIBCandidate,
+        into candidatesByID: inout [Int: LRCLIBCandidate]
+    ) {
+        guard let existing = candidatesByID[candidate.id] else {
+            candidatesByID[candidate.id] = candidate
+            return
+        }
+        let ordered = orderedCandidates([existing, candidate])
+        candidatesByID[candidate.id] = ordered.first
+    }
+
+    nonisolated private static func matchPriority(
+        _ matchKind: LRCLIBCandidate.MatchKind
+    ) -> Int {
+        switch matchKind {
+        case .exact: 0
+        case .titleAlbumMatch: 1
+        case .titleHint: 2
+        case .search: 3
+        case .albumHint: 4
+        }
     }
 
     nonisolated static func exactMatchURL(for track: Track) -> URL {
@@ -252,7 +293,7 @@ actor LRCLIBService {
             similarity(candidate.record.trackName, track.title) >= 0.55
         case .albumHint:
             similarity(candidate.record.albumName, track.album) >= 0.55
-        case .exact, .search:
+        case .exact, .titleAlbumMatch, .search:
             true
         }
     }

@@ -62,6 +62,178 @@ struct MetadataEditingTests {
         #expect(FileManager.default.fileExists(atPath: untouchedSource.path))
     }
 
+    @Test("Album and artist moves persist every destination path across reloads")
+    @MainActor
+    func albumAndArtistMovesPersistEveryPath() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let oldDirectory = media.appendingPathComponent(
+            "Old Artist/Old Album",
+            isDirectory: true
+        )
+        try FileManager.default.createDirectory(
+            at: oldDirectory,
+            withIntermediateDirectories: true
+        )
+
+        let sourceURLs = ["First.mp3", "Second.mp3"].map {
+            oldDirectory.appendingPathComponent($0)
+        }
+        for (index, sourceURL) in sourceURLs.enumerated() {
+            try Data("audio \(index)".utf8).write(to: sourceURL)
+        }
+        let originalTracks = try sourceURLs.enumerated().map { index, sourceURL in
+            Track(
+                id: UUID(), title: "Track \(index)", artist: "Old Artist",
+                album: "Old Album", duration: 1,
+                fileSize: Int64(try sourceURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0),
+                managedPath: sourceURL.path,
+                sha256: try LibraryRepository.sha256(of: sourceURL),
+                addedAt: .now, health: .verified
+            )
+        }
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: originalTracks))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+
+        try await store.updateAlbumMetadata(
+            trackIDs: originalTracks.map(\.id),
+            artist: "Old Artist",
+            album: "Split Album"
+        )
+        let albumSummary = try await store.organizeManagedMediaAfterMetadataChange(
+            trackIDs: Set(originalTracks.map(\.id))
+        )
+        let albumDestinations = sourceURLs.map {
+            media.appendingPathComponent("Old Artist/Split Album/\($0.lastPathComponent)")
+        }
+        let afterAlbumReload = try await repository.load().document.tracks
+
+        #expect(albumSummary.moved == 2)
+        #expect(Set(afterAlbumReload.map(\.managedPath)) == Set(albumDestinations.map(\.path)))
+        #expect(albumDestinations.allSatisfy { FileManager.default.fileExists(atPath: $0.path) })
+
+        try await store.updateArtistMetadata(
+            trackIDs: originalTracks.map(\.id),
+            artist: "New Artist"
+        )
+        let artistSummary = try await store.organizeManagedMediaAfterMetadataChange(
+            trackIDs: Set(originalTracks.map(\.id))
+        )
+        let artistDestinations = sourceURLs.map {
+            media.appendingPathComponent("New Artist/Split Album/\($0.lastPathComponent)")
+        }
+        let afterArtistReload = try await repository.load().document.tracks
+
+        #expect(artistSummary.moved == 2)
+        #expect(Set(afterArtistReload.map(\.managedPath)) == Set(artistDestinations.map(\.path)))
+        #expect(artistDestinations.allSatisfy { FileManager.default.fileExists(atPath: $0.path) })
+        #expect(albumDestinations.allSatisfy { !FileManager.default.fileExists(atPath: $0.path) })
+    }
+
+    @Test("Missing managed files cannot be reported as a successful metadata move")
+    @MainActor
+    func missingManagedFileFailsOrganization() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let missingURL = media.appendingPathComponent("Artist/Album/Missing.mp3")
+        let track = Track(
+            id: UUID(), title: "Missing", artist: "Artist", album: "Album",
+            duration: 1, fileSize: 1, managedPath: missingURL.path,
+            sha256: "missing", addedAt: .now, health: .missing
+        )
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: [track]))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        try await store.updateArtistMetadata(trackIDs: [track.id], artist: "New Artist")
+
+        do {
+            _ = try await store.organizeManagedMediaAfterMetadataChange(trackIDs: [track.id])
+            Issue.record("A missing managed file was incorrectly reported as organized")
+        } catch LibraryStore.MetadataEditError.mediaOrganizationUnavailable(let count) {
+            #expect(count == 1)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+    }
+
+    @Test("A same-name destination requires confirmation before replacing the file")
+    @MainActor
+    func sameNameDestinationRequiresReplacementConfirmation() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
+        let media = root.appendingPathComponent("Media", isDirectory: true)
+        let sourceDirectory = media.appendingPathComponent("Old Artist/Old Album")
+        let destinationDirectory = media.appendingPathComponent("New Artist/New Album")
+        try FileManager.default.createDirectory(
+            at: sourceDirectory,
+            withIntermediateDirectories: true
+        )
+        try FileManager.default.createDirectory(
+            at: destinationDirectory,
+            withIntermediateDirectories: true
+        )
+        let source = sourceDirectory.appendingPathComponent("Song.mp3")
+        let destination = destinationDirectory.appendingPathComponent("Song.mp3")
+        let sourceData = Data("new audio".utf8)
+        let existingData = Data("existing audio".utf8)
+        try sourceData.write(to: source)
+        try existingData.write(to: destination)
+        let track = Track(
+            id: UUID(), title: "Song", artist: "Old Artist", album: "Old Album",
+            duration: 1, fileSize: Int64(sourceData.count), managedPath: source.path,
+            sha256: try LibraryRepository.sha256(of: source),
+            addedAt: .now, health: .verified
+        )
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: [track]))
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        try await store.updateTrackMetadata(
+            id: track.id,
+            title: track.title,
+            artist: "New Artist",
+            album: "New Album"
+        )
+
+        do {
+            _ = try await store.organizeManagedMediaAfterMetadataChange(trackIDs: [track.id])
+            Issue.record("A same-name destination must require an explicit choice")
+        } catch LibraryRepository.RepositoryError.mediaOrganizationConflict(let count) {
+            #expect(count == 1)
+        } catch {
+            Issue.record("Unexpected error: \(error)")
+        }
+        #expect(try Data(contentsOf: source) == sourceData)
+        #expect(try Data(contentsOf: destination) == existingData)
+
+        let summary = try await store.organizeManagedMediaAfterMetadataChange(
+            trackIDs: [track.id],
+            collisionPolicy: .replace
+        )
+        let reloadedTrack = try #require(
+            try await repository.load().document.tracks.first { $0.id == track.id }
+        )
+
+        #expect(summary.moved == 1)
+        #expect(!FileManager.default.fileExists(atPath: source.path))
+        #expect(try Data(contentsOf: destination) == sourceData)
+        #expect(reloadedTrack.fileURL.standardizedFileURL == destination.standardizedFileURL)
+        #expect(!FileManager.default.fileExists(
+            atPath: catalog.appendingPathComponent("Media Organization Backups").path
+        ))
+    }
+
     @Test("Song, album, and artist edits persist without changing unsupported files")
     @MainActor
     func editsPersistAtomically() async throws {
@@ -485,6 +657,67 @@ struct MetadataEditingTests {
         #expect(LRCLIBService.isUsefulFallback(titleHint, for: track))
     }
 
+    @Test("Lyrics and artwork rank title plus album matches before title-only matches")
+    func onlineMetadataCandidatePriority() throws {
+        var track = makeTrack(title: "The Song", album: "The Album")
+        track.artist = "The Artist"
+        track.duration = 180
+        let titleAlbumRecord = LRCLIBRecord(
+            id: 10, name: nil, trackName: "The Song", artistName: "Another Artist",
+            albumName: "The Album", duration: 220, instrumental: false,
+            plainLyrics: "Album match", syncedLyrics: nil
+        )
+        let titleOnlyRecord = LRCLIBRecord(
+            id: 11, name: nil, trackName: "The Song", artistName: "The Artist",
+            albumName: "Another Album", duration: 180, instrumental: false,
+            plainLyrics: "Title match", syncedLyrics: nil
+        )
+        let lyricsCandidates = LRCLIBService.orderedCandidates([
+            LRCLIBService.evaluate(titleOnlyRecord, against: track, matchKind: .titleHint),
+            LRCLIBService.evaluate(titleAlbumRecord, against: track, matchKind: .search)
+        ])
+
+        #expect(lyricsCandidates.map(\.record.id) == [10, 11])
+        #expect(lyricsCandidates[0].matchKind == .titleAlbumMatch)
+        #expect(lyricsCandidates[1].matchKind == .titleHint)
+
+        func artworkCandidate(
+            id: String,
+            confidence: Double,
+            matchKind: MusicBrainzCandidate.MatchKind
+        ) -> MusicBrainzCandidate {
+            MusicBrainzCandidate(
+                recordingID: id,
+                releaseID: "release-\(id)",
+                releaseGroupID: nil,
+                title: "The Song",
+                artist: "The Artist",
+                artistSortName: "Artist, The",
+                artistIDs: [],
+                album: matchKind == .titleAlbumMatch ? "The Album" : "Another Album",
+                albumArtist: "The Artist",
+                duration: 180,
+                releaseDate: nil,
+                country: nil,
+                mediaFormat: nil,
+                trackNumber: nil,
+                trackCount: nil,
+                discNumber: nil,
+                discCount: nil,
+                isrc: nil,
+                confidence: confidence,
+                durationDifference: 0,
+                matchKind: matchKind
+            )
+        }
+        let artworkCandidates = MusicBrainzService.orderedCandidates([
+            artworkCandidate(id: "title", confidence: 0.99, matchKind: .titleHint),
+            artworkCandidate(id: "album", confidence: 0.70, matchKind: .titleAlbumMatch)
+        ])
+
+        #expect(artworkCandidates.map(\.recordingID) == ["album", "title"])
+    }
+
     @Test("LRCLIB synchronized results retain source identity")
     func lrclibRecordCreatesCachedLyrics() throws {
         let fetchedAt = Date(timeIntervalSince1970: 1_800_000_000)
@@ -723,6 +956,28 @@ struct MetadataEditingTests {
             addedAt: .now,
             lastVerifiedAt: .now,
             health: .verified
+        )
+    }
+
+    @Test("Lightweight file availability marks missing files without claiming restored files are verified")
+    func lightweightFileAvailability() {
+        #expect(
+            TrackFileAvailability.reconciledHealth(
+                fileExists: false,
+                currentHealth: .verified
+            ) == .missing
+        )
+        #expect(
+            TrackFileAvailability.reconciledHealth(
+                fileExists: true,
+                currentHealth: .missing
+            ) == .unchecked
+        )
+        #expect(
+            TrackFileAvailability.reconciledHealth(
+                fileExists: true,
+                currentHealth: .changed
+            ) == .changed
         )
     }
 }

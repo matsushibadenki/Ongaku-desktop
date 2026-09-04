@@ -20,6 +20,19 @@ private extension View {
     }
 }
 
+private struct MissingFileBadge: View {
+    var body: some View {
+        Label(L10n.text("library.missingFile.badge"), systemImage: "exclamationmark.triangle.fill")
+            .font(.caption2.bold())
+            .lineLimit(1)
+            .foregroundStyle(Color.white)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 3)
+            .background(AppTheme.danger, in: Capsule())
+            .accessibilityLabel(L10n.text("library.missingFile.accessibility"))
+    }
+}
+
 private struct TrackPlaybackAttributeActions: View {
     @EnvironmentObject private var library: LibraryStore
     let track: Track
@@ -823,6 +836,13 @@ struct LibraryContent: View {
                         .draggable(dragPayload(for: track))
                     Text(track.title)
                         .lineLimit(1)
+                        .trackTableForeground(
+                            isSelected: library.selectedTrackIDs.contains(track.id),
+                            fallback: track.health == .missing ? AppTheme.danger : AppTheme.ink
+                        )
+                    if track.health == .missing {
+                        MissingFileBadge()
+                    }
                     if track.isPinned {
                         Image(systemName: "pin.fill")
                             .font(.caption)
@@ -1929,15 +1949,32 @@ private struct AlbumDetail: View {
     let onDeleteAlbum: (AlbumGroup) -> Void
 
     var body: some View {
+        GeometryReader { proxy in
+            if proxy.size.height < 480 {
+                ScrollView {
+                    albumDetailContent(compact: true)
+                }
+            } else {
+                albumDetailContent(compact: false)
+            }
+        }
+        .background(AppTheme.canvas)
+    }
+
+    private func albumDetailContent(compact: Bool) -> some View {
         VStack(spacing: 0) {
             albumHeader
 
             Divider()
                 .overlay(AppTheme.rule)
 
-            trackTable
+            if compact {
+                trackTable.frame(height: 220)
+            } else {
+                trackTable
+            }
         }
-        .background(AppTheme.canvas)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private var albumHeader: some View {
@@ -2029,6 +2066,13 @@ private struct AlbumDetail: View {
                         .frame(width: 16)
                     Text(track.title)
                         .lineLimit(1)
+                        .trackTableForeground(
+                            isSelected: library.selectedTrackID == track.id,
+                            fallback: track.health == .missing ? AppTheme.danger : AppTheme.ink
+                        )
+                    if track.health == .missing {
+                        MissingFileBadge()
+                    }
                 }
             }
             .width(min: 260, ideal: 380)
@@ -2254,6 +2298,19 @@ private struct ArtistDetail: View {
     let onDeleteAlbum: (AlbumGroup) -> Void
 
     var body: some View {
+        GeometryReader { proxy in
+            if proxy.size.height < 520 {
+                ScrollView {
+                    artistDetailContent(compact: true)
+                }
+            } else {
+                artistDetailContent(compact: false)
+            }
+        }
+        .background(AppTheme.canvas)
+    }
+
+    private func artistDetailContent(compact: Bool) -> some View {
         VStack(spacing: 0) {
             artistHeader
 
@@ -2265,9 +2322,13 @@ private struct ArtistDetail: View {
             Divider()
                 .overlay(AppTheme.rule)
 
-            trackTable
+            if compact {
+                trackTable.frame(height: 240)
+            } else {
+                trackTable
+            }
         }
-        .background(AppTheme.canvas)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 
     private var artistHeader: some View {
@@ -2409,6 +2470,13 @@ private struct ArtistDetail: View {
                             .frame(width: 16)
                         Text(track.title)
                             .lineLimit(1)
+                            .trackTableForeground(
+                                isSelected: library.selectedTrackID == track.id,
+                                fallback: track.health == .missing ? AppTheme.danger : AppTheme.ink
+                            )
+                        if track.health == .missing {
+                            MissingFileBadge()
+                        }
                     }
                 }
                 .width(min: 220, ideal: 300)

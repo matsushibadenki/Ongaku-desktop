@@ -2,6 +2,7 @@
 import AppKit
 import CryptoKit
 import Foundation
+@preconcurrency import MusicKit
 import SwiftUI
 
 enum ArtworkSubject: Hashable, Sendable {
@@ -21,6 +22,46 @@ enum ArtworkSubject: Hashable, Sendable {
 enum ArtworkThumbnailShape: Equatable {
     case roundedRectangle
     case circle
+}
+
+struct ArtistImageCandidate: Identifiable, Equatable, Sendable {
+    enum Source: String, Codable, Sendable {
+        case appleMusic
+        case wikimediaCommons
+
+        var titleKey: String { "artistImage.source.\(rawValue)" }
+    }
+
+    let id: String
+    let artistName: String
+    let previewURL: URL
+    let downloadURL: URL
+    let sourceURL: URL?
+    let source: Source
+    let attribution: String?
+    let licenseName: String?
+    let licenseURL: URL?
+    let matchScore: Double
+}
+
+struct ArtistArtworkAttribution: Codable, Equatable, Sendable {
+    let artistName: String
+    let source: ArtistImageCandidate.Source
+    let sourceURL: URL?
+    let attribution: String?
+    let licenseName: String?
+    let licenseURL: URL?
+    let savedAt: Date
+
+    init(candidate: ArtistImageCandidate, savedAt: Date = .now) {
+        artistName = candidate.artistName
+        source = candidate.source
+        sourceURL = candidate.sourceURL
+        attribution = candidate.attribution
+        licenseName = candidate.licenseName
+        licenseURL = candidate.licenseURL
+        self.savedAt = savedAt
+    }
 }
 
 /// Displays a user-registered image first, then embedded artwork, and only
@@ -248,8 +289,8 @@ actor ArtworkResolver {
     private static let maximumDownloadSize = 12 * 1_024 * 1_024
 
     private let session: URLSession
-    private let cacheDirectory: URL
-    private let customDirectory: URL
+    private var cacheDirectory: URL
+    private var customDirectory: URL
     private var memoryCache: [ArtworkSubject: Data] = [:]
     private var missing = Set<ArtworkSubject>()
     private var inFlight: [ArtworkSubject: Task<Data?, Never>] = [:]
@@ -266,28 +307,34 @@ actor ArtworkResolver {
         ]
         session = URLSession(configuration: configuration)
 
-        let caches = FileManager.default.urls(
-            for: .cachesDirectory,
-            in: .userDomainMask
-        ).first ?? FileManager.default.temporaryDirectory
-        cacheDirectory = caches
-            .appendingPathComponent("Ongaku Desktop", isDirectory: true)
-            .appendingPathComponent("Artwork", isDirectory: true)
-        let applicationSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        ).first ?? FileManager.default.temporaryDirectory
-        customDirectory = applicationSupport
-            .appendingPathComponent("Ongaku Desktop", isDirectory: true)
-            .appendingPathComponent("Custom Artwork", isDirectory: true)
-        try? FileManager.default.createDirectory(
+        let defaultMedia = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask)
+            .first?
+            .appendingPathComponent("Ongaku Desktop/Ongaku Media", isDirectory: true)
+            ?? FileManager.default.temporaryDirectory.appendingPathComponent("Ongaku Media")
+        let portable = PortableLibraryStorage(mediaURL: defaultMedia)
+        cacheDirectory = portable.downloadedArtworkURL
+        customDirectory = portable.customArtworkURL
+    }
+
+    /// Selects the artwork directories belonging to the active portable
+    /// library. Device-independent artwork then travels with the music folder.
+    func configure(libraryRootURL: URL) throws {
+        cacheDirectory = libraryRootURL
+            .appendingPathComponent("Artwork/Downloaded", isDirectory: true)
+        customDirectory = libraryRootURL
+            .appendingPathComponent("Artwork/Custom", isDirectory: true)
+        try FileManager.default.createDirectory(
             at: cacheDirectory,
             withIntermediateDirectories: true
         )
-        try? FileManager.default.createDirectory(
+        try FileManager.default.createDirectory(
             at: customDirectory,
             withIntermediateDirectories: true
         )
+        memoryCache.removeAll()
+        missing.removeAll()
+        for task in inFlight.values { task.cancel() }
+        inFlight.removeAll()
     }
 
     func customArtworkData(for subject: ArtworkSubject) -> Data? {
@@ -303,19 +350,93 @@ actor ArtworkResolver {
             throw CocoaError(.fileReadCorruptFile)
         }
         try data.write(to: customURL(for: subject), options: .atomic)
+        try? FileManager.default.removeItem(at: attributionURL(for: subject))
+    }
+
+    func registerArtistArtwork(
+        _ data: Data,
+        candidate: ArtistImageCandidate,
+        for subject: ArtworkSubject
+    ) throws {
+        guard case .artist = subject else { throw CocoaError(.fileWriteInvalidFileName) }
+        try registerCustomArtwork(data, for: subject)
+        let attribution = ArtistArtworkAttribution(candidate: candidate)
+        try JSONEncoder().encode(attribution).write(
+            to: attributionURL(for: subject),
+            options: .atomic
+        )
+    }
+
+    func artistArtworkAttribution(for subject: ArtworkSubject) -> ArtistArtworkAttribution? {
+        guard let data = try? Data(contentsOf: attributionURL(for: subject)) else { return nil }
+        return try? JSONDecoder().decode(ArtistArtworkAttribution.self, from: data)
     }
 
     func removeCustomArtwork(for subject: ArtworkSubject) throws {
         let url = customURL(for: subject)
-        guard FileManager.default.fileExists(atPath: url.path) else { return }
-        try FileManager.default.removeItem(at: url)
+        if FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
+        }
+        try? FileManager.default.removeItem(at: attributionURL(for: subject))
     }
 
     func migrateCustomArtwork(from source: ArtworkSubject, to destination: ArtworkSubject) throws {
         guard source != destination,
               let data = try? Data(contentsOf: customURL(for: source)) else { return }
         try registerCustomArtwork(data, for: destination)
+        if let attribution = artistArtworkAttribution(for: source) {
+            try JSONEncoder().encode(attribution).write(
+                to: attributionURL(for: destination),
+                options: .atomic
+            )
+        }
         try removeCustomArtwork(for: source)
+    }
+
+    func artistImageCandidates(for name: String) async -> [ArtistImageCandidate] {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard Self.isMeaningful(.artist(name: trimmed)) else { return [] }
+
+        let musicBrainzMatch = await matchedMusicBrainzArtist(name: trimmed)
+        var acceptedNames = Set([Self.normalized(trimmed)])
+        if let musicBrainzMatch {
+            acceptedNames.insert(Self.normalized(musicBrainzMatch.name))
+            for alias in musicBrainzMatch.aliases ?? [] {
+                acceptedNames.insert(Self.normalized(alias.name))
+            }
+        }
+
+        async let appleMusic = appleMusicArtistCandidates(
+            name: trimmed,
+            acceptedNames: acceptedNames
+        )
+        let commons = await wikimediaArtistCandidates(
+            name: trimmed,
+            musicBrainzMatch: musicBrainzMatch
+        )
+        let combined = await appleMusic + commons
+        return Self.orderedArtistImageCandidates(combined)
+    }
+
+    nonisolated static func orderedArtistImageCandidates(
+        _ candidates: [ArtistImageCandidate]
+    ) -> [ArtistImageCandidate] {
+        Dictionary(grouping: candidates, by: \.id)
+            .compactMap { $0.value.max(by: { $0.matchScore < $1.matchScore }) }
+            .sorted {
+                let lhsExact = $0.matchScore >= 0.999
+                let rhsExact = $1.matchScore >= 0.999
+                if lhsExact != rhsExact { return lhsExact && !rhsExact }
+                if $0.source != $1.source {
+                    return $0.source == .appleMusic
+                }
+                if $0.matchScore != $1.matchScore { return $0.matchScore > $1.matchScore }
+                return $0.id < $1.id
+            }
+    }
+
+    func downloadArtistImage(_ candidate: ArtistImageCandidate) async -> Data? {
+        await imageData(from: candidate.downloadURL)
     }
 
     func artworkData(for subject: ArtworkSubject) async -> Data? {
@@ -446,22 +567,7 @@ actor ArtworkResolver {
     }
 
     private func resolveArtist(name: String) async -> Data? {
-        guard let response: ArtistSearchResponse = await musicBrainzJSON(
-            path: "/ws/2/artist/",
-            queryItems: [
-                URLQueryItem(name: "query", value: "artist:\"\(escapedQuery(name))\""),
-                URLQueryItem(name: "fmt", value: "json"),
-                URLQueryItem(name: "limit", value: "5")
-            ]
-        ) else { return nil }
-
-        let expected = Self.normalized(name)
-        guard let match = response.artists
-            .filter({ artist in
-                Self.normalized(artist.name) == expected
-                    || artist.aliases?.contains(where: { Self.normalized($0.name) == expected }) == true
-            })
-            .max(by: { $0.score < $1.score }), match.score >= 90,
+        guard let match = await matchedMusicBrainzArtist(name: name),
               let details: ArtistDetails = await musicBrainzJSON(
                   path: "/ws/2/artist/\(match.id)",
                   queryItems: [
@@ -485,6 +591,162 @@ actor ArtworkResolver {
         components.queryItems = [URLQueryItem(name: "width", value: "600")]
         guard let imageURL = components.url else { return nil }
         return await imageData(from: imageURL)
+    }
+
+    private func matchedMusicBrainzArtist(name: String) async -> ArtistSearchResult? {
+        guard let response: ArtistSearchResponse = await musicBrainzJSON(
+            path: "/ws/2/artist/",
+            queryItems: [
+                URLQueryItem(name: "query", value: "artist:\"\(escapedQuery(name))\""),
+                URLQueryItem(name: "fmt", value: "json"),
+                URLQueryItem(name: "limit", value: "8")
+            ]
+        ) else { return nil }
+        let expected = Self.normalized(name)
+        return response.artists
+            .filter { artist in
+                Self.normalized(artist.name) == expected
+                    || artist.aliases?.contains(where: {
+                        Self.normalized($0.name) == expected
+                    }) == true
+            }
+            .filter { $0.score >= 80 }
+            .max(by: { $0.score < $1.score })
+    }
+
+    private func appleMusicArtistCandidates(
+        name: String,
+        acceptedNames: Set<String>
+    ) async -> [ArtistImageCandidate] {
+        do {
+            var request = MusicCatalogSearchRequest(term: name, types: [MusicKit.Artist.self])
+            request.limit = 10
+            request.includeTopResults = true
+            let response = try await request.response()
+            return response.artists.compactMap { artist in
+                let normalizedName = Self.normalized(artist.name)
+                let score = acceptedNames.contains(normalizedName)
+                    ? 1.0 : Self.nameSimilarity(normalizedName, Self.normalized(name))
+                guard score >= 0.72,
+                      let previewURL = artist.artwork?.url(width: 360, height: 360),
+                      let downloadURL = artist.artwork?.url(width: 1_000, height: 1_000) else {
+                    return nil
+                }
+                return ArtistImageCandidate(
+                    id: "apple-music:\(artist.id.rawValue)",
+                    artistName: artist.name,
+                    previewURL: previewURL,
+                    downloadURL: downloadURL,
+                    sourceURL: artist.url,
+                    source: .appleMusic,
+                    attribution: "Apple Music · \(artist.name)",
+                    licenseName: nil,
+                    licenseURL: nil,
+                    matchScore: score
+                )
+            }
+        } catch {
+            return []
+        }
+    }
+
+    private func wikimediaArtistCandidates(
+        name: String,
+        musicBrainzMatch: ArtistSearchResult?
+    ) async -> [ArtistImageCandidate] {
+        guard let musicBrainzMatch,
+              let details: ArtistDetails = await musicBrainzJSON(
+                path: "/ws/2/artist/\(musicBrainzMatch.id)",
+                queryItems: [
+                    URLQueryItem(name: "inc", value: "url-rels"),
+                    URLQueryItem(name: "fmt", value: "json")
+                ]
+              ),
+              let wikidataURL = details.relations.first(where: {
+                $0.type == "wikidata"
+              })?.url.resource,
+              let identifier = URL(string: wikidataURL)?.lastPathComponent,
+              identifier.hasPrefix("Q"),
+              let entityURL = URL(
+                string: "https://www.wikidata.org/wiki/Special:EntityData/\(identifier).json"
+              ),
+              let entities: WikidataResponse = await json(from: entityURL) else {
+            return []
+        }
+        let fileNames = entities.entities[identifier]?.claims["P18"]?
+            .compactMap(\.mainsnak.datavalue?.value) ?? []
+        var candidates: [ArtistImageCandidate] = []
+        for fileName in fileNames.prefix(8) {
+            guard !Task.isCancelled,
+                  let metadata = await commonsMetadata(fileName: fileName) else { continue }
+            candidates.append(ArtistImageCandidate(
+                id: "wikimedia-commons:\(fileName)",
+                artistName: musicBrainzMatch.name,
+                previewURL: metadata.thumbnailURL ?? metadata.originalURL,
+                downloadURL: metadata.originalURL,
+                sourceURL: metadata.descriptionURL,
+                source: .wikimediaCommons,
+                attribution: Self.plainText(metadata.artist ?? metadata.credit),
+                licenseName: Self.plainText(metadata.licenseName),
+                licenseURL: metadata.licenseURL.flatMap(URL.init(string:)),
+                matchScore: Self.normalized(musicBrainzMatch.name) == Self.normalized(name)
+                    ? 1 : Double(musicBrainzMatch.score) / 100
+            ))
+        }
+        return candidates
+    }
+
+    private func commonsMetadata(fileName: String) async -> CommonsImageMetadata? {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = "commons.wikimedia.org"
+        components.path = "/w/api.php"
+        components.queryItems = [
+            URLQueryItem(name: "action", value: "query"),
+            URLQueryItem(name: "format", value: "json"),
+            URLQueryItem(name: "prop", value: "imageinfo"),
+            URLQueryItem(name: "iiprop", value: "url|extmetadata"),
+            URLQueryItem(name: "iiurlwidth", value: "360"),
+            URLQueryItem(name: "titles", value: "File:\(fileName)")
+        ]
+        guard let url = components.url,
+              let response: CommonsQueryResponse = await json(from: url),
+              let info = response.query.pages.values.first?.imageInfo?.first,
+              let originalURL = URL(string: info.url) else { return nil }
+        return CommonsImageMetadata(
+            originalURL: originalURL,
+            thumbnailURL: info.thumbnailURL.flatMap(URL.init(string:)),
+            descriptionURL: info.descriptionURL.flatMap(URL.init(string:)),
+            artist: info.extmetadata?["Artist"]?.value,
+            credit: info.extmetadata?["Credit"]?.value,
+            licenseName: info.extmetadata?["LicenseShortName"]?.value,
+            licenseURL: info.extmetadata?["LicenseUrl"]?.value
+        )
+    }
+
+    private nonisolated static func nameSimilarity(_ lhs: String, _ rhs: String) -> Double {
+        guard !lhs.isEmpty, !rhs.isEmpty else { return 0 }
+        if lhs == rhs { return 1 }
+        if lhs.contains(rhs) || rhs.contains(lhs) {
+            return Double(min(lhs.count, rhs.count)) / Double(max(lhs.count, rhs.count))
+        }
+        return 0
+    }
+
+    private nonisolated static func plainText(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let withoutTags = value.replacingOccurrences(
+            of: "<[^>]+>",
+            with: " ",
+            options: .regularExpression
+        )
+        let collapsed = withoutTags
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&#39;", with: "'")
+            .split(whereSeparator: \.isWhitespace)
+            .joined(separator: " ")
+        return collapsed.isEmpty ? nil : collapsed
     }
 
     private func musicBrainzJSON<T: Decodable>(
@@ -565,6 +827,11 @@ actor ArtworkResolver {
     private func customURL(for subject: ArtworkSubject) -> URL {
         customDirectory.appendingPathComponent(hashedName(for: subject))
             .appendingPathExtension("custom-artwork")
+    }
+
+    private func attributionURL(for subject: ArtworkSubject) -> URL {
+        customDirectory.appendingPathComponent(hashedName(for: subject))
+            .appendingPathExtension("artist-attribution.json")
     }
 
     private func hashedName(for subject: ArtworkSubject) -> String {
@@ -656,3 +923,46 @@ private struct WikidataClaim: Decodable { let mainsnak: WikidataSnak }
 private struct WikidataSnak: Decodable { let datavalue: WikidataValue? }
 
 private struct WikidataValue: Decodable { let value: String }
+
+private struct CommonsQueryResponse: Decodable {
+    let query: Query
+
+    struct Query: Decodable {
+        let pages: [String: Page]
+    }
+
+    struct Page: Decodable {
+        let imageInfo: [ImageInfo]?
+
+        enum CodingKeys: String, CodingKey {
+            case imageInfo = "imageinfo"
+        }
+    }
+
+    struct ImageInfo: Decodable {
+        let url: String
+        let thumbnailURL: String?
+        let descriptionURL: String?
+        let extmetadata: [String: MetadataValue]?
+
+        enum CodingKeys: String, CodingKey {
+            case url, extmetadata
+            case thumbnailURL = "thumburl"
+            case descriptionURL = "descriptionurl"
+        }
+    }
+
+    struct MetadataValue: Decodable {
+        let value: String
+    }
+}
+
+private struct CommonsImageMetadata {
+    let originalURL: URL
+    let thumbnailURL: URL?
+    let descriptionURL: URL?
+    let artist: String?
+    let credit: String?
+    let licenseName: String?
+    let licenseURL: String?
+}

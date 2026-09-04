@@ -3,11 +3,18 @@ import UniformTypeIdentifiers
 
 enum MediaOrganizationStatus: String, Codable, Sendable {
     case move
+    case conflict
     case unchanged
     case external
     case unavailable
 
     var titleKey: String { "mediaOrganization.status.\(rawValue)" }
+}
+
+enum MediaOrganizationCollisionPolicy: Equatable, Sendable {
+    case stop
+    case keepBoth
+    case replace
 }
 
 struct MediaOrganizationItem: Identifiable, Codable, Sendable {
@@ -25,6 +32,7 @@ struct MediaOrganizationPreview: Sendable {
     var items: [MediaOrganizationItem]
 
     var moveCount: Int { items.count { $0.status == .move } }
+    var conflictCount: Int { items.count { $0.status == .conflict } }
     var unchangedCount: Int { items.count { $0.status == .unchanged } }
     var externalCount: Int { items.count { $0.status == .external } }
     var unavailableCount: Int { items.count { $0.status == .unavailable } }
@@ -61,6 +69,8 @@ struct MediaOrganizationView: View {
     @State private var isExecuting = false
     @State private var errorMessage: String?
     @State private var scopedURL: URL?
+    @State private var isShowingOverwriteConfirmation = false
+    @State private var organizationConflictCount = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -91,6 +101,10 @@ struct MediaOrganizationView: View {
                         .lineLimit(2)
                     HStack(spacing: 18) {
                         Label(L10n.format("mediaOrganization.count.move", preview.moveCount), systemImage: "arrow.right")
+                        if preview.conflictCount > 0 {
+                            Label(L10n.format("mediaOrganization.count.conflict", preview.conflictCount), systemImage: "doc.on.doc")
+                                .foregroundStyle(.orange)
+                        }
                         Label(L10n.format("mediaOrganization.count.unchanged", preview.unchangedCount), systemImage: "checkmark.circle")
                         if preview.externalCount > 0 {
                             Label(L10n.format("mediaOrganization.count.external", preview.externalCount), systemImage: "link")
@@ -110,7 +124,7 @@ struct MediaOrganizationView: View {
                             .frame(width: 18)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(item.sourceURL.lastPathComponent).lineLimit(1)
-                            if item.status == .move {
+                            if item.status == .move || item.status == .conflict {
                                 Text(item.destinationURL.path)
                                     .font(.caption.monospaced())
                                     .foregroundStyle(.secondary)
@@ -147,7 +161,10 @@ struct MediaOrganizationView: View {
                     Task { await execute() }
                 }
                 .keyboardShortcut(.defaultAction)
-                .disabled(preview?.moveCount == 0 || isLoading || isExecuting)
+                .disabled(
+                    ((preview?.moveCount ?? 0) + (preview?.conflictCount ?? 0) == 0)
+                        || isLoading || isExecuting
+                )
             }
         }
         .padding(24)
@@ -165,6 +182,24 @@ struct MediaOrganizationView: View {
             loadPreview(destination: url)
         }
         .onDisappear { releaseSecurityScope() }
+        .confirmationDialog(
+            L10n.text("mediaOrganization.overwriteConfirmation.title"),
+            isPresented: $isShowingOverwriteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.text("mediaOrganization.overwriteConfirmation.replace"), role: .destructive) {
+                Task { await execute(collisionPolicy: .replace) }
+            }
+            Button(L10n.text("mediaOrganization.overwriteConfirmation.keepBoth")) {
+                Task { await execute(collisionPolicy: .keepBoth) }
+            }
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n.format(
+                "mediaOrganization.overwriteConfirmation.message",
+                organizationConflictCount
+            ))
+        }
     }
 
     private func loadDefaultPreview() async {
@@ -182,18 +217,26 @@ struct MediaOrganizationView: View {
         }
     }
 
-    private func execute() async {
+    private func execute(
+        collisionPolicy: MediaOrganizationCollisionPolicy = .stop
+    ) async {
         guard let preview else { return }
         isExecuting = true
         errorMessage = nil
         do {
-            _ = try await library.executeMediaOrganization(preview)
+            _ = try await library.executeMediaOrganization(
+                preview,
+                collisionPolicy: collisionPolicy
+            )
             if storage.mediaDirectoryURL.standardizedFileURL
                 != preview.destinationRootURL.standardizedFileURL {
                 try storage.useSelectedDirectory(preview.destinationRootURL)
                 libraryProfiles.updateActiveMediaURL(preview.destinationRootURL)
             }
             dismiss()
+        } catch LibraryRepository.RepositoryError.mediaOrganizationConflict(let count) {
+            organizationConflictCount = count
+            isShowingOverwriteConfirmation = true
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -213,6 +256,7 @@ struct MediaOrganizationView: View {
     private func symbol(for status: MediaOrganizationStatus) -> String {
         switch status {
         case .move: "arrow.right.circle.fill"
+        case .conflict: "doc.on.doc.fill"
         case .unchanged: "checkmark.circle.fill"
         case .external: "link.circle"
         case .unavailable: "exclamationmark.triangle.fill"
@@ -222,6 +266,7 @@ struct MediaOrganizationView: View {
     private func color(for status: MediaOrganizationStatus) -> Color {
         switch status {
         case .move: AppTheme.accent
+        case .conflict: .orange
         case .unchanged: .green
         case .external: .secondary
         case .unavailable: .orange

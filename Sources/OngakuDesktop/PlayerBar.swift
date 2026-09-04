@@ -5,6 +5,12 @@
 import SwiftUI
 
 struct PlayerBar: View {
+    nonisolated static let layoutHeight: CGFloat = 106
+
+    nonisolated static func navigationHeight(in availableHeight: CGFloat) -> CGFloat {
+        max(0, availableHeight - layoutHeight)
+    }
+
     @EnvironmentObject private var player: PlaybackController
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
@@ -36,6 +42,7 @@ struct PlayerBar: View {
             .background(AppTheme.surface)
             Divider().overlay(AppTheme.rule)
         }
+        .frame(height: Self.layoutHeight)
     }
 
     @ViewBuilder

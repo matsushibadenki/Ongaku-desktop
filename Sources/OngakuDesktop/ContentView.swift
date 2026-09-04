@@ -11,6 +11,7 @@ private struct PendingRequiredMetadataImport: Identifiable {
 
 struct ContentView: View {
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
@@ -131,6 +132,10 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestVerification)) { _ in
             Task { await library.verifyLibrary() }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { await library.refreshFileAvailability() }
         }
         .onAppear {
             library.undoManager = undoManager
@@ -283,23 +288,31 @@ struct ContentView: View {
 
     private var persistentPlayer: some View {
         PlayerBar()
-            .fixedSize(horizontal: false, vertical: true)
-            .layoutPriority(1)
+            .frame(height: PlayerBar.layoutHeight)
+            .layoutPriority(2)
     }
 
     private var playerAwareLayout: some View {
-        VStack(spacing: 0) {
-            if meterSettings.barPosition == .top {
-                persistentPlayer
-            }
+        GeometryReader { proxy in
+            let navigationHeight = PlayerBar.navigationHeight(in: proxy.size.height)
+            VStack(spacing: 0) {
+                if meterSettings.barPosition == .top {
+                    persistentPlayer
+                }
 
-            navigationContent
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .layoutPriority(0)
+                navigationContent
+                    .frame(
+                        maxWidth: .infinity,
+                        minHeight: navigationHeight,
+                        maxHeight: navigationHeight
+                    )
+                    .clipped()
 
-            if meterSettings.barPosition == .bottom {
-                persistentPlayer
+                if meterSettings.barPosition == .bottom {
+                    persistentPlayer
+                }
             }
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .top)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -307,12 +320,15 @@ struct ContentView: View {
     private var navigationContent: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             LibrarySidebar()
+                .frame(maxHeight: .infinity)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 300)
         } content: {
             LibraryContent()
+                .frame(maxHeight: .infinity)
                 .navigationSplitViewColumnWidth(min: 660, ideal: 760)
         } detail: {
             TrackInspector()
+                .frame(maxHeight: .infinity)
                 .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
         }
     }

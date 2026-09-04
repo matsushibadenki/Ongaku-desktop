@@ -5,6 +5,7 @@ import Foundation
 struct MusicBrainzCandidate: Identifiable, Equatable, Sendable {
     enum MatchKind: Equatable, Sendable {
         case isrc
+        case titleAlbumMatch
         case metadata
         case titleHint
         case albumHint
@@ -202,41 +203,62 @@ actor MusicBrainzService {
     }
 
     func candidates(for track: Track) async throws -> [MusicBrainzCandidate] {
-        var response: RecordingSearchResponse
+        var result: [MusicBrainzCandidate] = []
         if !track.isrc.isEmpty {
-            response = try await musicBrainzJSON(from: Self.isrcSearchURL(track.isrc))
-        } else {
-            response = RecordingSearchResponse(recordings: [])
+            let response: RecordingSearchResponse = try await musicBrainzJSON(
+                from: Self.isrcSearchURL(track.isrc)
+            )
+            result += Self.expand(response, against: track, matchKind: .isrc)
         }
-        var result = Self.expand(response, against: track, matchKind: .isrc)
-        if result.isEmpty {
-            response = try await musicBrainzJSON(from: Self.searchURL(for: track))
-            result = Self.expand(response, against: track, matchKind: .metadata)
-        }
+        var response: RecordingSearchResponse = try await musicBrainzJSON(
+            from: Self.searchURL(for: track)
+        )
+        result += Self.expand(response, against: track, matchKind: .metadata)
         if result.isEmpty {
             response = try await musicBrainzJSON(from: Self.searchURL(for: track, includesAlbum: false))
-            result = Self.expand(response, against: track, matchKind: .metadata)
+            result += Self.expand(response, against: track, matchKind: .metadata)
         }
+        response = try await musicBrainzJSON(from: Self.titleOnlySearchURL(for: track))
+        result += Self.expand(response, against: track, matchKind: .titleHint)
+            .filter { Self.isUsefulFallback($0, for: track) }
         if result.isEmpty {
-            response = try await musicBrainzJSON(from: Self.titleOnlySearchURL(for: track))
-            result += Self.expand(response, against: track, matchKind: .titleHint)
-                .filter { Self.isUsefulFallback($0, for: track) }
             response = try await musicBrainzJSON(from: Self.albumOnlySearchURL(for: track))
             result += Self.expand(response, against: track, matchKind: .albumHint)
                 .filter { Self.isUsefulFallback($0, for: track) }
         }
         let unique = Dictionary(grouping: result, by: \.id).compactMap { _, matches in
-            matches.max(by: { $0.confidence < $1.confidence })
+            Self.orderedCandidates(matches).first
         }
-        return unique.sorted {
+        return Self.orderedCandidates(unique)
+        .prefix(Self.maximumCandidates)
+        .map { $0 }
+    }
+
+    nonisolated static func orderedCandidates(
+        _ candidates: [MusicBrainzCandidate]
+    ) -> [MusicBrainzCandidate] {
+        candidates.sorted {
+            let lhsPriority = matchPriority($0.matchKind)
+            let rhsPriority = matchPriority($1.matchKind)
+            if lhsPriority != rhsPriority { return lhsPriority < rhsPriority }
             if $0.confidence != $1.confidence { return $0.confidence > $1.confidence }
             let lhsDuration = $0.durationDifference ?? .greatestFiniteMagnitude
             let rhsDuration = $1.durationDifference ?? .greatestFiniteMagnitude
             if lhsDuration != rhsDuration { return lhsDuration < rhsDuration }
             return $0.id < $1.id
         }
-        .prefix(Self.maximumCandidates)
-        .map { $0 }
+    }
+
+    nonisolated private static func matchPriority(
+        _ matchKind: MusicBrainzCandidate.MatchKind
+    ) -> Int {
+        switch matchKind {
+        case .titleAlbumMatch: 0
+        case .isrc: 1
+        case .titleHint: 2
+        case .metadata: 3
+        case .albumHint: 4
+        }
     }
 
     func releases(for toc: MusicBrainzDiscTOC) async throws -> [MusicBrainzDiscReleaseCandidate] {
@@ -453,6 +475,16 @@ actor MusicBrainzService {
                     + durationScore * 0.13 + serverScore * 0.10 + isrcScore * 0.20
             )
         }
+        let resolvedMatchKind: MusicBrainzCandidate.MatchKind
+        if matchKind == .isrc {
+            resolvedMatchKind = .isrc
+        } else if titleScore == 1, albumScore == 1 {
+            resolvedMatchKind = .titleAlbumMatch
+        } else if titleScore == 1 || matchKind == .titleHint {
+            resolvedMatchKind = .titleHint
+        } else {
+            resolvedMatchKind = matchKind
+        }
         return MusicBrainzCandidate(
             recordingID: recording.id,
             releaseID: release.id,
@@ -474,7 +506,7 @@ actor MusicBrainzService {
             isrc: recording.isrcs?.first,
             confidence: confidence,
             durationDifference: durationDifference,
-            matchKind: matchKind
+            matchKind: resolvedMatchKind
         )
     }
 
@@ -551,7 +583,7 @@ actor MusicBrainzService {
             similarity(candidate.title, track.title) >= 0.55
         case .albumHint:
             similarity(candidate.album, track.album) >= 0.55
-        case .isrc, .metadata:
+        case .isrc, .titleAlbumMatch, .metadata:
             true
         }
     }

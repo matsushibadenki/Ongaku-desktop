@@ -693,6 +693,8 @@ private struct LRCLIBCandidatePicker: View {
                             .foregroundStyle(AppTheme.ink)
                         if candidate.matchKind == .exact {
                             badge("lrclib.match.exact", color: AppTheme.good)
+                        } else if candidate.matchKind == .titleAlbumMatch {
+                            badge("lrclib.match.titleAlbum", color: AppTheme.good)
                         } else if candidate.matchKind == .titleHint {
                             badge("lrclib.match.titleHint", color: AppTheme.warning)
                         } else if candidate.matchKind == .albumHint {
@@ -774,7 +776,7 @@ private struct LRCLIBCandidatePicker: View {
             L10n.format("lrclib.hint.title", track.title)
         case .albumHint:
             L10n.format("lrclib.hint.album", track.album)
-        case .exact, .search:
+        case .exact, .titleAlbumMatch, .search:
             nil
         }
     }

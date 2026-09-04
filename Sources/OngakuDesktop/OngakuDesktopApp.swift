@@ -104,7 +104,11 @@ struct OngakuDesktopApp: App {
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
                 .task {
+                    try? await ArtworkResolver.shared.configure(
+                        libraryRootURL: libraryProfiles.activeProfile.catalogURL
+                    )
                     await library.load()
+                    await library.refreshFileAvailability(force: true)
                     phoneSync.updateLocalTracks(
                         library.tracks,
                         playbackEvents: library.playbackEvents,
@@ -131,10 +135,14 @@ struct OngakuDesktopApp: App {
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
                     Task {
+                        try? await ArtworkResolver.shared.configure(
+                            libraryRootURL: profile.catalogURL
+                        )
                         await library.switchLibrary(
                             catalogURL: profile.catalogURL,
                             mediaURL: profile.mediaURL
                         )
+                        await library.refreshFileAvailability(force: true)
                         player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                     }
                 }
@@ -142,10 +150,14 @@ struct OngakuDesktopApp: App {
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
                     Task {
+                        try? await ArtworkResolver.shared.configure(
+                            libraryRootURL: profile.catalogURL
+                        )
                         await library.switchLibrary(
                             catalogURL: profile.catalogURL,
                             mediaURL: profile.mediaURL
                         )
+                        await library.refreshFileAvailability(force: true)
                         player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                     }
                 }

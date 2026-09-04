@@ -1,5 +1,208 @@
 import Combine
+import CryptoKit
 import Foundation
+
+/// Files that define an Ongaku library live beside its managed music so the
+/// complete library can be moved to another Mac as one folder.
+struct PortableLibraryStorage: Sendable {
+    static let directoryName = "Ongaku Library Data"
+
+    let mediaURL: URL
+
+    var rootURL: URL {
+        mediaURL.standardizedFileURL
+            .appendingPathComponent(Self.directoryName, isDirectory: true)
+    }
+
+    var downloadedArtworkURL: URL {
+        rootURL.appendingPathComponent("Artwork/Downloaded", isDirectory: true)
+    }
+
+    var customArtworkURL: URL {
+        rootURL.appendingPathComponent("Artwork/Custom", isDirectory: true)
+    }
+
+    /// Moves legacy state item-by-item. Each item is first copied to a staging
+    /// location on the destination volume, then atomically installed. The old
+    /// copy is removed only after the destination has been verified.
+    static func migrateLegacyStateIfNeeded(
+        from legacyCatalogURL: URL,
+        to mediaURL: URL,
+        fileManager: FileManager = .default,
+        applicationSupportURL: URL? = nil,
+        cachesURL: URL? = nil,
+        removeLegacyArtwork: Bool = true
+    ) throws -> URL {
+        let layout = Self(mediaURL: mediaURL)
+        try fileManager.createDirectory(at: layout.rootURL, withIntermediateDirectories: true)
+
+        if legacyCatalogURL.standardizedFileURL != layout.rootURL.standardizedFileURL {
+            let catalogNames = try legacyCatalogItemNames(
+                at: legacyCatalogURL,
+                fileManager: fileManager
+            )
+            for name in catalogNames {
+                try moveIfDestinationIsMissing(
+                    from: legacyCatalogURL.appendingPathComponent(name),
+                    to: layout.rootURL.appendingPathComponent(name),
+                    fileManager: fileManager
+                )
+            }
+        }
+
+        let support = applicationSupportURL
+            ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        if let support {
+            try moveDirectoryContentsIfMissing(
+                from: support
+                    .appendingPathComponent("Ongaku Desktop", isDirectory: true)
+                    .appendingPathComponent("Custom Artwork", isDirectory: true),
+                to: layout.customArtworkURL,
+                fileManager: fileManager,
+                removeSource: removeLegacyArtwork
+            )
+        }
+
+        let caches = cachesURL
+            ?? fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
+        if let caches {
+            try moveDirectoryContentsIfMissing(
+                from: caches
+                    .appendingPathComponent("Ongaku Desktop", isDirectory: true)
+                    .appendingPathComponent("Artwork", isDirectory: true),
+                to: layout.downloadedArtworkURL,
+                fileManager: fileManager,
+                removeSource: removeLegacyArtwork
+            )
+        }
+        return layout.rootURL
+    }
+
+    private static func legacyCatalogItemNames(
+        at rootURL: URL,
+        fileManager: FileManager
+    ) throws -> [String] {
+        guard fileManager.fileExists(atPath: rootURL.path) else { return [] }
+        let names = try fileManager.contentsOfDirectory(atPath: rootURL.path)
+        let exactNames: Set<String> = [
+            "Incoming", "Playlist Artwork", "library-v1.json", "library-v1.backup.json",
+            "import-journal-v1.json", "media-organization-journal-v1.json",
+            "audio-features-v1.json", "device-sync-tags-v1.json",
+            "catalog-prototype-v1.sqlite", "catalog-prototype-v1.migrating.sqlite",
+            "catalog-prototype-v1.previous.sqlite", "catalog-json-rollback.json",
+        ]
+        return names.filter { name in
+            exactNames.contains(name)
+                || name.hasPrefix("library-schema-")
+                || name.hasPrefix("library-unversioned.")
+                || name.hasPrefix("catalog-prototype-v1.sqlite-")
+        }
+    }
+
+    private static func moveDirectoryContentsIfMissing(
+        from source: URL,
+        to destination: URL,
+        fileManager: FileManager,
+        removeSource: Bool
+    ) throws {
+        var isDirectory: ObjCBool = false
+        guard fileManager.fileExists(atPath: source.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else { return }
+        try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
+        for name in try fileManager.contentsOfDirectory(atPath: source.path) {
+            try moveIfDestinationIsMissing(
+                from: source.appendingPathComponent(name),
+                to: destination.appendingPathComponent(name),
+                fileManager: fileManager,
+                removeSource: removeSource
+            )
+        }
+        if removeSource,
+           (try? fileManager.contentsOfDirectory(atPath: source.path).isEmpty) == true {
+            try? fileManager.removeItem(at: source)
+        }
+    }
+
+    private static func moveIfDestinationIsMissing(
+        from source: URL,
+        to destination: URL,
+        fileManager: FileManager,
+        removeSource: Bool = true
+    ) throws {
+        guard fileManager.fileExists(atPath: source.path) else { return }
+        if fileManager.fileExists(atPath: destination.path) {
+            if removeSource,
+               try itemsMatch(source, destination, fileManager: fileManager) {
+                try fileManager.removeItem(at: source)
+            }
+            return
+        }
+        try fileManager.createDirectory(
+            at: destination.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        let staging = destination.deletingLastPathComponent().appendingPathComponent(
+            ".\(destination.lastPathComponent).migration-\(UUID().uuidString)"
+        )
+        do {
+            try fileManager.copyItem(at: source, to: staging)
+            guard try itemsMatch(source, staging, fileManager: fileManager) else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            try fileManager.moveItem(at: staging, to: destination)
+            if removeSource { try fileManager.removeItem(at: source) }
+        } catch {
+            try? fileManager.removeItem(at: staging)
+            throw error
+        }
+    }
+
+    private static func itemsMatch(
+        _ lhs: URL,
+        _ rhs: URL,
+        fileManager: FileManager
+    ) throws -> Bool {
+        let keys: Set<URLResourceKey> = [.isDirectoryKey, .fileSizeKey]
+        let leftValues = try lhs.resourceValues(forKeys: keys)
+        let rightValues = try rhs.resourceValues(forKeys: keys)
+        guard leftValues.isDirectory == rightValues.isDirectory else { return false }
+        if leftValues.isDirectory != true {
+            let leftHash = try sha256(of: lhs)
+            let rightHash = try sha256(of: rhs)
+            return leftValues.fileSize == rightValues.fileSize
+                && leftHash == rightHash
+        }
+        let left = try fileManager.subpathsOfDirectory(atPath: lhs.path).sorted()
+        let right = try fileManager.subpathsOfDirectory(atPath: rhs.path).sorted()
+        guard left == right else { return false }
+        for relativePath in left {
+            let leftItem = lhs.appendingPathComponent(relativePath)
+            let rightItem = rhs.appendingPathComponent(relativePath)
+            let leftItemValues = try leftItem.resourceValues(forKeys: keys)
+            let rightItemValues = try rightItem.resourceValues(forKeys: keys)
+            guard leftItemValues.isDirectory == rightItemValues.isDirectory else { return false }
+            if leftItemValues.isDirectory != true {
+                let leftHash = try sha256(of: leftItem)
+                let rightHash = try sha256(of: rightItem)
+                guard leftItemValues.fileSize == rightItemValues.fileSize,
+                      leftHash == rightHash else { return false }
+            }
+        }
+        return true
+    }
+
+    private static func sha256(of url: URL) throws -> SHA256.Digest {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while true {
+            let data = try handle.read(upToCount: 1_048_576) ?? Data()
+            if data.isEmpty { break }
+            hasher.update(data: data)
+        }
+        return hasher.finalize()
+    }
+}
 
 struct LibraryProfile: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
@@ -103,6 +306,7 @@ final class LibraryProfileSettings: ObservableObject {
             ?? initialProfiles.first(where: { !$0.isArchived })?.id
             ?? initialProfiles[0].id
         resolveExternalBookmarks()
+        migrateProfilesToPortableStorage()
         persistProfiles()
     }
 
@@ -131,10 +335,15 @@ final class LibraryProfileSettings: ObservableObject {
         let root = librariesRootURL.appendingPathComponent(id.uuidString, isDirectory: true)
         let media = root.appendingPathComponent("Ongaku Media", isDirectory: true)
         try fileManager.createDirectory(at: media, withIntermediateDirectories: true)
+        let catalog = try PortableLibraryStorage.migrateLegacyStateIfNeeded(
+            from: root,
+            to: media,
+            fileManager: fileManager
+        )
         profiles.append(LibraryProfile(
             id: id,
             name: name,
-            catalogPath: root.path,
+            catalogPath: catalog.path,
             mediaPath: media.path,
             isArchived: false,
             createdAt: .now
@@ -161,10 +370,13 @@ final class LibraryProfileSettings: ObservableObject {
         }
 
         let root = uniqueExternalRoot(in: parent, name: name)
-        let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
         let media = root.appendingPathComponent("Media", isDirectory: true)
-        try fileManager.createDirectory(at: catalog, withIntermediateDirectories: true)
         try fileManager.createDirectory(at: media, withIntermediateDirectories: true)
+        let catalog = try PortableLibraryStorage.migrateLegacyStateIfNeeded(
+            from: root.appendingPathComponent("Catalog", isDirectory: true),
+            to: media,
+            fileManager: fileManager
+        )
         let marker = ExternalLibraryMarker(libraryID: id, createdAt: .now)
         try JSONEncoder().encode(marker).write(
             to: root.appendingPathComponent(Self.externalMarkerName),
@@ -220,8 +432,13 @@ final class LibraryProfileSettings: ObservableObject {
                 from: Data(contentsOf: markerURL)
             )
             guard marker.libraryID == id else { throw ExternalLibraryError.wrongLibrary }
-            let catalog = root.appendingPathComponent("Catalog", isDirectory: true)
             let media = root.appendingPathComponent("Media", isDirectory: true)
+            let legacyCatalog = root.appendingPathComponent("Catalog", isDirectory: true)
+            let catalog = try PortableLibraryStorage.migrateLegacyStateIfNeeded(
+                from: legacyCatalog,
+                to: media,
+                fileManager: fileManager
+            )
             guard Self.requiredDirectoriesExist(catalog: catalog, media: media, fileManager: fileManager)
             else { throw ExternalLibraryError.invalidLocation }
             let bookmark = try root.bookmarkData(
@@ -267,7 +484,15 @@ final class LibraryProfileSettings: ObservableObject {
 
     func updateActiveMediaURL(_ url: URL) {
         guard let index = profiles.firstIndex(where: { $0.id == activeLibraryID }) else { return }
-        profiles[index].mediaPath = url.standardizedFileURL.path
+        let media = url.standardizedFileURL
+        guard let catalog = try? PortableLibraryStorage.migrateLegacyStateIfNeeded(
+            from: profiles[index].catalogURL,
+            to: media,
+            fileManager: fileManager
+        ) else { return }
+        profiles[index].mediaPath = media.path
+        profiles[index].catalogPath = catalog.path
+        activeLocationRevision &+= 1
     }
 
     private func normalizedName(_ value: String) -> String {
@@ -301,8 +526,12 @@ final class LibraryProfileSettings: ObservableObject {
                 bookmarkDataIsStale: &stale
             ) else { continue }
             let standardizedRoot = root.standardizedFileURL
-            let catalog = standardizedRoot.appendingPathComponent("Catalog", isDirectory: true)
             let media = standardizedRoot.appendingPathComponent("Media", isDirectory: true)
+            let portableCatalog = PortableLibraryStorage(mediaURL: media).rootURL
+            let legacyCatalog = standardizedRoot.appendingPathComponent("Catalog", isDirectory: true)
+            let catalog = fileManager.fileExists(atPath: portableCatalog.path)
+                ? portableCatalog
+                : legacyCatalog
             guard Self.requiredDirectoriesExist(
                 catalog: catalog,
                 media: media,
@@ -350,6 +579,37 @@ final class LibraryProfileSettings: ObservableObject {
     private func persistProfiles() {
         if let data = try? JSONEncoder().encode(profiles) {
             defaults.set(data, forKey: Self.profilesKey)
+        }
+    }
+
+    private func migrateProfilesToPortableStorage() {
+        let activeIndex = profiles.firstIndex { $0.id == activeLibraryID }
+        let orderedIndices = ([activeIndex].compactMap { $0 }
+            + profiles.indices.filter { $0 != activeIndex })
+        var migratedIndices: [Int] = []
+        for index in orderedIndices {
+            let profile = profiles[index]
+            guard Self.isReachable(profile, fileManager: fileManager),
+                  let portableRoot = try? PortableLibraryStorage.migrateLegacyStateIfNeeded(
+                      from: profile.catalogURL,
+                      to: profile.mediaURL,
+                      fileManager: fileManager,
+                      removeLegacyArtwork: false
+                  ) else { continue }
+            profiles[index].catalogPath = portableRoot.path
+            migratedIndices.append(index)
+        }
+        // The old artwork store was shared by every profile. Copy it to every
+        // reachable portable library first, then remove only verified matches.
+        if migratedIndices.count == orderedIndices.count,
+           let activeIndex,
+           let portableRoot = try? PortableLibraryStorage.migrateLegacyStateIfNeeded(
+               from: profiles[activeIndex].catalogURL,
+               to: profiles[activeIndex].mediaURL,
+               fileManager: fileManager,
+               removeLegacyArtwork: true
+           ) {
+            profiles[activeIndex].catalogPath = portableRoot.path
         }
     }
 }

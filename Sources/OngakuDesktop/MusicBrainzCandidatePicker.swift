@@ -99,6 +99,21 @@ struct MusicBrainzCandidatePicker: View {
                 Text(candidate.title)
                     .font(.headline)
                     .lineLimit(1)
+                if let badgeKey = matchBadgeKey(candidate) {
+                    Text(L10n.text(badgeKey))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(
+                            candidate.matchKind == .titleAlbumMatch
+                                ? AppTheme.good : AppTheme.warning
+                        )
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            (candidate.matchKind == .titleAlbumMatch
+                                ? AppTheme.good : AppTheme.warning).opacity(0.10),
+                            in: Capsule()
+                        )
+                }
                 Spacer()
                 Text(candidate.confidence, format: .percent.precision(.fractionLength(0)))
                     .font(.caption.monospacedDigit().bold())
@@ -279,8 +294,16 @@ struct MusicBrainzCandidatePicker: View {
             L10n.format("musicbrainz.hint.title", referenceTrack.title)
         case .albumHint:
             L10n.format("musicbrainz.hint.album", referenceTrack.album)
-        case .isrc, .metadata:
+        case .isrc, .titleAlbumMatch, .metadata:
             nil
+        }
+    }
+
+    private func matchBadgeKey(_ candidate: MusicBrainzCandidate) -> String? {
+        switch candidate.matchKind {
+        case .titleAlbumMatch: "musicbrainz.match.titleAlbum"
+        case .titleHint: "musicbrainz.match.title"
+        case .isrc, .metadata, .albumHint: nil
         }
     }
 
