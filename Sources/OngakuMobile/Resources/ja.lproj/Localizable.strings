@@ -43,3 +43,6 @@
 "mobile.transfer.pause" = "転送を一時停止";
 "mobile.transfer.resume" = "転送を再開";
 "mobile.transfer.cancel" = "転送をキャンセル";
+"deviceReceivedLibrary.error.corruptManifest" = "モバイルライブラリのカタログが破損し、有効なバックアップもありません。";
+"deviceReceivedLibrary.error.invalidFileName" = "受信したファイル名が無効です。";
+"deviceReceivedLibrary.error.verificationFailed" = "受信したファイルの整合性を確認できませんでした。";

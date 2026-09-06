@@ -208,12 +208,18 @@ final class LibraryStore: ObservableObject {
         if filterCriteria.activeCount > 0 {
             result = result.filter(filterCriteria.matches)
         }
-        guard !searchText.isEmpty else { return result }
-        let normalizedQuery = CatalogSearch.normalize(searchText)
+        let normalizedQuery = Self.normalizedSearchQuery(searchText)
+        guard !normalizedQuery.isEmpty else { return result }
         if indexedSearchQuery == normalizedQuery, let indexedSearchTrackIDs {
             return result.filter { indexedSearchTrackIDs.contains($0.id) }
         }
-        return result.filter { CatalogSearch.matches($0, query: searchText) }
+        return []
+    }
+
+    var isLocalSearchPending: Bool {
+        let normalizedQuery = Self.normalizedSearchQuery(searchText)
+        guard !normalizedQuery.isEmpty else { return false }
+        return indexedSearchQuery != normalizedQuery || indexedSearchTrackIDs == nil
     }
 
     var totalBytes: Int64 { tracks.reduce(0) { $0 + $1.fileSize } }
@@ -2821,6 +2827,7 @@ final class LibraryStore: ObservableObject {
                       self.contentRevision == expectedRevision else { return }
                 guard parity.isMatch else {
                     self.searchBackendStatus = .jsonFallback
+                    self.scheduleIndexedSearch()
                     return
                 }
                 self.searchBackendStatus = .sqlite
@@ -2829,43 +2836,86 @@ final class LibraryStore: ObservableObject {
                 guard !Task.isCancelled, let self,
                       self.contentRevision == expectedRevision else { return }
                 self.searchBackendStatus = .jsonFallback
+                self.scheduleIndexedSearch()
             }
         }
     }
 
     private func scheduleIndexedSearch() {
         indexedSearchTask?.cancel()
-        let normalizedQuery = CatalogSearch.normalize(searchText)
+        let normalizedQuery = Self.normalizedSearchQuery(searchText)
         guard !normalizedQuery.isEmpty else {
             indexedSearchTrackIDs = nil
             indexedSearchQuery = nil
             return
         }
-        guard searchBackendStatus == .sqlite else {
-            indexedSearchTrackIDs = nil
-            indexedSearchQuery = nil
-            return
-        }
-
         let expectedRevision = contentRevision
         let resultLimit = max(tracks.count, 1)
         let query = searchText
+        let fallbackTracks = tracks
+        guard searchBackendStatus == .sqlite else {
+            indexedSearchTrackIDs = nil
+            indexedSearchQuery = nil
+            indexedSearchTask = Task { [weak self] in
+                guard let ids = await Self.fallbackSearchIDs(
+                    in: fallbackTracks,
+                    query: query
+                ), !Task.isCancelled, let self,
+                      self.contentRevision == expectedRevision,
+                      Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
+                self.indexedSearchTrackIDs = ids
+                self.indexedSearchQuery = normalizedQuery
+            }
+            return
+        }
+
         indexedSearchTask = Task { [weak self, searchIndex] in
             do {
                 let ids = try await searchIndex.search(query, limit: resultLimit)
                 guard !Task.isCancelled, let self,
                       self.contentRevision == expectedRevision,
-                      CatalogSearch.normalize(self.searchText) == normalizedQuery else { return }
+                      Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
                 self.indexedSearchTrackIDs = Set(ids)
                 self.indexedSearchQuery = normalizedQuery
             } catch {
                 guard !Task.isCancelled, let self,
                       self.contentRevision == expectedRevision else { return }
-                self.indexedSearchTrackIDs = nil
-                self.indexedSearchQuery = nil
                 self.searchBackendStatus = .jsonFallback
+                guard let ids = await Self.fallbackSearchIDs(
+                    in: fallbackTracks,
+                    query: query
+                ), !Task.isCancelled,
+                      self.contentRevision == expectedRevision,
+                      Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
+                self.indexedSearchTrackIDs = ids
+                self.indexedSearchQuery = normalizedQuery
             }
         }
+    }
+
+    private nonisolated static func fallbackSearchIDs(
+        in tracks: [Track],
+        query: String
+    ) async -> Set<Track.ID>? {
+        let task = Task.detached(priority: .userInitiated) { () -> Set<Track.ID>? in
+            var result = Set<Track.ID>()
+            for track in tracks {
+                guard !Task.isCancelled else { return nil }
+                if CatalogSearch.matches(track, query: query) {
+                    result.insert(track.id)
+                }
+            }
+            return result
+        }
+        return await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
+    private nonisolated static func normalizedSearchQuery(_ query: String) -> String {
+        CatalogSearch.normalize(query.trimmingCharacters(in: .whitespacesAndNewlines))
     }
 
     private func parityQueries(for tracks: [Track]) -> [String] {

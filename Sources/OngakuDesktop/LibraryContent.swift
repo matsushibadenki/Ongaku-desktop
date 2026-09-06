@@ -2,24 +2,6 @@
 import AppKit
 import SwiftUI
 
-private struct TrackTableForegroundModifier: ViewModifier {
-    @Environment(\.controlActiveState) private var controlActiveState
-    let isSelected: Bool
-    let fallback: Color
-
-    func body(content: Content) -> some View {
-        content.foregroundStyle(
-            isSelected && controlActiveState == .key ? Color.white : fallback
-        )
-    }
-}
-
-private extension View {
-    func trackTableForeground(isSelected: Bool, fallback: Color) -> some View {
-        modifier(TrackTableForegroundModifier(isSelected: isSelected, fallback: fallback))
-    }
-}
-
 private struct MissingFileBadge: View {
     var body: some View {
         Label(L10n.text("library.missingFile.badge"), systemImage: "exclamationmark.triangle.fill")
@@ -178,6 +160,7 @@ struct LibraryContent: View {
     @EnvironmentObject private var trackTableSettings: TrackTableSettings
     @State private var sortOrder = [KeyPathComparator(\Track.title)]
     @State private var sortedTracks: [Track] = []
+    @FocusState private var isTrackTableFocused: Bool
     @State private var tableSelectedTrackIDs: Set<Track.ID> = []
     @State private var isSortingTracks = false
     @State private var trackSortTask: Task<Void, Never>?
@@ -189,6 +172,7 @@ struct LibraryContent: View {
     @State private var unifiedSearchTask: Task<Void, Never>?
     @State private var pendingDeletion: LibraryDeletionRequest?
     @State private var deletionErrorMessage: String?
+    @State private var selectedEffectTab: AudioEffectPageTab = .basic
 
     var body: some View {
         VStack(spacing: 0) {
@@ -289,7 +273,15 @@ struct LibraryContent: View {
     private var unifiedSearchContent: some View {
         VSplitView {
             Group {
-                if library.filteredTracks.isEmpty {
+                if library.isLocalSearchPending {
+                    VStack(spacing: 10) {
+                        ProgressView()
+                        Text(L10n.text("unifiedSearch.localSearching"))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.horizontal, 16)
+                } else if library.filteredTracks.isEmpty {
                     ContentUnavailableView(
                         L10n.text("unifiedSearch.localEmpty"),
                         systemImage: "music.note"
@@ -533,7 +525,7 @@ struct LibraryContent: View {
         case .duplicates:
             DuplicateLibraryView(groups: library.filteredDuplicateGroups)
         case .effects:
-            EffectsRackView()
+            EffectsRackView(selectedTab: $selectedEffectTab)
         }
     }
 
@@ -599,7 +591,8 @@ struct LibraryContent: View {
 
     private var headerSubtitle: String {
         if library.selectedPlaylist == nil && library.selectedSection == .effects {
-            return L10n.format("effects.enabledCount", player.enabledEffectCount, player.effectSettings.count)
+            let summary = player.effectCountSummary(for: selectedEffectTab)
+            return L10n.format("effects.enabledCount", summary.enabled, summary.total)
         }
         return L10n.format("library.visibleCount", library.filteredTracks.count)
     }
@@ -827,38 +820,21 @@ struct LibraryContent: View {
             TableColumn(L10n.text("column.title"), value: \.title) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
-                        .trackTableForeground(
-                            isSelected: library.selectedTrackIDs.contains(track.id),
-                            fallback: player.currentTrack?.id == track.id
-                                ? AppTheme.accent : AppTheme.secondaryInk
-                        )
                         .frame(width: 16)
                         .draggable(dragPayload(for: track))
                     Text(track.title)
                         .lineLimit(1)
-                        .trackTableForeground(
-                            isSelected: library.selectedTrackIDs.contains(track.id),
-                            fallback: track.health == .missing ? AppTheme.danger : AppTheme.ink
-                        )
                     if track.health == .missing {
                         MissingFileBadge()
                     }
                     if track.isPinned {
                         Image(systemName: "pin.fill")
                             .font(.caption)
-                            .trackTableForeground(
-                                isSelected: library.selectedTrackIDs.contains(track.id),
-                                fallback: AppTheme.secondaryInk
-                            )
                             .accessibilityLabel(L10n.text("sidebar.pinned"))
                     }
                     if track.isFavorite {
                         Image(systemName: "heart.fill")
                             .font(.caption)
-                            .trackTableForeground(
-                                isSelected: library.selectedTrackIDs.contains(track.id),
-                                fallback: AppTheme.accent
-                            )
                             .accessibilityLabel(L10n.text("track.favorite"))
                     }
                     Spacer(minLength: 0)
@@ -938,7 +914,7 @@ struct LibraryContent: View {
                     HealthLabel(
                         health: track.health,
                         compact: true,
-                        isSelected: library.selectedTrackIDs.contains(track.id)
+                        usesTableStyle: true
                     )
                     Spacer(minLength: 0)
                 }
@@ -995,6 +971,7 @@ struct LibraryContent: View {
                 .allowsHitTesting(false)
             }
         }
+        .focused($isTrackTableFocused)
         .task(id: trackSortRequest) {
             startTrackSort()
         }
@@ -1029,6 +1006,7 @@ struct LibraryContent: View {
         TapGesture(count: 1).onEnded {
             let modifiers = NSEvent.modifierFlags.intersection([.command, .shift, .control])
             guard modifiers.isEmpty else { return }
+            isTrackTableFocused = true
             tableSelectedTrackIDs = [trackID]
         }
     }
@@ -1937,7 +1915,46 @@ private struct AlbumGrid: View {
     }
 }
 
+private extension View {
+    func detailTrackSelection(_ id: Track.ID, selection: Binding<Track.ID?>, focus: FocusState<Bool>.Binding) -> some View {
+        frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 2)
+            .contentShape(Rectangle())
+            .simultaneousGesture(TapGesture().onEnded {
+                guard NSEvent.modifierFlags.intersection([.command, .shift, .control]).isEmpty else { return }
+                focus.wrappedValue = true
+                selection.wrappedValue = id
+            })
+    }
+}
+
+private struct DetailTableSelectionSync: ViewModifier {
+    let visibleIDs: [Track.ID]
+    @Binding var selection: Track.ID?
+    @Binding var focusedID: Track.ID?
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear { synchronizeFocus() }
+            .onChange(of: visibleIDs) { _, _ in synchronizeFocus() }
+            .onChange(of: focusedID) { _, _ in synchronizeFocus() }
+            .onChange(of: selection) { _, id in
+                // A table being replaced or showing a different album can emit
+                // nil. Do not let that clear another table's focused track.
+                guard let id, visibleIDs.contains(id), focusedID != id else { return }
+                focusedID = id
+            }
+    }
+
+    private func synchronizeFocus() {
+        let next = focusedID.flatMap { visibleIDs.contains($0) ? $0 : nil }
+        if selection != next { selection = next }
+    }
+}
+
 private struct AlbumDetail: View {
+    @FocusState private var isTrackTableFocused: Bool
+    @State private var tableSelection: Track.ID?
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
 
@@ -2050,36 +2067,26 @@ private struct AlbumDetail: View {
     private var trackTable: some View {
         Table(
             album.sortedTracks,
-            selection: Binding(
-                get: { library.selectedTrackID },
-                set: { library.selectedTrackID = $0 }
-            )
+            selection: $tableSelection
         ) {
             TableColumn(L10n.text("column.title")) { track in
                 HStack(spacing: 10) {
                     Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
-                        .trackTableForeground(
-                            isSelected: library.selectedTrackID == track.id,
-                            fallback: player.currentTrack?.id == track.id
-                                ? AppTheme.accent : AppTheme.secondaryInk
-                        )
                         .frame(width: 16)
                     Text(track.title)
                         .lineLimit(1)
-                        .trackTableForeground(
-                            isSelected: library.selectedTrackID == track.id,
-                            fallback: track.health == .missing ? AppTheme.danger : AppTheme.ink
-                        )
                     if track.health == .missing {
                         MissingFileBadge()
                     }
                 }
+                .detailTrackSelection(track.id, selection: $tableSelection, focus: $isTrackTableFocused)
             }
             .width(min: 260, ideal: 380)
 
             TableColumn(L10n.text("column.duration")) { track in
                 Text(DurationFormatter.string(track.duration))
                     .font(.callout.monospacedDigit())
+                    .detailTrackSelection(track.id, selection: $tableSelection, focus: $isTrackTableFocused)
             }
             .width(min: 68, ideal: 76)
 
@@ -2087,11 +2094,18 @@ private struct AlbumDetail: View {
                 HealthLabel(
                     health: track.health,
                     compact: true,
-                    isSelected: library.selectedTrackID == track.id
+                    usesTableStyle: true
                 )
+                .detailTrackSelection(track.id, selection: $tableSelection, focus: $isTrackTableFocused)
             }
             .width(min: 64, ideal: 72)
         }
+        .focused($isTrackTableFocused)
+        .modifier(DetailTableSelectionSync(
+            visibleIDs: album.sortedTracks.map(\.id),
+            selection: $tableSelection,
+            focusedID: Binding(get: { library.selectedTrackID }, set: { library.selectedTrackID = $0 })
+        ))
         .contextMenu(forSelectionType: Track.ID.self) { selection in
             if let track = album.sortedTracks.first(where: { selection.contains($0.id) }) {
                 Button(L10n.text("track.play")) {
@@ -2285,6 +2299,8 @@ private struct ArtistInitialIndex: View {
 }
 
 private struct ArtistDetail: View {
+    @FocusState private var isTrackTableFocused: Bool
+    @State private var tableSelection: Track.ID?
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
 
@@ -2454,42 +2470,33 @@ private struct ArtistDetail: View {
 
             Table(
                 artist.sortedTracks,
-                selection: Binding(
-                    get: { library.selectedTrackID },
-                    set: { library.selectedTrackID = $0 }
-                )
+                selection: $tableSelection
             ) {
                 TableColumn(L10n.text("column.title")) { track in
                     HStack(spacing: 10) {
                         Image(systemName: player.currentTrack?.id == track.id && player.isPlaying ? "speaker.wave.2.fill" : "music.note")
-                            .trackTableForeground(
-                                isSelected: library.selectedTrackID == track.id,
-                                fallback: player.currentTrack?.id == track.id
-                                    ? AppTheme.accent : AppTheme.secondaryInk
-                            )
                             .frame(width: 16)
                         Text(track.title)
                             .lineLimit(1)
-                            .trackTableForeground(
-                                isSelected: library.selectedTrackID == track.id,
-                                fallback: track.health == .missing ? AppTheme.danger : AppTheme.ink
-                            )
                         if track.health == .missing {
                             MissingFileBadge()
                         }
                     }
+                    .detailTrackSelection(track.id, selection: $tableSelection, focus: $isTrackTableFocused)
                 }
                 .width(min: 220, ideal: 300)
 
                 TableColumn(L10n.text("column.album")) { track in
                     Text(track.album)
                         .lineLimit(1)
+                        .detailTrackSelection(track.id, selection: $tableSelection, focus: $isTrackTableFocused)
                 }
                 .width(min: 150, ideal: 210)
 
                 TableColumn(L10n.text("column.duration")) { track in
                     Text(DurationFormatter.string(track.duration))
                         .font(.callout.monospacedDigit())
+                        .detailTrackSelection(track.id, selection: $tableSelection, focus: $isTrackTableFocused)
                 }
                 .width(min: 68, ideal: 76)
 
@@ -2497,11 +2504,18 @@ private struct ArtistDetail: View {
                     HealthLabel(
                         health: track.health,
                         compact: true,
-                        isSelected: library.selectedTrackID == track.id
+                        usesTableStyle: true
                     )
+                    .detailTrackSelection(track.id, selection: $tableSelection, focus: $isTrackTableFocused)
                 }
                 .width(min: 64, ideal: 72)
             }
+            .focused($isTrackTableFocused)
+            .modifier(DetailTableSelectionSync(
+                visibleIDs: artist.sortedTracks.map(\.id),
+                selection: $tableSelection,
+                focusedID: Binding(get: { library.selectedTrackID }, set: { library.selectedTrackID = $0 })
+            ))
             .contextMenu(forSelectionType: Track.ID.self) { selection in
                 if let track = artist.sortedTracks.first(where: { selection.contains($0.id) }) {
                     Button(L10n.text("track.play")) {

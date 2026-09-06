@@ -19,6 +19,20 @@ private func makeNowPlayingArtwork(
     MPMediaItemArtwork(boundsSize: box.image.size) { _ in box.image }
 }
 
+/// Combine does not express actor isolation in its `sink` contract. Building
+/// the callback outside the MainActor prevents Swift from attaching a main
+/// executor precondition to a closure that Combine may invoke through an
+/// Objective-C scheduler. Every notification then enters MainActor explicitly.
+func makeNowPlayingSyncHandler<Output>(
+    for controller: SystemNowPlayingController
+) -> @Sendable (Output) -> Void {
+    { [weak controller] _ in
+        Task { @MainActor [weak controller] in
+            controller?.publisherDidChange()
+        }
+    }
+}
+
 struct SystemNowPlayingSnapshot: Equatable, Sendable {
     let trackID: Track.ID
     let title: String
@@ -102,17 +116,11 @@ final class SystemNowPlayingController: ObservableObject {
             player.$isPlaying,
             player.$queueState
         )
-        .receive(on: RunLoop.main)
-        .sink { [weak self] _, _, _ in
-            self?.synchronize()
-        }
+        .sink(receiveValue: makeNowPlayingSyncHandler(for: self))
         .store(in: &observations)
 
         appleMusicPlayback.$state
-            .receive(on: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.synchronize()
-            }
+            .sink(receiveValue: makeNowPlayingSyncHandler(for: self))
             .store(in: &observations)
 
         // Control Center advances elapsed time from the playback rate. A
@@ -120,15 +128,17 @@ final class SystemNowPlayingController: ObservableObject {
         // sync without replacing the full metadata dictionary four times/sec.
         player.$elapsed
             .throttle(for: .seconds(1), scheduler: RunLoop.main, latest: true)
-            .sink { [weak self] _ in
-                self?.synchronize()
-            }
+            .sink(receiveValue: makeNowPlayingSyncHandler(for: self))
             .store(in: &observations)
 
         synchronize()
     }
 
     func activate() {
+        synchronize()
+    }
+
+    fileprivate func publisherDidChange() {
         synchronize()
     }
 

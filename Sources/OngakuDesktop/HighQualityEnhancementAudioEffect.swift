@@ -141,7 +141,7 @@ final class HighQualityEnhancementAudioEffect: AudioEffectNode {
         harmonicAirEQ.bypass = false
 
         // Keep the synthesized branch subtle to avoid harshness and clipping.
-        harmonicMixer.outputVolume = Float(min(0.24, 0.045 + intensity * (0.12 + harmonic * 0.10)))
+        harmonicMixer.outputVolume = Float(min(0.24, intensityCurve * (0.165 + harmonic * 0.10)))
         dryMixer.outputVolume = 1
         outputMixer.outputVolume = 1
 
@@ -187,19 +187,19 @@ final class HighQualityEnhancementAudioEffect: AudioEffectNode {
         cabinetEQ.bands[6].gain = -Float((0.30 + loudnessCurve * 1.4 + cabinetResonanceCurve * 0.24 - hardnessBoost * 0.4) * intensityCurve)
 
         masterEQ.bands[0].frequency = 85
-        masterEQ.bands[0].gain = -Float((1 - warmth) * 0.8)
+        masterEQ.bands[0].gain = -Float((1 - warmth) * 0.8) * Float(intensityCurve)
         masterEQ.bands[0].filterType = .lowShelf
         masterEQ.bands[0].bypass = abs(masterEQ.bands[0].gain) < 0.01
         masterEQ.bands[1].frequency = 2_000
-        masterEQ.bands[1].gain = Float((warmth - 0.5) * 0.8)
+        masterEQ.bands[1].gain = Float((warmth - 0.5) * 0.8) * Float(intensityCurve)
         masterEQ.bands[1].filterType = .parametric
         masterEQ.bands[1].bypass = abs(masterEQ.bands[1].gain) < 0.01
         masterEQ.bands[2].frequency = 9_000
-        masterEQ.bands[2].gain = Float((air - 0.5) * 2.0)
+        masterEQ.bands[2].gain = Float((air - 0.5) * 2.0) * Float(intensityCurve)
         masterEQ.bands[2].filterType = .parametric
         masterEQ.bands[2].bypass = abs(masterEQ.bands[2].gain) < 0.01
         masterEQ.bands[3].frequency = 16_000
-        masterEQ.bands[3].gain = Float(air * 1.8)
+        masterEQ.bands[3].gain = Float(air * 1.8) * Float(intensityCurve)
         masterEQ.bands[3].filterType = .highShelf
         masterEQ.bands[3].bypass = air < 0.01
 

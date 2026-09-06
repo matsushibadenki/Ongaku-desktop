@@ -587,6 +587,115 @@ struct LibraryRepositoryTests {
         #expect(reloaded.tracks[0].title == "First Edited")
     }
 
+    @Test("Queue positions and playback events do not rewrite the track catalog")
+    func playbackSidecarsAvoidCatalogRewrites() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let track = Track(
+            id: UUID(), title: "Sidecar", artist: "Artist", album: "Album", duration: 120,
+            fileSize: 1, managedPath: "/tmp/sidecar.m4a", sha256: "sidecar",
+            addedAt: .now, lastVerifiedAt: nil, health: .unchecked
+        )
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(tracks: [track])
+        let manifestURL = root.appendingPathComponent("library-v1.json")
+        let catalogBeforePlayback = try Data(contentsOf: manifestURL)
+
+        let queue = PlaybackQueueState(
+            trackIDs: [track.id],
+            currentTrackID: track.id,
+            position: 42.5
+        )
+        let event = PlaybackEvent(trackID: track.id, kind: .completed)
+        try await repository.save(playbackQueue: queue)
+        try await repository.recordPlaybackEvent(event)
+
+        #expect(try Data(contentsOf: manifestURL) == catalogBeforePlayback)
+        #expect(FileManager.default.fileExists(
+            atPath: root.appendingPathComponent("playback-queue-v1.json").path
+        ))
+        #expect(FileManager.default.fileExists(
+            atPath: root.appendingPathComponent("playback-events-v1.json").path
+        ))
+        let reloaded = try await LibraryRepository(rootURL: root).load().document
+        #expect(reloaded.playbackQueue == queue)
+        #expect(reloaded.playbackEvents.map(\.id) == [event.id])
+        #expect(reloaded.playbackEvents.map(\.kind) == [event.kind])
+    }
+
+    @Test("A playback sidecar is ignored when it belongs to another library")
+    func playbackSidecarsRespectLibraryIdentity() async throws {
+        let firstRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Sidecar-First-\(UUID().uuidString)")
+        let secondRoot = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Sidecar-Second-\(UUID().uuidString)")
+        defer {
+            try? FileManager.default.removeItem(at: firstRoot)
+            try? FileManager.default.removeItem(at: secondRoot)
+        }
+        let firstTrack = Track(
+            id: UUID(), title: "First", artist: "Artist", album: "Album", duration: 60,
+            fileSize: 1, managedPath: "/tmp/first-sidecar.m4a", sha256: "first-sidecar",
+            addedAt: .now, health: .unchecked
+        )
+        let secondTrack = Track(
+            id: UUID(), title: "Second", artist: "Artist", album: "Album", duration: 60,
+            fileSize: 1, managedPath: "/tmp/second-sidecar.m4a", sha256: "second-sidecar",
+            addedAt: .now, health: .unchecked
+        )
+        let firstRepository = LibraryRepository(rootURL: firstRoot)
+        let secondRepository = LibraryRepository(rootURL: secondRoot)
+        try await firstRepository.save(tracks: [firstTrack])
+        try await secondRepository.save(tracks: [secondTrack])
+        try await firstRepository.save(playbackQueue: PlaybackQueueState(
+            trackIDs: [firstTrack.id], currentTrackID: firstTrack.id, position: 30
+        ))
+
+        try FileManager.default.copyItem(
+            at: firstRoot.appendingPathComponent("playback-queue-v1.json"),
+            to: secondRoot.appendingPathComponent("foreign-playback-queue.json")
+        )
+        try FileManager.default.removeItem(
+            at: secondRoot.appendingPathComponent("playback-queue-v1.json")
+        )
+        try FileManager.default.moveItem(
+            at: secondRoot.appendingPathComponent("foreign-playback-queue.json"),
+            to: secondRoot.appendingPathComponent("playback-queue-v1.json")
+        )
+
+        let firstLibraryID = try await firstRepository.load().document.libraryID
+        let reloaded = try await LibraryRepository(rootURL: secondRoot).load().document
+        #expect(reloaded.libraryID != firstLibraryID)
+        #expect(reloaded.playbackQueue == nil)
+    }
+
+    @Test("A corrupt playback queue sidecar recovers its previous valid state")
+    func playbackQueueSidecarRecoversBackup() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let track = Track(
+            id: UUID(), title: "Recovery", artist: "Artist", album: "Album", duration: 60,
+            fileSize: 1, managedPath: "/tmp/recovery.m4a", sha256: "recovery",
+            addedAt: .now, health: .unchecked
+        )
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(tracks: [track])
+        let previous = PlaybackQueueState(
+            trackIDs: [track.id], currentTrackID: track.id, position: 12
+        )
+        try await repository.save(playbackQueue: previous)
+        try await repository.save(playbackQueue: PlaybackQueueState(
+            trackIDs: [track.id], currentTrackID: track.id, position: 48
+        ))
+        try Data("corrupt".utf8).write(
+            to: root.appendingPathComponent("playback-queue-v1.json"),
+            options: .atomic
+        )
+
+        let recovered = try await LibraryRepository(rootURL: root).load().document
+        #expect(recovered.playbackQueue == previous)
+    }
+
     @Test("A future schema is never replaced with an older backup")
     func rejectsFutureSchemaWithoutDowngrade() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

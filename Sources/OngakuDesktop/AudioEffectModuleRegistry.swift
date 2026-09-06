@@ -44,6 +44,11 @@ struct AudioEffectModuleDescriptor {
     }
 }
 
+struct AudioEffectCountSummary: Equatable, Sendable {
+    let enabled: Int
+    let total: Int
+}
+
 @MainActor
 enum AudioEffectModuleRegistry {
     /// The order here is the signal-flow order.
@@ -106,6 +111,18 @@ enum AudioEffectModuleRegistry {
     static func activeKinds(for pageTab: AudioEffectPageTab) -> Set<RealtimeAudioEffectKind> {
         guard pageTab != .off else { return [] }
         return Set(activeModules.lazy.filter { $0.pageTab == pageTab }.map(\.kind))
+    }
+
+    static func countSummary(
+        for pageTab: AudioEffectPageTab,
+        settings: [RealtimeAudioEffectSetting],
+        effectsBypassed: Bool
+    ) -> AudioEffectCountSummary {
+        let kinds = activeKinds(for: pageTab)
+        let enabled = effectsBypassed ? 0 : settings.count { setting in
+            setting.isEnabled && kinds.contains(setting.kind)
+        }
+        return AudioEffectCountSummary(enabled: enabled, total: kinds.count)
     }
 
     static func makePipeline() -> [AudioEffectNode] {

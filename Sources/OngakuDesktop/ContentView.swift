@@ -152,7 +152,19 @@ struct ContentView: View {
             )
         }
         .toolbar {
-            ToolbarItemGroup {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        columnVisibility = columnVisibility == .all ? .doubleColumn : .all
+                    }
+                } label: {
+                    Label(L10n.text("toolbar.sidebarToggleHelp"), systemImage: "sidebar.left")
+                }
+                .accessibilityIdentifier("main.toggle-sidebar")
+                .help(L10n.text("toolbar.sidebarToggleHelp"))
+            }
+
+            ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     presentMusicImportPanel()
                 } label: {
@@ -319,18 +331,24 @@ struct ContentView: View {
 
     private var navigationContent: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
+            // Each column owns toolbar preferences; removing the default item
+            // only outside the split view leaves its automatic toggle visible.
             LibrarySidebar()
+                .toolbar(removing: .sidebarToggle)
                 .frame(maxHeight: .infinity)
                 .navigationSplitViewColumnWidth(min: 220, ideal: 240, max: 300)
         } content: {
             LibraryContent()
+                .toolbar(removing: .sidebarToggle)
                 .frame(maxHeight: .infinity)
                 .navigationSplitViewColumnWidth(min: 660, ideal: 760)
         } detail: {
             TrackInspector()
+                .toolbar(removing: .sidebarToggle)
                 .frame(maxHeight: .infinity)
                 .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)
         }
+        .toolbar(removing: .sidebarToggle)
     }
 
     private var dropImportOverlay: some View {

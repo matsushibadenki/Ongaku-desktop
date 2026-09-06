@@ -194,23 +194,9 @@ final class OptoFETAudioEffect: AudioEffectNode {
         releaseMs: Float,
         masterGainDB: Float
     ) {
-        guard let parameters = unit.auAudioUnit.parameterTree?.allParameters else { return }
-        for parameter in parameters {
-            let key = "\(parameter.identifier) \(parameter.displayName)".lowercased()
-            if key.contains("threshold") {
-                parameter.value = thresholdDB
-            } else if key.contains("head") && key.contains("room") {
-                parameter.value = headroomDB
-            } else if key.contains("attack") {
-                parameter.value = attackMs
-            } else if key.contains("decay") || key.contains("release") {
-                parameter.value = releaseMs
-            } else if key.contains("master") && key.contains("gain") {
-                parameter.value = masterGainDB
-            } else if key.contains("expansion") && key.contains("ratio") {
-                parameter.value = 1.0
-            }
-        }
+        EffectDynamicsParameters.apply(to: unit, thresholdDB: thresholdDB,
+            headroomDB: headroomDB, attackMs: attackMs,
+            releaseMs: releaseMs, masterGainDB: masterGainDB)
     }
 
     private func clamped(_ value: Double?, defaultValue: Double) -> Double {

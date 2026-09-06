@@ -4,6 +4,8 @@
 "command.playback" = "再生";
 "command.automaticUpsampling" = "最大384 kHzへ自動アップサンプリング";
 "toolbar.importHelp" = "音楽ファイルをライブラリへ読み込みます";
+"toolbar.sidebarToggleHelp" = "サイドバーを表示または非表示にします";
+"storage.migration.failed" = "ライブラリの移行を完了できませんでした。フォルダのアクセス権と空き容量を確認して、アプリを再起動してください。既存データは保持されています。";
 "command.importCD" = "CDから読み込む…";
 "toolbar.importCDHelp" = "オーディオCDの楽曲をライブラリへ読み込みます";
 "command.importURL" = "URLから読み込む…";
@@ -263,6 +265,7 @@
 "appleMusic.error.rateLimited" = "Apple Musicへのリクエストが多すぎます。しばらく待ってから再試行してください。";
 "appleMusic.error.server" = "Apple Musicで処理を完了できませんでした。再試行してください。";
 "unifiedSearch.localEmpty" = "一致するローカル曲がありません";
+"unifiedSearch.localSearching" = "ライブラリを検索しています…";
 "unifiedSearch.appleMusic" = "Apple Musicの検索結果";
 "unifiedSearch.authorizationTitle" = "Apple Music検索が無効です";
 "unifiedSearch.authorizationMessage" = "カタログと同期ライブラリの結果を含めるには、Apple Musicへのアクセスを許可してください。";
@@ -617,6 +620,8 @@
 "lyrics.editor.invalidLRC" = "有効なLRCタイムスタンプが見つかりません。";
 "lyrics.editor.lineCount" = "%d行の同期歌詞";
 "lrclib.search" = "LRCLIBで検索";
+"lrclib.search.placeholder" = "曲名、アーティスト名、アルバム名で検索";
+"lrclib.search.currentSong" = "現在の楽曲情報で検索";
 "lrclib.noResults" = "LRCLIBに利用可能な歌詞候補がありませんでした。";
 "lrclib.error.invalidResponse" = "LRCLIBから読み取れない応答が返されました。";
 "lrclib.error.rateLimited" = "LRCLIBが一時的にリクエストを制限しています。しばらくしてから再試行してください。";
@@ -1195,3 +1200,10 @@
 "deviceSync.audit.conflict.playlistTracksUnmatched" = "一致しない曲を含むプレイリスト";
 "deviceSync.audit.conflict.playlistTracksAmbiguous" = "複数候補の曲を含むプレイリスト";
 "deviceSync.audit.conflict.playlistSmartCollision" = "スマートプレイリストとIDが競合";
+"deviceReceivedLibrary.error.corruptManifest" = "モバイルライブラリのカタログが破損し、有効なバックアップもありません。";
+"deviceReceivedLibrary.error.invalidFileName" = "受信したファイル名が無効です。";
+"deviceReceivedLibrary.error.verificationFailed" = "受信したファイルの整合性を確認できませんでした。";
+"appStoreUpdate.title" = "新しいバージョンがあります";
+"appStoreUpdate.message" = "Ongaku Desktop %@がApp Storeで公開されています。今すぐアップデートしますか？";
+"appStoreUpdate.update" = "App Storeを開く";
+"appStoreUpdate.later" = "あとで";

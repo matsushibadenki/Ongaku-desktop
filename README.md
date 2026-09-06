@@ -22,7 +22,7 @@ Ongaku Desktop is a native macOS music manager and player. It aims to cover the 
 
 ## Run
 
-Open `OngakuDesktop.xcodeproj` in Xcode, select the `OngakuDesktop` scheme and the `My Mac` destination, then run. The project is intentionally macOS-only with a macOS 14 deployment target.
+Open `OngakuDesktop.xcodeproj` in Xcode, select the `OngakuDesktop` scheme and the `My Mac` destination, then run. The desktop app targets macOS 14 and later. The Xcode project also contains an `OngakuMobile` iOS sync companion target; the Swift package builds the desktop app and its tests.
 
 For command-line development you can also use:
 
@@ -62,3 +62,14 @@ and restores only entries whose content still matches the recorded checksum. Par
 incoming copies are discarded without modifying source files.
 
 This is a strong local baseline, not a backup strategy. Keep an independent backup of the managed `Media` directory.
+
+## Development direction
+
+The [roadmap](docs/ROADMAP.md) is the source of development priorities.
+The [September 5 architecture review](docs/ARCHITECTURE_REVIEW_2026-09-05.md)
+and [ADR-0003](docs/adr/0003-stabilization-and-component-boundaries.md) prioritize
+safe persistence, large-library responsiveness, and release qualification before
+further feature expansion. Implemented features and verified release readiness
+are tracked separately. The Mobile companion now commits and verifies its manifest
+before acknowledging a transfer; physical-device interruption testing remains part
+of release qualification.

@@ -43,3 +43,6 @@
 "mobile.transfer.pause" = "Pause transfer";
 "mobile.transfer.resume" = "Resume transfer";
 "mobile.transfer.cancel" = "Cancel transfer";
+"deviceReceivedLibrary.error.corruptManifest" = "The mobile library catalog is damaged and no valid backup is available.";
+"deviceReceivedLibrary.error.invalidFileName" = "The received file name is invalid.";
+"deviceReceivedLibrary.error.verificationFailed" = "The received file did not pass integrity verification.";

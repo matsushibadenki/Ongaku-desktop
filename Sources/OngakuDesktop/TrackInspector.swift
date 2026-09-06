@@ -340,6 +340,7 @@ private struct LyricsEditorView: View {
     @State private var onlineLyrics: TrackLyrics?
     @State private var onlineTextSnapshot: String?
     @State private var onlineCandidates: [LRCLIBCandidate] = []
+    @State private var onlineSearchQuery: String
     @State private var isShowingOnlineCandidates = false
     @State private var isSearchingOnline = false
     @State private var isImporting = false
@@ -348,6 +349,11 @@ private struct LyricsEditorView: View {
 
     init(track: Track) {
         self.track = track
+        _onlineSearchQuery = State(
+            initialValue: [track.title, track.artist]
+                .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                .joined(separator: " ")
+        )
         if let lyrics = track.lyrics, lyrics.isSynced {
             let serialized = LRCParser.serialize(lyrics.syncedLines)
             _mode = State(initialValue: .synced)
@@ -390,6 +396,30 @@ private struct LyricsEditorView: View {
             }
             .pickerStyle(.segmented)
 
+            HStack(spacing: AppTheme.spaceSM) {
+                TextField(
+                    L10n.text("lrclib.search.placeholder"),
+                    text: $onlineSearchQuery
+                )
+                .textFieldStyle(.roundedBorder)
+                .onSubmit {
+                    guard canSearchOnline else { return }
+                    Task { await searchLRCLIB(query: onlineSearchQuery) }
+                }
+
+                Button {
+                    Task { await searchLRCLIB(query: onlineSearchQuery) }
+                } label: {
+                    if isSearchingOnline {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Label(L10n.text("lrclib.search"), systemImage: "magnifyingglass")
+                    }
+                }
+                .disabled(!canSearchOnline)
+            }
+            .accessibilityElement(children: .contain)
+
             TextEditor(text: $text)
                 .font(mode == .synced ? .body.monospaced() : .body)
                 .padding(AppTheme.spaceXS)
@@ -412,14 +442,8 @@ private struct LyricsEditorView: View {
                         .foregroundStyle(AppTheme.secondaryInk)
                 }
                 Spacer()
-                Button {
+                Button(L10n.text("lrclib.search.currentSong")) {
                     Task { await searchLRCLIB() }
-                } label: {
-                    if isSearchingOnline {
-                        ProgressView().controlSize(.small)
-                    } else {
-                        Label(L10n.text("lrclib.search"), systemImage: "globe")
-                    }
                 }
                 .disabled(isSearchingOnline)
                 Button(L10n.text("lyrics.editor.importLRC")) { isImporting = true }
@@ -474,6 +498,11 @@ private struct LyricsEditorView: View {
 
     private var trimmedText: String {
         text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSearchOnline: Bool {
+        !isSearchingOnline
+            && !onlineSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private var parsedLyrics: TrackLyrics? {
@@ -533,6 +562,29 @@ private struct LyricsEditorView: View {
         errorMessage = nil
         do {
             onlineCandidates = try await LRCLIBService.shared.candidates(for: track)
+            if onlineCandidates.isEmpty {
+                errorMessage = L10n.text("lrclib.noResults")
+            } else {
+                isShowingOnlineCandidates = true
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isSearchingOnline = false
+    }
+
+    @MainActor
+    private func searchLRCLIB(query: String) async {
+        guard !isSearchingOnline else { return }
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else { return }
+        isSearchingOnline = true
+        errorMessage = nil
+        do {
+            onlineCandidates = try await LRCLIBService.shared.candidates(
+                matching: trimmedQuery,
+                relativeTo: track
+            )
             if onlineCandidates.isEmpty {
                 errorMessage = L10n.text("lrclib.noResults")
             } else {
@@ -787,10 +839,9 @@ private extension LyricsSource {
 }
 
 struct HealthLabel: View {
-    @Environment(\.controlActiveState) private var controlActiveState
     let health: FileHealth
     let compact: Bool
-    var isSelected = false
+    var usesTableStyle = false
 
     private var color: Color {
         switch health {
@@ -803,6 +854,19 @@ struct HealthLabel: View {
 
     var body: some View {
         Group {
+            if usesTableStyle {
+                // Inherit the table's native selected/unselected foreground.
+                // Window activity alone does not indicate row emphasis.
+                label
+            } else {
+                label.foregroundStyle(color)
+            }
+        }
+        .accessibilityLabel(L10n.text(health.titleKey))
+    }
+
+    private var label: some View {
+        Group {
             if compact {
                 Label(L10n.text(health.titleKey), systemImage: health.symbol)
                     .labelStyle(.iconOnly)
@@ -811,9 +875,5 @@ struct HealthLabel: View {
                     .labelStyle(.titleAndIcon)
             }
         }
-        .foregroundStyle(
-            isSelected && controlActiveState == .key ? Color.white : color
-        )
-        .accessibilityLabel(L10n.text(health.titleKey))
     }
 }

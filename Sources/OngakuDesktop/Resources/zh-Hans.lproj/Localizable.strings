@@ -4,6 +4,8 @@
 "command.playback" = "播放";
 "command.automaticUpsampling" = "自动升频至最高384 kHz";
 "toolbar.importHelp" = "将音乐文件导入资料库";
+"toolbar.sidebarToggleHelp" = "显示或隐藏侧边栏";
+"storage.migration.failed" = "无法完成资料库迁移。请检查文件夹访问权限和可用空间，然后重新启动应用。现有数据已保留。";
 "command.importCD" = "从CD导入…";
 "toolbar.importCDHelp" = "将音频CD中的曲目导入资料库";
 "command.importURL" = "从URL导入…";
@@ -263,6 +265,7 @@
 "appleMusic.error.rateLimited" = "Apple Music请求过多。请稍候再试。";
 "appleMusic.error.server" = "Apple Music无法完成请求。请重试。";
 "unifiedSearch.localEmpty" = "没有匹配的本地歌曲";
+"unifiedSearch.localSearching" = "正在搜索资料库…";
 "unifiedSearch.appleMusic" = "Apple Music搜索结果";
 "unifiedSearch.authorizationTitle" = "Apple Music搜索已关闭";
 "unifiedSearch.authorizationMessage" = "请允许Apple Music访问，以包含目录和同步资料库结果。";
@@ -617,6 +620,8 @@
 "lyrics.editor.invalidLRC" = "未找到有效的LRC时间戳。";
 "lyrics.editor.lineCount" = "%d行同步歌词";
 "lrclib.search" = "搜索LRCLIB";
+"lrclib.search.placeholder" = "按歌名、艺人或专辑搜索";
+"lrclib.search.currentSong" = "搜索当前歌曲";
 "lrclib.noResults" = "LRCLIB未返回可用的歌词候选。";
 "lrclib.error.invalidResponse" = "LRCLIB返回了无法读取的响应。";
 "lrclib.error.rateLimited" = "LRCLIB暂时限制了请求，请稍后重试。";
@@ -1195,3 +1200,10 @@
 "deviceSync.audit.conflict.playlistTracksUnmatched" = "播放列表包含未匹配歌曲";
 "deviceSync.audit.conflict.playlistTracksAmbiguous" = "播放列表包含多个匹配候选的歌曲";
 "deviceSync.audit.conflict.playlistSmartCollision" = "ID 与智能播放列表冲突";
+"deviceReceivedLibrary.error.corruptManifest" = "移动资料库目录已损坏，并且没有可用的有效备份。";
+"deviceReceivedLibrary.error.invalidFileName" = "接收的文件名无效。";
+"deviceReceivedLibrary.error.verificationFailed" = "接收的文件未通过完整性验证。";
+"appStoreUpdate.title" = "有新版本可用";
+"appStoreUpdate.message" = "App Store 已发布 Ongaku Desktop %@。要立即更新吗？";
+"appStoreUpdate.update" = "打开 App Store";
+"appStoreUpdate.later" = "稍后";

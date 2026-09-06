@@ -892,7 +892,7 @@ final class PlaybackController: ObservableObject {
     @Published private(set) var isPlaying = false
     @Published private(set) var elapsed: TimeInterval = 0
     @Published var volume: Double = 0.8 {
-        didSet { sourceMixerNode.outputVolume = Float(volume) }
+        didSet { engine.mainMixerNode.outputVolume = Float(volume) }
     }
     @Published private(set) var errorMessage: String?
     @Published private(set) var sourceSampleRate: Double = 0
@@ -977,6 +977,7 @@ final class PlaybackController: ObservableObject {
     private var standbyPlayerNode: AVAudioPlayerNode {
         activePlayerIndex == 0 ? secondaryPlayerNode : primaryPlayerNode
     }
+    private let effectOutputProtection = EffectOutputProtection()
     private let effectPipeline: [AudioEffectNode]
     private let outputManager = AudioOutputManager()
     private var audioFile: AVAudioFile?
@@ -1046,10 +1047,12 @@ final class PlaybackController: ObservableObject {
         engine.attach(secondaryPlayerNode)
         engine.attach(sourceMixerNode)
         effectPipeline.forEach { $0.attach(to: engine) }
+        effectOutputProtection.attach(to: engine)
         effectSettings.forEach(applyEffectSetting)
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
-        sourceMixerNode.outputVolume = Float(volume)
+        sourceMixerNode.outputVolume = 1
+        engine.mainMixerNode.outputVolume = Float(volume)
         observeSystemAudioEvents()
     }
 
@@ -1062,6 +1065,14 @@ final class PlaybackController: ObservableObject {
 
     var enabledEffectCount: Int {
         effectsBypassed ? 0 : effectSettings.count(where: \.isEnabled)
+    }
+
+    func effectCountSummary(for pageTab: AudioEffectPageTab) -> AudioEffectCountSummary {
+        AudioEffectModuleRegistry.countSummary(
+            for: pageTab,
+            settings: effectSettings,
+            effectsBypassed: effectsBypassed
+        )
     }
 
     var signalPathSnapshot: AudioSignalPathSnapshot? {
@@ -1572,6 +1583,7 @@ final class PlaybackController: ObservableObject {
         for effect in effectPipeline {
             effect.nodes.forEach { engine.disconnectNodeOutput($0) }
         }
+        effectOutputProtection.nodes.forEach { engine.disconnectNodeOutput($0) }
         engine.disconnectNodeOutput(engine.mainMixerNode)
 
         // Both player nodes share a source mixer so compatible tracks can overlap
@@ -1596,7 +1608,9 @@ final class PlaybackController: ObservableObject {
             effect.connectInternalNodes(engine: engine, format: file.processingFormat)
             upstream = effect.outputNode
         }
-        engine.connect(upstream, to: engine.mainMixerNode, format: file.processingFormat)
+        effectOutputProtection.connect(from: upstream, engine: engine, format: file.processingFormat)
+        // Reapply sample-rate-dependent settings after the new format is connected.
+        effectSettings.forEach(applyEffectSetting)
         let hardwareFormat = engine.outputNode.inputFormat(forBus: 0)
         engine.connect(engine.mainMixerNode, to: engine.outputNode, format: hardwareFormat)
         outputSampleRate = hardwareFormat.sampleRate
@@ -2183,6 +2197,7 @@ final class PlaybackController: ObservableObject {
         var effectiveSetting = setting
         if effectsBypassed { effectiveSetting.isEnabled = false }
         effectPipeline.first(where: { $0.kind == setting.kind })?.apply(setting: effectiveSetting)
+        effectOutputProtection.setEnabled(effectPipeline.contains { $0.isEnabled })
     }
 
     private func persistEffectSettings() {

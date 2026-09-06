@@ -4,6 +4,69 @@ import SwiftUI
 import Sparkle
 #endif
 
+struct AppStoreRelease: Decodable, Equatable, Identifiable {
+    let version: String
+    let trackViewUrl: URL
+    let bundleId: String
+
+    var id: String { version }
+}
+
+struct AppStoreLookupResponse: Decodable {
+    let results: [AppStoreRelease]
+}
+
+enum AppVersionComparison {
+    static func isNewer(_ candidate: String, than installed: String) -> Bool {
+        candidate.compare(installed, options: .numeric) == .orderedDescending
+    }
+}
+
+@MainActor
+final class AppStoreUpdateChecker: ObservableObject {
+    nonisolated static let appID = "6807717764"
+    nonisolated static let bundleID = "com.ongaku.desktop"
+
+    @Published var availableRelease: AppStoreRelease?
+    private var hasChecked = false
+
+    func checkIfNeeded(
+        installedVersion: String = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleShortVersionString"
+        ) as? String ?? "0"
+    ) async {
+        guard !hasChecked else { return }
+        hasChecked = true
+
+        var components = URLComponents(string: "https://itunes.apple.com/lookup")!
+        components.queryItems = [
+            URLQueryItem(name: "id", value: Self.appID),
+            URLQueryItem(name: "country", value: "jp")
+        ]
+        guard let url = components.url else { return }
+
+        do {
+            let (data, response) = try await URLSession.shared.data(from: url)
+            guard let http = response as? HTTPURLResponse,
+                  (200..<300).contains(http.statusCode),
+                  let release = try JSONDecoder().decode(
+                    AppStoreLookupResponse.self,
+                    from: data
+                  ).results.first(where: { $0.bundleId == Self.bundleID }),
+                  AppVersionComparison.isNewer(release.version, than: installedVersion) else {
+                return
+            }
+            availableRelease = release
+        } catch {
+            // An update check must never delay launch or surface a network error.
+        }
+    }
+
+    func dismiss() {
+        availableRelease = nil
+    }
+}
+
 #if !APP_STORE
 @MainActor
 final class SoftwareUpdateController: ObservableObject {
@@ -39,6 +102,7 @@ struct OngakuDesktopApp: App {
     @StateObject private var appleMusicStore: AppleMusicStoreController
     @StateObject private var systemNowPlaying: SystemNowPlayingController
     @StateObject private var phoneSync = PhoneSyncController()
+    @StateObject private var appStoreUpdateChecker = AppStoreUpdateChecker()
 #if !APP_STORE
     @StateObject private var softwareUpdater = SoftwareUpdateController()
 #endif
@@ -71,7 +135,7 @@ struct OngakuDesktopApp: App {
         )
         _library = StateObject(wrappedValue: LibraryStore(
             repository: LibraryRepository(
-                rootURL: libraryProfiles.activeProfile.catalogURL,
+                rootURL: PortableLibraryStorage(mediaURL: libraryProfiles.activeProfile.mediaURL).rootURL,
                 mediaURL: libraryProfiles.activeProfile.mediaURL
             )
         ))
@@ -80,7 +144,13 @@ struct OngakuDesktopApp: App {
     var body: some Scene {
         Window("Ongaku", id: "main") {
             Group {
-                if windowPresentation.isMiniPlayer {
+                if let error = libraryProfiles.migrationError {
+                    VStack(spacing: 16) {
+                        Text(L10n.text("storage.migration.failed")).font(.headline)
+                        Text(error).textSelection(.enabled)
+                    }
+                    .padding(24)
+                } else if windowPresentation.isMiniPlayer {
                     MiniPlayerView()
                 } else {
                     ContentView()
@@ -104,6 +174,10 @@ struct OngakuDesktopApp: App {
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
                 .task {
+#if APP_STORE
+                    await appStoreUpdateChecker.checkIfNeeded()
+#endif
+                    guard libraryProfiles.migrationError == nil else { return }
                     try? await ArtworkResolver.shared.configure(
                         libraryRootURL: libraryProfiles.activeProfile.catalogURL
                     )
@@ -176,6 +250,26 @@ struct OngakuDesktopApp: App {
                 .onAppear {
                     systemNowPlaying.activate()
                 }
+#if APP_STORE
+                .alert(
+                    L10n.text("appStoreUpdate.title"),
+                    isPresented: Binding(
+                        get: { appStoreUpdateChecker.availableRelease != nil },
+                        set: { if !$0 { appStoreUpdateChecker.dismiss() } }
+                    ),
+                    presenting: appStoreUpdateChecker.availableRelease
+                ) { release in
+                    Button(L10n.text("appStoreUpdate.update")) {
+                        NSWorkspace.shared.open(release.trackViewUrl)
+                        appStoreUpdateChecker.dismiss()
+                    }
+                    Button(L10n.text("appStoreUpdate.later"), role: .cancel) {
+                        appStoreUpdateChecker.dismiss()
+                    }
+                } message: { release in
+                    Text(L10n.format("appStoreUpdate.message", release.version))
+                }
+#endif
         }
         .commandsRemoved()
         .defaultSize(width: 1_320, height: 780)

@@ -615,6 +615,12 @@ struct MetadataEditingTests {
             resolvingAgainstBaseURL: false
         ))
         #expect(albumOnly.queryItems?.map(\.name) == ["album_name"])
+        let freeText = try #require(URLComponents(
+            url: LRCLIBService.freeTextSearchURL(query: "Song & Artist / Live"),
+            resolvingAgainstBaseURL: false
+        ))
+        #expect(freeText.path == "/api/search")
+        #expect(freeText.queryItems == [URLQueryItem(name: "q", value: "Song & Artist / Live")])
     }
 
     @Test("LRCLIB confidence rewards matching metadata and duration")

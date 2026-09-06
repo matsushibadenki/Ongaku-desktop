@@ -43,3 +43,6 @@
 "mobile.transfer.pause" = "暂停传输";
 "mobile.transfer.resume" = "继续传输";
 "mobile.transfer.cancel" = "取消传输";
+"deviceReceivedLibrary.error.corruptManifest" = "移动资料库目录已损坏，并且没有可用的有效备份。";
+"deviceReceivedLibrary.error.invalidFileName" = "接收的文件名无效。";
+"deviceReceivedLibrary.error.verificationFailed" = "接收的文件未通过完整性验证。";

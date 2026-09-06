@@ -161,6 +161,49 @@ struct LargeLibraryPerformanceTests {
         #expect(result == [document.tracks[99_999].id])
     }
 
+    @Test("Opt-in 100,000-track playback sidecar persistence benchmark")
+    func playbackSidecarBenchmark() async throws {
+        guard ProcessInfo.processInfo.environment["ONGAKU_RUN_PLAYBACK_SIDECAR_BENCHMARK"] == "1"
+        else { return }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Playback-Sidecar-100k-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let document = LargeLibraryFixture.makeDocument()
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(document: document)
+        let manifestURL = root.appendingPathComponent("library-v1.json")
+        let queueURL = root.appendingPathComponent("playback-queue-v1.json")
+        let manifestBefore = try Data(contentsOf: manifestURL)
+        let currentID = try #require(document.tracks.first?.id)
+        var position = 0.0
+
+        let samples = try await measureAsync(iterations: 10) {
+            position += 5
+            try await repository.save(playbackQueue: PlaybackQueueState(
+                trackIDs: [currentID],
+                currentTrackID: currentID,
+                position: position
+            ))
+        }
+        let manifestAfter = try Data(contentsOf: manifestURL)
+        let queueBytes = try FileManager.default.attributesOfItem(atPath: queueURL.path)[.size]
+            as? NSNumber
+
+        print(
+            "ONGAKU_PLAYBACK_SIDECAR_100K_BENCHMARK "
+                + "samples=10 "
+                + "saveP95=\(formatMilliseconds(percentile95(samples)))ms "
+                + "manifestBytesWritten=\(manifestBefore == manifestAfter ? 0 : manifestAfter.count) "
+                + "queueSidecarBytes=\(queueBytes?.int64Value ?? 0)"
+        )
+
+        #expect(manifestAfter == manifestBefore)
+        #expect((queueBytes?.int64Value ?? .max) < 4_096)
+        let restored = try await LibraryRepository(rootURL: root).load().document
+        #expect(restored.playbackQueue?.position == 50)
+    }
+
     private func seconds(_ duration: Duration) -> Double {
         let components = duration.components
         return Double(components.seconds) + Double(components.attoseconds) / 1e18

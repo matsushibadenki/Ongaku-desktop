@@ -50,11 +50,11 @@ final class ExciterAudioEffect: AudioEffectNode {
         outputMixer.outputVolume = 1.0
         
         // --- Exciter EQ ---
-        exciterEQ.bands[0].filterType = .parametric; exciterEQ.bypass = false
-        exciterEQ.bands[1].filterType = .parametric; exciterEQ.bypass = false
-        exciterEQ.bands[2].filterType = .parametric; exciterEQ.bypass = false
-        exciterEQ.bands[3].filterType = .parametric; exciterEQ.bypass = false
-        exciterEQ.bands[4].filterType = .highShelf;  exciterEQ.bypass = false
+        exciterEQ.bands[0].filterType = .parametric; exciterEQ.bands[0].bypass = false
+        exciterEQ.bands[1].filterType = .parametric; exciterEQ.bands[1].bypass = false
+        exciterEQ.bands[2].filterType = .parametric; exciterEQ.bands[2].bypass = false
+        exciterEQ.bands[3].filterType = .parametric; exciterEQ.bands[3].bypass = false
+        exciterEQ.bands[4].filterType = .highShelf; exciterEQ.bands[4].bypass = false
 
         deEsserEQ.bands[0].filterType = .parametric
         deEsserEQ.bands[1].filterType = .highShelf
@@ -162,7 +162,7 @@ final class ExciterAudioEffect: AudioEffectNode {
         dryMixer.outputVolume = 1.0
         // The wet branch contains only the generated high-frequency material.
         // Keep it conservative and let the output safety stage handle residual peaks.
-        harmonicMixer.outputVolume = Float(min(0.42, 0.08 + effectiveIntensity * (0.20 + openness * 0.14)))
+        harmonicMixer.outputVolume = Float(min(0.42, effectiveIntensity * (0.28 + openness * 0.14)))
         exciterEQ.bands[0].frequency = Float(focusFrequency)
         exciterEQ.bands[0].gain = Float(effectiveIntensity * (2.9 + openness * 0.5))
         exciterEQ.bands[0].bandwidth = Float(1.32 - openness * 0.08)
@@ -264,23 +264,9 @@ final class ExciterAudioEffect: AudioEffectNode {
         releaseMs: Float,
         masterGainDB: Float
     ) {
-        guard let parameters = unit.auAudioUnit.parameterTree?.allParameters else { return }
-        for parameter in parameters {
-            let key = "\(parameter.identifier) \(parameter.displayName)".lowercased()
-            if key.contains("threshold") {
-                parameter.value = thresholdDB
-            } else if key.contains("head") && key.contains("room") {
-                parameter.value = headroomDB
-            } else if key.contains("attack") {
-                parameter.value = attackMs
-            } else if key.contains("decay") || key.contains("release") {
-                parameter.value = releaseMs
-            } else if key.contains("master") && key.contains("gain") {
-                parameter.value = masterGainDB
-            } else if key.contains("expansion") && key.contains("ratio") {
-                parameter.value = 1.0
-            }
-        }
+        EffectDynamicsParameters.apply(to: unit, thresholdDB: thresholdDB,
+            headroomDB: headroomDB, attackMs: attackMs,
+            releaseMs: releaseMs, masterGainDB: masterGainDB)
     }
 
     private func smoothstep(_ value: Double) -> Double {

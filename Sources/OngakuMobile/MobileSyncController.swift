@@ -9,6 +9,11 @@ struct MobilePairingRequest: Identifiable, Equatable, Sendable {
 }
 
 final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendable {
+    private struct LibraryImportResult: Sendable {
+        var snapshot: DeviceReceivedLibrarySnapshot
+        var firstErrorMessage: String?
+    }
+
     @Published private(set) var connectionState: DeviceSyncConnectionState = .disconnected
     @Published private(set) var localItems: [DeviceSyncItem] = []
     @Published private(set) var remoteItems: [DeviceSyncItem] = []
@@ -49,6 +54,9 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
     )
     private lazy var checkpointStore = DeviceTransferCheckpointStore(
         directory: Self.checkpointDirectory
+    )
+    private lazy var libraryRepository = DeviceReceivedLibraryRepository(
+        directory: Self.tracksDirectory
     )
     private var isStarted = false
 
@@ -112,26 +120,28 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
     }
 
     func loadLibrary() async {
-        let loaded = await Task.detached(priority: .utility) {
-            Self.loadStoredLibrary()
-        }.value
-        localItems = loaded.items
-        lock.withLock { localURLs = loaded.urls }
+        do {
+            let repository = libraryRepository
+            let loaded = try await Task.detached(priority: .utility) {
+                try repository.load()
+            }.value
+            applyLibrarySnapshot(loaded)
+        } catch {
+            publishFailure(error.localizedDescription)
+        }
     }
 
     func importFiles(_ urls: [URL]) async {
         guard !urls.isEmpty else { return }
-        let existing = localItems
+        let repository = libraryRepository
         let imported = await Task.detached(priority: .userInitiated) {
-            Self.copyIntoLibrary(urls, existing: existing)
+            Self.importIntoLibrary(urls, repository: repository)
         }.value
-
-        localItems = imported.items.sorted {
-            $0.title.localizedStandardCompare($1.title) == .orderedAscending
+        applyLibrarySnapshot(imported.snapshot)
+        sendManifestIfConnected(items: imported.snapshot.items)
+        if let message = imported.firstErrorMessage {
+            publishFailure(message)
         }
-        lock.withLock { localURLs = imported.urls }
-        Self.saveManifest(localItems)
-        sendManifestIfConnected()
     }
 
     func uploadToMac(_ item: DeviceSyncItem) {
@@ -167,12 +177,12 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
         localItems.contains { $0.sha256 == item.sha256 }
     }
 
-    private func sendManifestIfConnected() {
+    private func sendManifestIfConnected(items: [DeviceSyncItem]? = nil) {
         guard !session.connectedPeers.isEmpty else { return }
         send(.manifest(DeviceSyncManifest(
             deviceName: peerID.displayName,
             generatedAt: .now,
-            items: localItems,
+            items: items ?? localItems,
             storage: Self.deviceStorageInfo()
         )))
     }
@@ -446,22 +456,11 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
                 descriptor: descriptor,
                 checkpoint: checkpoint
             )
-            let alreadyStored = DispatchQueue.main.sync {
-                localItems.contains { $0.sha256 == descriptor.item.sha256 }
-            }
-            var storedItem: DeviceSyncItem?
-            var destination: URL?
-            if !alreadyStored {
-                let target = try Self.uniqueDestination(for: descriptor.item.fileName)
-                try FileManager.default.copyItem(at: partial, to: target)
-                var item = descriptor.item
-                item.id = UUID()
-                item.fileName = target.lastPathComponent
-                storedItem = item
-                destination = target
-            }
-            try checkpointStore.remove(forSHA256: descriptor.item.sha256)
-            refreshResumableTransfers()
+            let commit = try libraryRepository.commitVerifiedFile(
+                at: partial,
+                item: descriptor.item
+            )
+            applyLibrarySnapshot(commit.snapshot)
             _ = lock.withLock { incomingChunkTransfers.removeValue(forKey: descriptor.transferID) }
             updateTransferProgress(
                 id: descriptor.transferID,
@@ -473,18 +472,9 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
                 transferID: descriptor.transferID,
                 sha256: descriptor.item.sha256
             )))
-            if let storedItem, let destination {
-                DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    localItems.append(storedItem)
-                    localItems.sort {
-                        $0.title.localizedStandardCompare($1.title) == .orderedAscending
-                    }
-                    lock.withLock { localURLs[storedItem.id] = destination }
-                    Self.saveManifest(localItems)
-                    sendManifestIfConnected()
-                }
-            }
+            try? checkpointStore.remove(forSHA256: descriptor.item.sha256)
+            refreshResumableTransfers()
+            sendManifestIfConnected(items: commit.snapshot.items)
         } catch {
             failChunkTransfer(descriptor.transferID, error: error)
         }
@@ -554,21 +544,17 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
             guard try DeviceSyncFileIntegrity.verified(temporaryURL, matches: announcement.item) else {
                 throw CocoaError(.fileReadCorruptFile)
             }
-            let destination = try Self.uniqueDestination(for: announcement.item.fileName)
-            try FileManager.default.copyItem(at: temporaryURL, to: destination)
-            var storedItem = announcement.item
-            storedItem.id = UUID()
-            storedItem.fileName = destination.lastPathComponent
+            let commit = try libraryRepository.commitVerifiedFile(
+                at: temporaryURL,
+                item: announcement.item
+            )
             DispatchQueue.main.async { [weak self] in
                 guard let self else { return }
-                localItems.append(storedItem)
-                localItems.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-                lock.withLock { localURLs[storedItem.id] = destination }
-                Self.saveManifest(localItems)
+                applyLibrarySnapshot(commit.snapshot)
                 updateTransfer(id: transferID, phase: .completed)
                 updateTransferProgress(id: transferID, fraction: 1, completedBytes: announcement.item.fileSize)
                 removeProgress(for: transferID)
-                sendManifestIfConnected()
+                sendManifestIfConnected(items: commit.snapshot.items)
             }
         } catch {
             updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
@@ -752,82 +738,58 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
         }
     }
 
-    private static var manifestURL: URL {
-        tracksDirectory.appendingPathComponent("ongaku-mobile-manifest.json")
-    }
-
-    private static func loadStoredLibrary() -> (items: [DeviceSyncItem], urls: [UUID: URL]) {
-        try? FileManager.default.createDirectory(at: tracksDirectory, withIntermediateDirectories: true)
-        guard let data = try? Data(contentsOf: manifestURL),
-              let decoded = try? JSONDecoder().decode([DeviceSyncItem].self, from: data) else {
-            return ([], [:])
+    private func applyLibrarySnapshot(_ snapshot: DeviceReceivedLibrarySnapshot) {
+        if Thread.isMainThread {
+            localItems = snapshot.items
+            lock.withLock { localURLs = snapshot.fileURLs }
+        } else {
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                localItems = snapshot.items
+                lock.withLock { localURLs = snapshot.fileURLs }
+            }
         }
-        let valid = decoded.filter {
-            FileManager.default.fileExists(atPath: tracksDirectory.appendingPathComponent($0.fileName).path)
-        }
-        return (valid, Dictionary(uniqueKeysWithValues: valid.map {
-            ($0.id, tracksDirectory.appendingPathComponent($0.fileName))
-        }))
     }
 
-    private static func saveManifest(_ items: [DeviceSyncItem]) {
-        try? FileManager.default.createDirectory(at: tracksDirectory, withIntermediateDirectories: true)
-        guard let data = try? JSONEncoder().encode(items) else { return }
-        try? data.write(to: manifestURL, options: .atomic)
-    }
-
-    private static func copyIntoLibrary(
+    private static func importIntoLibrary(
         _ urls: [URL],
-        existing: [DeviceSyncItem]
-    ) -> (items: [DeviceSyncItem], urls: [UUID: URL]) {
-        try? FileManager.default.createDirectory(at: tracksDirectory, withIntermediateDirectories: true)
-        var items = existing
-        var outputURLs = Dictionary(uniqueKeysWithValues: existing.map {
-            ($0.id, tracksDirectory.appendingPathComponent($0.fileName))
-        })
-        var knownHashes = Set(existing.map(\.sha256))
-
+        repository: DeviceReceivedLibraryRepository
+    ) -> LibraryImportResult {
+        var snapshot: DeviceReceivedLibrarySnapshot
+        do {
+            snapshot = try repository.load()
+        } catch {
+            return LibraryImportResult(
+                snapshot: DeviceReceivedLibrarySnapshot(items: [], fileURLs: [:]),
+                firstErrorMessage: error.localizedDescription
+            )
+        }
+        var firstErrorMessage: String?
         for source in urls {
             let accessing = source.startAccessingSecurityScopedResource()
             defer { if accessing { source.stopAccessingSecurityScopedResource() } }
             do {
                 let hash = try DeviceSyncFileIntegrity.sha256(of: source)
-                guard knownHashes.insert(hash).inserted else { continue }
                 let values = try source.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey])
-                let destination = try uniqueDestination(for: source.lastPathComponent)
-                try FileManager.default.copyItem(at: source, to: destination)
                 let item = DeviceSyncItem(
                     id: UUID(),
                     title: source.deletingPathExtension().lastPathComponent,
                     artist: "",
                     album: "",
-                    fileName: destination.lastPathComponent,
+                    fileName: source.lastPathComponent,
                     fileSize: Int64(values.fileSize ?? 0),
                     sha256: hash,
                     modifiedAt: values.contentModificationDate ?? .now
                 )
-                items.append(item)
-                outputURLs[item.id] = destination
+                snapshot = try repository.commitVerifiedFile(at: source, item: item).snapshot
             } catch {
-                continue
+                firstErrorMessage = firstErrorMessage ?? error.localizedDescription
             }
         }
-        return (items, outputURLs)
-    }
-
-    private static func uniqueDestination(for fileName: String) throws -> URL {
-        try FileManager.default.createDirectory(at: tracksDirectory, withIntermediateDirectories: true)
-        let source = URL(fileURLWithPath: fileName)
-        let stem = source.deletingPathExtension().lastPathComponent
-        let ext = source.pathExtension
-        var candidate = tracksDirectory.appendingPathComponent(source.lastPathComponent)
-        var counter = 2
-        while FileManager.default.fileExists(atPath: candidate.path) {
-            let next = ext.isEmpty ? "\(stem) \(counter)" : "\(stem) \(counter).\(ext)"
-            candidate = tracksDirectory.appendingPathComponent(next)
-            counter += 1
-        }
-        return candidate
+        return LibraryImportResult(
+            snapshot: snapshot,
+            firstErrorMessage: firstErrorMessage
+        )
     }
 }
 

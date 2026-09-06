@@ -4,6 +4,23 @@ import Testing
 
 @Suite("System Now Playing")
 struct SystemNowPlayingTests {
+    @Test("Combine delivery enters MainActor explicitly")
+    @MainActor
+    func publisherDeliveryFromBackgroundExecutor() async {
+        let player = PlaybackController()
+        let appleMusicPlayback = AppleMusicPlaybackController()
+        let controller = SystemNowPlayingController(
+            player: player,
+            appleMusicPlayback: appleMusicPlayback
+        )
+        let handler: @Sendable (Int) -> Void = makeNowPlayingSyncHandler(for: controller)
+
+        await Task.detached {
+            handler(1)
+        }.value
+        await Task.yield()
+    }
+
     @Test("Metadata contains the track, position, state, and queue location")
     func metadataSnapshot() {
         let previousID = UUID()

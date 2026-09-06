@@ -316,6 +316,199 @@ struct DeviceTransferCheckpointStore: Sendable {
     }
 }
 
+struct DeviceReceivedLibrarySnapshot: Equatable, Sendable {
+    var items: [DeviceSyncItem]
+    var fileURLs: [UUID: URL]
+}
+
+struct DeviceReceivedLibraryCommit: Equatable, Sendable {
+    var snapshot: DeviceReceivedLibrarySnapshot
+    var item: DeviceSyncItem
+    var fileURL: URL
+    var wasAlreadyStored: Bool
+}
+
+enum DeviceReceivedLibraryError: LocalizedError, Equatable {
+    case corruptManifest
+    case invalidFileName
+    case verificationFailed
+
+    var errorDescription: String? {
+        let key = switch self {
+        case .corruptManifest: "deviceReceivedLibrary.error.corruptManifest"
+        case .invalidFileName: "deviceReceivedLibrary.error.invalidFileName"
+        case .verificationFailed: "deviceReceivedLibrary.error.verificationFailed"
+        }
+        return NSLocalizedString(key, comment: "")
+    }
+}
+
+/// Owns the durable commit boundary for files received by the mobile companion.
+/// A transfer is complete only after the copied file and its manifest entry are durable.
+final class DeviceReceivedLibraryRepository: @unchecked Sendable {
+    private let directory: URL
+    private let manifestURL: URL
+    private let backupURL: URL
+    private let fileManager: FileManager
+    private let beforePersist: @Sendable () throws -> Void
+    private let lock = NSLock()
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
+
+    init(
+        directory: URL,
+        manifestFileName: String = "ongaku-mobile-manifest.json",
+        fileManager: FileManager = .default,
+        beforePersist: @escaping @Sendable () throws -> Void = {}
+    ) {
+        self.directory = directory
+        manifestURL = directory.appendingPathComponent(manifestFileName)
+        backupURL = directory.appendingPathComponent("\(manifestFileName).previous")
+        self.fileManager = fileManager
+        self.beforePersist = beforePersist
+    }
+
+    func load() throws -> DeviceReceivedLibrarySnapshot {
+        try lock.withLock {
+            try prepareDirectory()
+            return try loadRecoveringIfNeeded()
+        }
+    }
+
+    func commitVerifiedFile(
+        at sourceURL: URL,
+        item proposedItem: DeviceSyncItem
+    ) throws -> DeviceReceivedLibraryCommit {
+        try lock.withLock {
+            try prepareDirectory()
+            var snapshot = try loadRecoveringIfNeeded()
+
+            if let existing = snapshot.items.first(where: { $0.sha256 == proposedItem.sha256 }),
+               let existingURL = snapshot.fileURLs[existing.id],
+               try DeviceSyncFileIntegrity.verified(existingURL, matches: existing) {
+                return DeviceReceivedLibraryCommit(
+                    snapshot: snapshot,
+                    item: existing,
+                    fileURL: existingURL,
+                    wasAlreadyStored: true
+                )
+            }
+
+            guard proposedItem.fileName == URL(fileURLWithPath: proposedItem.fileName).lastPathComponent,
+                  !proposedItem.fileName.isEmpty else {
+                throw DeviceReceivedLibraryError.invalidFileName
+            }
+            guard try DeviceSyncFileIntegrity.verified(sourceURL, matches: proposedItem) else {
+                throw DeviceReceivedLibraryError.verificationFailed
+            }
+
+            let destination = try uniqueDestination(for: proposedItem.fileName)
+            do {
+                try fileManager.copyItem(at: sourceURL, to: destination)
+                guard try DeviceSyncFileIntegrity.verified(destination, matches: proposedItem) else {
+                    throw DeviceReceivedLibraryError.verificationFailed
+                }
+
+                var storedItem = proposedItem
+                storedItem.id = UUID()
+                storedItem.fileName = destination.lastPathComponent
+                snapshot.items.append(storedItem)
+                snapshot.items.sort {
+                    $0.title.localizedStandardCompare($1.title) == .orderedAscending
+                }
+                snapshot.fileURLs[storedItem.id] = destination
+                try persist(snapshot.items)
+                return DeviceReceivedLibraryCommit(
+                    snapshot: snapshot,
+                    item: storedItem,
+                    fileURL: destination,
+                    wasAlreadyStored: false
+                )
+            } catch {
+                if fileManager.fileExists(atPath: destination.path) {
+                    try? fileManager.removeItem(at: destination)
+                }
+                throw error
+            }
+        }
+    }
+
+    private func prepareDirectory() throws {
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+    }
+
+    private func loadRecoveringIfNeeded() throws -> DeviceReceivedLibrarySnapshot {
+        guard fileManager.fileExists(atPath: manifestURL.path) else {
+            return DeviceReceivedLibrarySnapshot(items: [], fileURLs: [:])
+        }
+        do {
+            return snapshot(for: try decode(at: manifestURL))
+        } catch {
+            guard fileManager.fileExists(atPath: backupURL.path),
+                  let backupItems = try? decode(at: backupURL) else {
+                throw DeviceReceivedLibraryError.corruptManifest
+            }
+            let corruptURL = directory.appendingPathComponent(
+                "\(manifestURL.lastPathComponent).corrupt-\(UUID().uuidString)"
+            )
+            try fileManager.moveItem(at: manifestURL, to: corruptURL)
+            do {
+                try Data(contentsOf: backupURL).write(to: manifestURL, options: .atomic)
+            } catch {
+                try? fileManager.moveItem(at: corruptURL, to: manifestURL)
+                throw error
+            }
+            return snapshot(for: backupItems)
+        }
+    }
+
+    private func decode(at url: URL) throws -> [DeviceSyncItem] {
+        try decoder.decode([DeviceSyncItem].self, from: Data(contentsOf: url))
+    }
+
+    private func snapshot(for decoded: [DeviceSyncItem]) -> DeviceReceivedLibrarySnapshot {
+        let valid = decoded.filter { item in
+            guard item.fileName == URL(fileURLWithPath: item.fileName).lastPathComponent else {
+                return false
+            }
+            return fileManager.fileExists(
+                atPath: directory.appendingPathComponent(item.fileName).path
+            )
+        }
+        return DeviceReceivedLibrarySnapshot(
+            items: valid,
+            fileURLs: Dictionary(uniqueKeysWithValues: valid.map {
+                ($0.id, directory.appendingPathComponent($0.fileName))
+            })
+        )
+    }
+
+    private func persist(_ items: [DeviceSyncItem]) throws {
+        let data = try encoder.encode(items)
+        if fileManager.fileExists(atPath: manifestURL.path),
+           let previous = try? Data(contentsOf: manifestURL),
+           (try? decoder.decode([DeviceSyncItem].self, from: previous)) != nil {
+            try previous.write(to: backupURL, options: .atomic)
+        }
+        try beforePersist()
+        try data.write(to: manifestURL, options: .atomic)
+    }
+
+    private func uniqueDestination(for fileName: String) throws -> URL {
+        let source = URL(fileURLWithPath: fileName)
+        let stem = source.deletingPathExtension().lastPathComponent
+        let ext = source.pathExtension
+        var candidate = directory.appendingPathComponent(source.lastPathComponent)
+        var counter = 2
+        while fileManager.fileExists(atPath: candidate.path) {
+            let next = ext.isEmpty ? "\(stem) \(counter)" : "\(stem) \(counter).\(ext)"
+            candidate = directory.appendingPathComponent(next)
+            counter += 1
+        }
+        return candidate
+    }
+}
+
 private extension String {
     var isSHA256Hex: Bool {
         count == 64 && allSatisfy { $0.isHexDigit }

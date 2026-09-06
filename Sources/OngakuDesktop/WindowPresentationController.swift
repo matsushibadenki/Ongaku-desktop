@@ -17,7 +17,11 @@ final class WindowPresentationController: ObservableObject {
 
     func attach(to window: NSWindow) {
         managedWindow = window
-        window.titlebarAppearsTransparent = true
+        // Keep the three-column layout below the title bar and its toolbar.
+        // A full-size transparent title bar makes SwiftUI place the first row
+        // of every NavigationSplitView column underneath those controls.
+        window.styleMask.remove(.fullSizeContentView)
+        window.titlebarAppearsTransparent = false
         window.backgroundColor = AppTheme.windowBackground
         window.titlebarSeparatorStyle = .none
         updateMiniaturizeButtonHelp(in: window)

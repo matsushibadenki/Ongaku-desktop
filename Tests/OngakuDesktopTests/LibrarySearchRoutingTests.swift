@@ -64,8 +64,48 @@ struct LibrarySearchRoutingTests {
         try await waitUntil { store.searchBackendStatus == .jsonFallback }
 
         store.searchText = "back"
+        #expect(store.isLocalSearchPending)
+        #expect(store.filteredTracks.isEmpty)
+        try await waitUntil { store.indexedSearchQuery == CatalogSearch.normalize("back") }
+        #expect(!store.isLocalSearchPending)
         #expect(store.filteredTracks.map(\.id) == [track.id])
+
+        store.searchText = "  \n  "
+        #expect(!store.isLocalSearchPending)
+        #expect(store.filteredTracks.map(\.id) == [track.id])
+    }
+
+    @Test("Changing a query never performs the JSON fallback inline on MainActor")
+    @MainActor
+    func jsonFallbackIsAsynchronous() async throws {
+        let root = temporaryRoot(named: "Async-Fallback")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let tracks = (0..<10_000).map { index in
+            makeTrack(
+                title: "Track \(index)",
+                artist: "Artist \(index % 100)",
+                album: "Album \(index % 500)"
+            )
+        }
+        let blockedIndexRoot = root.appendingPathComponent("blocked-index")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data("not a directory".utf8).write(to: blockedIndexRoot)
+        let repository = LibraryRepository(rootURL: root.appendingPathComponent("Library"))
+        try await repository.save(tracks: tracks)
+        let store = LibraryStore(
+            repository: repository,
+            searchIndex: SQLiteCatalogPrototype(rootURL: blockedIndexRoot)
+        )
+        await store.load()
+        try await waitUntil { store.searchBackendStatus == .jsonFallback }
+
+        store.searchText = "Track 9999"
         #expect(store.indexedSearchQuery == nil)
+        #expect(store.isLocalSearchPending)
+        #expect(store.filteredTracks.isEmpty)
+        try await waitUntil { store.indexedSearchQuery == CatalogSearch.normalize("Track 9999") }
+        #expect(!store.isLocalSearchPending)
+        #expect(store.filteredTracks.map(\.title) == ["Track 9999"])
     }
 
     private func temporaryRoot(named name: String) -> URL {

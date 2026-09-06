@@ -4,6 +4,8 @@
 "command.playback" = "Playback";
 "command.automaticUpsampling" = "Automatic Upsampling up to 384 kHz";
 "toolbar.importHelp" = "Import music files into the library";
+"toolbar.sidebarToggleHelp" = "Show or hide the sidebar";
+"storage.migration.failed" = "Library migration could not finish. Check folder access and free space, then restart the app. Existing data has been preserved.";
 "command.importCD" = "Import from CD…";
 "toolbar.importCDHelp" = "Import tracks from an audio CD into the library";
 "command.importURL" = "Import from URL…";
@@ -263,6 +265,7 @@
 "appleMusic.error.rateLimited" = "Apple Music is receiving too many requests. Wait briefly and retry.";
 "appleMusic.error.server" = "Apple Music could not complete the request. Please retry.";
 "unifiedSearch.localEmpty" = "No matching local songs";
+"unifiedSearch.localSearching" = "Searching your library…";
 "unifiedSearch.appleMusic" = "Apple Music Results";
 "unifiedSearch.authorizationTitle" = "Apple Music Search Is Off";
 "unifiedSearch.authorizationMessage" = "Allow Apple Music access to include catalog and synced-library results.";
@@ -617,6 +620,8 @@
 "lyrics.editor.invalidLRC" = "No valid LRC timestamps were found.";
 "lyrics.editor.lineCount" = "%d synchronized lines";
 "lrclib.search" = "Search LRCLIB";
+"lrclib.search.placeholder" = "Search by song title, artist, or album";
+"lrclib.search.currentSong" = "Search Current Song";
 "lrclib.noResults" = "LRCLIB did not return any usable lyrics candidates.";
 "lrclib.error.invalidResponse" = "LRCLIB returned an unreadable response.";
 "lrclib.error.rateLimited" = "LRCLIB is temporarily limiting requests. Please try again later.";
@@ -1195,3 +1200,10 @@
 "deviceSync.audit.conflict.playlistTracksUnmatched" = "playlist contains unmatched tracks";
 "deviceSync.audit.conflict.playlistTracksAmbiguous" = "playlist contains tracks with multiple matches";
 "deviceSync.audit.conflict.playlistSmartCollision" = "ID conflicts with a smart playlist";
+"deviceReceivedLibrary.error.corruptManifest" = "The mobile library catalog is damaged and no valid backup is available.";
+"deviceReceivedLibrary.error.invalidFileName" = "The received file name is invalid.";
+"deviceReceivedLibrary.error.verificationFailed" = "The received file did not pass integrity verification.";
+"appStoreUpdate.title" = "A New Version Is Available";
+"appStoreUpdate.message" = "Ongaku Desktop %@ is available on the App Store. Would you like to update now?";
+"appStoreUpdate.update" = "Open App Store";
+"appStoreUpdate.later" = "Later";

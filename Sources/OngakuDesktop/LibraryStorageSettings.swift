@@ -9,6 +9,10 @@ struct PortableLibraryStorage: Sendable {
 
     let mediaURL: URL
 
+    static func relocateLegacyMedia(from source: URL, to destination: URL, fileManager: FileManager) throws {
+        try moveIfDestinationIsMissing(from: source, to: destination, fileManager: fileManager)
+    }
+
     var rootURL: URL {
         mediaURL.standardizedFileURL
             .appendingPathComponent(Self.directoryName, isDirectory: true)
@@ -41,10 +45,38 @@ struct PortableLibraryStorage: Sendable {
                 at: legacyCatalogURL,
                 fileManager: fileManager
             )
-            for name in catalogNames {
+            // Keep a complete source set before removing any item. In particular,
+            // queues and history must not be mixed into a different library ID.
+            let sourceManifest = legacyCatalogURL.appendingPathComponent("library-v1.json")
+            let destinationManifest = layout.rootURL.appendingPathComponent("library-v1.json")
+            let hasConflict = try fileManager.fileExists(atPath: sourceManifest.path)
+                && fileManager.fileExists(atPath: destinationManifest.path)
+                && !itemsMatch(sourceManifest, destinationManifest, fileManager: fileManager)
+            let target = hasConflict
+                ? layout.rootURL.appendingPathComponent("Legacy Imports/\(UUID().uuidString)", isDirectory: true)
+                : layout.rootURL
+            // Conflicting catalogs stay independently recoverable, never overwrite
+            // the current library or attach their sidecars to it.
+            if hasConflict {
+                for name in catalogNames {
+                    try moveIfDestinationIsMissing(
+                        from: legacyCatalogURL.appendingPathComponent(name),
+                        to: target.appendingPathComponent(name),
+                        fileManager: fileManager,
+                        removeSource: false
+                    )
+                }
+            }
+            // Remove the source manifest last so an interrupted conflicting
+            // migration cannot mistake leftover sidecars for the active library.
+            for name in catalogNames.sorted(by: { lhs, rhs in
+                if lhs == "library-v1.json" { return false }
+                if rhs == "library-v1.json" { return true }
+                return lhs < rhs
+            }) {
                 try moveIfDestinationIsMissing(
                     from: legacyCatalogURL.appendingPathComponent(name),
-                    to: layout.rootURL.appendingPathComponent(name),
+                    to: target.appendingPathComponent(name),
                     fileManager: fileManager
                 )
             }
@@ -88,6 +120,8 @@ struct PortableLibraryStorage: Sendable {
             "Incoming", "Playlist Artwork", "library-v1.json", "library-v1.backup.json",
             "import-journal-v1.json", "media-organization-journal-v1.json",
             "audio-features-v1.json", "device-sync-tags-v1.json",
+            "playback-queue-v1.json", "playback-queue-v1.backup.json",
+            "playback-events-v1.json", "playback-events-v1.backup.json", "Artwork",
             "catalog-prototype-v1.sqlite", "catalog-prototype-v1.migrating.sqlite",
             "catalog-prototype-v1.previous.sqlite", "catalog-json-rollback.json",
         ]
@@ -131,9 +165,15 @@ struct PortableLibraryStorage: Sendable {
     ) throws {
         guard fileManager.fileExists(atPath: source.path) else { return }
         if fileManager.fileExists(atPath: destination.path) {
-            if removeSource,
-               try itemsMatch(source, destination, fileManager: fileManager) {
-                try fileManager.removeItem(at: source)
+            if removeSource {
+                if try itemsMatch(source, destination, fileManager: fileManager) {
+                    try fileManager.removeItem(at: source)
+                } else {
+                    let preserved = destination.deletingLastPathComponent()
+                        .appendingPathComponent("Migration Conflicts/\(UUID().uuidString)", isDirectory: true)
+                        .appendingPathComponent(source.lastPathComponent)
+                    try moveIfDestinationIsMissing(from: source, to: preserved, fileManager: fileManager)
+                }
             }
             return
         }
@@ -254,10 +294,12 @@ final class LibraryProfileSettings: ObservableObject {
         didSet { defaults.set(activeLibraryID.uuidString, forKey: Self.activeProfileKey) }
     }
     @Published private(set) var activeLocationRevision = 0
+    @Published private(set) var migrationError: String?
 
     private let defaults: UserDefaults
     private let fileManager: FileManager
     private let librariesRootURL: URL
+    private let legacyRootURL: URL
     private var securityScopedProfileURLs: [LibraryProfile.ID: URL] = [:]
 
     private struct ExternalLibraryMarker: Codable {
@@ -278,7 +320,13 @@ final class LibraryProfileSettings: ObservableObject {
         let support = applicationSupportURL
             ?? fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         let legacyRoot = support.appendingPathComponent("Ongaku Desktop", isDirectory: true)
-        librariesRootURL = legacyRoot.appendingPathComponent("Libraries", isDirectory: true)
+        legacyRootURL = legacyRoot
+        let musicRoot = fileManager.urls(for: .musicDirectory, in: .userDomainMask)[0]
+        let safeDefaultMedia = defaultMediaURL.path.hasPrefix(legacyRoot.path + "/")
+            ? musicRoot.appendingPathComponent("Ongaku Desktop/Ongaku Media", isDirectory: true)
+            : defaultMediaURL
+        librariesRootURL = PortableLibraryStorage(mediaURL: safeDefaultMedia).rootURL
+            .appendingPathComponent("Libraries", isDirectory: true)
 
         let initialProfiles: [LibraryProfile]
         if let data = defaults.data(forKey: Self.profilesKey),
@@ -306,6 +354,19 @@ final class LibraryProfileSettings: ObservableObject {
             ?? initialProfiles.first(where: { !$0.isArchived })?.id
             ?? initialProfiles[0].id
         resolveExternalBookmarks()
+        for index in profiles.indices where profiles[index].mediaURL.path.hasPrefix(legacyRoot.path + "/") {
+            let oldMedia = profiles[index].mediaURL
+            let newMedia = librariesRootURL.appendingPathComponent("Recovered/\(profiles[index].id)/Media", isDirectory: true)
+            do {
+                try PortableLibraryStorage.relocateLegacyMedia(from: oldMedia, to: newMedia, fileManager: fileManager)
+                if profiles[index].catalogPath.hasPrefix(oldMedia.path + "/") {
+                    profiles[index].catalogPath = newMedia.path + profiles[index].catalogPath.dropFirst(oldMedia.path.count)
+                }
+                profiles[index].mediaPath = newMedia.path
+            } catch {
+                migrationError = error.localizedDescription
+            }
+        }
         migrateProfilesToPortableStorage()
         persistProfiles()
     }
@@ -583,33 +644,57 @@ final class LibraryProfileSettings: ObservableObject {
     }
 
     private func migrateProfilesToPortableStorage() {
+        guard migrationError == nil else { return }
         let activeIndex = profiles.firstIndex { $0.id == activeLibraryID }
         let orderedIndices = ([activeIndex].compactMap { $0 }
             + profiles.indices.filter { $0 != activeIndex })
         var migratedIndices: [Int] = []
         for index in orderedIndices {
             let profile = profiles[index]
-            guard Self.isReachable(profile, fileManager: fileManager),
-                  let portableRoot = try? PortableLibraryStorage.migrateLegacyStateIfNeeded(
+            guard Self.isReachable(profile, fileManager: fileManager) else { continue }
+            do {
+                let portableRoot = try PortableLibraryStorage.migrateLegacyStateIfNeeded(
                       from: profile.catalogURL,
                       to: profile.mediaURL,
                       fileManager: fileManager,
+                      applicationSupportURL: legacyRootURL.deletingLastPathComponent(),
                       removeLegacyArtwork: false
-                  ) else { continue }
-            profiles[index].catalogPath = portableRoot.path
-            migratedIndices.append(index)
+                  )
+                profiles[index].catalogPath = portableRoot.path
+                migratedIndices.append(index)
+            } catch {
+                migrationError = error.localizedDescription
+            }
+        }
+        if migrationError == nil, let activeIndex,
+           profiles[activeIndex].catalogURL.standardizedFileURL != legacyRootURL.standardizedFileURL {
+            do {
+                _ = try PortableLibraryStorage.migrateLegacyStateIfNeeded(
+                    from: legacyRootURL,
+                    to: profiles[activeIndex].mediaURL,
+                    fileManager: fileManager,
+                    applicationSupportURL: legacyRootURL.deletingLastPathComponent(),
+                    removeLegacyArtwork: false
+                )
+            } catch {
+                migrationError = error.localizedDescription
+            }
         }
         // The old artwork store was shared by every profile. Copy it to every
         // reachable portable library first, then remove only verified matches.
-        if migratedIndices.count == orderedIndices.count,
-           let activeIndex,
-           let portableRoot = try? PortableLibraryStorage.migrateLegacyStateIfNeeded(
-               from: profiles[activeIndex].catalogURL,
-               to: profiles[activeIndex].mediaURL,
-               fileManager: fileManager,
-               removeLegacyArtwork: true
-           ) {
-            profiles[activeIndex].catalogPath = portableRoot.path
+        if migrationError == nil, migratedIndices.count == orderedIndices.count, let activeIndex {
+            do {
+                let portableRoot = try PortableLibraryStorage.migrateLegacyStateIfNeeded(
+                    from: profiles[activeIndex].catalogURL,
+                    to: profiles[activeIndex].mediaURL,
+                    fileManager: fileManager,
+                    applicationSupportURL: legacyRootURL.deletingLastPathComponent(),
+                    removeLegacyArtwork: true
+                )
+                profiles[activeIndex].catalogPath = portableRoot.path
+            } catch {
+                migrationError = error.localizedDescription
+            }
         }
     }
 }
@@ -889,8 +974,7 @@ final class LibraryStorageSettings: ObservableObject {
     }
 
     private static func defaultMediaDirectory(fileManager: FileManager) -> URL {
-        fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Ongaku Desktop/Ongaku Media", isDirectory: true)
+        freshDefaultMediaDirectory(fileManager: fileManager, musicDirectoryURL: nil)
     }
 
     private static func freshDefaultMediaDirectory(

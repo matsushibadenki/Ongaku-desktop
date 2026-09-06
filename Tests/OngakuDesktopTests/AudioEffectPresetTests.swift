@@ -43,4 +43,39 @@ struct AudioEffectPresetTests {
 
         #expect(restored == settings)
     }
+
+    @Test("Enabled counts include only the selected effect mode")
+    @MainActor
+    func enabledCountIsScopedToSelectedMode() {
+        var settings = AudioEffectModuleRegistry.makeDefaultSettings()
+        for index in settings.indices {
+            settings[index].isEnabled = [
+                RealtimeAudioEffectKind.highQualityEnhancement,
+                .simulation,
+                .equalizer,
+            ].contains(settings[index].kind)
+        }
+
+        #expect(
+            AudioEffectModuleRegistry.countSummary(
+                for: .basic,
+                settings: settings,
+                effectsBypassed: false
+            ) == AudioEffectCountSummary(enabled: 1, total: 1)
+        )
+        #expect(
+            AudioEffectModuleRegistry.countSummary(
+                for: .pro,
+                settings: settings,
+                effectsBypassed: false
+            ) == AudioEffectCountSummary(enabled: 2, total: 9)
+        )
+        #expect(
+            AudioEffectModuleRegistry.countSummary(
+                for: .off,
+                settings: settings,
+                effectsBypassed: true
+            ) == AudioEffectCountSummary(enabled: 0, total: 0)
+        )
+    }
 }

@@ -150,6 +150,24 @@ actor LRCLIBService {
         .map { $0 }
     }
 
+    func candidates(matching query: String, relativeTo track: Track) async throws
+        -> [LRCLIBCandidate] {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else { return [] }
+        return try await search(url: Self.freeTextSearchURL(query: trimmedQuery))
+            .filter(\.hasUsableLyrics)
+            .map { Self.evaluate($0, against: track, matchKind: .search) }
+            .sorted {
+                if $0.confidence != $1.confidence { return $0.confidence > $1.confidence }
+                if $0.durationDifference != $1.durationDifference {
+                    return $0.durationDifference < $1.durationDifference
+                }
+                return $0.record.id < $1.record.id
+            }
+            .prefix(Self.maximumCandidates)
+            .map { $0 }
+    }
+
     nonisolated static func evaluate(
         _ record: LRCLIBRecord,
         against track: Track,
@@ -250,6 +268,10 @@ actor LRCLIBService {
 
     nonisolated static func albumOnlySearchURL(for track: Track) -> URL {
         searchURL(queryItems: [URLQueryItem(name: "album_name", value: track.album)])
+    }
+
+    nonisolated static func freeTextSearchURL(query: String) -> URL {
+        searchURL(queryItems: [URLQueryItem(name: "q", value: query)])
     }
 
     nonisolated private static func searchURL(queryItems: [URLQueryItem]) -> URL {

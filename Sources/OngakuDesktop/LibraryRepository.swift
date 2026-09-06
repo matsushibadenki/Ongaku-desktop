@@ -84,6 +84,22 @@ actor LibraryRepository {
         var playbackQueue: PlaybackQueueState?
     }
 
+    private struct PlaybackQueueDocument: Codable {
+        static let currentSchema = 1
+        var schemaVersion = currentSchema
+        var libraryID: UUID
+        var updatedAt: Date = .now
+        var queue: PlaybackQueueState?
+    }
+
+    private struct PlaybackEventsDocument: Codable {
+        static let currentSchema = 1
+        var schemaVersion = currentSchema
+        var libraryID: UUID
+        var updatedAt: Date = .now
+        var events: [PlaybackEvent]
+    }
+
     private struct Schema5LibraryDocument: Decodable {
         var updatedAt: Date
         var tracks: [Track]
@@ -204,6 +220,14 @@ actor LibraryRepository {
     private var incomingURL: URL { rootURL.appendingPathComponent("Incoming", isDirectory: true) }
     private var manifestURL: URL { rootURL.appendingPathComponent("library-v1.json") }
     private var backupURL: URL { rootURL.appendingPathComponent("library-v1.backup.json") }
+    private var playbackQueueURL: URL { rootURL.appendingPathComponent("playback-queue-v1.json") }
+    private var playbackQueueBackupURL: URL {
+        rootURL.appendingPathComponent("playback-queue-v1.backup.json")
+    }
+    private var playbackEventsURL: URL { rootURL.appendingPathComponent("playback-events-v1.json") }
+    private var playbackEventsBackupURL: URL {
+        rootURL.appendingPathComponent("playback-events-v1.backup.json")
+    }
     private func migrationArchiveURL(for schemaVersion: Int) -> URL {
         let source = schemaVersion == 0 ? "unversioned" : "schema-\(schemaVersion)"
         return rootURL.appendingPathComponent("library-\(source).migration-backup.json")
@@ -247,7 +271,7 @@ actor LibraryRepository {
             )
         }
 
-        var document = decoded.document
+        var document = try applyingPlaybackSidecars(to: decoded.document)
         try reconcileMediaOrganizationJournal(with: document.tracks)
         let recovery = try recoverImports(into: &document)
         let relocated = relocateFilesAfterPortableLibraryMove(in: document.tracks)
@@ -268,6 +292,10 @@ actor LibraryRepository {
         } else if recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0 {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: !recoveredFromBackup)
+        }
+        if !fileManager.fileExists(atPath: playbackQueueURL.path)
+            || !fileManager.fileExists(atPath: playbackEventsURL.path) {
+            try persistPlaybackSidecars(document)
         }
         currentDocument = document
         return LibraryLoadResult(
@@ -620,7 +648,7 @@ actor LibraryRepository {
         var document = try documentForMutation()
         document.updatedAt = .now
         document.playbackEvents.append(event)
-        try persistDocument(document, backUpReadablePrimary: true)
+        try persistPlaybackEvents(document)
         currentDocument = document
     }
 
@@ -629,7 +657,7 @@ actor LibraryRepository {
         var document = try documentForMutation()
         document.updatedAt = .now
         document.playbackEvents = playbackEvents
-        try persistDocument(document, backUpReadablePrimary: true)
+        try persistPlaybackEvents(document)
         currentDocument = document
     }
 
@@ -638,7 +666,7 @@ actor LibraryRepository {
         var document = try documentForMutation()
         document.updatedAt = .now
         document.playbackQueue = playbackQueue
-        try persistDocument(document, backUpReadablePrimary: true)
+        try persistPlaybackQueue(document)
         currentDocument = document
     }
 
@@ -667,6 +695,7 @@ actor LibraryRepository {
         // Once the primary becomes empty, neither recovery path can re-register
         // tracks. Incoming audio files themselves are deliberately left untouched.
         try persistImportJournal(ImportJournal())
+        try replacePlaybackSidecarsForClear(emptyDocument)
         try data.write(to: backupURL, options: [.atomic])
         try data.write(to: manifestURL, options: [.atomic])
         currentDocument = emptyDocument
@@ -1316,6 +1345,7 @@ actor LibraryRepository {
         _ document: LibraryDocument,
         backUpReadablePrimary: Bool
     ) throws {
+        try persistPlaybackSidecars(document)
         let data = try encoder.encode(document)
         if backUpReadablePrimary,
            let previous = try? Data(contentsOf: manifestURL),
@@ -1323,6 +1353,128 @@ actor LibraryRepository {
             try previous.write(to: backupURL, options: [.atomic])
         }
         try data.write(to: manifestURL, options: [.atomic])
+    }
+
+    private func applyingPlaybackSidecars(to source: LibraryDocument) throws -> LibraryDocument {
+        var document = source
+        let trackIDs = Set(document.tracks.map(\.id))
+
+        if let queueDocument: PlaybackQueueDocument = try decodeSidecar(
+            at: playbackQueueURL,
+            backupURL: playbackQueueBackupURL
+        ), queueDocument.schemaVersion == PlaybackQueueDocument.currentSchema,
+           queueDocument.libraryID == document.libraryID {
+            if let queue = queueDocument.queue {
+                let validQueueIDs = queue.trackIDs.filter(trackIDs.contains)
+                let currentTrackID = queue.currentTrackID.flatMap {
+                    validQueueIDs.contains($0) ? $0 : nil
+                }
+                document.playbackQueue = PlaybackQueueState(
+                    trackIDs: validQueueIDs,
+                    currentTrackID: currentTrackID,
+                    position: currentTrackID == nil ? 0 : queue.position
+                )
+            } else {
+                document.playbackQueue = nil
+            }
+        }
+
+        if let eventsDocument: PlaybackEventsDocument = try decodeSidecar(
+            at: playbackEventsURL,
+            backupURL: playbackEventsBackupURL
+        ), eventsDocument.schemaVersion == PlaybackEventsDocument.currentSchema,
+           eventsDocument.libraryID == document.libraryID {
+            document.playbackEvents = eventsDocument.events.filter {
+                trackIDs.contains($0.trackID)
+            }
+        }
+        return document
+    }
+
+    private func decodeSidecar<Value: Decodable>(
+        at url: URL,
+        backupURL: URL
+    ) throws -> Value? {
+        guard fileManager.fileExists(atPath: url.path) else { return nil }
+        do {
+            return try decoder.decode(Value.self, from: Data(contentsOf: url))
+        } catch {
+            guard fileManager.fileExists(atPath: backupURL.path),
+                  let backupData = try? Data(contentsOf: backupURL),
+                  let recovered = try? decoder.decode(Value.self, from: backupData) else {
+                return nil
+            }
+            try backupData.write(to: url, options: .atomic)
+            return recovered
+        }
+    }
+
+    private func persistPlaybackSidecars(_ document: LibraryDocument) throws {
+        try persistPlaybackQueue(document)
+        try persistPlaybackEvents(document)
+    }
+
+    private func persistPlaybackQueue(_ document: LibraryDocument) throws {
+        let snapshot = PlaybackQueueDocument(
+            libraryID: document.libraryID,
+            updatedAt: document.updatedAt,
+            queue: document.playbackQueue
+        )
+        let data = try encoder.encode(snapshot)
+        try persistSidecar(
+            data,
+            at: playbackQueueURL,
+            backupURL: playbackQueueBackupURL,
+            validatesAs: PlaybackQueueDocument.self
+        )
+    }
+
+    private func persistPlaybackEvents(_ document: LibraryDocument) throws {
+        let snapshot = PlaybackEventsDocument(
+            libraryID: document.libraryID,
+            updatedAt: document.updatedAt,
+            events: document.playbackEvents
+        )
+        let data = try encoder.encode(snapshot)
+        try persistSidecar(
+            data,
+            at: playbackEventsURL,
+            backupURL: playbackEventsBackupURL,
+            validatesAs: PlaybackEventsDocument.self
+        )
+    }
+
+    private func persistSidecar<Value: Decodable>(
+        _ data: Data,
+        at url: URL,
+        backupURL: URL,
+        validatesAs type: Value.Type
+    ) throws {
+        if fileManager.fileExists(atPath: url.path),
+           let previous = try? Data(contentsOf: url),
+           (try? decoder.decode(type, from: previous)) != nil {
+            try previous.write(to: backupURL, options: .atomic)
+        }
+        try data.write(to: url, options: .atomic)
+    }
+
+    private func replacePlaybackSidecarsForClear(_ document: LibraryDocument) throws {
+        let queueData = try encoder.encode(PlaybackQueueDocument(
+            libraryID: document.libraryID,
+            updatedAt: document.updatedAt,
+            queue: document.playbackQueue
+        ))
+        let eventsData = try encoder.encode(PlaybackEventsDocument(
+            libraryID: document.libraryID,
+            updatedAt: document.updatedAt,
+            events: document.playbackEvents
+        ))
+        for url in [playbackQueueBackupURL, playbackQueueURL] {
+            try queueData.write(to: url, options: .atomic)
+        }
+        for url in [playbackEventsBackupURL, playbackEventsURL] {
+            try eventsData.write(to: url, options: .atomic)
+        }
     }
 
     private func archivePreMigrationManifest(

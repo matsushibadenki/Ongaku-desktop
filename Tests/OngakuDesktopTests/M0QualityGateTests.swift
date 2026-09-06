@@ -207,6 +207,19 @@ struct M0QualityGateTests {
         #expect(!inspector.contains("AppTheme.bottomPlayerClearance"))
     }
 
+    @Test("The sidebar toggle stays leading while other toolbar actions stay trailing")
+    func mainToolbarAlignmentContract() throws {
+        let content = try Self.source("ContentView.swift")
+
+        #expect(content.contains("ToolbarItem(placement: .navigation)"))
+        #expect(content.contains("ToolbarItemGroup(placement: .primaryAction)"))
+        #expect(content.contains(
+            ".navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 380)\n        }\n        .toolbar(removing: .sidebarToggle)"
+        ))
+        #expect(content.contains("columnVisibility == .all ? .doubleColumn : .all"))
+        #expect(content.contains(".accessibilityIdentifier(\"main.toggle-sidebar\")"))
+    }
+
     @Test("A short window always reserves the complete persistent player height")
     func shortWindowPlayerHeightContract() {
         #expect(PlayerBar.layoutHeight == 106)

@@ -139,6 +139,8 @@ final class SpaceAudioEffect: AudioEffectNode {
         let isSampleRateSafe = sampleRate > 0 && sampleRate <= 96000
 
         guard isSampleRateSafe else {
+            isEnabled = false
+            estimatedGainBoostDB = 0
             earlyMixer.outputVolume = 0
             lateMixer.outputVolume = 0
             return

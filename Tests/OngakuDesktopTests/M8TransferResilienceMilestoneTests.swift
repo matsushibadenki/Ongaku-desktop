@@ -259,6 +259,106 @@ struct M8TransferResilienceMilestoneTests {
         #expect(try store.summaries().isEmpty)
     }
 
+    @Test("Received files become visible only after their manifest is durable")
+    func receivedLibraryCommitIsDurable() throws {
+        let fixture = try makeChunkFixture(byteCount: 180_000)
+        defer { fixture.cleanUp() }
+        let library = fixture.root.appendingPathComponent("library", isDirectory: true)
+        let repository = DeviceReceivedLibraryRepository(directory: library)
+
+        let commit = try repository.commitVerifiedFile(
+            at: fixture.sourceURL,
+            item: fixture.item
+        )
+
+        #expect(!commit.wasAlreadyStored)
+        #expect(commit.snapshot.items == [commit.item])
+        #expect(try DeviceSyncFileIntegrity.verified(commit.fileURL, matches: commit.item))
+        let reloaded = try DeviceReceivedLibraryRepository(directory: library).load()
+        #expect(reloaded.items == [commit.item])
+        #expect(reloaded.fileURLs[commit.item.id] == commit.fileURL)
+    }
+
+    @Test("A manifest failure rolls back the received copy and remains retryable")
+    func receivedLibraryCommitRollsBackOnPersistenceFailure() throws {
+        enum ForcedFailure: Error { case persist }
+
+        let fixture = try makeChunkFixture(byteCount: 90_000)
+        defer { fixture.cleanUp() }
+        let library = fixture.root.appendingPathComponent("library", isDirectory: true)
+        let failing = DeviceReceivedLibraryRepository(
+            directory: library,
+            beforePersist: { throw ForcedFailure.persist }
+        )
+
+        #expect(throws: ForcedFailure.self) {
+            try failing.commitVerifiedFile(at: fixture.sourceURL, item: fixture.item)
+        }
+        #expect(FileManager.default.fileExists(atPath: fixture.sourceURL.path))
+        #expect(try DeviceReceivedLibraryRepository(directory: library).load().items.isEmpty)
+
+        let files = try FileManager.default.contentsOfDirectory(
+            at: library,
+            includingPropertiesForKeys: nil
+        )
+        #expect(files.isEmpty)
+        let retried = try DeviceReceivedLibraryRepository(directory: library)
+            .commitVerifiedFile(at: fixture.sourceURL, item: fixture.item)
+        #expect(retried.snapshot.items.count == 1)
+    }
+
+    @Test("Retry after a durable commit does not create a duplicate")
+    func receivedLibraryCommitIsIdempotent() throws {
+        let fixture = try makeChunkFixture(byteCount: 120_000)
+        defer { fixture.cleanUp() }
+        let library = fixture.root.appendingPathComponent("library", isDirectory: true)
+        let repository = DeviceReceivedLibraryRepository(directory: library)
+
+        let first = try repository.commitVerifiedFile(at: fixture.sourceURL, item: fixture.item)
+        let retry = try repository.commitVerifiedFile(at: fixture.sourceURL, item: fixture.item)
+
+        #expect(!first.wasAlreadyStored)
+        #expect(retry.wasAlreadyStored)
+        #expect(retry.item.id == first.item.id)
+        #expect(retry.snapshot.items.count == 1)
+        #expect(retry.fileURL == first.fileURL)
+    }
+
+    @Test("A corrupt primary manifest is preserved and restored from its backup")
+    func receivedLibraryRecoversManifestBackup() throws {
+        let first = try makeChunkFixture(byteCount: 70_000)
+        defer { first.cleanUp() }
+        let library = first.root.appendingPathComponent("library", isDirectory: true)
+        let repository = DeviceReceivedLibraryRepository(directory: library)
+        let firstCommit = try repository.commitVerifiedFile(at: first.sourceURL, item: first.item)
+
+        let secondURL = first.root.appendingPathComponent("second.flac")
+        try Data(repeating: 0xA5, count: 80_000).write(to: secondURL)
+        let secondItem = DeviceSyncItem(
+            id: UUID(),
+            title: "Second",
+            artist: "Ongaku",
+            album: "M8",
+            fileName: secondURL.lastPathComponent,
+            fileSize: 80_000,
+            sha256: try DeviceSyncFileIntegrity.sha256(of: secondURL),
+            modifiedAt: .now
+        )
+        _ = try repository.commitVerifiedFile(at: secondURL, item: secondItem)
+
+        let manifest = library.appendingPathComponent("ongaku-mobile-manifest.json")
+        try Data("corrupt".utf8).write(to: manifest, options: .atomic)
+        let restored = try DeviceReceivedLibraryRepository(directory: library).load()
+
+        #expect(restored.items == [firstCommit.item])
+        #expect(try JSONDecoder().decode(
+            [DeviceSyncItem].self,
+            from: Data(contentsOf: manifest)
+        ) == [firstCommit.item])
+        let names = try FileManager.default.contentsOfDirectory(atPath: library.path)
+        #expect(names.contains { $0.hasPrefix("ongaku-mobile-manifest.json.corrupt-") })
+    }
+
     private func makeItem(fileSize: Int64) -> DeviceSyncItem {
         DeviceSyncItem(
             id: UUID(),

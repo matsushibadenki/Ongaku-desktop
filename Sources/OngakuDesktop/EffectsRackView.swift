@@ -7,11 +7,15 @@ import SwiftUI
 
 struct EffectsRackView: View {
     @EnvironmentObject private var player: PlaybackController
-    @State private var selectedTab: AudioEffectPageTab = .basic
+    @Binding var selectedTab: AudioEffectPageTab
 
     private var visibleKinds: [RealtimeAudioEffectKind] {
         let allowed = AudioEffectModuleRegistry.activeKinds(for: selectedTab)
         return AudioEffectModuleRegistry.activeKinds.filter(allowed.contains)
+    }
+
+    private var countSummary: AudioEffectCountSummary {
+        player.effectCountSummary(for: selectedTab)
     }
 
     var body: some View {
@@ -65,11 +69,11 @@ struct EffectsRackView: View {
             Spacer(minLength: AppTheme.spaceMD)
 
             Label(
-                L10n.format("effects.enabledShort", player.enabledEffectCount),
+                L10n.format("effects.enabledShort", countSummary.enabled),
                 systemImage: "waveform.path.ecg"
             )
             .font(.caption.monospacedDigit())
-            .foregroundStyle(player.enabledEffectCount > 0 ? AppTheme.good : AppTheme.secondaryInk)
+            .foregroundStyle(countSummary.enabled > 0 ? AppTheme.good : AppTheme.secondaryInk)
         }
         .padding(AppTheme.spaceMD)
         .ongakuPanel()
