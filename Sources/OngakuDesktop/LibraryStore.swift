@@ -2815,14 +2815,34 @@ final class LibraryStore: ObservableObject {
 
         searchIndexSynchronizationTask = Task { [weak self, searchIndex] in
             do {
-                _ = try await searchIndex.migrate(
-                    document: document,
-                    sourceManifestURL: sourceManifestURL
-                )
-                let parity = try await searchIndex.verifyParity(
-                    document: document,
-                    queries: queries
-                )
+                let parity: SQLiteCatalogPrototype.ParityReport
+                if await searchIndex.hasInstalledDatabase() {
+                    do {
+                        _ = try await searchIndex.synchronizeSearchIndex(document: document)
+                        parity = try await searchIndex.verifySearchParity(
+                            document: document,
+                            queries: queries
+                        )
+                    } catch SQLiteCatalogPrototype.PrototypeError.requiresFullMigration {
+                        _ = try await searchIndex.migrate(
+                            document: document,
+                            sourceManifestURL: sourceManifestURL
+                        )
+                        parity = try await searchIndex.verifyParity(
+                            document: document,
+                            queries: queries
+                        )
+                    }
+                } else {
+                    _ = try await searchIndex.migrate(
+                        document: document,
+                        sourceManifestURL: sourceManifestURL
+                    )
+                    parity = try await searchIndex.verifyParity(
+                        document: document,
+                        queries: queries
+                    )
+                }
                 guard !Task.isCancelled, let self,
                       self.contentRevision == expectedRevision else { return }
                 guard parity.isMatch else {

@@ -85,6 +85,33 @@ struct SQLiteCatalogPrototypeTests {
         }
     }
 
+    @Test("Search metadata updates only changed SQLite rows")
+    func incrementallySynchronizesSearchMetadata() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-SQLite-Diff-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prototype = SQLiteCatalogPrototype(rootURL: root)
+        var document = makeDocument()
+        _ = try await prototype.migrate(document: document)
+
+        document.tracks[0].title = "Renamed Search Target"
+        document.tracks[0].lyrics = TrackLyrics(
+            plainText: "new searchable phrase",
+            source: .manual
+        )
+        let report = try await prototype.synchronizeSearchIndex(document: document)
+
+        #expect(report.updatedTrackCount == 1)
+        #expect(report.unchangedTrackCount == 1)
+        #expect(try await prototype.search("renamed") == [document.tracks[0].id])
+        #expect(try await prototype.search("new searchable") == [document.tracks[0].id])
+        #expect(try await prototype.search("lpha song").isEmpty)
+
+        let unchanged = try await prototype.synchronizeSearchIndex(document: document)
+        #expect(unchanged.updatedTrackCount == 0)
+        #expect(unchanged.unchangedTrackCount == 2)
+    }
+
     private func makeDocument() -> LibraryDocument {
         let firstArtistID = UUID()
         let firstAlbumID = UUID()

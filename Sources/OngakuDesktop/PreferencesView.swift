@@ -482,6 +482,7 @@ private struct AppearanceSettingsView: View {
 
 private struct GeneralSettingsView: View {
     @EnvironmentObject private var language: AppLanguageSettings
+    @EnvironmentObject private var artworkPrivacy: ArtworkPrivacySettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
@@ -542,6 +543,20 @@ private struct GeneralSettingsView: View {
                 .help(L10n.text("settings.language.description"))
                 .accessibilityLabel(L10n.text("settings.language.title"))
                 .accessibilityValue(language.selectedLanguage.displayName)
+            }
+
+            settingsRow(
+                title: L10n.text("settings.privacy.externalArtwork.title"),
+                description: L10n.text("settings.privacy.externalArtwork.description")
+            ) {
+                Toggle(
+                    L10n.text("settings.privacy.externalArtwork.toggle"),
+                    isOn: $artworkPrivacy.allowsAutomaticExternalArtwork
+                )
+                .labelsHidden()
+                .accessibilityLabel(
+                    L10n.text("settings.privacy.externalArtwork.toggle")
+                )
             }
         }
         .background {

@@ -622,6 +622,13 @@
 "lrclib.search" = "搜索LRCLIB";
 "lrclib.search.placeholder" = "按歌名、艺人或专辑搜索";
 "lrclib.search.currentSong" = "搜索当前歌曲";
+"settings.privacy.externalArtwork.title" = "自动获取在线图片";
+"settings.privacy.externalArtwork.description" = "启用后，缺少封面的专辑可能会将专辑名和艺人名发送给MusicBrainz和Cover Art Archive。此功能默认关闭；已保存和内嵌的图片仍可显示。";
+"settings.privacy.externalArtwork.toggle" = "允许自动搜索在线图片";
+"artwork.externalLookup.title" = "要在线搜索图片吗？";
+"artwork.externalLookup.continue" = "在线搜索";
+"artwork.externalLookup.albumMessage" = "为了查找封面，将把专辑名和艺人名发送给MusicBrainz和Cover Art Archive。";
+"artwork.externalLookup.artistMessage" = "为了查找艺人图片，将把艺人名发送给MusicBrainz、Apple Music和Wikimedia Commons。";
 "lrclib.noResults" = "LRCLIB未返回可用的歌词候选。";
 "lrclib.error.invalidResponse" = "LRCLIB返回了无法读取的响应。";
 "lrclib.error.rateLimited" = "LRCLIB暂时限制了请求，请稍后重试。";

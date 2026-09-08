@@ -24,6 +24,30 @@ enum ArtworkThumbnailShape: Equatable {
     case circle
 }
 
+@MainActor
+final class ArtworkPrivacySettings: ObservableObject {
+    nonisolated static let automaticExternalArtworkKey =
+        "privacy.automaticExternalArtwork.v1"
+
+    @Published var allowsAutomaticExternalArtwork: Bool {
+        didSet {
+            defaults.set(
+                allowsAutomaticExternalArtwork,
+                forKey: Self.automaticExternalArtworkKey
+            )
+        }
+    }
+
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        allowsAutomaticExternalArtwork = defaults.bool(
+            forKey: Self.automaticExternalArtworkKey
+        )
+    }
+}
+
 struct ArtistImageCandidate: Identifiable, Equatable, Sendable {
     enum Source: String, Codable, Sendable {
         case appleMusic
@@ -68,6 +92,7 @@ struct ArtistArtworkAttribution: Codable, Equatable, Sendable {
 /// searches online when neither local source provides an image.
 struct ArtworkThumbnail: View {
     @EnvironmentObject private var library: LibraryStore
+    @EnvironmentObject private var artworkPrivacy: ArtworkPrivacySettings
 
     let tracks: [Track]
     let subject: ArtworkSubject
@@ -81,6 +106,7 @@ struct ArtworkThumbnail: View {
     @State private var isRefreshing = false
     @State private var didRefresh = false
     @State private var isShowingRefreshFailure = false
+    @State private var isShowingExternalLookupConfirmation = false
 
     private var requestID: String {
         subject.cacheKey
@@ -131,7 +157,7 @@ struct ArtworkThumbnail: View {
                     Divider()
                 }
                 Button {
-                    Task { await refreshAlbumArtwork() }
+                    isShowingExternalLookupConfirmation = true
                 } label: {
                     Label(
                         L10n.text("artwork.forceRefreshAlbum"),
@@ -157,6 +183,18 @@ struct ArtworkThumbnail: View {
         } message: {
             Text(L10n.text("artwork.refreshFailed.message"))
         }
+        .confirmationDialog(
+            L10n.text("artwork.externalLookup.title"),
+            isPresented: $isShowingExternalLookupConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.text("artwork.externalLookup.continue")) {
+                Task { await refreshAlbumArtwork() }
+            }
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n.text("artwork.externalLookup.albumMessage"))
+        }
         .task(id: requestID) {
             artwork = nil
             if let custom = await ArtworkResolver.shared.customArtworkData(for: subject),
@@ -170,7 +208,10 @@ struct ArtworkThumbnail: View {
             if let embedded {
                 data = embedded
             } else {
-                data = await ArtworkResolver.shared.artworkData(for: subject)
+                data = await ArtworkResolver.shared.artworkData(
+                    for: subject,
+                    allowsNetwork: artworkPrivacy.allowsAutomaticExternalArtwork
+                )
             }
             guard !Task.isCancelled, let data else { return }
             artwork = NSImage(data: data)
@@ -297,7 +338,10 @@ actor ArtworkResolver {
     private var nextMusicBrainzRequest: ContinuousClock.Instant?
     private var isManualRefreshInProgress = false
 
-    init() {
+    init(session: URLSession? = nil) {
+        if let session {
+            self.session = session
+        } else {
         let configuration = URLSessionConfiguration.ephemeral
         configuration.timeoutIntervalForRequest = 12
         configuration.timeoutIntervalForResource = 20
@@ -305,7 +349,8 @@ actor ArtworkResolver {
             "User-Agent": "OngakuDesktop/0.1 (https://github.com/matsushibadenki/Ongaku-desktop)",
             "Accept": "application/json, image/*"
         ]
-        session = URLSession(configuration: configuration)
+            self.session = URLSession(configuration: configuration)
+        }
 
         let defaultMedia = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask)
             .first?
@@ -439,7 +484,10 @@ actor ArtworkResolver {
         await imageData(from: candidate.downloadURL)
     }
 
-    func artworkData(for subject: ArtworkSubject) async -> Data? {
+    func artworkData(
+        for subject: ArtworkSubject,
+        allowsNetwork: Bool = true
+    ) async -> Data? {
         guard Self.isMeaningful(subject) else { return nil }
         if let data = memoryCache[subject] { return data }
         if missing.contains(subject) { return nil }
@@ -451,6 +499,7 @@ actor ArtworkResolver {
             memoryCache[subject] = cached
             return cached
         }
+        guard allowsNetwork else { return nil }
         // A manual refresh gets priority over background thumbnail population.
         guard !isManualRefreshInProgress else { return nil }
         if let task = inFlight[subject] { return await task.value }

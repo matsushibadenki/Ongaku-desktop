@@ -622,6 +622,13 @@
 "lrclib.search" = "Search LRCLIB";
 "lrclib.search.placeholder" = "Search by song title, artist, or album";
 "lrclib.search.currentSong" = "Search Current Song";
+"settings.privacy.externalArtwork.title" = "Automatic Online Artwork";
+"settings.privacy.externalArtwork.description" = "When enabled, missing album artwork may send the album and artist names to MusicBrainz and Cover Art Archive. It is off by default; saved and embedded artwork remains available.";
+"settings.privacy.externalArtwork.toggle" = "Allow automatic online artwork searches";
+"artwork.externalLookup.title" = "Search Online for Artwork?";
+"artwork.externalLookup.continue" = "Search Online";
+"artwork.externalLookup.albumMessage" = "The album and artist names will be sent to MusicBrainz and Cover Art Archive to find cover artwork.";
+"artwork.externalLookup.artistMessage" = "The artist name will be sent to MusicBrainz, Apple Music, and Wikimedia Commons to find an artist image.";
 "lrclib.noResults" = "LRCLIB did not return any usable lyrics candidates.";
 "lrclib.error.invalidResponse" = "LRCLIB returned an unreadable response.";
 "lrclib.error.rateLimited" = "LRCLIB is temporarily limiting requests. Please try again later.";

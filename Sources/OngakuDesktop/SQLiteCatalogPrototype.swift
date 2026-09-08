@@ -21,11 +21,17 @@ actor SQLiteCatalogPrototype {
         var isMatch: Bool { mismatchedQueries.isEmpty }
     }
 
+    struct SearchSynchronizationReport: Equatable, Sendable {
+        let updatedTrackCount: Int
+        let unchangedTrackCount: Int
+    }
+
     enum PrototypeError: LocalizedError {
         case sqlite(String)
         case invalidCatalog(String)
         case missingRollbackSnapshot
         case unsupportedSnapshotSchema(Int)
+        case requiresFullMigration
 
         var errorDescription: String? {
             switch self {
@@ -34,6 +40,8 @@ actor SQLiteCatalogPrototype {
             case .missingRollbackSnapshot: "The JSON rollback snapshot is missing."
             case .unsupportedSnapshotSchema(let version):
                 "The rollback snapshot uses unsupported schema \(version)."
+            case .requiresFullMigration:
+                "The installed search index requires a full migration."
             }
         }
     }
@@ -188,6 +196,135 @@ actor SQLiteCatalogPrototype {
                     .filter { CatalogSearch.matches($0, query: query) }
                     .map(\.id)
             )
+            let sqliteIDs = Set(try search(query, limit: max(document.tracks.count, 1)))
+            if jsonIDs != sqliteIDs { mismatches.append(query) }
+        }
+        return ParityReport(
+            trackCount: document.tracks.count,
+            checkedQueries: queries,
+            mismatchedQueries: mismatches
+        )
+    }
+
+    func synchronizeSearchIndex(document: LibraryDocument) throws
+        -> SearchSynchronizationReport {
+        struct SearchFields: Equatable {
+            let title: String
+            let artist: String
+            let album: String
+            let metadata: String
+        }
+
+        let desired = Dictionary(uniqueKeysWithValues: document.tracks.map { track in
+            (track.id.uuidString, SearchFields(
+                title: CatalogSearch.normalize(track.title),
+                artist: CatalogSearch.normalize(track.artist),
+                album: CatalogSearch.normalize(track.album),
+                metadata: CatalogSearch.searchableText(for: track)
+            ))
+        })
+
+        return try withOpenDatabase(readOnly: false) { database in
+            guard try string(database, sql: "SELECT id FROM library LIMIT 1")
+                    == document.libraryID.uuidString,
+                  try integer(database, sql: "SELECT schema_version FROM library LIMIT 1")
+                    == document.schemaVersion else {
+                throw PrototypeError.requiresFullMigration
+            }
+
+            var installed: [String: SearchFields] = [:]
+            try withStatement(
+                database,
+                sql: "SELECT id, title_search, artist_search, album_search, metadata_search FROM track"
+            ) { statement in
+                while sqlite3_step(statement) == SQLITE_ROW {
+                    guard let id = sqlite3_column_text(statement, 0),
+                          let title = sqlite3_column_text(statement, 1),
+                          let artist = sqlite3_column_text(statement, 2),
+                          let album = sqlite3_column_text(statement, 3),
+                          let metadata = sqlite3_column_text(statement, 4) else {
+                        throw PrototypeError.invalidCatalog("SQLite search fields are invalid.")
+                    }
+                    installed[String(cString: id)] = SearchFields(
+                        title: String(cString: title),
+                        artist: String(cString: artist),
+                        album: String(cString: album),
+                        metadata: String(cString: metadata)
+                    )
+                }
+            }
+            guard Set(installed.keys) == Set(desired.keys) else {
+                throw PrototypeError.requiresFullMigration
+            }
+
+            let changedIDs = desired.keys.filter { installed[$0] != desired[$0] }
+            guard !changedIDs.isEmpty else {
+                return SearchSynchronizationReport(
+                    updatedTrackCount: 0,
+                    unchangedTrackCount: desired.count
+                )
+            }
+
+            do {
+                try execute(database, sql: "BEGIN IMMEDIATE")
+                try withStatement(
+                    database,
+                    sql: "UPDATE track SET title_search = ?, artist_search = ?, album_search = ?, metadata_search = ? WHERE id = ?"
+                ) { updateStatement in
+                    try withStatement(
+                        database,
+                        sql: "DELETE FROM track_search WHERE track_id = ?"
+                    ) { deleteStatement in
+                        try withStatement(
+                            database,
+                            sql: "INSERT INTO track_search(track_id, title_search, artist_search, album_search, metadata_search) VALUES (?, ?, ?, ?, ?)"
+                        ) { insertStatement in
+                            for id in changedIDs.sorted() {
+                                guard let fields = desired[id] else { continue }
+                                try reset(updateStatement, database: database)
+                                try bind(fields.title, to: 1, in: updateStatement, database: database)
+                                try bind(fields.artist, to: 2, in: updateStatement, database: database)
+                                try bind(fields.album, to: 3, in: updateStatement, database: database)
+                                try bind(fields.metadata, to: 4, in: updateStatement, database: database)
+                                try bind(id, to: 5, in: updateStatement, database: database)
+                                try stepDone(updateStatement, database: database)
+
+                                try reset(deleteStatement, database: database)
+                                try bind(id, to: 1, in: deleteStatement, database: database)
+                                try stepDone(deleteStatement, database: database)
+
+                                try reset(insertStatement, database: database)
+                                try bind(id, to: 1, in: insertStatement, database: database)
+                                try bind(fields.title, to: 2, in: insertStatement, database: database)
+                                try bind(fields.artist, to: 3, in: insertStatement, database: database)
+                                try bind(fields.album, to: 4, in: insertStatement, database: database)
+                                try bind(fields.metadata, to: 5, in: insertStatement, database: database)
+                                try stepDone(insertStatement, database: database)
+                            }
+                        }
+                    }
+                }
+                try execute(database, sql: "COMMIT")
+            } catch {
+                try? execute(database, sql: "ROLLBACK")
+                throw error
+            }
+            return SearchSynchronizationReport(
+                updatedTrackCount: changedIDs.count,
+                unchangedTrackCount: desired.count - changedIDs.count
+            )
+        }
+    }
+
+    func verifySearchParity(
+        document: LibraryDocument,
+        queries: [String]
+    ) throws -> ParityReport {
+        var mismatches: [String] = []
+        for query in queries {
+            let jsonIDs = Set(document.tracks.lazy.filter {
+                CatalogSearch.matches($0, query: query)
+            }.map(\.id))
             let sqliteIDs = Set(try search(query, limit: max(document.tracks.count, 1)))
             if jsonIDs != sqliteIDs { mismatches.append(query) }
         }
@@ -835,6 +972,17 @@ actor SQLiteCatalogPrototype {
         try withStatement(database, sql: sql) { statement in
             guard sqlite3_step(statement) == SQLITE_ROW else { throw sqliteError(database) }
             return Int(sqlite3_column_int64(statement, 0))
+        }
+    }
+
+    private func string(_ database: OpaquePointer, sql: String) throws -> String? {
+        try withStatement(database, sql: sql) { statement in
+            let result = sqlite3_step(statement)
+            if result == SQLITE_DONE { return nil }
+            guard result == SQLITE_ROW, let text = sqlite3_column_text(statement, 0) else {
+                throw sqliteError(database)
+            }
+            return String(cString: text)
         }
     }
 

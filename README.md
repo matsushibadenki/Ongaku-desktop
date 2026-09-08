@@ -16,7 +16,7 @@ Ongaku Desktop is a native macOS music manager and player. It aims to cover the 
 - Atomic import journal with verified recovery after interruption or restart
 - Full-library verification with missing, changed, and unreadable states
 - English, Japanese, and Simplified Chinese UI
-- Embedded artwork with automatic MusicBrainz/Cover Art Archive and Wikidata/Wikimedia fallback
+- Embedded artwork with opt-in MusicBrainz/Cover Art Archive lookup and manual artist-image search
 - Signed and notarized Universal macOS DMG packaging for Apple Silicon and Intel Macs
 - Signed in-app software updates through the app menu
 

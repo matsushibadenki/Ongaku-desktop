@@ -209,6 +209,7 @@ struct MetadataEditorView: View {
     @State private var existingArtistAttribution: ArtistArtworkAttribution?
     @State private var isSearchingArtistImages = false
     @State private var isShowingArtistImageCandidates = false
+    @State private var isShowingArtistLookupConfirmation = false
     @State private var isShowingFileOrganizationConfirmation = false
     @State private var isShowingOverwriteConfirmation = false
     @State private var organizationConflictCount = 0
@@ -355,6 +356,18 @@ struct MetadataEditorView: View {
                 candidates: artistImageCandidates,
                 onUse: applyArtistImageCandidate
             )
+        }
+        .confirmationDialog(
+            L10n.text("artwork.externalLookup.title"),
+            isPresented: $isShowingArtistLookupConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(L10n.text("artwork.externalLookup.continue")) {
+                Task { await searchArtistImages() }
+            }
+            Button(L10n.text("common.cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n.text("artwork.externalLookup.artistMessage"))
         }
         .confirmationDialog(
             L10n.text("metadataEditor.organizationConfirmation.title"),
@@ -821,7 +834,7 @@ struct MetadataEditorView: View {
 
             if isArtist {
                 Button {
-                    Task { await searchArtistImages() }
+                    isShowingArtistLookupConfirmation = true
                 } label: {
                     if isSearchingArtistImages {
                         ProgressView().controlSize(.small)

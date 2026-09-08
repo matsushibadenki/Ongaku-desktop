@@ -96,6 +96,7 @@ struct OngakuDesktopApp: App {
     @StateObject private var meterSettings: PlayerMeterSettings
     @StateObject private var trackTableSettings: TrackTableSettings
     @StateObject private var socialPrivacy: SocialPrivacySettings
+    @StateObject private var artworkPrivacy: ArtworkPrivacySettings
     @StateObject private var windowPresentation = WindowPresentationController()
     @StateObject private var player: PlaybackController
     @StateObject private var appleMusicPlayback: AppleMusicPlaybackController
@@ -119,6 +120,7 @@ struct OngakuDesktopApp: App {
         _meterSettings = StateObject(wrappedValue: PlayerMeterSettings())
         _trackTableSettings = StateObject(wrappedValue: TrackTableSettings())
         _socialPrivacy = StateObject(wrappedValue: SocialPrivacySettings())
+        _artworkPrivacy = StateObject(wrappedValue: ArtworkPrivacySettings())
         let player = PlaybackController()
         let appleMusicPlayback = AppleMusicPlaybackController()
         player.setExternalPlaybackStopHandler { [weak appleMusicPlayback] in
@@ -169,6 +171,7 @@ struct OngakuDesktopApp: App {
                 .environmentObject(meterSettings)
                 .environmentObject(trackTableSettings)
                 .environmentObject(socialPrivacy)
+                .environmentObject(artworkPrivacy)
                 .environmentObject(phoneSync)
                 .environment(\.locale, language.selectedLanguage.locale ?? .current)
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
