@@ -82,21 +82,33 @@ final class LibraryStore: ObservableObject {
         case failed(String)
     }
 
-    @Published private(set) var tracks: [Track] = []
-    @Published private(set) var playlists: [Playlist] = []
+    @Published private(set) var tracks: [Track] = [] {
+        didSet { tracksRevision &+= 1; schedulePresentation() }
+    }
+    @Published private(set) var playlists: [Playlist] = [] {
+        didSet { schedulePresentation() }
+    }
     @Published private(set) var playlistFolders: [PlaylistFolder] = []
-    @Published private(set) var playbackEvents: [PlaybackEvent] = []
+    @Published private(set) var playbackEvents: [PlaybackEvent] = [] {
+        didSet { eventsRevision &+= 1; schedulePresentation() }
+    }
     @Published private(set) var playbackQueue: PlaybackQueueState?
     @Published private(set) var syncedDisplayTags: [Track.ID: [String]] = [:]
     @Published private(set) var contentRevision = 0
-    @Published private(set) var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
+    @Published private(set) var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:] {
+        didSet { schedulePresentation() }
+    }
     @Published private(set) var isAnalyzingAudioFeatures = false
     @Published private(set) var isAudioFeatureAnalysisPaused = false
     @Published private(set) var audioFeatureAnalysisPauseReason: AudioFeatureAnalysisPauseReason?
     @Published private(set) var audioFeatureRevision = 0
     @Published private(set) var audioFeatureAnalysisProgress: AudioFeatureAnalysisProgress?
-    @Published var selectedSection: LibrarySection = .songs
-    @Published var selectedPlaylistID: Playlist.ID?
+    @Published var selectedSection: LibrarySection = .songs {
+        didSet { if oldValue != selectedSection { schedulePresentation() } }
+    }
+    @Published var selectedPlaylistID: Playlist.ID? {
+        didSet { if oldValue != selectedPlaylistID { schedulePresentation() } }
+    }
     @Published private var trackSelection = TrackSelectionState()
     var selectedTrackID: Track.ID? {
         get { trackSelection.focusedID }
@@ -128,14 +140,30 @@ final class LibraryStore: ObservableObject {
         }
     }
     @Published var searchText = "" {
-        didSet { scheduleIndexedSearch() }
+        didSet { scheduleIndexedSearch(); schedulePresentation() }
     }
-    @Published var filterCriteria = LibraryFilterCriteria()
+    @Published var filterCriteria = LibraryFilterCriteria() {
+        didSet { if oldValue != filterCriteria { schedulePresentation() } }
+    }
     @Published private(set) var activity: Activity = .idle
     @Published private(set) var lastIssues: [ImportIssue] = []
     @Published private(set) var searchBackendStatus: SearchBackendStatus = .jsonFallback
     @Published private var indexedSearchTrackIDs: Set<Track.ID>?
-    @Published private(set) var indexedSearchQuery: String?
+    @Published private(set) var indexedSearchQuery: String? {
+        didSet {
+            if !Self.normalizedSearchQuery(searchText).isEmpty { schedulePresentation() }
+        }
+    }
+    @Published private(set) var presentation = LibraryPresentation()
+    @Published private(set) var presentationRevision = 0
+    @Published private(set) var isPresentationUpdating = false
+    private let presentationWorker = LibraryPresentationWorker()
+    private var presentationTask: Task<Void, Never>?
+    private var presentationGeneration = 0
+    private var tracksRevision = 0
+    private var eventsRevision = 0
+    private var presentedTracksRevision = -1
+    private var presentedEventsRevision = -1
 
     private var repository: LibraryRepository
     private var deviceSyncTagsURL: URL
@@ -180,50 +208,69 @@ final class LibraryStore: ObservableObject {
         return playlists.first { $0.id == selectedPlaylistID }
     }
 
-    var filteredTracks: [Track] {
-        var result: [Track]
-        if let selectedPlaylist {
-            if let definition = selectedPlaylist.smartDefinition {
-                result = SmartPlaylistResolver.tracks(
-                    matching: definition,
-                    tracks: tracks,
-                    statistics: PlaybackStatisticsResolver.statistics(
-                        events: playbackEvents,
-                        tracks: tracks
-                    )
-                )
-            } else {
-                let tracksByID = Dictionary(uniqueKeysWithValues: tracks.map { ($0.id, $0) })
-                result = selectedPlaylist.entries.compactMap { tracksByID[$0.trackID] }
-            }
-        } else {
-            result = StandardLibraryResolver.tracks(
-                for: selectedSection,
-                tracks: tracks,
-                events: playbackEvents,
-                audioFeatures: audioFeatures
-            )
-        }
-
-        if filterCriteria.activeCount > 0 {
-            result = result.filter(filterCriteria.matches)
-        }
-        let normalizedQuery = Self.normalizedSearchQuery(searchText)
-        guard !normalizedQuery.isEmpty else { return result }
-        if indexedSearchQuery == normalizedQuery, let indexedSearchTrackIDs {
-            return result.filter { indexedSearchTrackIDs.contains($0.id) }
-        }
-        return []
-    }
+    /// Empty while a different request is pending, so actions never target
+    /// results belonging to the previous section, filter, or library.
+    var filteredTracks: [Track] { isPresentationUpdating ? [] : presentation.tracks }
 
     var isLocalSearchPending: Bool {
-        let normalizedQuery = Self.normalizedSearchQuery(searchText)
-        guard !normalizedQuery.isEmpty else { return false }
-        return indexedSearchQuery != normalizedQuery || indexedSearchTrackIDs == nil
+        let query = Self.normalizedSearchQuery(searchText)
+        return !query.isEmpty && (isPresentationUpdating
+            || indexedSearchQuery != query || indexedSearchTrackIDs == nil)
     }
 
-    var totalBytes: Int64 { tracks.reduce(0) { $0 + $1.fileSize } }
-    var attentionCount: Int { tracks.filter { $0.health != .verified }.count }
+    var totalBytes: Int64 { presentation.totalBytes }
+    var attentionCount: Int { presentation.attentionCount }
+
+    private func schedulePresentation() {
+        presentationTask?.cancel()
+        presentationGeneration &+= 1
+        let generation = presentationGeneration
+        isPresentationUpdating = true
+        // Coalesce mutations within one MainActor turn before copying snapshots.
+        presentationTask = Task { [weak self] in
+            await Task.yield()
+            guard !Task.isCancelled, let self,
+                  generation == self.presentationGeneration else { return }
+            let query = Self.normalizedSearchQuery(self.searchText)
+            guard query.isEmpty || (self.indexedSearchQuery == query
+                && self.indexedSearchTrackIDs != nil) else {
+                self.presentationTask = nil
+                return
+            }
+            let request = LibraryPresentationRequest(
+                tracks: self.tracks, events: self.playbackEvents,
+                tracksRevision: self.tracksRevision, eventsRevision: self.eventsRevision,
+                section: self.selectedSection, playlist: self.selectedPlaylist,
+                filter: self.filterCriteria,
+                searchIDs: query.isEmpty ? nil : self.indexedSearchTrackIDs,
+                audioFeatures: self.audioFeatures
+            )
+            do {
+                let result = try await self.presentationWorker.resolve(request)
+                guard !Task.isCancelled,
+                      generation == self.presentationGeneration else { return }
+                self.presentation = result
+                self.presentedTracksRevision = request.tracksRevision
+                self.presentedEventsRevision = request.eventsRevision
+                self.presentationRevision &+= 1
+                self.isPresentationUpdating = false
+                self.presentationTask = nil
+            } catch is CancellationError {
+                // A newer request owns the pending flag and eventual result.
+            } catch {
+                guard generation == self.presentationGeneration else { return }
+                self.presentationTask = nil
+                self.isPresentationUpdating = false
+                self.activity = .failed(error.localizedDescription)
+            }
+        }
+    }
+
+    /// Await derived state after an explicit operation without blocking UI.
+    /// Search callers must also wait for the query's index result.
+    func waitForPresentation() async {
+        while let task = presentationTask { await task.value }
+    }
 
     var duplicateGroups: [DuplicateTrackGroup] {
         if duplicateGroupCacheRevision != contentRevision {
@@ -234,17 +281,20 @@ final class LibraryStore: ObservableObject {
     }
 
     var filteredDuplicateGroups: [DuplicateTrackGroup] {
-        return duplicateGroups.filter { group in
-            group.tracks.contains { track in
-                filterCriteria.matches(track)
-                    && (searchText.isEmpty || CatalogSearch.matches(track, query: searchText))
-            }
-        }
+        isPresentationUpdating ? [] : presentation.duplicates
     }
 
     func playbackStatistics(for trackID: Track.ID) -> TrackPlaybackStatistics {
-        PlaybackStatisticsResolver.statistics(events: playbackEvents, tracks: tracks)[trackID]
-            ?? TrackPlaybackStatistics()
+        if presentedTracksRevision == tracksRevision && presentedEventsRevision == eventsRevision {
+            return presentation.statistics[trackID] ?? TrackPlaybackStatistics()
+        }
+        // Mutating callers can read their own write before the asynchronous
+        // snapshot finishes. Derive only this track, never a full catalog map.
+        let track = tracks.first { $0.id == trackID }
+        return PlaybackStatisticsResolver.statistics(
+            events: playbackEvents.filter { $0.trackID == trackID },
+            tracks: track.map { [$0] } ?? []
+        )[trackID] ?? TrackPlaybackStatistics()
     }
 
     func setFavorite(_ isFavorite: Bool, for trackID: Track.ID) async {
@@ -1212,6 +1262,7 @@ final class LibraryStore: ObservableObject {
                 activity = .idle
             }
             scheduleSearchIndexSynchronization(document: result.document)
+            await waitForPresentation()
         } catch {
             activity = .failed(error.localizedDescription)
         }
@@ -1255,6 +1306,9 @@ final class LibraryStore: ObservableObject {
     }
 
     func switchLibrary(catalogURL: URL, mediaURL: URL) async {
+        presentationTask?.cancel()
+        presentationGeneration &+= 1
+        presentation = LibraryPresentation()
         searchIndexSynchronizationTask?.cancel()
         indexedSearchTask?.cancel()
         playbackQueueSaveTask?.cancel()

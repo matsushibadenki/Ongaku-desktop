@@ -184,6 +184,10 @@ struct LibraryContent: View {
 
             if !library.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 unifiedSearchContent
+            } else if library.isPresentationUpdating && library.selectedSection != .effects {
+                ProgressView(L10n.text("library.preparing"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.horizontal, AppTheme.spaceMD)
             } else if library.selectedPlaylist?.smartDefinition != nil
                 && library.filteredTracks.isEmpty {
                 smartPlaylistEmptyView
@@ -492,6 +496,7 @@ struct LibraryContent: View {
             } else {
                 AlbumGrid(
                     albums: albums,
+                    sections: library.presentation.albumSections,
                     selectedAlbumID: $selectedAlbumID,
                     onEditAlbum: editAlbum,
                     onDeleteAlbum: requestAlbumDeletion
@@ -797,7 +802,7 @@ struct LibraryContent: View {
     }
 
     private var albums: [AlbumGroup] {
-        AlbumGroup.makeGroups(from: library.filteredTracks)
+        library.presentation.albums
     }
 
     private var selectedAlbum: AlbumGroup? {
@@ -806,7 +811,7 @@ struct LibraryContent: View {
     }
 
     private var artists: [ArtistGroup] {
-        ArtistGroup.makeGroups(from: library.filteredTracks)
+        library.presentation.artists
     }
 
     private var selectedArtist: ArtistGroup? {
@@ -1195,7 +1200,7 @@ struct LibraryContent: View {
 
     private var trackSortRequest: TrackSortRequest {
         TrackSortRequest(
-            contentRevision: library.contentRevision,
+            contentRevision: library.presentationRevision,
             audioFeatureRevision: library.audioFeatureRevision,
             section: library.selectedSection,
             playlistID: library.selectedPlaylistID,
@@ -1683,131 +1688,10 @@ private struct TrackSortRule: Hashable, Sendable {
     }
 }
 
-private struct AlbumGroup: Identifiable {
-    let id: UUID
-    let name: String
-    let artist: String
-    let tracks: [Track]
-
-    var sortedTracks: [Track] {
-        tracks.sorted {
-            $0.title.localizedStandardCompare($1.title) == .orderedAscending
-        }
-    }
-
-    var totalDuration: TimeInterval {
-        tracks.reduce(0) { $0 + $1.duration }
-    }
-
-    static func makeGroups(from tracks: [Track]) -> [AlbumGroup] {
-        let groups = Dictionary(grouping: tracks, by: \.albumID)
-        return groups.values.compactMap { group in
-            guard let first = group.first else { return nil }
-            return AlbumGroup(
-                id: first.albumID,
-                name: first.album,
-                artist: first.artist,
-                tracks: group
-            )
-        }
-        .sorted {
-            AlbumDisplayOrdering.areInIncreasingOrder(
-                lhsName: $0.name,
-                lhsArtist: $0.artist,
-                lhsID: $0.id,
-                rhsName: $1.name,
-                rhsArtist: $1.artist,
-                rhsID: $1.id
-            )
-        }
-    }
-}
-
-private struct ArtistGroup: Identifiable {
-    let id: UUID
-    let name: String
-    let tracks: [Track]
-    var albumCount: Int { Set(tracks.map(\.albumID)).count }
-
-    var sortedTracks: [Track] {
-        tracks.sorted {
-            let albumComparison = $0.album.localizedStandardCompare($1.album)
-            if albumComparison != .orderedSame { return albumComparison == .orderedAscending }
-            return $0.title.localizedStandardCompare($1.title) == .orderedAscending
-        }
-    }
-
-    var albums: [AlbumGroup] {
-        AlbumGroup.makeGroups(from: tracks)
-    }
-
-    static func makeGroups(from tracks: [Track]) -> [ArtistGroup] {
-        Dictionary(grouping: tracks, by: \.artistID).compactMap { artistID, songs in
-            guard let artist = songs.first?.artist else { return nil }
-            return ArtistGroup(id: artistID, name: artist, tracks: songs)
-        }
-        .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-    }
-}
-
-enum AlbumTitleGrouping {
-    static let miscellaneousInitial = "#"
-
-    static func initial(for title: String, locale: Locale = .current) -> String {
-        let normalized = title.trimmingCharacters(in: .whitespacesAndNewlines)
-            .folding(
-                options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
-                locale: locale
-            )
-        guard let firstCharacter = normalized.first else { return miscellaneousInitial }
-        let initial = String(firstCharacter)
-        guard initial.unicodeScalars.contains(where: CharacterSet.letters.contains) else {
-            return miscellaneousInitial
-        }
-        return initial.uppercased(with: locale)
-    }
-
-    static func ordered(_ initials: some Sequence<String>, locale: Locale = .current) -> [String] {
-        initials.sorted { lhs, rhs in
-            if lhs == miscellaneousInitial { return false }
-            if rhs == miscellaneousInitial { return true }
-            return lhs.compare(rhs, options: [.caseInsensitive, .diacriticInsensitive], locale: locale)
-                == .orderedAscending
-        }
-    }
-}
-
-enum AlbumDisplayOrdering {
-    static func areInIncreasingOrder(
-        lhsName: String,
-        lhsArtist: String,
-        lhsID: UUID,
-        rhsName: String,
-        rhsArtist: String,
-        rhsID: UUID
-    ) -> Bool {
-        let nameComparison = lhsName.localizedStandardCompare(rhsName)
-        if nameComparison != .orderedSame {
-            return nameComparison == .orderedAscending
-        }
-
-        let artistComparison = lhsArtist.localizedStandardCompare(rhsArtist)
-        if artistComparison != .orderedSame {
-            return artistComparison == .orderedAscending
-        }
-
-        return lhsID.uuidString < rhsID.uuidString
-    }
-}
-
 private struct AlbumGrid: View {
-    private struct AlbumSection: Identifiable {
-        let initial: String
-        let albums: [AlbumGroup]
-        var id: String { initial }
-    }
 
     let albums: [AlbumGroup]
+    let sections: [AlbumSection]
     @Binding var selectedAlbumID: AlbumGroup.ID?
     let onEditAlbum: (AlbumGroup) -> Void
     let onDeleteAlbum: (AlbumGroup) -> Void
@@ -1846,16 +1730,6 @@ private struct AlbumGrid: View {
 
     private var columns: [GridItem] {
         [GridItem(.adaptive(minimum: 170, maximum: 210), spacing: AppTheme.spaceLG)]
-    }
-
-    private var sections: [AlbumSection] {
-        let grouped = Dictionary(grouping: albums) {
-            AlbumTitleGrouping.initial(for: $0.name)
-        }
-        return AlbumTitleGrouping.ordered(grouped.keys).compactMap { initial in
-            guard let albums = grouped[initial] else { return nil }
-            return AlbumSection(initial: initial, albums: albums)
-        }
     }
 
     private func albumCard(_ album: AlbumGroup) -> some View {

@@ -1214,3 +1214,5 @@
 "appStoreUpdate.message" = "Ongaku Desktop %@ is available on the App Store. Would you like to update now?";
 "appStoreUpdate.update" = "Open App Store";
 "appStoreUpdate.later" = "Later";
+
+"library.preparing" = "Preparing library…";

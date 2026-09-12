@@ -10,7 +10,7 @@ struct TrackInspector: View {
 
     var body: some View {
         Group {
-            if let track = library.selectedTrack {
+            if let track = inspectedTrack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
                         artwork(for: track)
@@ -65,6 +65,13 @@ struct TrackInspector: View {
         }
     }
 
+    private var inspectedTrack: Track? {
+        guard let current = player.currentTrack else { return library.selectedTrack }
+        // Keep artwork, lyrics and details on the same playback item, while
+        // taking metadata edits from the current library snapshot.
+        return library.tracks.first { $0.id == current.id } ?? current
+    }
+
     private func artwork(for track: Track) -> some View {
         ArtworkThumbnail(
             tracks: [track],
@@ -73,6 +80,7 @@ struct TrackInspector: View {
             fallbackSymbol: "waveform",
             fallbackLetter: String(track.album.prefix(1)).uppercased()
         )
+        .id(track.id)
         .aspectRatio(1, contentMode: .fit)
         .accessibilityHidden(true)
     }

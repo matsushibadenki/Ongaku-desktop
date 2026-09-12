@@ -1163,7 +1163,8 @@ enum StandardLibraryResolver {
         for section: LibrarySection,
         tracks: [Track],
         events: [PlaybackEvent],
-        audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
+        audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:],
+        statistics cachedStatistics: [Track.ID: TrackPlaybackStatistics]? = nil
     ) -> [Track] {
         switch section {
         case .pinned:
@@ -1174,7 +1175,7 @@ enum StandardLibraryResolver {
                 return titleOrder($0, $1)
             }
         case .frequentlyPlayed:
-            let statistics = PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
+            let statistics = cachedStatistics ?? PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
             return tracks.filter { (statistics[$0.id]?.playCount ?? 0) > 0 }.sorted {
                 let lhs = statistics[$0.id] ?? TrackPlaybackStatistics()
                 let rhs = statistics[$1.id] ?? TrackPlaybackStatistics()
@@ -1185,7 +1186,7 @@ enum StandardLibraryResolver {
                 return titleOrder($0, $1)
             }
         case .recentlyPlayed:
-            let statistics = PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
+            let statistics = cachedStatistics ?? PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
             return tracks.filter { statistics[$0.id]?.lastPlayedAt != nil }.sorted {
                 let lhs = statistics[$0.id]?.lastPlayedAt ?? .distantPast
                 let rhs = statistics[$1.id]?.lastPlayedAt ?? .distantPast
