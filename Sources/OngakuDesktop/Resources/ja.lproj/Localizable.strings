@@ -623,7 +623,7 @@
 "lrclib.search.placeholder" = "曲名、アーティスト名、アルバム名で検索";
 "lrclib.search.currentSong" = "現在の楽曲情報で検索";
 "settings.privacy.externalArtwork.title" = "オンライン画像の自動取得";
-"settings.privacy.externalArtwork.description" = "有効にすると、画像がないアルバムのアルバム名とアーティスト名をMusicBrainzとCover Art Archiveへ送信することがあります。初期状態では無効です。保存済み画像と埋め込み画像は引き続き表示されます。";
+"settings.privacy.externalArtwork.description" = "有効にすると、画像がないアルバムやアーティストの名前を使い、MusicBrainz・Cover Art Archive・Wikidata・Wikimedia Commonsから画像を取得します。初期状態では無効です。保存済み画像と埋め込み画像は引き続き表示されます。";
 "settings.privacy.externalArtwork.toggle" = "オンライン画像を自動検索する";
 "artwork.externalLookup.title" = "オンラインで画像を検索しますか？";
 "artwork.externalLookup.continue" = "オンラインで検索";

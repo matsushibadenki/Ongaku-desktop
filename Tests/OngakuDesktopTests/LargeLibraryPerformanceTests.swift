@@ -20,7 +20,7 @@ struct LargeLibraryPerformanceTests {
         #expect(document.tracks[19].artistID != document.tracks[20].artistID)
     }
 
-    @Test("M3 renders and searches a 100,000-track catalog within its budgets")
+    @Test("M3 loads a 100,000-track catalog and searches its index within CI budgets")
     func m3PerformanceGate() async throws {
         let document = LargeLibraryFixture.makeDocument()
         let root = FileManager.default.temporaryDirectory
@@ -66,6 +66,48 @@ struct LargeLibraryPerformanceTests {
         let searchP95 = percentile95(searchSamples)
         let searchBudget = enforcesPerformanceBudget ? 0.300 : 2.0
         #expect(searchP95 < searchBudget, "General search p95 took \(searchP95)s")
+        print("ONGAKU_M3_CI coldLoadAndFirstPage=\(presentationSeconds)s indexedSearchP95=\(searchP95)s")
+    }
+
+    @Test("Opt-in 100,000-track asynchronous presentation benchmark")
+    func presentationBenchmark() async throws {
+        guard ProcessInfo.processInfo.environment["ONGAKU_RUN_PRESENTATION_BENCHMARK"] == "1"
+        else { return }
+        let tracks = LargeLibraryFixture.makeDocument().tracks
+        let worker = LibraryPresentationWorker()
+        func request(_ section: LibrarySection, searchIDs: Set<Track.ID>? = nil) -> LibraryPresentationRequest {
+            LibraryPresentationRequest(
+                tracks: tracks, events: [], tracksRevision: 1, eventsRevision: 1,
+                section: section, playlist: nil, filter: LibraryFilterCriteria(),
+                searchIDs: searchIDs, audioFeatures: [:]
+            )
+        }
+        let clock = ContinuousClock()
+        let start = clock.now
+        let initial = try await worker.resolve(request(.songs))
+        let initialSeconds = seconds(start.duration(to: clock.now))
+        #expect(initial.tracks.count == 100_000)
+        var albumSamples: [Double] = []
+        var artistSamples: [Double] = []
+        var searchSamples: [Double] = []
+        for _ in 0..<10 {
+            var start = clock.now
+            let albums = try await worker.resolve(request(.albums))
+            albumSamples.append(seconds(start.duration(to: clock.now)))
+            #expect(albums.albums.count == 10_000)
+            start = clock.now
+            let artists = try await worker.resolve(request(.artists))
+            artistSamples.append(seconds(start.duration(to: clock.now)))
+            #expect(artists.artists.count == 5_000)
+            start = clock.now
+            let search = try await worker.resolve(request(.songs, searchIDs: [tracks[99_999].id]))
+            searchSamples.append(seconds(start.duration(to: clock.now)))
+            #expect(search.tracks.map(\.id) == [tracks[99_999].id])
+        }
+        // This measures worker computation, not SwiftUI rendering or index I/O.
+        print("ONGAKU_PRESENTATION_100K samples=10 initial=\(initialSeconds)s "
+            + "albumP95=\(percentile95(albumSamples))s artistP95=\(percentile95(artistSamples))s "
+            + "searchProjectionP95=\(percentile95(searchSamples))s")
     }
 
     @Test("Opt-in JSON persistence, cold-load, search, and grouping benchmark")

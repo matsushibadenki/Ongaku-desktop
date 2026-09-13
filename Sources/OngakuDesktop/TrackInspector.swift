@@ -69,7 +69,7 @@ struct TrackInspector: View {
         guard let current = player.currentTrack else { return library.selectedTrack }
         // Keep artwork, lyrics and details on the same playback item, while
         // taking metadata edits from the current library snapshot.
-        return library.tracks.first { $0.id == current.id } ?? current
+        return library.track(withID: current.id) ?? current
     }
 
     private func artwork(for track: Track) -> some View {

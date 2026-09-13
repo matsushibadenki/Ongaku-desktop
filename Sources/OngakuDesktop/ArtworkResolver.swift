@@ -112,6 +112,7 @@ struct ArtworkThumbnail: View {
         subject.cacheKey
             + "|" + tracks.map(\.sha256).joined(separator: "|")
             + "|revision:\(library.contentRevision)"
+            + "|network:\(artworkPrivacy.allowsAutomaticExternalArtwork)"
     }
 
     var body: some View {
@@ -486,12 +487,12 @@ actor ArtworkResolver {
 
     func artworkData(
         for subject: ArtworkSubject,
-        allowsNetwork: Bool = true
+        allowsNetwork: Bool = false
     ) async -> Data? {
         guard Self.isMeaningful(subject) else { return nil }
         if let data = memoryCache[subject] { return data }
         if missing.contains(subject) { return nil }
-        if let cached = diskCache(for: subject, allowExpired: false) {
+        if let cached = diskCache(for: subject, allowExpired: !allowsNetwork) {
             if cached.isEmpty {
                 missing.insert(subject)
                 return nil

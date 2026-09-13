@@ -45,6 +45,10 @@ struct ArtworkResolverTests {
         )
 
         #expect(result == nil)
+        let defaultResult = await resolver.artworkData(
+            for: .artist(name: "Private Artist")
+        )
+        #expect(defaultResult == nil)
         #expect(ArtworkRequestProbeURLProtocol.requestCount == 0)
     }
 

@@ -371,6 +371,7 @@ struct OngakuDesktopApp: App {
 
         Settings {
             PreferencesView(socialPrivacy: socialPrivacy)
+                .environmentObject(artworkPrivacy)
                 .environmentObject(library)
                 .environmentObject(player)
                 .environmentObject(storage)

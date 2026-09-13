@@ -672,11 +672,7 @@ struct LibraryContent: View {
     }
 
     private var ongakuMixCandidates: [OngakuMixCandidate] {
-        OngakuMixResolver.candidates(
-            tracks: library.tracks,
-            events: library.playbackEvents,
-            audioFeatures: library.audioFeatures
-        )
+        library.isPresentationUpdating ? [] : library.presentation.mixCandidates
     }
 
     private var ongakuMixCandidateByID: [Track.ID: OngakuMixCandidate] {
@@ -691,10 +687,7 @@ struct LibraryContent: View {
                 Text(L10n.text("ongakuMix.banner.title"))
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(AppTheme.ink)
-                if let seed = OngakuMixResolver.seed(
-                    in: library.tracks,
-                    events: library.playbackEvents
-                ) {
+                if let seed = library.presentation.mixSeed {
                     Text(L10n.format("ongakuMix.banner.seed", seed.title, seed.artist))
                         .font(.caption)
                         .foregroundStyle(AppTheme.secondaryInk)

@@ -623,7 +623,7 @@
 "lrclib.search.placeholder" = "Search by song title, artist, or album";
 "lrclib.search.currentSong" = "Search Current Song";
 "settings.privacy.externalArtwork.title" = "Automatic Online Artwork";
-"settings.privacy.externalArtwork.description" = "When enabled, missing album artwork may send the album and artist names to MusicBrainz and Cover Art Archive. It is off by default; saved and embedded artwork remains available.";
+"settings.privacy.externalArtwork.description" = "When enabled, missing album or artist images may be looked up using names on MusicBrainz, Cover Art Archive, Wikidata and Wikimedia Commons. It is off by default; saved and embedded artwork remains available.";
 "settings.privacy.externalArtwork.toggle" = "Allow automatic online artwork searches";
 "artwork.externalLookup.title" = "Search Online for Artwork?";
 "artwork.externalLookup.continue" = "Search Online";

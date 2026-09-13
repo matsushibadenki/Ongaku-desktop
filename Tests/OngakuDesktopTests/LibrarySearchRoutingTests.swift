@@ -23,11 +23,11 @@ struct LibrarySearchRoutingTests {
         try await waitUntil { store.searchBackendStatus == .sqlite }
 
         store.searchText = "LPH"
-        try await waitUntil { store.indexedSearchQuery == CatalogSearch.normalize("LPH") }
+        try await waitUntil { !store.isPresentationUpdating && store.indexedSearchQuery == CatalogSearch.normalize("LPH") }
         #expect(store.filteredTracks.map(\.id) == [first.id])
 
         store.searchText = "夜"
-        try await waitUntil { store.indexedSearchQuery == CatalogSearch.normalize("夜") }
+        try await waitUntil { !store.isPresentationUpdating && store.indexedSearchQuery == CatalogSearch.normalize("夜") }
         #expect(store.filteredTracks.map(\.id) == [second.id])
 
         try await store.updateTrackMetadata(
@@ -38,7 +38,7 @@ struct LibrarySearchRoutingTests {
         )
         try await waitUntil { store.searchBackendStatus == .sqlite }
         store.searchText = "named"
-        try await waitUntil { store.indexedSearchQuery == CatalogSearch.normalize("named") }
+        try await waitUntil { !store.isPresentationUpdating && store.indexedSearchQuery == CatalogSearch.normalize("named") }
         #expect(store.filteredTracks.map(\.id) == [first.id])
     }
 
@@ -66,11 +66,12 @@ struct LibrarySearchRoutingTests {
         store.searchText = "back"
         #expect(store.isLocalSearchPending)
         #expect(store.filteredTracks.isEmpty)
-        try await waitUntil { store.indexedSearchQuery == CatalogSearch.normalize("back") }
+        try await waitUntil { !store.isPresentationUpdating && store.indexedSearchQuery == CatalogSearch.normalize("back") }
         #expect(!store.isLocalSearchPending)
         #expect(store.filteredTracks.map(\.id) == [track.id])
 
         store.searchText = "  \n  "
+        await store.waitForPresentation()
         #expect(!store.isLocalSearchPending)
         #expect(store.filteredTracks.map(\.id) == [track.id])
     }
@@ -103,9 +104,43 @@ struct LibrarySearchRoutingTests {
         #expect(store.indexedSearchQuery == nil)
         #expect(store.isLocalSearchPending)
         #expect(store.filteredTracks.isEmpty)
-        try await waitUntil { store.indexedSearchQuery == CatalogSearch.normalize("Track 9999") }
+        try await waitUntil { !store.isPresentationUpdating && store.indexedSearchQuery == CatalogSearch.normalize("Track 9999") }
         #expect(!store.isLocalSearchPending)
         #expect(store.filteredTracks.map(\.title) == ["Track 9999"])
+    }
+
+    @Test("A failed edit restores searchable results without waiting for a new query")
+    @MainActor
+    func failedEditRestoresSearch() async throws {
+        let root = temporaryRoot(named: "Failed-Edit")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let libraryRoot = root.appendingPathComponent("Library")
+        let blockedIndex = root.appendingPathComponent("blocked-index")
+        try Data("blocked".utf8).write(to: blockedIndex)
+        let track = makeTrack(title: "Searchable Song", artist: "Artist", album: "Album")
+        let repository = LibraryRepository(rootURL: libraryRoot)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(
+            repository: repository, searchIndex: SQLiteCatalogPrototype(rootURL: blockedIndex)
+        )
+        await store.load()
+        try await waitUntil { store.searchBackendStatus == .jsonFallback }
+        store.searchText = "Searchable"
+        try await waitUntil { !store.isLocalSearchPending }
+        #expect(store.filteredTracks.map(\.id) == [track.id])
+
+        // Only this test's disposable repository is replaced, making persistence
+        // fail after the optimistic in-memory edit has invalidated the search.
+        try FileManager.default.removeItem(at: libraryRoot)
+        try Data("blocked".utf8).write(to: libraryRoot)
+        await store.setRating(5, for: track.id)
+        try await waitUntil { !store.isLocalSearchPending }
+        #expect(store.tracks.first?.rating == track.rating)
+        #expect(store.filteredTracks.map(\.id) == [track.id])
+        if case .failed = store.activity {} else {
+            Issue.record("The forced persistence error was not reported")
+        }
     }
 
     private func temporaryRoot(named name: String) -> URL {

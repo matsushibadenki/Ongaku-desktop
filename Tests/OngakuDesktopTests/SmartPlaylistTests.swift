@@ -65,11 +65,14 @@ struct SmartPlaylistTests {
             name: "Highly Rated",
             definition: definition
         )
+        await store.waitForPresentation()
         #expect(store.filteredTracks.map(\.id) == [second.id])
 
         await store.setRating(5, for: first.id)
+        await store.waitForPresentation()
         #expect(Set(store.filteredTracks.map(\.id)) == [first.id, second.id])
         await store.setRating(1, for: second.id)
+        await store.waitForPresentation()
         #expect(store.filteredTracks.map(\.id) == [first.id])
 
         let restored = try await LibraryRepository(rootURL: root).load().document

@@ -623,7 +623,7 @@
 "lrclib.search.placeholder" = "按歌名、艺人或专辑搜索";
 "lrclib.search.currentSong" = "搜索当前歌曲";
 "settings.privacy.externalArtwork.title" = "自动获取在线图片";
-"settings.privacy.externalArtwork.description" = "启用后，缺少封面的专辑可能会将专辑名和艺人名发送给MusicBrainz和Cover Art Archive。此功能默认关闭；已保存和内嵌的图片仍可显示。";
+"settings.privacy.externalArtwork.description" = "启用后，缺少专辑或艺人图片时，会使用名称从MusicBrainz、Cover Art Archive、Wikidata和Wikimedia Commons查找图片。此功能默认关闭；已保存和内嵌的图片仍可显示。";
 "settings.privacy.externalArtwork.toggle" = "允许自动搜索在线图片";
 "artwork.externalLookup.title" = "要在线搜索图片吗？";
 "artwork.externalLookup.continue" = "在线搜索";

@@ -83,7 +83,18 @@ final class LibraryStore: ObservableObject {
     }
 
     @Published private(set) var tracks: [Track] = [] {
-        didSet { tracksRevision &+= 1; schedulePresentation() }
+        didSet {
+            tracksRevision &+= 1
+            // Persisting an edit can suspend before index synchronization.
+            // Never apply matches from the previous catalog in that interval.
+            indexedSearchTask?.cancel()
+            searchIndexSynchronizationTask?.cancel()
+            indexedSearchTrackIDs = nil
+            indexedSearchQuery = nil
+            searchBackendStatus = .synchronizing
+            scheduleIndexedSearch()
+            schedulePresentation()
+        }
     }
     @Published private(set) var playlists: [Playlist] = [] {
         didSet { schedulePresentation() }
@@ -160,6 +171,7 @@ final class LibraryStore: ObservableObject {
     private let presentationWorker = LibraryPresentationWorker()
     private var presentationTask: Task<Void, Never>?
     private var presentationGeneration = 0
+    private var isPresentationScheduled = false
     private var tracksRevision = 0
     private var eventsRevision = 0
     private var presentedTracksRevision = -1
@@ -177,8 +189,6 @@ final class LibraryStore: ObservableObject {
     private var audioFeatureAnalysisTask: Task<Void, Never>?
     private var audioFeatureAnalysisGeneration = UUID()
     private var isAudioFeatureAnalysisUserPaused = false
-    private var duplicateGroupCacheRevision = -1
-    private var duplicateGroupCache: [DuplicateTrackGroup] = []
     private var lastFileAvailabilityScanAt: Date?
     weak var undoManager: UndoManager?
 
@@ -193,7 +203,12 @@ final class LibraryStore: ObservableObject {
     }
 
     var selectedTrack: Track? {
-        tracks.first { $0.id == selectedTrackID }
+        selectedTrackID.flatMap { track(withID: $0) }
+    }
+
+    func track(withID id: Track.ID) -> Track? {
+        if presentedTracksRevision == tracksRevision { return presentation.tracksByID[id] }
+        return tracks.first { $0.id == id }
     }
 
     func updateTrackSelection(_ selectedIDs: Set<Track.ID>, focusedID: Track.ID?) {
@@ -222,15 +237,17 @@ final class LibraryStore: ObservableObject {
     var attentionCount: Int { presentation.attentionCount }
 
     private func schedulePresentation() {
-        presentationTask?.cancel()
         presentationGeneration &+= 1
-        let generation = presentationGeneration
         isPresentationUpdating = true
+        guard !isPresentationScheduled else { return }
+        presentationTask?.cancel()
+        isPresentationScheduled = true
         // Coalesce mutations within one MainActor turn before copying snapshots.
         presentationTask = Task { [weak self] in
             await Task.yield()
-            guard !Task.isCancelled, let self,
-                  generation == self.presentationGeneration else { return }
+            guard !Task.isCancelled, let self else { return }
+            self.isPresentationScheduled = false
+            let generation = self.presentationGeneration
             let query = Self.normalizedSearchQuery(self.searchText)
             guard query.isEmpty || (self.indexedSearchQuery == query
                 && self.indexedSearchTrackIDs != nil) else {
@@ -273,11 +290,7 @@ final class LibraryStore: ObservableObject {
     }
 
     var duplicateGroups: [DuplicateTrackGroup] {
-        if duplicateGroupCacheRevision != contentRevision {
-            duplicateGroupCache = DuplicateTrackAnalyzer.groups(in: tracks)
-            duplicateGroupCacheRevision = contentRevision
-        }
-        return duplicateGroupCache
+        presentedTracksRevision == tracksRevision ? presentation.allDuplicates : []
     }
 
     var filteredDuplicateGroups: [DuplicateTrackGroup] {
@@ -1307,6 +1320,7 @@ final class LibraryStore: ObservableObject {
 
     func switchLibrary(catalogURL: URL, mediaURL: URL) async {
         presentationTask?.cancel()
+        isPresentationScheduled = false
         presentationGeneration &+= 1
         presentation = LibraryPresentation()
         searchIndexSynchronizationTask?.cancel()
@@ -2429,6 +2443,7 @@ final class LibraryStore: ObservableObject {
         keeping keepID: Track.ID,
         moveManagedFilesToTrash: Bool
     ) async throws -> DuplicateResolutionResult {
+        await waitForPresentation()
         guard let group = duplicateGroups.first(where: { $0.id == groupID }),
               group.tracks.contains(where: { $0.id == keepID }) else {
             throw DuplicateResolutionError.invalidSelection
@@ -2862,6 +2877,7 @@ final class LibraryStore: ObservableObject {
         indexedSearchQuery = nil
         searchBackendStatus = .synchronizing
         let expectedRevision = contentRevision
+        let expectedTracksRevision = tracksRevision
         let queries = parityQueries(for: document.tracks)
         let manifestURL = repository.rootURL.appendingPathComponent("library-v1.json")
         let sourceManifestURL = FileManager.default.fileExists(atPath: manifestURL.path)
@@ -2898,6 +2914,7 @@ final class LibraryStore: ObservableObject {
                     )
                 }
                 guard !Task.isCancelled, let self,
+                      self.tracksRevision == expectedTracksRevision,
                       self.contentRevision == expectedRevision else { return }
                 guard parity.isMatch else {
                     self.searchBackendStatus = .jsonFallback
@@ -2908,6 +2925,7 @@ final class LibraryStore: ObservableObject {
                 self.scheduleIndexedSearch()
             } catch {
                 guard !Task.isCancelled, let self,
+                      self.tracksRevision == expectedTracksRevision,
                       self.contentRevision == expectedRevision else { return }
                 self.searchBackendStatus = .jsonFallback
                 self.scheduleIndexedSearch()
@@ -2923,7 +2941,7 @@ final class LibraryStore: ObservableObject {
             indexedSearchQuery = nil
             return
         }
-        let expectedRevision = contentRevision
+        let expectedTracksRevision = tracksRevision
         let resultLimit = max(tracks.count, 1)
         let query = searchText
         let fallbackTracks = tracks
@@ -2935,7 +2953,7 @@ final class LibraryStore: ObservableObject {
                     in: fallbackTracks,
                     query: query
                 ), !Task.isCancelled, let self,
-                      self.contentRevision == expectedRevision,
+                      self.tracksRevision == expectedTracksRevision,
                       Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
                 self.indexedSearchTrackIDs = ids
                 self.indexedSearchQuery = normalizedQuery
@@ -2947,19 +2965,19 @@ final class LibraryStore: ObservableObject {
             do {
                 let ids = try await searchIndex.search(query, limit: resultLimit)
                 guard !Task.isCancelled, let self,
-                      self.contentRevision == expectedRevision,
+                      self.tracksRevision == expectedTracksRevision,
                       Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
                 self.indexedSearchTrackIDs = Set(ids)
                 self.indexedSearchQuery = normalizedQuery
             } catch {
                 guard !Task.isCancelled, let self,
-                      self.contentRevision == expectedRevision else { return }
+                      self.tracksRevision == expectedTracksRevision else { return }
                 self.searchBackendStatus = .jsonFallback
                 guard let ids = await Self.fallbackSearchIDs(
                     in: fallbackTracks,
                     query: query
                 ), !Task.isCancelled,
-                      self.contentRevision == expectedRevision,
+                      self.tracksRevision == expectedTracksRevision,
                       Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
                 self.indexedSearchTrackIDs = ids
                 self.indexedSearchQuery = normalizedQuery

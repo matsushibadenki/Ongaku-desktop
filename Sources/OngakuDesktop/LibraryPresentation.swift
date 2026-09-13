@@ -16,10 +16,13 @@ struct LibraryPresentationRequest: Sendable {
 
 struct LibraryPresentation: Sendable {
     var tracks: [Track] = []
+    var mixCandidates: [OngakuMixCandidate] = []
+    var mixSeed: Track?
     var albums: [AlbumGroup] = []
     var artists: [ArtistGroup] = []
     var albumSections: [AlbumSection] = []
     var duplicates: [DuplicateTrackGroup] = []
+    var allDuplicates: [DuplicateTrackGroup] = []
     var statistics: [Track.ID: TrackPlaybackStatistics] = [:]
     var tracksByID: [Track.ID: Track] = [:]
     var totalBytes: Int64 = 0
@@ -33,6 +36,7 @@ actor LibraryPresentationWorker {
     private var eventsRevision = -1
     private var tracksByID: [Track.ID: Track] = [:]
     private var statistics: [Track.ID: TrackPlaybackStatistics] = [:]
+    private var duplicates: [DuplicateTrackGroup] = []
     private var totalBytes: Int64 = 0
     private var attentionCount = 0
 
@@ -50,6 +54,9 @@ actor LibraryPresentationWorker {
                 bytes += track.fileSize
                 if track.health != .verified { attention += 1 }
             }
+            let groups = DuplicateTrackAnalyzer.groups(in: request.tracks)
+            try Task.checkCancellation()
+            duplicates = groups
             tracksByID = byID
             totalBytes = bytes
             attentionCount = attention
@@ -64,6 +71,8 @@ actor LibraryPresentationWorker {
         }
         try Task.checkCancellation()
         var visible: [Track]
+        var mixCandidates: [OngakuMixCandidate] = []
+        var mixSeed: Track?
         if let playlist = request.playlist {
             if let definition = playlist.smartDefinition {
                 visible = SmartPlaylistResolver.tracks(
@@ -72,6 +81,16 @@ actor LibraryPresentationWorker {
             } else {
                 visible = playlist.entries.compactMap { tracksByID[$0.trackID] }
             }
+        } else if request.section == .ongakuMix {
+            mixSeed = OngakuMixResolver.seed(in: request.tracks, events: request.events)
+            mixCandidates = OngakuMixResolver.candidates(
+                tracks: request.tracks, events: request.events,
+                seedTrackID: mixSeed?.id, audioFeatures: request.audioFeatures
+            )
+            visible = mixCandidates.map(\.track)
+        } else if request.section == .duplicates {
+            let ids = Set(duplicates.flatMap { $0.tracks.map(\.id) })
+            visible = request.tracks.filter { ids.contains($0.id) }
         } else {
             visible = StandardLibraryResolver.tracks(
                 for: request.section, tracks: request.tracks, events: request.events,
@@ -87,10 +106,10 @@ actor LibraryPresentationWorker {
             }
         }
         var result = LibraryPresentation(
-            tracks: visible, statistics: statistics, tracksByID: tracksByID,
+            tracks: visible, mixCandidates: mixCandidates, mixSeed: mixSeed, allDuplicates: duplicates, statistics: statistics, tracksByID: tracksByID,
             totalBytes: totalBytes, attentionCount: attentionCount
         )
-        if request.section == .albums || request.section == .artists {
+        if request.section == .albums {
             result.albums = AlbumGroup.makeGroups(from: visible)
             result.albumSections = AlbumSection.makeSections(from: result.albums)
         }
@@ -102,7 +121,7 @@ actor LibraryPresentationWorker {
             // Analyze the complete catalog first so filters do not hide a
             // matching group's other copies from the resolution workflow.
             let visibleIDs = Set(visible.map(\.id))
-            result.duplicates = DuplicateTrackAnalyzer.groups(in: request.tracks).filter {
+            result.duplicates = duplicates.filter {
                 $0.tracks.contains { visibleIDs.contains($0.id) }
             }
         }
@@ -117,14 +136,18 @@ struct AlbumGroup: Identifiable, Sendable {
     let artist: String
     let tracks: [Track]
 
-    var sortedTracks: [Track] {
-        tracks.sorted {
+    let sortedTracks: [Track]
+    let totalDuration: TimeInterval
+
+    init(id: UUID, name: String, artist: String, tracks: [Track]) {
+        self.id = id
+        self.name = name
+        self.artist = artist
+        self.tracks = tracks
+        sortedTracks = tracks.sorted {
             $0.title.localizedStandardCompare($1.title) == .orderedAscending
         }
-    }
-
-    var totalDuration: TimeInterval {
-        tracks.reduce(0) { $0 + $1.duration }
+        totalDuration = tracks.reduce(0) { $0 + $1.duration }
     }
 
     static func makeGroups(from tracks: [Track]) -> [AlbumGroup] {
@@ -155,18 +178,21 @@ struct ArtistGroup: Identifiable, Sendable {
     let id: UUID
     let name: String
     let tracks: [Track]
-    var albumCount: Int { Set(tracks.map(\.albumID)).count }
+    let albumCount: Int
+    let sortedTracks: [Track]
+    let albums: [AlbumGroup]
 
-    var sortedTracks: [Track] {
-        tracks.sorted {
+    init(id: UUID, name: String, tracks: [Track]) {
+        self.id = id
+        self.name = name
+        self.tracks = tracks
+        albums = AlbumGroup.makeGroups(from: tracks)
+        albumCount = albums.count
+        sortedTracks = tracks.sorted {
             let albumComparison = $0.album.localizedStandardCompare($1.album)
             if albumComparison != .orderedSame { return albumComparison == .orderedAscending }
             return $0.title.localizedStandardCompare($1.title) == .orderedAscending
         }
-    }
-
-    var albums: [AlbumGroup] {
-        AlbumGroup.makeGroups(from: tracks)
     }
 
     static func makeGroups(from tracks: [Track]) -> [ArtistGroup] {
