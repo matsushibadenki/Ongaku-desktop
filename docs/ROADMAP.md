@@ -65,7 +65,9 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] A3実画面ゲートの計測基盤として、一時ディレクトリだけを受け付ける専用起動モードと決定論的な10万曲fixture生成を追加した。計測時はユーザーのライブラリ、更新確認、ファイル存在確認、端末同期、外部ストア通信から分離する。Release UIテストは初回表示、10検索のp95、各計測点のRSSを製品目標に対して判定し、通常のUIテストでは明示的にスキップする
 - [Done] A4の音声境界の第1段階として、通常再生と次曲先読みで使う音声ファイルopen処理を`PlaybackController`へ注入可能にした。実エンジンを起動せずopen失敗を発生させ、対象曲・停止状態・ユーザー向けエラーを検証する自動試験を追加した
 - [Done] A4のMusicKit境界の第1段階として、再生開始・再開・前曲・次曲・キュー項目再生の非同期transport操作を`AppleMusicPlaybackOperations`へ分離した。ネットワーク再生を行わず各操作へ同一障害を注入でき、production controllerにも差し替え可能なことを自動試験で確認した
-- [Done] A4のUI更新境界として、Mac／Mobileの端末同期コントローラーを`MainActor`へ隔離した。MultipeerConnectivityの任意スレッドデリゲートは`nonisolated`で受け、UI状態へ触れる前に明示的にMainActorへ橋渡しする。Xcode 27で厳格化されたprotocol conformance診断と実行時actor違反を避ける回帰ゲートを追加した
+- [Done] A4のUI更新境界として、Mac／MobileのMultipeerConnectivityデリゲートとProgress監視コールバックからUI状態へ触れる前に、明示的にMainActorへ橋渡しする。コントローラー全体のMainActor化はバックグラウンド転送を誤って隔離するため採用せず、Xcode 27の実行時queue検査で停止しない境界を回帰ゲートにした
+- [Done] A4のcheckpoint読書きでは初期化時に固定したSendable storeを転送キューへ値として渡す。破棄・期限切れ整理・一覧取得後の`resumableTransfers`更新はMainActorへ明示的に戻す
+- [Done] A4の転送状態分離として、Mac／Mobileで重複していた一時停止IDと保留チャンク要求を共通の`DeviceChunkTransferPauseCoordinator`へ移した。停止判定と要求保存を同じロック内で原子的に実行し、同時再開で要求が取り残される競合を除去した
 - [Next] A4の次段階として、チャンク転送のファイルI/O・checkpoint・転送中辞書を専用actorへ移し、現在Xcode 27が警告するDispatchQueueクロージャーからMainActor状態への参照を解消する
 - [Done] 上記A4境界変更をXcode 27.0で全296テスト、通常macOS Debug、Mac App Store Release、iOS Simulator Debugの順に検証した。並列Xcodeビルドは同一DerivedDataのDBロックを起こすため構成ビルドを直列化し、3構成すべて成功した
 - [Next] `ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する

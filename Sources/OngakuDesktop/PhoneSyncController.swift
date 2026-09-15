@@ -36,7 +36,6 @@ struct NearbyBrowserLifecycle: Equatable, Sendable {
     }
 }
 
-@MainActor
 final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable {
     nonisolated static let auditHistoryDefaultsKey = "deviceSync.overlayAudit.v1"
     @Published private(set) var connectionState: DeviceSyncConnectionState = .disconnected
@@ -84,8 +83,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private var terminalTransferActions: [UUID: DeviceTransferControlAction] = [:]
     private var outgoingChunkTransfers: [UUID: (DeviceChunkTransferDescriptor, URL)] = [:]
     private var incomingChunkTransfers: [UUID: (DeviceChunkTransferDescriptor, DeviceTransferCheckpoint)] = [:]
-    private var pendingChunkRequests: [UUID: DeviceChunkRequest] = [:]
-    private var pausedChunkTransferIDs: Set<UUID> = []
+    private let chunkPauseCoordinator = DeviceChunkTransferPauseCoordinator()
     private var chunkTransferCompletions: [UUID: @Sendable (Error?) -> Void] = [:]
     private var bulkUploadQueue: [UUID] = []
     private var bulkDownloadQueue: [UUID] = []
@@ -102,15 +100,14 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         label: "com.matsushibadenki.OngakuDesktop.chunk-transfer",
         qos: .utility
     )
-    private lazy var checkpointStore = DeviceTransferCheckpointStore(
-        directory: Self.checkpointDirectory
-    )
+    private let checkpointStore: DeviceTransferCheckpointStore
     private var automaticInvitationCooldowns: [String: Date] = [:]
     private var browserLifecycle = NearbyBrowserLifecycle()
     private var isStarted = false
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        checkpointStore = DeviceTransferCheckpointStore(directory: Self.checkpointDirectory)
         super.init()
         session.delegate = self
         browser.delegate = self
@@ -121,7 +118,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         refreshResumableTransfers(removingStale: true)
     }
 
-    isolated deinit {
+    deinit {
         bulkOperationTimeoutWorkItem?.cancel()
         connectionAttemptTimeoutWorkItem?.cancel()
         usbDetectionTimer?.cancel()
@@ -553,10 +550,12 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 
     func discardResumableTransfers() {
         guard !transfers.contains(where: \.isActive) else { return }
-        chunkTransferQueue.async { [weak self] in
-            guard let self else { return }
+        chunkTransferQueue.async { [weak self, checkpointStore] in
             try? checkpointStore.removeAll()
-            refreshResumableTransfers()
+            let summaries = (try? checkpointStore.summaries()) ?? []
+            Task { @MainActor [weak self] in
+                self?.resumableTransfers = summaries
+            }
         }
     }
 
@@ -878,10 +877,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             guard let (descriptor, fileURL) = value,
                   let index = request.missingIndexes.first,
                   descriptor.chunkHashes.indices.contains(index) else { return }
-            if lock.withLock({ pausedChunkTransferIDs.contains(request.transferID) }) {
-                lock.withLock { pendingChunkRequests[request.transferID] = request }
-                return
-            }
+            if chunkPauseCoordinator.deferIfPaused(request) { return }
             do {
                 let payload = try DeviceChunkTransfer.payload(
                     descriptor: descriptor,
@@ -996,8 +992,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         let value = lock.withLock {
             let outgoing = outgoingChunkTransfers.removeValue(forKey: completion.transferID)
             let callback = chunkTransferCompletions.removeValue(forKey: completion.transferID)
-            pendingChunkRequests.removeValue(forKey: completion.transferID)
-            pausedChunkTransferIDs.remove(completion.transferID)
+            chunkPauseCoordinator.remove(completion.transferID)
             return (outgoing, callback)
         }
         guard let descriptor = value.0?.0,
@@ -1022,8 +1017,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         let callback = lock.withLock { () -> (@Sendable (Error?) -> Void)? in
             outgoingChunkTransfers.removeValue(forKey: transferID)
             incomingChunkTransfers.removeValue(forKey: transferID)
-            pendingChunkRequests.removeValue(forKey: transferID)
-            pausedChunkTransferIDs.remove(transferID)
+            chunkPauseCoordinator.remove(transferID)
             return chunkTransferCompletions.removeValue(forKey: transferID)
         }
         updateTransfer(id: transferID, phase: .failed(error.localizedDescription))
@@ -1119,11 +1113,13 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 
     private func observe(_ progress: Progress, transferID: UUID) {
         let observation = progress.observe(\.fractionCompleted, options: [.initial, .new]) { [weak self] value, _ in
-            self?.updateTransferProgress(
-                id: transferID,
-                fraction: value.fractionCompleted,
-                completedBytes: value.completedUnitCount
-            )
+            Task { @MainActor [weak self] in
+                self?.updateTransferProgress(
+                    id: transferID,
+                    fraction: value.fractionCompleted,
+                    completedBytes: value.completedUnitCount
+                )
+            }
         }
         lock.withLock {
             transferProgresses[transferID] = progress
@@ -1142,22 +1138,18 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         let progress = lock.withLock { transferProgresses[control.transferID] }
         switch control.action {
         case .pause:
-            _ = lock.withLock { pausedChunkTransferIDs.insert(control.transferID) }
+            chunkPauseCoordinator.pause(control.transferID)
             progress?.pause()
             updateTransfer(id: control.transferID, phase: .paused)
         case .resume:
-            let pending = lock.withLock { () -> DeviceChunkRequest? in
-                pausedChunkTransferIDs.remove(control.transferID)
-                return pendingChunkRequests.removeValue(forKey: control.transferID)
-            }
+            let pending = chunkPauseCoordinator.resume(control.transferID)
             progress?.resume()
             updateTransfer(id: control.transferID, phase: .transferring)
             if let pending { sendRequestedChunk(pending) }
         case .cancel:
             let chunkValue = lock.withLock { () -> ((DeviceChunkTransferDescriptor, DeviceTransferCheckpoint)?, (@Sendable (Error?) -> Void)?) in
                 terminalTransferActions[control.transferID] = .cancel
-                pausedChunkTransferIDs.remove(control.transferID)
-                pendingChunkRequests.removeValue(forKey: control.transferID)
+                chunkPauseCoordinator.remove(control.transferID)
                 outgoingChunkTransfers.removeValue(forKey: control.transferID)
                 let incoming = incomingChunkTransfers.removeValue(forKey: control.transferID)
                 let callback = chunkTransferCompletions.removeValue(forKey: control.transferID)
@@ -1174,8 +1166,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         case .insufficientStorage:
             let callback = lock.withLock { () -> (@Sendable (Error?) -> Void)? in
                 terminalTransferActions[control.transferID] = .insufficientStorage
-                pausedChunkTransferIDs.remove(control.transferID)
-                pendingChunkRequests.removeValue(forKey: control.transferID)
+                chunkPauseCoordinator.remove(control.transferID)
                 outgoingChunkTransfers.removeValue(forKey: control.transferID)
                 return chunkTransferCompletions.removeValue(forKey: control.transferID)
             }
@@ -1197,10 +1188,9 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             terminalTransferActions.removeAll()
             outgoingChunkTransfers.removeAll()
             incomingChunkTransfers.removeAll()
-            pendingChunkRequests.removeAll()
-            pausedChunkTransferIDs.removeAll()
             chunkTransferCompletions.removeAll()
         }
+        chunkPauseCoordinator.removeAll()
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             for index in transfers.indices where transfers[index].isActive {
@@ -1233,15 +1223,14 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     }
 
     private func refreshResumableTransfers(removingStale: Bool = false) {
-        chunkTransferQueue.async { [weak self] in
-            guard let self else { return }
+        chunkTransferQueue.async { [weak self, checkpointStore] in
             if removingStale {
                 _ = try? checkpointStore.removeStale(
                     before: Date().addingTimeInterval(-30 * 24 * 60 * 60)
                 )
             }
             let summaries = (try? checkpointStore.summaries()) ?? []
-            DispatchQueue.main.async { [weak self] in
+            Task { @MainActor [weak self] in
                 self?.resumableTransfers = summaries
             }
         }
@@ -1274,7 +1263,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 }
 
 extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
-    nonisolated func browser(
+    func browser(
         _ browser: MCNearbyServiceBrowser,
         foundPeer peerID: MCPeerID,
         withDiscoveryInfo info: [String: String]?
@@ -1299,7 +1288,7 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
         }
     }
 
-    nonisolated func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         Task { @MainActor [weak self] in
             guard let self else { return }
             let id = peerID.displayName
@@ -1311,7 +1300,7 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
         }
     }
 
-    nonisolated func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         Task { @MainActor [weak self] in
             guard let self else { return }
             browserLifecycle.markStartFailed()
@@ -1323,7 +1312,7 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
 }
 
 extension PhoneSyncController: MCSessionDelegate {
-    nonisolated func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         Task { @MainActor [weak self] in
             guard let self else { return }
             let name = peerID.displayName
@@ -1352,7 +1341,7 @@ extension PhoneSyncController: MCSessionDelegate {
         }
     }
 
-    nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         Task { @MainActor [weak self] in
             guard let self else { return }
             do {
@@ -1363,7 +1352,7 @@ extension PhoneSyncController: MCSessionDelegate {
         }
     }
 
-    nonisolated func session(
+    func session(
         _ session: MCSession,
         didStartReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
@@ -1379,7 +1368,7 @@ extension PhoneSyncController: MCSessionDelegate {
         }
     }
 
-    nonisolated func session(
+    func session(
         _ session: MCSession,
         didFinishReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
@@ -1391,7 +1380,7 @@ extension PhoneSyncController: MCSessionDelegate {
         }
     }
 
-    nonisolated func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
+    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
 }
 
 private extension NSLock {

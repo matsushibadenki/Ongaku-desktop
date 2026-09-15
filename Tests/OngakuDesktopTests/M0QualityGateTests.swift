@@ -342,7 +342,7 @@ struct M0QualityGateTests {
         ))
     }
 
-    @Test("Device sync UI state is MainActor-owned and delegate callbacks bridge explicitly")
+    @Test("Device sync callbacks bridge UI updates without isolating transfer workers")
     func deviceSyncActorBoundaryContract() throws {
         let desktop = try Self.source("PhoneSyncController.swift")
         let mobile = try String(
@@ -351,14 +351,14 @@ struct M0QualityGateTests {
             encoding: .utf8
         )
 
-        #expect(desktop.contains("@MainActor\nfinal class PhoneSyncController"))
-        #expect(mobile.contains("@MainActor\nfinal class MobileSyncController"))
-        #expect(desktop.contains("nonisolated func browser("))
-        #expect(desktop.contains("nonisolated func session("))
-        #expect(mobile.contains("nonisolated func advertiser("))
-        #expect(mobile.contains("nonisolated func session("))
+        #expect(!desktop.contains("@MainActor\nfinal class PhoneSyncController"))
+        #expect(!mobile.contains("@MainActor\nfinal class MobileSyncController"))
         #expect(desktop.contains("Task { @MainActor [weak self] in"))
         #expect(mobile.contains("Task { @MainActor [weak self] in"))
+        #expect(desktop.contains("private let checkpointStore"))
+        #expect(mobile.contains("private let checkpointStore"))
+        #expect(!desktop.contains("private lazy var checkpointStore"))
+        #expect(!mobile.contains("private lazy var checkpointStore"))
     }
 
     private static func stringsTable(named name: String, locale: String) throws -> [String: String] {

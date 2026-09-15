@@ -101,6 +101,22 @@ struct M8TransferResilienceMilestoneTests {
         }
     }
 
+    @Test("Pause and deferred request state changes atomically")
+    func pauseCoordinatorIsAtomic() {
+        let coordinator = DeviceChunkTransferPauseCoordinator()
+        let transferID = UUID()
+        let first = DeviceChunkRequest(transferID: transferID, missingIndexes: [1, 2])
+        let latest = DeviceChunkRequest(transferID: transferID, missingIndexes: [2])
+
+        #expect(!coordinator.deferIfPaused(first))
+        coordinator.pause(transferID)
+        #expect(coordinator.deferIfPaused(first))
+        #expect(coordinator.deferIfPaused(latest))
+        #expect(coordinator.resume(transferID) == latest)
+        #expect(coordinator.resume(transferID) == nil)
+        #expect(!coordinator.deferIfPaused(first))
+    }
+
     @Test("A persisted checkpoint requests only missing chunks after restart")
     func checkpointResume() throws {
         let fixture = try makeChunkFixture(byteCount: 700_000)

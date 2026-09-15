@@ -509,6 +509,51 @@ final class DeviceReceivedLibraryRepository: @unchecked Sendable {
     }
 }
 
+final class DeviceChunkTransferPauseCoordinator: @unchecked Sendable {
+    private let lock = NSLock()
+    private var pausedTransferIDs: Set<UUID> = []
+    private var pendingRequests: [UUID: DeviceChunkRequest] = [:]
+
+    func pause(_ transferID: UUID) {
+        _ = withLock { pausedTransferIDs.insert(transferID) }
+    }
+
+    func deferIfPaused(_ request: DeviceChunkRequest) -> Bool {
+        withLock {
+            guard pausedTransferIDs.contains(request.transferID) else { return false }
+            pendingRequests[request.transferID] = request
+            return true
+        }
+    }
+
+    func resume(_ transferID: UUID) -> DeviceChunkRequest? {
+        withLock {
+            pausedTransferIDs.remove(transferID)
+            return pendingRequests.removeValue(forKey: transferID)
+        }
+    }
+
+    func remove(_ transferID: UUID) {
+        withLock {
+            pausedTransferIDs.remove(transferID)
+            pendingRequests.removeValue(forKey: transferID)
+        }
+    }
+
+    func removeAll() {
+        withLock {
+            pausedTransferIDs.removeAll()
+            pendingRequests.removeAll()
+        }
+    }
+
+    private func withLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return try body()
+    }
+}
+
 private extension String {
     var isSHA256Hex: Bool {
         count == 64 && allSatisfy { $0.isHexDigit }
