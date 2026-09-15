@@ -52,6 +52,8 @@ struct M0QualityGateTests {
         #expect(sidebar.contains(".symbolRenderingMode(.monochrome)"))
         #expect(sidebar.contains(".foregroundStyle(sidebarIconColor)"))
         #expect(sidebar.components(separatedBy: "sidebarSystemImage(").count - 1 >= 7)
+        #expect(sidebar.contains("fallbackIconColor: sidebarIconColor"))
+        #expect(sidebar.contains(".foregroundStyle(fallbackIconColor)"))
     }
 
     @Test("English, Japanese, and Simplified Chinese localization keys stay in parity")
@@ -338,6 +340,25 @@ struct M0QualityGateTests {
         #expect(effectsRack.contains(
             "selectedTab == .pro ? AppTheme.bottomPlayerClearance : AppTheme.spaceLG"
         ))
+    }
+
+    @Test("Device sync UI state is MainActor-owned and delegate callbacks bridge explicitly")
+    func deviceSyncActorBoundaryContract() throws {
+        let desktop = try Self.source("PhoneSyncController.swift")
+        let mobile = try String(
+            contentsOf: Self.repositoryRoot
+                .appendingPathComponent("Sources/OngakuMobile/MobileSyncController.swift"),
+            encoding: .utf8
+        )
+
+        #expect(desktop.contains("@MainActor\nfinal class PhoneSyncController"))
+        #expect(mobile.contains("@MainActor\nfinal class MobileSyncController"))
+        #expect(desktop.contains("nonisolated func browser("))
+        #expect(desktop.contains("nonisolated func session("))
+        #expect(mobile.contains("nonisolated func advertiser("))
+        #expect(mobile.contains("nonisolated func session("))
+        #expect(desktop.contains("Task { @MainActor [weak self] in"))
+        #expect(mobile.contains("Task { @MainActor [weak self] in"))
     }
 
     private static func stringsTable(named name: String, locale: String) throws -> [String: String] {

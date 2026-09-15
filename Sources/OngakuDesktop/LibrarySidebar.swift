@@ -542,7 +542,10 @@ struct LibrarySidebar: View {
                     .symbolRenderingMode(.monochrome)
                     .foregroundStyle(sidebarIconColor)
             } else {
-                PlaylistSidebarArtwork(playlist: playlist)
+                PlaylistSidebarArtwork(
+                    playlist: playlist,
+                    fallbackIconColor: sidebarIconColor
+                )
             }
         }
         .tag(SidebarDestination.playlist(playlist.id))
@@ -908,6 +911,7 @@ private struct PlaylistImportPreviewView: View {
 
 private struct PlaylistSidebarArtwork: View {
     let playlist: Playlist
+    let fallbackIconColor: Color
 
     var body: some View {
         Group {
@@ -916,6 +920,8 @@ private struct PlaylistSidebarArtwork: View {
                 Image(nsImage: image).resizable().scaledToFill()
             } else {
                 Image(systemName: "music.note.list")
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(fallbackIconColor)
             }
         }
         .frame(width: 18, height: 18)

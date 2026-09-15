@@ -36,6 +36,7 @@ struct NearbyBrowserLifecycle: Equatable, Sendable {
     }
 }
 
+@MainActor
 final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable {
     nonisolated static let auditHistoryDefaultsKey = "deviceSync.overlayAudit.v1"
     @Published private(set) var connectionState: DeviceSyncConnectionState = .disconnected
@@ -120,7 +121,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         refreshResumableTransfers(removingStale: true)
     }
 
-    deinit {
+    isolated deinit {
         bulkOperationTimeoutWorkItem?.cancel()
         connectionAttemptTimeoutWorkItem?.cancel()
         usbDetectionTimer?.cancel()
@@ -1273,20 +1274,20 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 }
 
 extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
-    func browser(
+    nonisolated func browser(
         _ browser: MCNearbyServiceBrowser,
         foundPeer peerID: MCPeerID,
         withDiscoveryInfo info: [String: String]?
     ) {
-        let id = peerID.displayName
-        lock.withLock { peersByID[id] = peerID }
-        let phone = DiscoveredPhone(
-            id: id,
-            name: peerID.displayName,
-            pairingCode: info?["code"] ?? "------"
-        )
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             guard let self else { return }
+            let id = peerID.displayName
+            lock.withLock { peersByID[id] = peerID }
+            let phone = DiscoveredPhone(
+                id: id,
+                name: peerID.displayName,
+                pairingCode: info?["code"] ?? "------"
+            )
             discoveryRetryWorkItem?.cancel()
             discoveryRetryWorkItem = nil
             if let index = discoveredPhones.firstIndex(where: { $0.id == id }) {
@@ -1298,11 +1299,11 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
         }
     }
 
-    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-        let id = peerID.displayName
-        _ = lock.withLock { peersByID.removeValue(forKey: id) }
-        DispatchQueue.main.async { [weak self] in
+    nonisolated func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        Task { @MainActor [weak self] in
             guard let self else { return }
+            let id = peerID.displayName
+            _ = lock.withLock { peersByID.removeValue(forKey: id) }
             discoveredPhones.removeAll { $0.id == id }
             if discoveredPhones.isEmpty, isStarted {
                 scheduleDiscoveryRetry()
@@ -1310,8 +1311,8 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
         }
     }
 
-    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-        DispatchQueue.main.async { [weak self] in
+    nonisolated func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+        Task { @MainActor [weak self] in
             guard let self else { return }
             browserLifecycle.markStartFailed()
             guard isStarted else { return }
@@ -1322,10 +1323,10 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
 }
 
 extension PhoneSyncController: MCSessionDelegate {
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        let name = peerID.displayName
-        DispatchQueue.main.async { [weak self] in
+    nonisolated func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        Task { @MainActor [weak self] in
             guard let self else { return }
+            let name = peerID.displayName
             switch state {
             case .notConnected:
                 interruptActiveTransfers()
@@ -1351,39 +1352,46 @@ extension PhoneSyncController: MCSessionDelegate {
         }
     }
 
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        do {
-            handle(try decoder.decode(DeviceSyncMessage.self, from: data))
-        } catch {
-            publishFailure(error.localizedDescription)
+    nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                handle(try decoder.decode(DeviceSyncMessage.self, from: data))
+            } catch {
+                publishFailure(error.localizedDescription)
+            }
         }
     }
 
-    func session(
+    nonisolated func session(
         _ session: MCSession,
         didStartReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
         with progress: Progress
     ) {
-        guard let transferID = UUID(uuidString: resourceName) else { return }
-        if lock.withLock({ terminalTransferActions[transferID] }) != nil {
-            progress.cancel()
-            return
+        Task { @MainActor [weak self] in
+            guard let self, let transferID = UUID(uuidString: resourceName) else { return }
+            if lock.withLock({ terminalTransferActions[transferID] }) != nil {
+                progress.cancel()
+                return
+            }
+            observe(progress, transferID: transferID)
         }
-        observe(progress, transferID: transferID)
     }
 
-    func session(
+    nonisolated func session(
         _ session: MCSession,
         didFinishReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
         at localURL: URL?,
         withError error: Error?
     ) {
-        finishReceivedResource(name: resourceName, temporaryURL: localURL, error: error)
+        Task { @MainActor [weak self] in
+            self?.finishReceivedResource(name: resourceName, temporaryURL: localURL, error: error)
+        }
     }
 
-    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
+    nonisolated func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
 }
 
 private extension NSLock {

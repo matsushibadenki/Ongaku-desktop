@@ -57,12 +57,17 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] エフェクト画面の有効数を選択中モードへ限定し、BASIC・Pro・OFFの集計を共通化した。専用回帰試験を追加し、全270テスト / 31 suiteの成功を確認した
 - [Done] サイドバー切替を左側、その他のツールバー操作を右側へ明示配置した。標準切替ボタンの除去を各カラムへ適用し、修正版Debugアプリで開く→閉じる→開くを操作して、ボタンが1つだけで左右の位置が変わらないことを実画面で確認した。先行する全271テスト成功は静的配置検査を含むが、表示保証にはこの実画面確認を用いる
 - [Done] サイドバーのSF Symbolを外観へ明示的に追従させ、ライトモードは黒、ダークモードは白の単色表示に統一した。プレイリストのカスタムアートワークは元画像の色を維持する。Xcode 27.0（Swift 6.4／macOS 27 SDK）でDebugビルドと専用回帰試験に成功
+- [Done] プレイリストだけが専用アートワークViewのフォールバックSF Symbolを使い、アクセントの青が残る経路を修正した。画像設定済みプレイリストは原色を維持し、未設定時の音符アイコンだけをライト黒／ダーク白へ明示する
 - [Done] A3の第3段階として、標準ビュー・スマートプレイリスト・詳細フィルタ・検索結果の絞り込み、アルバム／アーティスト分類、重複・再生統計・Ongaku Mixの表示用集計を専用actorへ移した。同一ターンの変更をまとめ、キャンセル・世代照合で古い結果の反映を防ぐ。曲表は集計結果のrevisionで再ソートし、再生中インスペクタの曲参照もキャッシュを使う。[検証記録](quality/ASYNC_LIBRARY_MILESTONE_2026-09-12.md)を参照
 - [Done] GitHub Actions run 34678611788の失敗8件を特定。検索索引の完了と表示集計の完了を区別し、スマートプレイリスト・検索の試験を表示完了後の値で検証するよう修正。保存失敗時の検索復旧も追加し、全291テストが成功。待機時間の固定延長や性能閾値の緩和は行っていない
 - [Done] A5の補修として、設定画面へ画像取得設定を渡し、Control Centerの画像取得経路も既定で通信しない設定へ変更。取得設定の切替でサムネイルを再評価し、自動取得無効時は期限切れの保存済み画像も表示する。三言語の説明にアーティスト画像の取得先も含めた
 - [Next] A3の残りとして、実画面のRelease初回表示2秒・入力から結果表示p95 300ms・ピーク512MiBを計測し、再生中／索引更新中の条件で改善する。2026-09-08のDebug測定11.27秒はJSON再読込と先頭ページ準備の時間で、事前の保存時間とSwiftUI描画は含まない。2026-09-12に同じCIゲートは通過したが、実画面の製品目標の合格には数えない
 - [Done] A3実画面ゲートの計測基盤として、一時ディレクトリだけを受け付ける専用起動モードと決定論的な10万曲fixture生成を追加した。計測時はユーザーのライブラリ、更新確認、ファイル存在確認、端末同期、外部ストア通信から分離する。Release UIテストは初回表示、10検索のp95、各計測点のRSSを製品目標に対して判定し、通常のUIテストでは明示的にスキップする
 - [Done] A4の音声境界の第1段階として、通常再生と次曲先読みで使う音声ファイルopen処理を`PlaybackController`へ注入可能にした。実エンジンを起動せずopen失敗を発生させ、対象曲・停止状態・ユーザー向けエラーを検証する自動試験を追加した
+- [Done] A4のMusicKit境界の第1段階として、再生開始・再開・前曲・次曲・キュー項目再生の非同期transport操作を`AppleMusicPlaybackOperations`へ分離した。ネットワーク再生を行わず各操作へ同一障害を注入でき、production controllerにも差し替え可能なことを自動試験で確認した
+- [Done] A4のUI更新境界として、Mac／Mobileの端末同期コントローラーを`MainActor`へ隔離した。MultipeerConnectivityの任意スレッドデリゲートは`nonisolated`で受け、UI状態へ触れる前に明示的にMainActorへ橋渡しする。Xcode 27で厳格化されたprotocol conformance診断と実行時actor違反を避ける回帰ゲートを追加した
+- [Next] A4の次段階として、チャンク転送のファイルI/O・checkpoint・転送中辞書を専用actorへ移し、現在Xcode 27が警告するDispatchQueueクロージャーからMainActor状態への参照を解消する
+- [Done] 上記A4境界変更をXcode 27.0で全296テスト、通常macOS Debug、Mac App Store Release、iOS Simulator Debugの順に検証した。並列Xcodeビルドは同一DerivedDataのDBロックを起こすため構成ビルドを直列化し、3構成すべて成功した
 - [Next] `ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
 - [Next] 2026-09-15の実行ではReleaseアプリ／UIテストのビルドは成功したが、XcodeのUIテストランナーがAutomation Modeの有効化でタイムアウトし、計測本体の開始前に終了した。macOSのUIオートメーション権限を復旧後に上記コマンドを再実行し、数値が得られるまではA3の製品目標を合格扱いにしない
 - [Done] 曲・アーティスト・アルバムのセルクリックでTableのFocusStateも更新し、選択だけ変わって非アクティブのグレー表示になる経路を修正した。Debugビルド成功。実画面検証はユーザー操作との競合により未完了

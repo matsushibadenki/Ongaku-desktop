@@ -94,6 +94,21 @@ enum AppleMusicQueueEditor {
     }
 }
 
+/// Side-effect boundary for MusicKit transport calls. Keeping queue construction and
+/// observation in the controller preserves MusicKit's strongly typed queue API while
+/// allowing every asynchronous transport failure to be injected in tests.
+struct AppleMusicPlaybackOperations {
+    var play: @MainActor (ApplicationMusicPlayer) async throws -> Void
+    var skipToPrevious: @MainActor (ApplicationMusicPlayer) async throws -> Void
+    var skipToNext: @MainActor (ApplicationMusicPlayer) async throws -> Void
+
+    static let live = Self(
+        play: { try await $0.play() },
+        skipToPrevious: { try await $0.skipToPreviousEntry() },
+        skipToNext: { try await $0.skipToNextEntry() }
+    )
+}
+
 @MainActor
 final class AppleMusicPlaybackController: ObservableObject {
     private enum RetryOperation {
@@ -116,13 +131,16 @@ final class AppleMusicPlaybackController: ObservableObject {
     private var playerStateObservation: AnyCancellable?
     private var progressTask: Task<Void, Never>?
     private var retryOperation: RetryOperation?
+    private let operations: AppleMusicPlaybackOperations
 
     var isPlaying: Bool { state.isPlaying }
     var isWorking: Bool { state.isWorking || isQueueEditing }
     var duration: TimeInterval { currentQueueItem?.duration ?? 0 }
     var canRetry: Bool { retryOperation != nil && errorMessage != nil }
 
-    init() {}
+    init(operations: AppleMusicPlaybackOperations = .live) {
+        self.operations = operations
+    }
 
     func play(
         item: AppleMusicCatalogItem,
@@ -141,7 +159,7 @@ final class AppleMusicPlaybackController: ObservableObject {
             player.queue = queue
             observeQueue(player)
             refreshQueueSnapshot()
-            try await player.play()
+            try await operations.play(player)
             state.didStart()
             refreshQueueSnapshot()
             startProgressUpdates()
@@ -164,7 +182,7 @@ final class AppleMusicPlaybackController: ObservableObject {
         guard let currentItem, let player, !state.isWorking else { return }
         state.begin(itemID: currentItem.musicItemID)
         do {
-            try await player.play()
+            try await operations.play(player)
             state.didStart()
             errorMessage = nil
             retryOperation = nil
@@ -193,7 +211,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     func playPrevious() async {
         guard currentItem != nil, let player, !state.isWorking else { return }
         do {
-            try await player.skipToPreviousEntry()
+            try await operations.skipToPrevious(player)
             refreshQueueSnapshot()
             errorMessage = nil
             retryOperation = nil
@@ -206,7 +224,7 @@ final class AppleMusicPlaybackController: ObservableObject {
     func playNext() async {
         guard currentItem != nil, let player, !state.isWorking else { return }
         do {
-            try await player.skipToNextEntry()
+            try await operations.skipToNext(player)
             refreshQueueSnapshot()
             errorMessage = nil
             retryOperation = nil
@@ -244,7 +262,7 @@ final class AppleMusicPlaybackController: ObservableObject {
               let entry = player.queue.entries.first(where: { $0.id == id }) else { return }
         player.queue.currentEntry = entry
         do {
-            try await player.play()
+            try await operations.play(player)
             state.didStart()
             refreshQueueSnapshot()
             startProgressUpdates()

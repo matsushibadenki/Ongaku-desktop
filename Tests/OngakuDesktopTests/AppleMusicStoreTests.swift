@@ -1,4 +1,5 @@
 import Foundation
+@preconcurrency import MusicKit
 import Testing
 @testable import OngakuDesktop
 
@@ -319,8 +320,8 @@ struct AppleMusicStoreTests {
 
     @Test("Apple Music playlist conversion classifies matches without changing files")
     func plansPlaylistConversion() {
-        func track(_ id: UUID, title: String, duration: TimeInterval) -> Track {
-            Track(
+        func track(_ id: UUID, title: String, duration: TimeInterval) -> OngakuDesktop.Track {
+            OngakuDesktop.Track(
                 id: id,
                 title: title,
                 artist: "Ongaku Ensemble",
@@ -389,8 +390,8 @@ struct AppleMusicStoreTests {
 
     @Test("Ongaku playlist export preserves order and classifies unsafe matches")
     func plansOngakuPlaylistExport() {
-        func track(_ id: UUID, title: String, duration: TimeInterval) -> Track {
-            Track(
+        func track(_ id: UUID, title: String, duration: TimeInterval) -> OngakuDesktop.Track {
+            OngakuDesktop.Track(
                 id: id,
                 title: title,
                 artist: "Ongaku Ensemble",
@@ -528,6 +529,35 @@ struct AppleMusicStoreTests {
         #expect(state.currentItemID == nil)
         #expect(!state.isPlaying)
         #expect(!state.isWorking)
+    }
+
+    @Test("MusicKit transport failures can be injected without network playback")
+    @MainActor
+    func musicKitTransportFailureInjection() async {
+        let failure = NSError(
+            domain: "OngakuTests.MusicKitTransport",
+            code: 88,
+            userInfo: [NSLocalizedDescriptionKey: "injected MusicKit failure"]
+        )
+        var calls: [String] = []
+        let operations = AppleMusicPlaybackOperations(
+            play: { _ in calls.append("play"); throw failure },
+            skipToPrevious: { _ in calls.append("previous"); throw failure },
+            skipToNext: { _ in calls.append("next"); throw failure }
+        )
+        let player = ApplicationMusicPlayer.shared
+
+        for operation in [operations.play, operations.skipToPrevious, operations.skipToNext] {
+            do {
+                try await operation(player)
+                Issue.record("Injected MusicKit operation unexpectedly succeeded")
+            } catch {
+                #expect(error.localizedDescription == "injected MusicKit failure")
+            }
+        }
+        #expect(calls == ["play", "previous", "next"])
+
+        _ = AppleMusicPlaybackController(operations: operations)
     }
 
     @Test("iTunes Store search URL is regional, music-only, and safely encoded")

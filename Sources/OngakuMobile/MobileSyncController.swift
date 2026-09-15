@@ -8,6 +8,15 @@ struct MobilePairingRequest: Identifiable, Equatable, Sendable {
     var pairingCode: String
 }
 
+private final class MobileInvitationHandlerBox: @unchecked Sendable {
+    let value: (Bool, MCSession?) -> Void
+
+    init(_ value: @escaping (Bool, MCSession?) -> Void) {
+        self.value = value
+    }
+}
+
+@MainActor
 final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendable {
     private struct LibraryImportResult: Sendable {
         var snapshot: DeviceReceivedLibrarySnapshot
@@ -67,7 +76,7 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
         refreshResumableTransfers(removingStale: true)
     }
 
-    deinit {
+    isolated deinit {
         transferProgresses.values.forEach { $0.cancel() }
         advertiser.stopAdvertisingPeer()
         session.disconnect()
@@ -751,7 +760,7 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
         }
     }
 
-    private static func importIntoLibrary(
+    nonisolated private static func importIntoLibrary(
         _ urls: [URL],
         repository: DeviceReceivedLibraryRepository
     ) -> LibraryImportResult {
@@ -794,21 +803,23 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
 }
 
 extension MobileSyncController: MCNearbyServiceAdvertiserDelegate {
-    func advertiser(
+    nonisolated func advertiser(
         _ advertiser: MCNearbyServiceAdvertiser,
         didReceiveInvitationFromPeer peerID: MCPeerID,
         withContext context: Data?,
         invitationHandler: @escaping (Bool, MCSession?) -> Void
     ) {
-        let requestID = UUID()
-        let receivedCode = context
-            .flatMap { try? JSONDecoder().decode([String: String].self, from: $0) }?["pairingCode"]
-            ?? pairingCode
-        lock.withLock { invitationHandlers[requestID] = invitationHandler }
-        DispatchQueue.main.async { [weak self] in
-            self?.advertisingRetryWorkItem?.cancel()
-            self?.advertisingRetryWorkItem = nil
-            self?.pairingRequest = MobilePairingRequest(
+        let invitation = MobileInvitationHandlerBox(invitationHandler)
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let requestID = UUID()
+            let receivedCode = context
+                .flatMap { try? JSONDecoder().decode([String: String].self, from: $0) }?["pairingCode"]
+                ?? pairingCode
+            lock.withLock { invitationHandlers[requestID] = invitation.value }
+            advertisingRetryWorkItem?.cancel()
+            advertisingRetryWorkItem = nil
+            pairingRequest = MobilePairingRequest(
                 id: requestID,
                 deviceName: peerID.displayName,
                 pairingCode: receivedCode
@@ -816,16 +827,18 @@ extension MobileSyncController: MCNearbyServiceAdvertiserDelegate {
         }
     }
 
-    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-        publishFailure(error.localizedDescription)
+    nonisolated func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+        Task { @MainActor [weak self] in
+            self?.publishFailure(error.localizedDescription)
+        }
     }
 }
 
 extension MobileSyncController: MCSessionDelegate {
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        let name = peerID.displayName
-        DispatchQueue.main.async { [weak self] in
+    nonisolated func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        Task { @MainActor [weak self] in
             guard let self else { return }
+            let name = peerID.displayName
             switch state {
             case .notConnected:
                 interruptActiveTransfers()
@@ -845,39 +858,46 @@ extension MobileSyncController: MCSessionDelegate {
         }
     }
 
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        do {
-            handle(try decoder.decode(DeviceSyncMessage.self, from: data))
-        } catch {
-            publishFailure(error.localizedDescription)
+    nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                handle(try decoder.decode(DeviceSyncMessage.self, from: data))
+            } catch {
+                publishFailure(error.localizedDescription)
+            }
         }
     }
 
-    func session(
+    nonisolated func session(
         _ session: MCSession,
         didStartReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
         with progress: Progress
     ) {
-        guard let transferID = UUID(uuidString: resourceName) else { return }
-        if lock.withLock({ terminalTransferActions[transferID] }) != nil {
-            progress.cancel()
-            return
+        Task { @MainActor [weak self] in
+            guard let self, let transferID = UUID(uuidString: resourceName) else { return }
+            if lock.withLock({ terminalTransferActions[transferID] }) != nil {
+                progress.cancel()
+                return
+            }
+            observe(progress, transferID: transferID)
         }
-        observe(progress, transferID: transferID)
     }
 
-    func session(
+    nonisolated func session(
         _ session: MCSession,
         didFinishReceivingResourceWithName resourceName: String,
         fromPeer peerID: MCPeerID,
         at localURL: URL?,
         withError error: Error?
     ) {
-        finishReceivedResource(name: resourceName, temporaryURL: localURL, error: error)
+        Task { @MainActor [weak self] in
+            self?.finishReceivedResource(name: resourceName, temporaryURL: localURL, error: error)
+        }
     }
 
-    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
+    nonisolated func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {}
 }
 
 private extension NSLock {
