@@ -90,7 +90,11 @@ struct LibrarySidebar: View {
                     .favorites,
                     .ongakuMix,
                 ]) { section in
-                    Label(L10n.text(section.titleKey), systemImage: section.systemImage)
+                    Label {
+                        Text(L10n.text(section.titleKey))
+                    } icon: {
+                        sidebarSystemImage(section.systemImage)
+                    }
                         .fixedSize(horizontal: true, vertical: false)
                         .tag(SidebarDestination.section(section))
                 }
@@ -111,7 +115,11 @@ struct LibrarySidebar: View {
                             playlistRow(playlist)
                         }
                     } label: {
-                        Label(folder.name, systemImage: "folder")
+                        Label {
+                            Text(folder.name)
+                        } icon: {
+                            sidebarSystemImage("folder")
+                        }
                             .lineLimit(1)
                     }
                     .draggable("folder:\(folder.id.uuidString)")
@@ -171,7 +179,7 @@ struct LibrarySidebar: View {
                             )
                         }
                     } label: {
-                        Image(systemName: "plus").contentShape(Rectangle())
+                        sidebarSystemImage("plus").contentShape(Rectangle())
                     }
                     .menuStyle(.borderlessButton)
                     .fixedSize()
@@ -181,10 +189,11 @@ struct LibrarySidebar: View {
             }
 
             Section(L10n.text("sidebar.processing")) {
-                Label(
-                    L10n.text(LibrarySection.effects.titleKey),
-                    systemImage: LibrarySection.effects.systemImage
-                )
+                Label {
+                    Text(L10n.text(LibrarySection.effects.titleKey))
+                } icon: {
+                    sidebarSystemImage(LibrarySection.effects.systemImage)
+                }
                 .fixedSize(horizontal: true, vertical: false)
                 .tag(SidebarDestination.section(.effects))
             }
@@ -202,7 +211,7 @@ struct LibrarySidebar: View {
                         }
                     }
                 } icon: {
-                    Image(systemName: LibrarySection.duplicates.systemImage)
+                    sidebarSystemImage(LibrarySection.duplicates.systemImage)
                 }
                 .tag(SidebarDestination.section(.duplicates))
 
@@ -218,7 +227,7 @@ struct LibrarySidebar: View {
                         }
                     }
                 } icon: {
-                    Image(systemName: LibrarySection.needsAttention.systemImage)
+                    sidebarSystemImage(LibrarySection.needsAttention.systemImage)
                 }
                 .tag(SidebarDestination.section(.needsAttention))
             }
@@ -530,6 +539,8 @@ struct LibrarySidebar: View {
         } icon: {
             if playlist.smartDefinition != nil {
                 Image(systemName: "gearshape.2")
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(sidebarIconColor)
             } else {
                 PlaylistSidebarArtwork(playlist: playlist)
             }
@@ -599,6 +610,16 @@ struct LibrarySidebar: View {
                 Label(L10n.text("playlist.delete"), systemImage: "trash")
             }
         }
+    }
+
+    private var sidebarIconColor: Color {
+        colorScheme == .dark ? .white : .black
+    }
+
+    private func sidebarSystemImage(_ systemName: String) -> some View {
+        Image(systemName: systemName)
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(sidebarIconColor)
     }
 
     private func handleFolderDrop(

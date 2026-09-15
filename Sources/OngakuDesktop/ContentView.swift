@@ -134,11 +134,12 @@ struct ContentView: View {
             Task { await library.verifyLibrary() }
         }
         .onChange(of: scenePhase) { _, phase in
-            guard phase == .active else { return }
+            guard phase == .active, !LibraryQualificationConfiguration.isEnabled else { return }
             Task { await library.refreshFileAvailability() }
         }
         .onAppear {
             library.undoManager = undoManager
+            guard !LibraryQualificationConfiguration.isEnabled else { return }
             phoneSync.onVerifiedIncomingFile = { url in
                 Task { @MainActor in
                     await prepareFilesForImport([url], cleanupURLs: [url])

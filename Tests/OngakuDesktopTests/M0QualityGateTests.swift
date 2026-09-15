@@ -13,6 +13,47 @@ struct M0QualityGateTests {
         .appendingPathComponent("Sources/OngakuDesktop/Resources", isDirectory: true)
     private static let locales = ["en", "ja", "zh-Hans"]
 
+    @Test("UI qualification mode is restricted to temporary library roots")
+    func qualificationModePathSafety() {
+        let temporaryPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OngakuQualificationTests", isDirectory: true).path
+        let valid = LibraryQualificationConfiguration.parse(arguments: [
+            "OngakuDesktop",
+            LibraryQualificationConfiguration.rootArgument,
+            temporaryPath,
+            LibraryQualificationConfiguration.prepareArgument,
+            "100000",
+        ])
+        #expect(valid?.rootURL.path == temporaryPath)
+        #expect(valid?.preparationTrackCount == 100_000)
+
+        #expect(LibraryQualificationConfiguration.parse(arguments: [
+            "OngakuDesktop",
+            LibraryQualificationConfiguration.rootArgument,
+            "/Users/example/Music",
+        ]) == nil)
+
+        let excessive = LibraryQualificationConfiguration.parse(arguments: [
+            "OngakuDesktop",
+            LibraryQualificationConfiguration.rootArgument,
+            temporaryPath,
+            LibraryQualificationConfiguration.prepareArgument,
+            "100001",
+        ])
+        #expect(excessive?.preparationTrackCount == nil)
+    }
+
+    @Test("Sidebar symbols follow the light and dark appearance")
+    func sidebarSymbolAppearanceContract() throws {
+        let sidebar = try Self.source("LibrarySidebar.swift")
+        #expect(sidebar.contains("private var sidebarIconColor: Color"))
+        #expect(sidebar.contains("colorScheme == .dark ? .white : .black"))
+        #expect(sidebar.contains("private func sidebarSystemImage(_ systemName: String)"))
+        #expect(sidebar.contains(".symbolRenderingMode(.monochrome)"))
+        #expect(sidebar.contains(".foregroundStyle(sidebarIconColor)"))
+        #expect(sidebar.components(separatedBy: "sidebarSystemImage(").count - 1 >= 7)
+    }
+
     @Test("English, Japanese, and Simplified Chinese localization keys stay in parity")
     func localizationKeyParity() throws {
         for table in ["Localizable", "InfoPlist"] {
@@ -237,6 +278,18 @@ struct M0QualityGateTests {
         #expect(libraryContent.contains("artistDetailContent(compact: true)"))
         #expect(libraryContent.contains("trackTable.frame(height: 220)"))
         #expect(libraryContent.contains("trackTable.frame(height: 240)"))
+    }
+
+    @Test("Every song table uses its primary action to play a double-clicked row")
+    func songTableDoubleClickContract() throws {
+        let libraryContent = try Self.source("LibraryContent.swift")
+
+        #expect(libraryContent.components(separatedBy: "} primaryAction: { selection in").count == 4)
+        #expect(libraryContent.contains("TapGesture(count: 2)"))
+        #expect(libraryContent.contains(".exclusively(before: TapGesture(count: 1))"))
+        #expect(libraryContent.contains("library.updateTrackSelection([track.id], focusedID: track.id)"))
+        #expect(libraryContent.contains("playTrack(track)"))
+        #expect(!libraryContent.contains("trackCellPlaybackGesture"))
     }
 
     @Test("The settings scene passes crash-critical social state explicitly")

@@ -22,6 +22,103 @@ enum AppVersionComparison {
     }
 }
 
+/// An explicit, temporary-library launch mode used by the Release UI qualification.
+/// It is intentionally unavailable for paths outside the process temporary directory,
+/// so an accidental launch argument can never redirect or overwrite a user's library.
+struct LibraryQualificationConfiguration: Sendable {
+    static let rootArgument = "--ongaku-qualification-root"
+    static let prepareArgument = "--ongaku-qualification-prepare"
+
+    let rootURL: URL
+    let preparationTrackCount: Int?
+
+    static var current: Self? {
+        parse(arguments: ProcessInfo.processInfo.arguments)
+    }
+
+    static var isEnabled: Bool { current != nil }
+
+    static func parse(arguments: [String]) -> Self? {
+        guard let rootIndex = arguments.firstIndex(of: rootArgument),
+              arguments.indices.contains(rootIndex + 1) else { return nil }
+
+        let rootURL = URL(fileURLWithPath: arguments[rootIndex + 1], isDirectory: true)
+            .standardizedFileURL
+        let temporaryRoot = FileManager.default.temporaryDirectory.standardizedFileURL
+        guard rootURL.path.hasPrefix(temporaryRoot.path + "/") else { return nil }
+
+        var trackCount: Int?
+        if let prepareIndex = arguments.firstIndex(of: prepareArgument),
+           arguments.indices.contains(prepareIndex + 1),
+           let requestedCount = Int(arguments[prepareIndex + 1]),
+           (1...100_000).contains(requestedCount) {
+            trackCount = requestedCount
+        }
+        return Self(rootURL: rootURL, preparationTrackCount: trackCount)
+    }
+}
+
+enum LibraryQualificationFixture {
+    static func prepare(_ configuration: LibraryQualificationConfiguration) async throws {
+        guard let trackCount = configuration.preparationTrackCount else { return }
+        let tracksPerAlbum = 10
+        let tracksPerArtist = 20
+        let artistCount = max(1, (trackCount + tracksPerArtist - 1) / tracksPerArtist)
+        let albumCount = max(1, (trackCount + tracksPerAlbum - 1) / tracksPerAlbum)
+        let artistIDs = (0..<artistCount).map { stableUUID(namespace: 0x2000_0000, value: $0) }
+        let albumIDs = (0..<albumCount).map { stableUUID(namespace: 0x3000_0000, value: $0) }
+        let baseDate = Date(timeIntervalSince1970: 1_700_000_000)
+        let tracks = (0..<trackCount).map { index in
+            let artistIndex = index / tracksPerArtist
+            let albumIndex = index / tracksPerAlbum
+            let titlePrefix = switch index % 3 {
+            case 0: "Track"
+            case 1: "楽曲"
+            default: "曲目"
+            }
+            return Track(
+                id: stableUUID(namespace: 0x1000_0000, value: index),
+                title: "\(titlePrefix) \(padded(index, width: 6))",
+                artist: "Artist \(padded(artistIndex, width: 4))",
+                album: "Album \(padded(albumIndex, width: 5))",
+                duration: TimeInterval(120 + index % 300),
+                fileSize: Int64(3_000_000 + index % 12_000_000),
+                managedPath: configuration.rootURL
+                    .appendingPathComponent("Media/Track \(padded(index, width: 6)).m4a").path,
+                sha256: String(format: "%064llx", UInt64(index + 1)),
+                addedAt: baseDate.addingTimeInterval(TimeInterval(index)),
+                lastVerifiedAt: baseDate,
+                health: .verified,
+                artistID: artistIDs[artistIndex],
+                albumID: albumIDs[albumIndex]
+            )
+        }
+        let document = LibraryDocument(
+            updatedAt: baseDate,
+            tracks: tracks,
+            libraryID: stableUUID(namespace: 0x4000_0000, value: 0),
+            createdAt: baseDate
+        )
+        let repository = LibraryRepository(
+            rootURL: configuration.rootURL,
+            mediaURL: configuration.rootURL.appendingPathComponent("Media", isDirectory: true)
+        )
+        try await repository.save(document: document)
+    }
+
+    private static func stableUUID(namespace: UInt32, value: Int) -> UUID {
+        UUID(uuidString: String(
+            format: "%08X-0000-4000-8000-%012llX",
+            namespace,
+            UInt64(value)
+        ))!
+    }
+
+    private static func padded(_ value: Int, width: Int) -> String {
+        String(format: "%0*d", width, value)
+    }
+}
+
 @MainActor
 final class AppStoreUpdateChecker: ObservableObject {
     nonisolated static let appID = "6807717764"
@@ -88,6 +185,7 @@ final class SoftwareUpdateController: ObservableObject {
 
 @main
 struct OngakuDesktopApp: App {
+    private let qualificationConfiguration: LibraryQualificationConfiguration?
     @StateObject private var storage: LibraryStorageSettings
     @StateObject private var libraryProfiles: LibraryProfileSettings
     @StateObject private var library: LibraryStore
@@ -110,10 +208,14 @@ struct OngakuDesktopApp: App {
 
     init() {
         NSWindow.allowsAutomaticWindowTabbing = false
+        let qualificationConfiguration = LibraryQualificationConfiguration.current
+        self.qualificationConfiguration = qualificationConfiguration
         let storage = LibraryStorageSettings()
         _storage = StateObject(wrappedValue: storage)
         let libraryProfiles = LibraryProfileSettings(defaultMediaURL: storage.mediaDirectoryURL)
-        storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
+        if qualificationConfiguration == nil {
+            storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
+        }
         _libraryProfiles = StateObject(wrappedValue: libraryProfiles)
         _language = StateObject(wrappedValue: AppLanguageSettings())
         _appearance = StateObject(wrappedValue: AppAppearanceSettings())
@@ -135,18 +237,26 @@ struct OngakuDesktopApp: App {
                 appleMusicPlayback: appleMusicPlayback
             )
         )
-        _library = StateObject(wrappedValue: LibraryStore(
-            repository: LibraryRepository(
+        let repository: LibraryRepository
+        if let qualificationConfiguration {
+            repository = LibraryRepository(
+                rootURL: qualificationConfiguration.rootURL,
+                mediaURL: qualificationConfiguration.rootURL
+                    .appendingPathComponent("Media", isDirectory: true)
+            )
+        } else {
+            repository = LibraryRepository(
                 rootURL: PortableLibraryStorage(mediaURL: libraryProfiles.activeProfile.mediaURL).rootURL,
                 mediaURL: libraryProfiles.activeProfile.mediaURL
             )
-        ))
+        }
+        _library = StateObject(wrappedValue: LibraryStore(repository: repository))
     }
 
     var body: some Scene {
         Window("Ongaku", id: "main") {
             Group {
-                if let error = libraryProfiles.migrationError {
+                if qualificationConfiguration == nil, let error = libraryProfiles.migrationError {
                     VStack(spacing: 16) {
                         Text(L10n.text("storage.migration.failed")).font(.headline)
                         Text(error).textSelection(.enabled)
@@ -177,6 +287,12 @@ struct OngakuDesktopApp: App {
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
                 .task {
+                    if let qualificationConfiguration {
+                        try? await LibraryQualificationFixture.prepare(qualificationConfiguration)
+                        await library.load()
+                        player.updateAudioFeatures(library.audioFeatures)
+                        return
+                    }
 #if APP_STORE
                     await appStoreUpdateChecker.checkIfNeeded()
 #endif
@@ -197,6 +313,7 @@ struct OngakuDesktopApp: App {
                     player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                 }
                 .onChange(of: library.contentRevision) {
+                    guard qualificationConfiguration == nil else { return }
                     phoneSync.updateLocalTracks(
                         library.tracks,
                         playbackEvents: library.playbackEvents,
@@ -209,6 +326,7 @@ struct OngakuDesktopApp: App {
                     player.updateAudioFeatures(library.audioFeatures)
                 }
                 .onChange(of: libraryProfiles.activeLibraryID) {
+                    guard qualificationConfiguration == nil else { return }
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
                     Task {
@@ -224,6 +342,7 @@ struct OngakuDesktopApp: App {
                     }
                 }
                 .onChange(of: libraryProfiles.activeLocationRevision) {
+                    guard qualificationConfiguration == nil else { return }
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
                     Task {
@@ -239,6 +358,7 @@ struct OngakuDesktopApp: App {
                     }
                 }
                 .onChange(of: storage.mediaDirectoryURL) { _, url in
+                    guard qualificationConfiguration == nil else { return }
                     libraryProfiles.updateActiveMediaURL(url)
                 }
                 .onChange(of: player.queueState) {

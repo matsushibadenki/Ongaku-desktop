@@ -255,7 +255,9 @@ struct LibraryContent: View {
             restoreSavedSortOrder(for: library.selectedSection)
         }
         .task {
-            await appleMusicStore.refresh()
+            if !LibraryQualificationConfiguration.isEnabled {
+                await appleMusicStore.refresh()
+            }
             scheduleUnifiedSearch(library.searchText)
         }
         .task(id: library.selectedSection) {
@@ -563,6 +565,7 @@ struct LibraryContent: View {
                     Text(headerSubtitle)
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(AppTheme.secondaryInk)
+                        .accessibilityIdentifier("library.visible-count")
                 }
             }
             Spacer()
@@ -838,8 +841,7 @@ struct LibraryContent: View {
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
-                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
-                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .simultaneousGesture(trackCellInteractionGesture(for: track))
                 .dropDestination(for: String.self) { payloads, location in
                     guard let playlistID = library.selectedPlaylistID,
                           library.selectedPlaylist?.smartDefinition == nil else { return false }
@@ -864,8 +866,7 @@ struct LibraryContent: View {
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
-                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
-                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .simultaneousGesture(trackCellInteractionGesture(for: track))
                 .opacity(columnOpacity(.artist))
             }
             .width(
@@ -880,8 +881,7 @@ struct LibraryContent: View {
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
-                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
-                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .simultaneousGesture(trackCellInteractionGesture(for: track))
                 .opacity(columnOpacity(.album))
             }
             .width(
@@ -897,8 +897,7 @@ struct LibraryContent: View {
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
-                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
-                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .simultaneousGesture(trackCellInteractionGesture(for: track))
                 .opacity(columnOpacity(.duration))
             }
             .width(
@@ -917,8 +916,7 @@ struct LibraryContent: View {
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
-                .simultaneousGesture(trackCellSelectionGesture(for: track.id))
-                .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                .simultaneousGesture(trackCellInteractionGesture(for: track))
                 .opacity(columnOpacity(.health))
             }
             .width(
@@ -939,8 +937,7 @@ struct LibraryContent: View {
                             .foregroundStyle(AppTheme.secondaryInk)
                     }
                     .contentShape(Rectangle())
-                    .simultaneousGesture(trackCellSelectionGesture(for: track.id))
-                    .simultaneousGesture(trackCellPlaybackGesture(for: track))
+                    .simultaneousGesture(trackCellInteractionGesture(for: track))
                 }
             }
             .width(
@@ -951,6 +948,13 @@ struct LibraryContent: View {
         }
         .contextMenu(forSelectionType: Track.ID.self) { selection in
             trackRowContextMenu(for: selection)
+        } primaryAction: { selection in
+            guard let track = sortedTracks.first(where: { selection.contains($0.id) }) else {
+                return
+            }
+            tableSelectedTrackIDs = [track.id]
+            library.updateTrackSelection([track.id], focusedID: track.id)
+            playTrack(track)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
         .overlay(alignment: .topTrailing) {
@@ -1000,20 +1004,23 @@ struct LibraryContent: View {
         }
     }
 
-    private func trackCellSelectionGesture(for trackID: Track.ID) -> some Gesture {
-        TapGesture(count: 1).onEnded {
-            let modifiers = NSEvent.modifierFlags.intersection([.command, .shift, .control])
-            guard modifiers.isEmpty else { return }
-            isTrackTableFocused = true
-            tableSelectedTrackIDs = [trackID]
-        }
-    }
-
-    private func trackCellPlaybackGesture(for track: Track) -> some Gesture {
-        TapGesture(count: 2).onEnded {
-            tableSelectedTrackIDs = [track.id]
-            playTrack(track)
-        }
+    private func trackCellInteractionGesture(for track: Track) -> some Gesture {
+        TapGesture(count: 2)
+            .exclusively(before: TapGesture(count: 1))
+            .onEnded { gesture in
+                switch gesture {
+                case .first:
+                    isTrackTableFocused = true
+                    tableSelectedTrackIDs = [track.id]
+                    library.updateTrackSelection([track.id], focusedID: track.id)
+                    playTrack(track)
+                case .second:
+                    let modifiers = NSEvent.modifierFlags.intersection([.command, .shift, .control])
+                    guard modifiers.isEmpty else { return }
+                    isTrackTableFocused = true
+                    tableSelectedTrackIDs = [track.id]
+                }
+            }
     }
 
     private func playTrack(_ track: Track) {
