@@ -123,6 +123,35 @@ struct M1PlaybackMilestoneTests {
         withExtendedLifetime(observation) {}
     }
 
+    @Test("Playback file opening failures are injectable and remain user-visible")
+    @MainActor
+    func injectedAudioFileOpenFailure() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OngakuAudioOpenFailure-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fileURL = directory.appendingPathComponent("unreadable.m4a")
+        try Data([0]).write(to: fileURL)
+        var track = Self.makeTracks(fileURL: fileURL)[0]
+        track.health = .verified
+        var openedURLs: [URL] = []
+        let player = PlaybackController { url in
+            openedURLs.append(url)
+            throw NSError(
+                domain: "OngakuTests.AudioFileOpening",
+                code: 77,
+                userInfo: [NSLocalizedDescriptionKey: "injected open failure"]
+            )
+        }
+
+        player.play(track)
+
+        #expect(openedURLs == [fileURL.standardizedFileURL])
+        #expect(player.currentTrack?.id == track.id)
+        #expect(player.isPlaying == false)
+        #expect(player.errorMessage?.contains("injected open failure") == true)
+    }
+
     private static func makeTracks(fileURL: URL? = nil) -> [Track] {
         (0..<trackCount).map { index in
             let id = UUID(uuidString: String(

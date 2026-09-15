@@ -980,6 +980,7 @@ final class PlaybackController: ObservableObject {
     private let effectOutputProtection = EffectOutputProtection()
     private let effectPipeline: [AudioEffectNode]
     private let outputManager = AudioOutputManager()
+    private let audioFileOpener: (URL) throws -> AVAudioFile
     private var audioFile: AVAudioFile?
     private var scheduledStartFrame: AVAudioFramePosition = 0
     private var playbackGeneration = UUID()
@@ -1016,7 +1017,12 @@ final class PlaybackController: ObservableObject {
         let outgoingTransitionPosition: TimeInterval
     }
 
-    init() {
+    init(
+        audioFileOpener: @escaping (URL) throws -> AVAudioFile = {
+            try AVAudioFile(forReading: $0)
+        }
+    ) {
+        self.audioFileOpener = audioFileOpener
         let defaultSettings = AudioEffectModuleRegistry.makeDefaultSettings()
         effectPipeline = AudioEffectModuleRegistry.makePipeline()
         effectSettings = Self.loadEffectSettings(defaults: defaultSettings)
@@ -1396,7 +1402,7 @@ final class PlaybackController: ObservableObject {
 
             stopCurrentPlayback()
             let fileURL = track.fileURL.standardizedFileURL
-            let file = try AVAudioFile(forReading: fileURL)
+            let file = try audioFileOpener(fileURL)
             suppressConfigurationRecovery()
             let sourceRate = file.processingFormat.sampleRate
             let configuration = automaticUpsampling
@@ -1909,7 +1915,7 @@ final class PlaybackController: ObservableObject {
                   in: playbackQueue,
                   mode: playbackMode
               ),
-              let nextFile = try? AVAudioFile(forReading: nextTrack.fileURL) else {
+              let nextFile = try? audioFileOpener(nextTrack.fileURL) else {
             return
         }
 

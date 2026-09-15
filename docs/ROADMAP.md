@@ -62,6 +62,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] A5の補修として、設定画面へ画像取得設定を渡し、Control Centerの画像取得経路も既定で通信しない設定へ変更。取得設定の切替でサムネイルを再評価し、自動取得無効時は期限切れの保存済み画像も表示する。三言語の説明にアーティスト画像の取得先も含めた
 - [Next] A3の残りとして、実画面のRelease初回表示2秒・入力から結果表示p95 300ms・ピーク512MiBを計測し、再生中／索引更新中の条件で改善する。2026-09-08のDebug測定11.27秒はJSON再読込と先頭ページ準備の時間で、事前の保存時間とSwiftUI描画は含まない。2026-09-12に同じCIゲートは通過したが、実画面の製品目標の合格には数えない
 - [Done] A3実画面ゲートの計測基盤として、一時ディレクトリだけを受け付ける専用起動モードと決定論的な10万曲fixture生成を追加した。計測時はユーザーのライブラリ、更新確認、ファイル存在確認、端末同期、外部ストア通信から分離する。Release UIテストは初回表示、10検索のp95、各計測点のRSSを製品目標に対して判定し、通常のUIテストでは明示的にスキップする
+- [Done] A4の音声境界の第1段階として、通常再生と次曲先読みで使う音声ファイルopen処理を`PlaybackController`へ注入可能にした。実エンジンを起動せずopen失敗を発生させ、対象曲・停止状態・ユーザー向けエラーを検証する自動試験を追加した
 - [Next] `ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
 - [Next] 2026-09-15の実行ではReleaseアプリ／UIテストのビルドは成功したが、XcodeのUIテストランナーがAutomation Modeの有効化でタイムアウトし、計測本体の開始前に終了した。macOSのUIオートメーション権限を復旧後に上記コマンドを再実行し、数値が得られるまではA3の製品目標を合格扱いにしない
 - [Done] 曲・アーティスト・アルバムのセルクリックでTableのFocusStateも更新し、選択だけ変わって非アクティブのグレー表示になる経路を修正した。Debugビルド成功。実画面検証はユーザー操作との競合により未完了
