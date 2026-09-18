@@ -133,15 +133,17 @@ actor LibraryPresentationWorker {
 struct AlbumGroup: Identifiable, Sendable {
     let id: UUID
     let name: String
+    let sortName: String
     let artist: String
     let tracks: [Track]
 
     let sortedTracks: [Track]
     let totalDuration: TimeInterval
 
-    init(id: UUID, name: String, artist: String, tracks: [Track]) {
+    init(id: UUID, name: String, sortName: String = "", artist: String, tracks: [Track]) {
         self.id = id
         self.name = name
+        self.sortName = sortName
         self.artist = artist
         self.tracks = tracks
         sortedTracks = tracks.sorted {
@@ -157,6 +159,7 @@ struct AlbumGroup: Identifiable, Sendable {
             return AlbumGroup(
                 id: first.albumID,
                 name: first.album,
+                sortName: first.albumSortName,
                 artist: first.artist,
                 tracks: group
             )
@@ -221,6 +224,31 @@ enum AlbumTitleGrouping {
         return initial.uppercased(with: locale)
     }
 
+    static func initial(
+        for title: String,
+        preferredReading: String,
+        locale: Locale = .current
+    ) -> String {
+        let reading = preferredReading.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !reading.isEmpty, containsJapaneseTitleCharacters(title) else {
+            return initial(for: title, locale: locale)
+        }
+        return initial(for: reading, locale: locale)
+    }
+
+    private static func containsJapaneseTitleCharacters(_ title: String) -> Bool {
+        title.unicodeScalars.contains { scalar in
+            switch scalar.value {
+            case 0x3040 ... 0x30FF, // Hiragana and Katakana
+                 0x3400 ... 0x4DBF, // CJK Extension A
+                 0x4E00 ... 0x9FFF: // CJK Unified Ideographs
+                true
+            default:
+                false
+            }
+        }
+    }
+
     static func ordered(_ initials: some Sequence<String>, locale: Locale = .current) -> [String] {
         initials.sorted { lhs, rhs in
             if lhs == miscellaneousInitial { return false }
@@ -260,7 +288,9 @@ struct AlbumSection: Identifiable, Sendable {
     var id: String { initial }
 
     static func makeSections(from albums: [AlbumGroup]) -> [AlbumSection] {
-        let grouped = Dictionary(grouping: albums) { AlbumTitleGrouping.initial(for: $0.name) }
+        let grouped = Dictionary(grouping: albums) {
+            AlbumTitleGrouping.initial(for: $0.name, preferredReading: $0.sortName)
+        }
         return AlbumTitleGrouping.ordered(grouped.keys).compactMap { initial in
             grouped[initial].map { AlbumSection(initial: initial, albums: $0) }
         }

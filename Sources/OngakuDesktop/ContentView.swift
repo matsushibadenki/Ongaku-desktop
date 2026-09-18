@@ -33,7 +33,6 @@ struct ContentView: View {
     var body: some View {
         playerAwareLayout
         .accessibilityIdentifier("main.window")
-        .background(AppTheme.canvas)
         .tint(AppTheme.accent)
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }
@@ -314,6 +313,7 @@ struct ContentView: View {
                 }
 
                 navigationContent
+                    .background(AppTheme.canvas)
                     .frame(
                         maxWidth: .infinity,
                         minHeight: navigationHeight,

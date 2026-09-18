@@ -346,6 +346,37 @@ struct ApplicationSettingsTests {
         #expect(window.contentLayoutRect.maxY < window.frame.height)
     }
 
+    @Test("Title-bar dragging uses screen coordinates across window movement")
+    func titleBarDragCoordinates() {
+        let drag = TitleBarDrag(
+            windowOrigin: NSPoint(x: -400, y: 80),
+            mouseOrigin: NSPoint(x: -100, y: 600)
+        )
+        #expect(drag.windowOrigin(for: NSPoint(x: 40, y: 560)) == NSPoint(x: -260, y: 40))
+        #expect(drag.windowOrigin(for: NSPoint(x: -100, y: 600)) == NSPoint(x: -400, y: 80))
+    }
+
+    @Test("Title-bar dragging excludes content and window controls")
+    @MainActor
+    func titleBarDragHitRegions() throws {
+        let window = NSWindow(
+            contentRect: NSRect(x: 80, y: 120, width: 600, height: 400),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        let controller = WindowPresentationController()
+        controller.attach(to: window)
+        let titlePoint = NSPoint(x: 450, y: window.frame.height - 10)
+        #expect(TitleBarDrag.canStart(in: window, at: titlePoint))
+        #expect(!TitleBarDrag.canStart(in: window, at: NSPoint(x: 450, y: 100)))
+        let close = try #require(window.standardWindowButton(.closeButton))
+        let closePoint = close.convert(NSPoint(x: close.bounds.midX, y: close.bounds.midY), to: nil)
+        #expect(!TitleBarDrag.canStart(in: window, at: closePoint))
+        window.isMovable = false
+        #expect(!TitleBarDrag.canStart(in: window, at: titlePoint))
+    }
+
     @Test("A selected Apple Music library resolves and persists its Media folder")
     @MainActor
     func appleMusicLibraryPersistence() throws {

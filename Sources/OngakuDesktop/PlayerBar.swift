@@ -2,6 +2,7 @@
  * component: persistent player transport · genre: atmospheric · theme: Midnight
  * states: native macOS default · hover · focus · active · disabled · playback feedback
  */
+import CoreImage
 import SwiftUI
 
 struct PlayerBar: View {
@@ -30,6 +31,8 @@ struct PlayerBar: View {
                         .frame(width: blockWidth)
                     centerPlayerArea
                         .frame(width: blockWidth * 2)
+                        .frame(maxHeight: .infinity)
+                        .background(AppTheme.surface)
                     meterCell(
                         channel: "R",
                         level: player.stereoLevels.right,
@@ -39,7 +42,6 @@ struct PlayerBar: View {
                 }
             }
             .frame(height: 104)
-            .background(AppTheme.surface)
             Divider().overlay(AppTheme.rule)
         }
         .frame(height: Self.layoutHeight)
@@ -62,10 +64,28 @@ struct PlayerBar: View {
         }
         .padding(.horizontal, AppTheme.spaceMD)
         .padding(.vertical, AppTheme.spaceSM)
+        .background {
+            if meterSettings.style == .spectrum {
+                SpectrumGlassBackground()
+            } else {
+                AppTheme.surface
+            }
+        }
+        .overlay {
+            if meterSettings.style == .spectrum {
+                SpectrumGlassReflection()
+            }
+        }
         .overlay(alignment: channel == "L" ? .trailing : .leading) {
             Rectangle()
                 .fill(AppTheme.rule.opacity(0.42))
                 .frame(width: 1)
+        }
+        .overlay {
+            if meterSettings.style == .spectrum {
+                SpectrumWindowDragSurface()
+                    .accessibilityHidden(true)
+            }
         }
     }
 
@@ -647,10 +667,6 @@ private struct ChannelSpectrumView: View {
 
             GeometryReader { proxy in
                 ZStack(alignment: .bottom) {
-                    Rectangle()
-                        .fill(AppTheme.rule.opacity(0.72))
-                        .frame(height: 1)
-
                     HStack(alignment: .bottom, spacing: 2) {
                         ForEach(Array(bands.enumerated()), id: \.offset) { _, value in
                             SpectrumBar(value: value, availableHeight: proxy.size.height)
@@ -664,6 +680,7 @@ private struct ChannelSpectrumView: View {
                 )
             }
         }
+        .allowsHitTesting(false)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(channel) \(L10n.text("miniPlayer.stereoMeter"))")
         .accessibilityValue(averageLevel)
@@ -676,13 +693,172 @@ private struct ChannelSpectrumView: View {
     }
 }
 
+private struct SpectrumGlassBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.displayScale) private var displayScale
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private var isDark: Bool { colorScheme == .dark }
+    private var pixel: CGFloat { 1 / max(displayScale, 1) }
+    var body: some View {
+        SpectrumBackdropBlur(isDark: isDark)
+        .overlay {
+            if reduceTransparency {
+                (isDark ? Color.black : Color.white)
+                    .allowsHitTesting(false)
+            } else if isDark {
+                Color.black.opacity(0.80)
+                    .allowsHitTesting(false)
+            } else {
+                LinearGradient(
+                    colors: [
+                        .white.opacity(0.15),
+                        .clear,
+                        .black.opacity(0.04),
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .allowsHitTesting(false)
+            }
+        }
+        .overlay {
+            // Keep the bevel on the area's outer edge, without an inset frame.
+            Rectangle().strokeBorder(
+                LinearGradient(
+                    colors: [.white.opacity(isDark ? 0.28 : 0.65),
+                             .white.opacity(0.04), .black.opacity(isDark ? 0.32 : 0.16)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                ),
+                lineWidth: 1.5 * pixel
+            )
+            .allowsHitTesting(false)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+private struct SpectrumBackdropBlur: NSViewRepresentable {
+    let isDark: Bool
+
+    func makeNSView(context: Context) -> SpectrumGlassView {
+        let view = SpectrumGlassView()
+        view.blendingMode = .behindWindow
+        view.material = .underWindowBackground
+        view.state = .active
+        view.alphaValue = 0.80
+        view.wantsLayer = true
+        view.layerUsesCoreImageFilters = true
+        view.layer?.masksToBounds = true
+        return view
+    }
+
+    func updateNSView(_ view: SpectrumGlassView, context: Context) {
+        // Match the app's appearance override, including when it differs from macOS.
+        view.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
+    }
+}
+
+private final class SpectrumGlassView: NSVisualEffectView {
+    private var filteredSize: NSSize = .zero
+    private let transmissionMask: CAGradientLayer = {
+        let mask = CAGradientLayer()
+        // Vary the actual backdrop opacity, not just the foreground reflection.
+        mask.colors = [
+            NSColor.white.cgColor,
+            NSColor.white.withAlphaComponent(0.72).cgColor,
+            NSColor.white.withAlphaComponent(0.88).cgColor,
+            NSColor.white.cgColor,
+        ]
+        mask.locations = [0, 0.38, 0.68, 1]
+        mask.startPoint = CGPoint(x: 0, y: 1)
+        mask.endPoint = CGPoint(x: 1, y: 0)
+        return mask
+    }()
+
+    override func layout() {
+        super.layout()
+        let size = bounds.size
+        guard size.width > 0, size.height > 0, size != filteredSize else { return }
+        filteredSize = size
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        transmissionMask.frame = CGRect(origin: .zero, size: size)
+        layer?.mask = transmissionMask
+        CATransaction.commit()
+
+        // Sample the backdrop with a little refraction, then soften it just
+        // enough to retain shapes and color behind the glass.
+        let refraction = CIFilter(name: "CIBumpDistortion", parameters: [
+            kCIInputCenterKey: CIVector(x: size.width / 2, y: size.height / 2),
+            kCIInputRadiusKey: max(size.width, size.height) * 0.55,
+            kCIInputScaleKey: 0.10,
+        ])
+        let blur = CIFilter(name: "CIGaussianBlur", parameters: [
+            kCIInputRadiusKey: 8,
+        ])
+        layer?.backgroundFilters = [refraction, blur].compactMap { $0 }
+    }
+
+    override var mouseDownCanMoveWindow: Bool { true }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+}
+
+private struct SpectrumWindowDragSurface: NSViewRepresentable {
+    func makeNSView(context: Context) -> SpectrumWindowDragView {
+        SpectrumWindowDragView()
+    }
+
+    func updateNSView(_ view: SpectrumWindowDragView, context: Context) {}
+}
+
+private final class SpectrumWindowDragView: NSView {
+    override var mouseDownCanMoveWindow: Bool { true }
+
+    override func mouseDown(with event: NSEvent) {
+        window?.performDrag(with: event)
+    }
+}
+
+// The reflection belongs to the glass pane, independently of the animated bars.
+private struct SpectrumGlassReflection: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                stops: [
+                    .init(color: .white.opacity(0.18), location: 0),
+                    .init(color: .clear, location: 0.28),
+                    .init(color: .white.opacity(0.22), location: 0.45),
+                    .init(color: .white.opacity(0.05), location: 0.53),
+                    .init(color: .clear, location: 0.72),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            LinearGradient(
+                colors: [.white.opacity(0.14), .clear, .black.opacity(0.04)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+        .opacity(colorScheme == .dark ? 0.75 : 1)
+        .clipped()
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 private struct SpectrumBar: View {
     let value: Double
     let availableHeight: CGFloat
 
     var body: some View {
         Capsule()
-            .fill(AppTheme.accent)
+            .fill(Color.white)
             .frame(maxWidth: .infinity)
             .frame(height: max(2, availableHeight * SpectrumPresentation.height(for: value)))
             .opacity(value > 0.015 ? 1 : 0.24)

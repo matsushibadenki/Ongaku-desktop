@@ -16,13 +16,21 @@ final class WindowPresentationController: ObservableObject {
     private var zoomButtonWasEnabled = true
 
     func attach(to window: NSWindow) {
+        // SwiftUI can update the bridge during a window drag. Reapplying the
+        // style mask at that point rebuilds the title bar while it is tracking.
+        guard managedWindow !== window else { return }
         managedWindow = window
         // Keep the three-column layout below the title bar and its toolbar.
         // A full-size transparent title bar makes SwiftUI place the first row
         // of every NavigationSplitView column underneath those controls.
         window.styleMask.remove(.fullSizeContentView)
         window.titlebarAppearsTransparent = false
-        window.backgroundColor = AppTheme.windowBackground
+        window.isMovable = true
+        window.isMovableByWindowBackground = true
+        // The navigation and transport paint their own backgrounds. Leave the
+        // spectrum regions clear for native behind-window backdrop sampling.
+        window.isOpaque = false
+        window.backgroundColor = .clear
         window.titlebarSeparatorStyle = .none
         updateMiniaturizeButtonHelp(in: window)
         if isMiniPlayer {
@@ -135,13 +143,18 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
         private weak var button: NSButton?
         private var originalTarget: AnyObject?
         private var originalAction: Selector?
+        private var titleBarMouseMonitor: Any?
+        private var titleBarDrag: TitleBarDrag?
 
         init(controller: WindowPresentationController) {
             self.controller = controller
         }
 
         func connect(to window: NSWindow?) {
-            guard let window else { return }
+            guard let window else {
+                disconnect()
+                return
+            }
             if self.window === window, button?.target === self {
                 controller.attach(to: window)
                 return
@@ -155,9 +168,21 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
             button.target = self
             button.action = #selector(toggleMiniPlayer)
             controller.attach(to: window)
+            titleBarMouseMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
+            ) { [weak self] event in
+                let consumed = MainActor.assumeIsolated {
+                    guard let self else { return false }
+                    return self.handleTitleBarMouse(event) == nil
+                }
+                return consumed ? nil : event
+            }
         }
 
         func disconnect() {
+            if let titleBarMouseMonitor { NSEvent.removeMonitor(titleBarMouseMonitor) }
+            titleBarMouseMonitor = nil
+            titleBarDrag = nil
             if let button, button.target === self {
                 button.target = originalTarget
                 button.action = originalAction
@@ -168,6 +193,37 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
             originalAction = nil
         }
 
+        private func handleTitleBarMouse(_ event: NSEvent) -> NSEvent? {
+            guard let window, event.window === window else { return event }
+            switch event.type {
+            case .leftMouseDown:
+                titleBarDrag = nil
+                guard event.clickCount == 1,
+                      !event.modifierFlags.contains(.control),
+                      TitleBarDrag.canStart(in: window, at: event.locationInWindow)
+                else { return event }
+                titleBarDrag = TitleBarDrag(
+                    windowOrigin: window.frame.origin,
+                    mouseOrigin: window.convertPoint(toScreen: event.locationInWindow)
+                )
+                // Track this region ourselves: the transparent SwiftUI window
+                // receives title-bar events without starting AppKit's move loop.
+                return nil
+            case .leftMouseDragged:
+                guard let titleBarDrag else { return event }
+                window.setFrameOrigin(titleBarDrag.windowOrigin(
+                    for: window.convertPoint(toScreen: event.locationInWindow)
+                ))
+                return nil
+            case .leftMouseUp:
+                guard titleBarDrag != nil else { return event }
+                titleBarDrag = nil
+                return nil
+            default:
+                return event
+            }
+        }
+
         @objc private func toggleMiniPlayer() {
             guard let window else { return }
             controller.toggleMiniPlayer(in: window)
@@ -175,8 +231,46 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
     }
 }
 
+struct TitleBarDrag {
+    let windowOrigin: NSPoint
+    let mouseOrigin: NSPoint
+
+    func windowOrigin(for mouseLocation: NSPoint) -> NSPoint {
+        NSPoint(
+            x: windowOrigin.x + mouseLocation.x - mouseOrigin.x,
+            y: windowOrigin.y + mouseLocation.y - mouseOrigin.y
+        )
+    }
+
+    @MainActor
+    static func canStart(in window: NSWindow, at point: NSPoint) -> Bool {
+        guard window.isMovable, window.attachedSheet == nil,
+              !window.styleMask.contains(.fullScreen),
+              point.y >= window.contentLayoutRect.maxY,
+              let frameView = window.contentView?.superview,
+              frameView.bounds.contains(frameView.convert(point, from: nil)),
+              let hitView = frameView.hitTest(frameView.convert(point, from: nil))
+        else { return false }
+
+        // Hosted toolbar controls and search fields must retain their events,
+        // including disabled buttons and their surrounding hit regions.
+        if window.toolbar?.items.contains(where: { item in
+            guard let view = item.view else { return false }
+            return view.convert(view.bounds, to: nil).contains(point)
+        }) == true { return false }
+        var current: NSView? = hitView
+        while let view = current {
+            guard !(view is NSControl), view.mouseDownCanMoveWindow else { return false }
+            current = view.superview
+        }
+        return true
+    }
+}
+
 final class WindowProbeView: NSView {
     var onWindowChange: ((NSWindow?) -> Void)?
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()

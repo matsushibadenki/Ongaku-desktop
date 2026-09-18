@@ -45,6 +45,7 @@ struct PreferencesView: View {
 
     @EnvironmentObject private var language: AppLanguageSettings
     @EnvironmentObject private var appearance: AppAppearanceSettings
+    @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var socialPrivacy: SocialPrivacySettings
     @State private var selection: PreferencesSection = .general
     @State private var measuredContentHeight: CGFloat = 0
@@ -56,8 +57,14 @@ struct PreferencesView: View {
     var body: some View {
         HStack(spacing: 0) {
             List(PreferencesSection.allCases, selection: $selection) { section in
-                Label(section.title, systemImage: section.icon)
-                    .tag(section)
+                Label {
+                    Text(section.title)
+                } icon: {
+                    Image(systemName: section.icon)
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(colorScheme == .dark ? Color.white : Color.black)
+                }
+                .tag(section)
             }
             .listStyle(.sidebar)
             .frame(width: 190)

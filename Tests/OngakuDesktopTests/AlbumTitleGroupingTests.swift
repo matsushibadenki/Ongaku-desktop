@@ -20,6 +20,39 @@ struct AlbumTitleGroupingTests {
         #expect(AlbumTitleGrouping.initial(for: "音乐", locale: locale) == "音")
     }
 
+    @Test("Japanese album titles prefer their reading initial")
+    func prefersJapaneseReadingInitial() {
+        #expect(AlbumTitleGrouping.initial(
+            for: "音楽",
+            preferredReading: "おんがく",
+            locale: locale
+        ) == "お")
+        #expect(AlbumTitleGrouping.initial(
+            for: "東京物語",
+            preferredReading: "Tokyo Monogatari",
+            locale: locale
+        ) == "T")
+        #expect(AlbumTitleGrouping.initial(
+            for: "音楽",
+            preferredReading: "",
+            locale: locale
+        ) == "音")
+        #expect(AlbumTitleGrouping.initial(
+            for: "Album",
+            preferredReading: "Wrong Reading",
+            locale: locale
+        ) == "A")
+
+        let album = AlbumGroup(
+            id: UUID(),
+            name: "音楽",
+            sortName: "おんがく",
+            artist: "Artist",
+            tracks: []
+        )
+        #expect(AlbumSection.makeSections(from: [album]).map(\.initial) == ["お"])
+    }
+
     @Test("Numbers, symbols, and empty titles use the miscellaneous group")
     func groupsNonLettersAsMiscellaneous() {
         #expect(AlbumTitleGrouping.initial(for: "1989", locale: locale) == "#")

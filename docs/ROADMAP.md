@@ -68,6 +68,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] A4のUI更新境界として、Mac／MobileのMultipeerConnectivityデリゲートとProgress監視コールバックからUI状態へ触れる前に、明示的にMainActorへ橋渡しする。コントローラー全体のMainActor化はバックグラウンド転送を誤って隔離するため採用せず、Xcode 27の実行時queue検査で停止しない境界を回帰ゲートにした
 - [Done] A4のcheckpoint読書きでは初期化時に固定したSendable storeを転送キューへ値として渡す。破棄・期限切れ整理・一覧取得後の`resumableTransfers`更新はMainActorへ明示的に戻す
 - [Done] A4の転送状態分離として、Mac／Mobileで重複していた一時停止IDと保留チャンク要求を共通の`DeviceChunkTransferPauseCoordinator`へ移した。停止判定と要求保存を同じロック内で原子的に実行し、同時再開で要求が取り残される競合を除去した
+- [Done] アルバムのイニシャル分類で、日本語文字を含むタイトルに`albumSortName`がある場合は読み仮名の先頭を優先する。読みがない既存データと英字タイトルは従来の分類を維持する
 - [Next] A4の次段階として、チャンク転送のファイルI/O・checkpoint・転送中辞書を専用actorへ移し、現在Xcode 27が警告するDispatchQueueクロージャーからMainActor状態への参照を解消する
 - [Done] 上記A4境界変更をXcode 27.0で全296テスト、通常macOS Debug、Mac App Store Release、iOS Simulator Debugの順に検証した。並列Xcodeビルドは同一DerivedDataのDBロックを起こすため構成ビルドを直列化し、3構成すべて成功した
 - [Next] `ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
