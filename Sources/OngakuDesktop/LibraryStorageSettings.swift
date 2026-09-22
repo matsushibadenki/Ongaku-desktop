@@ -120,6 +120,7 @@ struct PortableLibraryStorage: Sendable {
             "Incoming", "Playlist Artwork", "library-v1.json", "library-v1.backup.json",
             "import-journal-v1.json", "media-organization-journal-v1.json",
             "audio-features-v1.json", "device-sync-tags-v1.json",
+            "storage-recovery-v1.json", "Recovery Backups", "Legacy Imports",
             "playback-queue-v1.json", "playback-queue-v1.backup.json",
             "playback-events-v1.json", "playback-events-v1.backup.json", "Artwork",
             "catalog-prototype-v1.sqlite", "catalog-prototype-v1.migrating.sqlite",
@@ -556,6 +557,21 @@ final class LibraryProfileSettings: ObservableObject {
         activeLocationRevision &+= 1
     }
 
+    /// A storage selection opens an independent catalog; it is not a migration.
+    func adoptActiveStorageLocation(_ url: URL) {
+        guard let index = profiles.firstIndex(where: { $0.id == activeLibraryID }) else { return }
+        let locationChanged = profiles[index].mediaURL.standardizedFileURL != url.standardizedFileURL
+        profiles[index].mediaPath = url.standardizedFileURL.path
+        profiles[index].catalogPath = PortableLibraryStorage(mediaURL: url).rootURL.path
+        if locationChanged, profiles[index].externalRootURL != nil {
+            securityScopedProfileURLs.removeValue(forKey: activeLibraryID)?.stopAccessingSecurityScopedResource()
+            profiles[index].externalRootPath = nil
+            profiles[index].externalBookmark = nil
+            profiles[index].externalVolumeName = nil
+        }
+        activeLocationRevision &+= 1
+    }
+
     private func normalizedName(_ value: String) -> String {
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? L10n.text("libraryProfile.untitled") : String(trimmed.prefix(80))
@@ -830,6 +846,8 @@ final class LibraryStorageSettings: ObservableObject {
     private static let sourceKey = "library.storage.source.v1"
     private static let musicLibraryPathKey = "library.storage.musicLibraryPath.v1"
     private static let musicLibraryMediaPathKey = "library.storage.musicLibraryMediaPath.v1"
+    private static let musicLibraryStorageVersionKey = "library.storage.musicLibraryManagedStorage.v2"
+    private static let mediaAccessBookmarksKey = "library.storage.mediaAccessBookmarks.v1"
     private static let managedFolderName = "Ongaku Media"
 
     @Published private(set) var mediaDirectoryURL: URL
@@ -840,6 +858,7 @@ final class LibraryStorageSettings: ObservableObject {
     private let defaults: UserDefaults
     private let fileManager: FileManager
     private var securityScopedURL: URL?
+    private var musicMediaScopedURL: URL?
 
     init(
         defaults: UserDefaults = .standard,
@@ -860,7 +879,8 @@ final class LibraryStorageSettings: ObservableObject {
             source = .musicDirectory
             defaults.set(freshDirectory.path, forKey: Self.pathKey)
             defaults.set(LibraryStorageSource.musicDirectory.rawValue, forKey: Self.sourceKey)
-        } else if savedSource == .selectedAppleMusicLibrary {
+        } else if savedSource == .selectedAppleMusicLibrary,
+                  !defaults.bool(forKey: Self.musicLibraryStorageVersionKey) {
             // Migrate the earlier behavior that incorrectly used Apple Music's
             // Media folder as Ongaku's managed-copy destination.
             mediaDirectoryURL = Self.defaultMediaDirectory(fileManager: fileManager)
@@ -889,10 +909,12 @@ final class LibraryStorageSettings: ObservableObject {
                 fileManager: fileManager
             )
         }
+        musicMediaScopedURL = restoreMediaAccess(for: mediaDirectoryURL)
     }
 
     deinit {
         securityScopedURL?.stopAccessingSecurityScopedResource()
+        musicMediaScopedURL?.stopAccessingSecurityScopedResource()
     }
 
     func useSelectedDirectory(_ directoryURL: URL) throws {
@@ -911,10 +933,96 @@ final class LibraryStorageSettings: ObservableObject {
             fileManager: fileManager
         )
         let library = libraryURL.standardizedFileURL
+        try useDirectory(Self.managedDirectory(in: mediaFolder), source: .selectedAppleMusicLibrary)
+        defaults.set(true, forKey: Self.musicLibraryStorageVersionKey)
         defaults.set(library.path, forKey: Self.musicLibraryPathKey)
         defaults.set(mediaFolder.path, forKey: Self.musicLibraryMediaPathKey)
         musicLibraryURL = library
         musicLibraryMediaURL = mediaFolder
+    }
+
+    /// Keep bookmarks and the previous storage selection intact if preparation fails.
+    func activateDirectory(
+        _ directoryURL: URL,
+        source newSource: LibraryStorageSource = .userSelected,
+        musicLibrary: URL? = nil,
+        musicMedia: URL? = nil,
+        prepare: (URL) async throws -> Void
+    ) async throws {
+        let directory = directoryURL.standardizedFileURL
+        let sourceScope = musicMedia.flatMap { $0.startAccessingSecurityScopedResource() ? $0 : nil }
+            ?? restoreMediaAccess(for: directory)
+        let didAccess = directory.startAccessingSecurityScopedResource()
+        do {
+            try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+            let bookmark = try directory.bookmarkData(
+                options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil
+            )
+            let sourceBookmark = try musicMedia?.bookmarkData(
+                options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil
+            )
+            try await prepare(directory)
+            securityScopedURL?.stopAccessingSecurityScopedResource()
+            musicMediaScopedURL?.stopAccessingSecurityScopedResource()
+            securityScopedURL = didAccess ? directory : nil
+            musicMediaScopedURL = sourceScope
+            if let sourceBookmark {
+                var bookmarks = defaults.dictionary(forKey: Self.mediaAccessBookmarksKey) ?? [:]
+                bookmarks[directory.path] = sourceBookmark
+                defaults.set(bookmarks, forKey: Self.mediaAccessBookmarksKey)
+            }
+            defaults.set(bookmark, forKey: Self.bookmarkKey)
+            defaults.set(directory.path, forKey: Self.pathKey)
+            defaults.set(newSource.rawValue, forKey: Self.sourceKey)
+            defaults.set(musicLibrary?.path, forKey: Self.musicLibraryPathKey)
+            defaults.set(musicMedia?.path, forKey: Self.musicLibraryMediaPathKey)
+            defaults.set(musicLibrary != nil, forKey: Self.musicLibraryStorageVersionKey)
+            mediaDirectoryURL = directory
+            source = newSource
+            musicLibraryURL = musicLibrary
+            musicLibraryMediaURL = musicMedia
+        } catch {
+            if didAccess { directory.stopAccessingSecurityScopedResource() }
+            sourceScope?.stopAccessingSecurityScopedResource()
+            throw error
+        }
+    }
+
+    func activateAppleMusicLibrary(
+        _ libraryURL: URL, authorizedMediaURL: URL? = nil, prepare: (URL) async throws -> Void
+    ) async throws {
+        let didAccess = libraryURL.startAccessingSecurityScopedResource()
+        defer { if didAccess { libraryURL.stopAccessingSecurityScopedResource() } }
+        guard libraryURL.pathExtension.lowercased() == "musiclibrary",
+              try libraryURL.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+            throw AppleMusicSettingsReader.AppleMusicLibraryError.invalidPackage
+        }
+        let media = try authorizedMediaURL?.standardizedFileURL
+            ?? AppleMusicSettingsReader.mediaFolder(forMusicLibrary: libraryURL, fileManager: fileManager)
+        try await activateDirectory(
+            Self.managedDirectory(in: media), source: .selectedAppleMusicLibrary,
+            musicLibrary: libraryURL.standardizedFileURL, musicMedia: media, prepare: prepare
+        )
+    }
+
+    private func restoreMediaAccess(for directory: URL) -> URL? {
+        guard let bookmarks = defaults.dictionary(forKey: Self.mediaAccessBookmarksKey),
+              let data = bookmarks[directory.standardizedFileURL.path] as? Data else { return nil }
+        var stale = false
+        guard let url = try? URL(
+            resolvingBookmarkData: data, options: [.withSecurityScope], relativeTo: nil,
+            bookmarkDataIsStale: &stale
+        ), url.startAccessingSecurityScopedResource() else { return nil }
+        return url
+    }
+
+    func activateAutomaticLocation(prepare: (URL) async throws -> Void) async throws {
+        let detected = AppleMusicSettingsReader.detectedMediaFolder(fileManager: fileManager, userDefaults: defaults)
+        try await activateDirectory(
+            detected.map(Self.managedDirectory(in:)) ?? Self.defaultMediaDirectory(fileManager: fileManager),
+            source: detected == nil ? .musicDirectory : .automaticAppleMusic,
+            prepare: prepare
+        )
     }
 
     private func useDirectory(_ directoryURL: URL, source newSource: LibraryStorageSource) throws {

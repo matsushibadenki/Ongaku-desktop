@@ -757,11 +757,12 @@
 "effects.on" = "开";
 "effects.off" = "关";
 "settings.storage.title" = "音乐存储位置";
-"settings.storage.subtitle" = "选择Ongaku保存已验证管理副本的位置。";
+"settings.storage.subtitle" = "选择文件夹以创建或打开其中的Ongaku资料库。";
 "settings.storage.location" = "管理音乐文件夹";
 "settings.storage.choose" = "选择文件夹…";
 "settings.storage.chooseMusicLibrary" = "选择Music资料库…";
 "settings.storage.choosePanelConfirm" = "选择";
+"settings.storage.authorizeMusicMedia" = "请选择此Music资料库的媒体文件夹，以允许访问歌曲并创建Ongaku Media。";
 "settings.storage.musicLibraryHelp" = "选择Apple Music的.musiclibrary包";
 "settings.storage.importingMusicLibrary" = "正在扫描并导入所选资料库中的音乐…";
 "settings.storage.musicLibraryImportResult" = "资料库扫描完成：找到%d个音频文件，新增%d个，%d首已重新链接到原始文件，%d个无法建立索引。";
@@ -776,7 +777,8 @@
 "settings.storage.source.selectedAppleMusicLibrary" = "已从所选Apple Music资料库读取";
 "settings.storage.source.default" = "使用Ongaku默认的Application Support位置";
 "settings.storage.source.custom" = "正在使用所选位置";
-"settings.storage.safetyNote" = "今后导入的音乐将保存在此处。现有管理文件会保留在已验证的位置，因此更改设置不会移动或覆盖它们。";
+"settings.storage.safetyNote" = "新文件夹将创建独立的管理数据。重新选择以前的文件夹时，会读取其中的歌曲和播放列表，不会移动其他资料库。选择Music资料库时，将在媒体文件夹中创建Ongaku Media，并引用原始歌曲而不修改它们。";
+"settings.storage.error.multiplePreservedLibraries" = "发现多个保留的资料库。为避免恢复错误的资料库，已停止自动恢复。请通过资料库导入选择要恢复的目录文件：\n%@";
 "settings.storage.error.invalidMusicLibrary" = "请选择有效的.musiclibrary包。";
 "settings.storage.error.mediaFolderNotFound" = "找不到与此Apple Music资料库对应的Media文件夹。";
 "settings.storage.clearTitle" = "资料库注册";
@@ -787,7 +789,7 @@
 "settings.storage.clearConfirmationButton" = "全部取消注册";
 "settings.storage.clearSuccess" = "已取消所有歌曲注册。音乐文件未被更改。";
 "common.cancel" = "取消";
-"status.storageChanged" = "已更新今后导入音乐的存储位置。";
+"status.storageChanged" = "已切换资料库的存储位置。";
 "status.appleMusicNoFiles" = "Apple Music的Media文件夹中未找到支持的音频文件。";
 "status.appleMusicImported" = "已索引%d首歌曲，并将%d首重新链接到Apple Music原始文件。";
 "status.folderNoFiles" = "所选文件夹中未找到支持的音频文件。";

@@ -82,6 +82,10 @@ final class OngakuDesktopUITests: XCTestCase {
         let launchStarted = ContinuousClock.now
         app.launch()
         XCTAssertTrue(waitForVisibleCount("100000", in: app, timeout: 20))
+        XCTAssertTrue(
+            renderedTrack(named: "Track 000000", in: app).waitForExistence(timeout: 20),
+            "The initial song table did not render its first track."
+        )
         let initialDisplaySeconds = launchStarted.duration(to: .now).seconds
         XCTAssertLessThan(initialDisplaySeconds, 2.0)
 
@@ -95,11 +99,16 @@ final class OngakuDesktopUITests: XCTestCase {
             searchField.typeKey("a", modifierFlags: .command)
             searchField.typeKey(.delete, modifierFlags: [])
             let query = String(format: "Track %06d", index * 3)
+            searchField.typeText(String(query.dropLast()))
             let searchStarted = ContinuousClock.now
-            searchField.typeText(query)
+            searchField.typeText(String(query.suffix(1)))
             XCTAssertTrue(
-                waitForVisibleCount("1", in: app, timeout: 5),
-                "Search timed out: \(query)"
+                waitForSearchResult(
+                    title: query,
+                    in: app,
+                    timeout: 5
+                ),
+                "Search did not render the requested track: \(query)"
             )
             searchDurations.append(searchStarted.duration(to: .now).seconds)
             observedPeakRSSMiB = max(
@@ -148,6 +157,31 @@ final class OngakuDesktopUITests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.02))
         }
         return false
+    }
+
+    @MainActor
+    private func waitForSearchResult(
+        title: String,
+        in app: XCUIApplication,
+        timeout: TimeInterval
+    ) -> Bool {
+        let result = renderedTrack(named: title, in: app)
+        let count = app.staticTexts["library.visible-count"]
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if result.exists, count.exists, count.label.filter(\.isNumber) == "1" {
+                return true
+            }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.02))
+        }
+        return false
+    }
+
+    @MainActor
+    private func renderedTrack(named title: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .tableRow)
+            .matching(NSPredicate(format: "value CONTAINS %@", title))
+            .firstMatch
     }
 
     private func residentMemoryMiB(processID: Int32) -> Double? {

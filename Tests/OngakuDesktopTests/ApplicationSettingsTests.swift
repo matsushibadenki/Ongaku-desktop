@@ -394,14 +394,12 @@ struct ApplicationSettingsTests {
         }
 
         let settings = LibraryStorageSettings(defaults: defaults)
-        let originalManagedDirectory = settings.mediaDirectoryURL
-        let originalSource = settings.source
         try settings.useAppleMusicLibrary(library)
-        #expect(settings.source == originalSource)
+        #expect(settings.source == .selectedAppleMusicLibrary)
         #expect(settings.musicLibraryURL == library.standardizedFileURL)
         #expect(settings.musicLibraryMediaURL == media.standardizedFileURL)
-        #expect(settings.mediaDirectoryURL == originalManagedDirectory)
-        #expect(!FileManager.default.fileExists(atPath: media.appendingPathComponent("Ongaku Media").path))
+        #expect(settings.mediaDirectoryURL == media.appendingPathComponent("Ongaku Media", isDirectory: true))
+        #expect(FileManager.default.fileExists(atPath: settings.mediaDirectoryURL.path))
 
         let restored = LibraryStorageSettings(defaults: defaults)
         #expect(restored.musicLibraryURL == library.standardizedFileURL)
@@ -434,4 +432,130 @@ struct ApplicationSettingsTests {
         )
         #expect(restored.mediaDirectoryURL == selected.standardizedFileURL)
     }
+    @Test("Storage activation creates a catalog, reopens it, and preserves the old library on failure")
+    @MainActor
+    func storageActivationRoundTrip() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let suite = "Ongaku.StorageActivation.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: root)
+        }
+        let first = root.appendingPathComponent("First", isDirectory: true)
+        let second = root.appendingPathComponent("Second", isDirectory: true)
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let repository = LibraryRepository(rootURL: firstCatalog, mediaURL: first)
+        let track = Track(
+            id: UUID(), title: "Original", artist: "Artist", album: "Album", duration: 10,
+            fileSize: 1, managedPath: first.appendingPathComponent("original.mp3").path,
+            sha256: "original", addedAt: .now, health: .verified
+        )
+        try await repository.save(tracks: [track])
+        let playlist = Playlist(name: "Original playlist", entries: [PlaylistEntry(trackID: track.id)])
+        let queue = PlaybackQueueState(trackIDs: [track.id], currentTrackID: track.id, position: 4)
+        try await repository.save(playlists: [playlist])
+        try await repository.save(playbackQueue: queue)
+        let firstID = try await repository.load().document.libraryID
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        // Player notifications can arrive while the destination's asynchronous load is in progress.
+        let queueNotification = store.$audioFeatureRevision.sink { _ in
+            if store.isSwitchingLibrary {
+                store.schedulePlaybackQueueSave(PlaybackQueueState())
+            }
+        }
+        defer { queueNotification.cancel() }
+        let settings = LibraryStorageSettings(defaults: defaults, freshMusicDirectoryURL: root)
+        let profiles = LibraryProfileSettings(
+            defaultMediaURL: first, defaults: defaults, applicationSupportURL: root.appendingPathComponent("Support")
+        )
+        try await settings.activateDirectory(second) { try await store.openStorageDirectory($0) }
+        profiles.adoptActiveStorageLocation(second)
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        #expect(store.tracks.isEmpty)
+        #expect(profiles.activeProfile.catalogURL == secondCatalog)
+        for name in ["library-v1.json", "playback-queue-v1.json", "playback-events-v1.json", "Artwork/Custom", "Artwork/Downloaded"] {
+            #expect(FileManager.default.fileExists(atPath: secondCatalog.appendingPathComponent(name).path))
+        }
+        #expect(FileManager.default.fileExists(atPath: firstCatalog.appendingPathComponent("library-v1.json").path))
+        let secondRepository = LibraryRepository(rootURL: secondCatalog, mediaURL: second)
+        let secondID = try await secondRepository.load().document.libraryID
+        #expect(secondID != firstID)
+        try await settings.activateDirectory(first) { try await store.openStorageDirectory($0) }
+        profiles.adoptActiveStorageLocation(first)
+        #expect(store.tracks.map(\.id) == [track.id])
+        #expect(store.playlists.map(\.id) == [playlist.id])
+        #expect(store.playbackQueue == queue)
+        #expect(try await LibraryRepository(rootURL: firstCatalog, mediaURL: first).load().document.libraryID == firstID)
+        #expect(try await LibraryRepository(rootURL: secondCatalog, mediaURL: second).load().document.libraryID == secondID)
+        let restored = LibraryStorageSettings(defaults: defaults)
+        #expect(restored.mediaDirectoryURL == first)
+
+        let broken = root.appendingPathComponent("Broken", isDirectory: true)
+        let brokenCatalog = PortableLibraryStorage(mediaURL: broken).rootURL
+        try FileManager.default.createDirectory(at: brokenCatalog, withIntermediateDirectories: true)
+        let corruptData = Data("broken catalog".utf8)
+        try corruptData.write(to: brokenCatalog.appendingPathComponent("library-v1.json"))
+        do {
+            try await settings.activateDirectory(broken) { try await store.openStorageDirectory($0) }
+            Issue.record("Corrupt storage was activated")
+        } catch {
+            #expect(settings.mediaDirectoryURL == first)
+            #expect(store.tracks.map(\.id) == [track.id])
+            #expect(profiles.activeProfile.mediaURL == first)
+            #expect(try Data(contentsOf: brokenCatalog.appendingPathComponent("library-v1.json")) == corruptData)
+        }
+    }
+
+    @Test("Selecting another Music library opens its own Ongaku storage and persists it")
+    @MainActor
+    func musicStorageActivation() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let suite = "Ongaku.MusicActivation.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: root)
+        }
+        let settings = LibraryStorageSettings(defaults: defaults, freshMusicDirectoryURL: root)
+        let store = LibraryStore(repository: LibraryRepository(mediaURL: settings.mediaDirectoryURL))
+        await store.load()
+        var ids: [UUID] = []
+        for name in ["First", "Second", "First"] {
+            let parent = root.appendingPathComponent(name, isDirectory: true)
+            let music = parent.appendingPathComponent("Music Library.musiclibrary", isDirectory: true)
+            let media = parent.appendingPathComponent("Media", isDirectory: true)
+            try FileManager.default.createDirectory(at: music, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+            let sentinel = music.appendingPathComponent("Library.musicdb")
+            let original = Data("Apple Music database".utf8)
+            try original.write(to: sentinel)
+            try await settings.activateAppleMusicLibrary(music) { try await store.openStorageDirectory($0) }
+            #expect(settings.mediaDirectoryURL == media.appendingPathComponent("Ongaku Media", isDirectory: true))
+            #expect(settings.source == .selectedAppleMusicLibrary)
+            #expect(settings.musicLibraryMediaURL == media)
+            #expect(try Data(contentsOf: sentinel) == original)
+            let catalog = PortableLibraryStorage(mediaURL: settings.mediaDirectoryURL).rootURL
+            ids.append(try await LibraryRepository(rootURL: catalog, mediaURL: settings.mediaDirectoryURL).load().document.libraryID)
+            let restored = LibraryStorageSettings(defaults: defaults)
+            #expect(restored.mediaDirectoryURL == settings.mediaDirectoryURL)
+            #expect(restored.source == .selectedAppleMusicLibrary)
+        }
+        #expect(ids[0] != ids[1])
+        #expect(ids[0] == ids[2])
+
+        // A Media folder can live somewhere other than beside the package.
+        let customMedia = root.appendingPathComponent("External Media", isDirectory: true)
+        try FileManager.default.createDirectory(at: customMedia, withIntermediateDirectories: true)
+        let music = root.appendingPathComponent("First/Music Library.musiclibrary", isDirectory: true)
+        try await settings.activateAppleMusicLibrary(music, authorizedMediaURL: customMedia) {
+            try await store.openStorageDirectory($0)
+        }
+        let managed = customMedia.appendingPathComponent("Ongaku Media", isDirectory: true)
+        #expect(settings.mediaDirectoryURL == managed)
+        let bookmarks = try #require(defaults.dictionary(forKey: "library.storage.mediaAccessBookmarks.v1"))
+        #expect(bookmarks[managed.path] is Data)
+    }
+
 }

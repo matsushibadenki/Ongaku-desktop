@@ -320,7 +320,9 @@ struct OngakuDesktopApp: App {
                         playlists: library.playlists,
                         displayTags: library.syncedDisplayTags
                     )
-                    player.reconcilePlaybackQueue(with: library.tracks)
+                    if !library.isSwitchingLibrary {
+                        player.reconcilePlaybackQueue(with: library.tracks)
+                    }
                 }
                 .onChange(of: library.audioFeatureRevision) {
                     player.updateAudioFeatures(library.audioFeatures)
@@ -344,6 +346,7 @@ struct OngakuDesktopApp: App {
                 .onChange(of: libraryProfiles.activeLocationRevision) {
                     guard qualificationConfiguration == nil else { return }
                     let profile = libraryProfiles.activeProfile
+                    guard !library.isUsingCatalog(at: profile.catalogURL) else { return }
                     storage.activateProfileMediaDirectory(profile.mediaURL)
                     Task {
                         try? await ArtworkResolver.shared.configure(
@@ -357,14 +360,12 @@ struct OngakuDesktopApp: App {
                         player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                     }
                 }
-                .onChange(of: storage.mediaDirectoryURL) { _, url in
-                    guard qualificationConfiguration == nil else { return }
-                    libraryProfiles.updateActiveMediaURL(url)
-                }
                 .onChange(of: player.queueState) {
                     library.schedulePlaybackQueueSave(player.queueState)
                 }
                 .onReceive(player.playbackEventPublisher) { event in
+                    guard !library.isSwitchingLibrary,
+                          library.tracks.contains(where: { $0.id == event.trackID }) else { return }
                     Task { await library.recordPlaybackEvent(event) }
                 }
                 .onReceive(player.missingTrackPublisher) { trackID in

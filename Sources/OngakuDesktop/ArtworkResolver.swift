@@ -365,18 +365,20 @@ actor ArtworkResolver {
     /// Selects the artwork directories belonging to the active portable
     /// library. Device-independent artwork then travels with the music folder.
     func configure(libraryRootURL: URL) throws {
-        cacheDirectory = libraryRootURL
+        let newCacheDirectory = libraryRootURL
             .appendingPathComponent("Artwork/Downloaded", isDirectory: true)
-        customDirectory = libraryRootURL
+        let newCustomDirectory = libraryRootURL
             .appendingPathComponent("Artwork/Custom", isDirectory: true)
         try FileManager.default.createDirectory(
-            at: cacheDirectory,
+            at: newCacheDirectory,
             withIntermediateDirectories: true
         )
         try FileManager.default.createDirectory(
-            at: customDirectory,
+            at: newCustomDirectory,
             withIntermediateDirectories: true
         )
+        cacheDirectory = newCacheDirectory
+        customDirectory = newCustomDirectory
         memoryCache.removeAll()
         missing.removeAll()
         for task in inFlight.values { task.cancel() }

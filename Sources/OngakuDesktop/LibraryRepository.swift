@@ -172,6 +172,7 @@ actor LibraryRepository {
         case relinkFingerprintMismatch(String)
         case mediaOrganizationConflict(Int)
         case mediaOrganizationAmbiguousConflict(String)
+        case multiplePreservedLibraries(String)
 
         var errorDescription: String? {
             switch self {
@@ -187,6 +188,8 @@ actor LibraryRepository {
                 L10n.format("library.error.mediaOrganizationConflict", count)
             case .mediaOrganizationAmbiguousConflict(let file):
                 L10n.format("library.error.mediaOrganizationAmbiguousConflict", file)
+            case .multiplePreservedLibraries(let paths):
+                L10n.format("settings.storage.error.multiplePreservedLibraries", paths)
             }
         }
     }
@@ -220,6 +223,7 @@ actor LibraryRepository {
     private var incomingURL: URL { rootURL.appendingPathComponent("Incoming", isDirectory: true) }
     private var manifestURL: URL { rootURL.appendingPathComponent("library-v1.json") }
     private var backupURL: URL { rootURL.appendingPathComponent("library-v1.backup.json") }
+    private var storageRecoveryReceiptURL: URL { rootURL.appendingPathComponent("storage-recovery-v1.json") }
     private var playbackQueueURL: URL { rootURL.appendingPathComponent("playback-queue-v1.json") }
     private var playbackQueueBackupURL: URL {
         rootURL.appendingPathComponent("playback-queue-v1.backup.json")
@@ -246,6 +250,131 @@ actor LibraryRepository {
         mediaURL = standardized
     }
 
+    /// A previous migration can leave an empty primary and the real catalog in
+    /// Legacy Imports. Only explicit storage selection invokes this recovery.
+    /// Originals and the replaced empty catalog remain available on disk.
+    func restorePreservedLibraryIfEmpty() throws {
+        if let current = try storageCatalog(at: rootURL) {
+            guard !hasLibraryContent(current.document) else { return }
+            if let receipt = try? Data(contentsOf: storageRecoveryReceiptURL),
+               (try? decoder.decode(UUID.self, from: receipt)) == current.document.libraryID {
+                return
+            }
+        }
+
+        let nestedRoots = [
+            rootURL,
+            mediaURL.appendingPathComponent("Ongaku Desktop"),
+            mediaURL.appendingPathComponent("Ongaku Desktop/Ongaku Library Data"),
+            mediaURL.appendingPathComponent("Ongaku Desktop/Ongaku Media/Ongaku Library Data"),
+            mediaURL.appendingPathComponent("Ongaku Media/Ongaku Library Data"),
+            mediaURL.appendingPathComponent("Media/Ongaku Library Data"),
+            mediaURL.appendingPathComponent("Catalog")
+        ]
+        var locations = Array(nestedRoots.dropFirst())
+        for root in nestedRoots {
+            let archives = root.appendingPathComponent("Legacy Imports", isDirectory: true)
+            if fileManager.fileExists(atPath: archives.path) {
+                locations += try fileManager.contentsOfDirectory(
+                    at: archives, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+                    options: [.skipsHiddenFiles]
+                ).filter {
+                    let values = try $0.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+                    return values.isDirectory == true && values.isSymbolicLink != true
+                }
+            }
+        }
+        var candidates: [(directory: URL, manifest: URL, document: LibraryDocument)] = []
+        for location in locations {
+            guard let catalog = try storageCatalog(at: location),
+                  hasLibraryContent(catalog.document) else { continue }
+            candidates.append((location, catalog.manifest, catalog.document))
+        }
+        guard !candidates.isEmpty else { return }
+        guard candidates.count == 1, let candidate = candidates.first else {
+            throw RepositoryError.multiplePreservedLibraries(
+                candidates.map { $0.directory.path }.joined(separator: "\n")
+            )
+        }
+
+        let recovery = rootURL.appendingPathComponent("Recovery Backups/\(UUID().uuidString)")
+        let prepared = recovery.appendingPathComponent("Prepared")
+        let previous = recovery.appendingPathComponent("Previous")
+        try fileManager.createDirectory(at: prepared, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: previous, withIntermediateDirectories: true)
+        // Derived SQLite indexes are rebuilt through the normal library-ID checks.
+        var names = [
+            "library-v1.backup.json", "playback-queue-v1.json", "playback-queue-v1.backup.json",
+            "playback-events-v1.json", "playback-events-v1.backup.json",
+            "device-sync-tags-v1.json", "audio-features-v1.json"
+        ]
+        for name in names + ["Artwork", "Playlist Artwork"] {
+            let source = candidate.directory.appendingPathComponent(name)
+            if fileManager.fileExists(atPath: source.path) {
+                try fileManager.copyItem(at: source, to: prepared.appendingPathComponent(name))
+                if !names.contains(name) { names.append(name) }
+            }
+        }
+        try fileManager.copyItem(at: candidate.manifest, to: prepared.appendingPathComponent("library-v1.json"))
+        // Validate (or recover from their backups) before touching the active files.
+        let _: PlaybackQueueDocument? = try decodeSidecar(
+            at: prepared.appendingPathComponent("playback-queue-v1.json"),
+            backupURL: prepared.appendingPathComponent("playback-queue-v1.backup.json")
+        )
+        let _: PlaybackEventsDocument? = try decodeSidecar(
+            at: prepared.appendingPathComponent("playback-events-v1.json"),
+            backupURL: prepared.appendingPathComponent("playback-events-v1.backup.json")
+        )
+        try encoder.encode(candidate.document.libraryID)
+            .write(to: prepared.appendingPathComponent(storageRecoveryReceiptURL.lastPathComponent), options: .atomic)
+        // Commit the primary last: interrupted preparation cannot hide the preserved source.
+        names += [storageRecoveryReceiptURL.lastPathComponent, "library-v1.json"]
+        var installed: [String] = []
+        var backedUp: [String] = []
+        do {
+            for name in names {
+                let destination = rootURL.appendingPathComponent(name)
+                if fileManager.fileExists(atPath: destination.path) {
+                    try fileManager.moveItem(at: destination, to: previous.appendingPathComponent(name))
+                    backedUp.append(name)
+                }
+                let staged = prepared.appendingPathComponent(name)
+                if fileManager.fileExists(atPath: staged.path) {
+                    try fileManager.moveItem(at: staged, to: destination)
+                    installed.append(name)
+                }
+            }
+        } catch {
+            for name in installed.reversed() {
+                try fileManager.removeItem(at: rootURL.appendingPathComponent(name))
+            }
+            for name in backedUp.reversed() {
+                try fileManager.moveItem(at: previous.appendingPathComponent(name), to: rootURL.appendingPathComponent(name))
+            }
+            throw error
+        }
+        currentDocument = nil
+    }
+
+    private func hasLibraryContent(_ document: LibraryDocument) -> Bool {
+        !document.tracks.isEmpty || !document.playlists.isEmpty || !document.playlistFolders.isEmpty
+            || !document.playbackEvents.isEmpty
+    }
+
+    private func storageCatalog(at directory: URL) throws -> (manifest: URL, document: LibraryDocument)? {
+        let primary = directory.appendingPathComponent("library-v1.json")
+        let backup = directory.appendingPathComponent("library-v1.backup.json")
+        if fileManager.fileExists(atPath: primary.path) {
+            do { return (primary, try readExternalLibraryDocument(at: primary)) }
+            catch RepositoryError.unsupportedSchema(let version) { throw RepositoryError.unsupportedSchema(version) }
+            catch { if !fileManager.fileExists(atPath: backup.path) { throw error } }
+        }
+        if fileManager.fileExists(atPath: backup.path) {
+            return (backup, try readExternalLibraryDocument(at: backup))
+        }
+        return nil
+    }
+
     func load() throws -> LibraryLoadResult {
         try prepareDirectories()
         var recoveredFromBackup = false
@@ -264,6 +393,10 @@ actor LibraryRepository {
                 decodedSourceURL = backupURL
                 recoveredFromBackup = true
             }
+        } else if fileManager.fileExists(atPath: backupURL.path) {
+            decoded = try decodeDocument(at: backupURL)
+            decodedSourceURL = backupURL
+            recoveredFromBackup = true
         } else {
             decoded = DecodedLibraryDocument(
                 document: LibraryDocument(),
@@ -289,7 +422,8 @@ actor LibraryRepository {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: false)
             try encoder.encode(document).write(to: backupURL, options: [.atomic])
-        } else if recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0 {
+        } else if recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0
+            || !fileManager.fileExists(atPath: manifestURL.path) {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: !recoveredFromBackup)
         }
@@ -695,6 +829,7 @@ actor LibraryRepository {
         // Once the primary becomes empty, neither recovery path can re-register
         // tracks. Incoming audio files themselves are deliberately left untouched.
         try persistImportJournal(ImportJournal())
+        try encoder.encode(emptyDocument.libraryID).write(to: storageRecoveryReceiptURL, options: .atomic)
         try replacePlaybackSidecarsForClear(emptyDocument)
         try data.write(to: backupURL, options: [.atomic])
         try data.write(to: manifestURL, options: [.atomic])

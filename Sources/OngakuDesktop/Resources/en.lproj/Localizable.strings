@@ -757,11 +757,12 @@
 "effects.on" = "On";
 "effects.off" = "Off";
 "settings.storage.title" = "Music Storage";
-"settings.storage.subtitle" = "Choose where Ongaku keeps verified managed copies.";
+"settings.storage.subtitle" = "Choose a folder to create or open its Ongaku library.";
 "settings.storage.location" = "Managed music folder";
 "settings.storage.choose" = "Choose Folder…";
 "settings.storage.chooseMusicLibrary" = "Choose Music Library…";
 "settings.storage.choosePanelConfirm" = "Choose";
+"settings.storage.authorizeMusicMedia" = "Select this Music library’s media folder to allow access to its songs and create Ongaku Media.";
 "settings.storage.musicLibraryHelp" = "Choose an Apple Music .musiclibrary package";
 "settings.storage.importingMusicLibrary" = "Scanning and importing music from the selected library…";
 "settings.storage.musicLibraryImportResult" = "Library scan complete: %d audio files found, %d added, %d relinked to originals, %d could not be indexed.";
@@ -776,7 +777,8 @@
 "settings.storage.source.selectedAppleMusicLibrary" = "Loaded from the selected Apple Music library";
 "settings.storage.source.default" = "Using Ongaku's default Application Support location";
 "settings.storage.source.custom" = "Using your selected location";
-"settings.storage.safetyNote" = "New imports are stored here. Existing managed files stay in their verified locations, so changing this setting never moves or overwrites them.";
+"settings.storage.safetyNote" = "A new folder gets its own library data. Selecting a previous folder restores its tracks and playlists without moving the other library. Selecting a Music library creates an Ongaku Media folder inside its media folder and registers the original songs without changing them.";
+"settings.storage.error.multiplePreservedLibraries" = "Multiple preserved libraries were found. Automatic recovery was stopped to avoid choosing the wrong library. Use library import to select the catalog to restore:\n%@";
 "settings.storage.error.invalidMusicLibrary" = "Choose a valid .musiclibrary package.";
 "settings.storage.error.mediaFolderNotFound" = "The Media folder associated with this Apple Music library could not be found.";
 "settings.storage.clearTitle" = "Library registration";
@@ -787,7 +789,7 @@
 "settings.storage.clearConfirmationButton" = "Remove All";
 "settings.storage.clearSuccess" = "All track registrations were removed. No music files were changed.";
 "common.cancel" = "Cancel";
-"status.storageChanged" = "The storage location for new imports was updated.";
+"status.storageChanged" = "The library storage location was updated.";
 "status.appleMusicNoFiles" = "No supported audio files were found in the Apple Music Media folder.";
 "status.appleMusicImported" = "Indexed %d tracks and relinked %d tracks to their Apple Music originals.";
 "status.folderNoFiles" = "No supported audio files were found in the selected folder.";

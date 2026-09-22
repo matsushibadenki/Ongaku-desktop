@@ -6,6 +6,160 @@ import Testing
 
 @Suite("Library repository integrity")
 struct LibraryRepositoryTests {
+    private final class FailingRecoveryFileManager: FileManager, @unchecked Sendable {
+        override func moveItem(at source: URL, to destination: URL) throws {
+            if source.deletingLastPathComponent().lastPathComponent == "Prepared",
+               source.lastPathComponent == "library-v1.json" {
+                throw CocoaError(.fileWriteNoPermission)
+            }
+            try super.moveItem(at: source, to: destination)
+        }
+    }
+
+    @Test("A recovery commit failure restores the active catalog and its sidecars")
+    func preservedRecoveryRollsBack() async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        _ = try await LibraryRepository(rootURL: catalog, mediaURL: media).load()
+        let names = ["library-v1.json", "playback-queue-v1.json", "playback-events-v1.json"]
+        let originals = try names.map { try Data(contentsOf: catalog.appendingPathComponent($0)) }
+        let archived = catalog.appendingPathComponent("Legacy Imports/original")
+        try await LibraryRepository(rootURL: archived, mediaURL: media).save(playlists: [Playlist(name: "Original")])
+        let archivedBytes = try Data(contentsOf: archived.appendingPathComponent("library-v1.json"))
+        let failing = LibraryRepository(rootURL: catalog, mediaURL: media, fileManager: FailingRecoveryFileManager())
+        do {
+            try await failing.restorePreservedLibraryIfEmpty()
+            Issue.record("Injected recovery failure must be reported")
+        } catch {
+            #expect((error as NSError).code == CocoaError.fileWriteNoPermission.rawValue)
+        }
+        for (name, bytes) in zip(names, originals) {
+            #expect(try Data(contentsOf: catalog.appendingPathComponent(name)) == bytes)
+        }
+        #expect(try Data(contentsOf: archived.appendingPathComponent("library-v1.json")) == archivedBytes)
+    }
+
+    @Test("Storage selection recovers preserved catalogs without moving originals", arguments: [
+        "Ongaku Library Data/Legacy Imports/preserved",
+        "Ongaku Desktop/Ongaku Media/Ongaku Library Data",
+        "Ongaku Desktop"
+    ])
+    @MainActor
+    func recoversPreservedStorage(relativePath: String) async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let active = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let empty = try await active.load().document
+        let originalPrimary = try Data(contentsOf: catalog.appendingPathComponent("library-v1.json"))
+        let preservedURL = media.appendingPathComponent(relativePath)
+        let preserved = LibraryRepository(rootURL: preservedURL, mediaURL: media)
+        let song = media.appendingPathComponent("Artist/Album/song.mp3")
+        try FileManager.default.createDirectory(at: song.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let audio = Data("original audio".utf8)
+        try audio.write(to: song)
+        let track = Track(
+            id: UUID(), title: "Preserved title", artist: "Artist", album: "Album",
+            duration: 30, fileSize: Int64(audio.count), managedPath: song.path,
+            sha256: try LibraryRepository.sha256(of: song), addedAt: .now, health: .verified
+        )
+        try await preserved.save(tracks: [track])
+        let playlist = Playlist(name: "Preserved playlist", entries: [PlaylistEntry(trackID: track.id)])
+        try await preserved.save(playlists: [playlist])
+        let queue = PlaybackQueueState(trackIDs: [track.id], currentTrackID: track.id, position: 12)
+        try await preserved.save(playbackQueue: queue)
+        let preservedID = try await preserved.load().document.libraryID
+        let preservedBytes = try Data(contentsOf: preservedURL.appendingPathComponent("library-v1.json"))
+        let artwork = preservedURL.appendingPathComponent("Artwork/Custom/cover.png")
+        try FileManager.default.createDirectory(at: artwork.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let artworkData = Data("artwork fixture".utf8)
+        try artworkData.write(to: artwork)
+
+        let store = LibraryStore(repository: active)
+        await store.load()
+        try await store.openStorageDirectory(media)
+        #expect(store.tracks.map(\.id) == [track.id])
+        #expect(store.playlists.map(\.id) == [playlist.id])
+        #expect(store.playbackQueue == queue)
+        let restored = try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document
+        #expect(restored.libraryID == preservedID)
+        #expect(restored.libraryID != empty.libraryID)
+        #expect(try Data(contentsOf: song) == audio)
+        #expect(try Data(contentsOf: preservedURL.appendingPathComponent("library-v1.json")) == preservedBytes)
+        #expect(try Data(contentsOf: catalog.appendingPathComponent("Artwork/Custom/cover.png")) == artworkData)
+        let backups = try FileManager.default.contentsOfDirectory(
+            at: catalog.appendingPathComponent("Recovery Backups"), includingPropertiesForKeys: nil
+        )
+        #expect(backups.count == 1)
+        #expect(try Data(contentsOf: backups[0].appendingPathComponent("Previous/library-v1.json")) == originalPrimary)
+        try await store.openStorageDirectory(media)
+        #expect(store.tracks.count == 1)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: catalog.appendingPathComponent("Recovery Backups").path).count == 1)
+    }
+
+    @Test("Recovery never replaces a populated catalog or revives intentionally cleared songs")
+    func preservedRecoveryRespectsActiveLibrary() async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let track = Track(id: UUID(), title: "Current", artist: "Artist", album: "Album", duration: 1,
+                          fileSize: 1, managedPath: media.appendingPathComponent("song.mp3").path,
+                          sha256: "current", addedAt: .now, health: .verified)
+        try await repository.save(tracks: [track])
+        let archive = catalog.appendingPathComponent("Legacy Imports/old")
+        let preserved = LibraryRepository(rootURL: archive, mediaURL: media)
+        var oldTrack = track
+        oldTrack.title = "Old"
+        try await preserved.save(tracks: [oldTrack])
+        try await repository.restorePreservedLibraryIfEmpty()
+        #expect(try await repository.load().document.tracks.first?.title == "Current")
+        try await repository.clearAllRegistrations()
+        try await repository.restorePreservedLibraryIfEmpty()
+        #expect(try await repository.load().document.tracks.isEmpty)
+    }
+
+    @Test("Multiple preserved catalogs are reported without modifying any catalog")
+    func ambiguousPreservedLibraries() async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        _ = try await repository.load()
+        let original = try Data(contentsOf: catalog.appendingPathComponent("library-v1.json"))
+        for name in ["First", "Second"] {
+            let archive = catalog.appendingPathComponent("Legacy Imports/\(name)")
+            try await LibraryRepository(rootURL: archive, mediaURL: media).save(playlists: [Playlist(name: name)])
+        }
+        do {
+            try await repository.restorePreservedLibraryIfEmpty()
+            Issue.record("Ambiguous catalogs must not be selected automatically")
+        } catch LibraryRepository.RepositoryError.multiplePreservedLibraries(let paths) {
+            #expect(paths.contains("First"))
+            #expect(paths.contains("Second"))
+        }
+        #expect(try Data(contentsOf: catalog.appendingPathComponent("library-v1.json")) == original)
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("Recovery Backups").path))
+    }
+
+    @Test("A missing primary catalog recovers the existing library from its backup")
+    func missingPrimaryRecoversBackup() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root, mediaURL: root.appendingPathComponent("Media"))
+        let initial = try await repository.load().document
+        let manifest = root.appendingPathComponent("library-v1.json")
+        #expect(FileManager.default.fileExists(atPath: manifest.path))
+        let backup = root.appendingPathComponent("library-v1.backup.json")
+        try FileManager.default.moveItem(at: manifest, to: backup)
+        let recovered = try await repository.load()
+        #expect(recovered.recoveredFromBackup)
+        #expect(recovered.document.libraryID == initial.libraryID)
+        #expect(FileManager.default.fileExists(atPath: manifest.path))
+        #expect(try await repository.load().document.libraryID == initial.libraryID)
+    }
+
     private func fixtureURL(_ name: String) -> URL {
         guard let url = Bundle.module.url(
             forResource: name,

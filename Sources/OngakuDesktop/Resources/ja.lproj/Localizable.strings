@@ -757,11 +757,12 @@
 "effects.on" = "オン";
 "effects.off" = "オフ";
 "settings.storage.title" = "音楽の保存先";
-"settings.storage.subtitle" = "Ongakuが検証済みの管理コピーを保存する場所を選択します。";
+"settings.storage.subtitle" = "フォルダを選んでOngakuライブラリを新規作成、または読み込みます。";
 "settings.storage.location" = "管理音楽フォルダ";
 "settings.storage.choose" = "フォルダを選択…";
 "settings.storage.chooseMusicLibrary" = "Musicライブラリを選択…";
 "settings.storage.choosePanelConfirm" = "選択";
+"settings.storage.authorizeMusicMedia" = "このMusicライブラリのメディアフォルダを選択してください。楽曲へのアクセスを許可し、Ongaku Mediaを作成します。";
 "settings.storage.musicLibraryHelp" = "Apple Musicの.musiclibraryパッケージを選択します";
 "settings.storage.importingMusicLibrary" = "選択したライブラリの音楽を検索して読み込んでいます…";
 "settings.storage.musicLibraryImportResult" = "ライブラリの読み込みが完了しました：音声ファイル%d件、新規登録%d件、原本へ参照を戻した曲%d件、登録できなかったファイル%d件。";
@@ -776,7 +777,8 @@
 "settings.storage.source.selectedAppleMusicLibrary" = "選択したApple Musicライブラリから読み込みました";
 "settings.storage.source.default" = "Ongaku標準のApplication Support内に保存します";
 "settings.storage.source.custom" = "選択した保存先を使用しています";
-"settings.storage.safetyNote" = "今後読み込む音楽をこの場所へ保存します。既存の管理ファイルは検証済みの場所に残すため、設定変更による移動や上書きは行いません。";
+"settings.storage.safetyNote" = "新しいフォルダには専用の管理データを作成します。以前のフォルダを選ぶと、その楽曲・プレイリストを読み込みます。別のライブラリのデータは移動しません。Musicライブラリを選ぶとメディア内にOngaku Mediaを用意し、元の楽曲を変更せず参照登録します。";
+"settings.storage.error.multiplePreservedLibraries" = "復元候補のライブラリが複数あるため、自動復元を停止しました。ライブラリのインポートから復元する台帳を選択してください。\n%@";
 "settings.storage.error.invalidMusicLibrary" = "有効な.musiclibraryパッケージを選択してください。";
 "settings.storage.error.mediaFolderNotFound" = "このApple Musicライブラリに対応するMediaフォルダが見つかりませんでした。";
 "settings.storage.clearTitle" = "ライブラリの登録";
@@ -787,7 +789,7 @@
 "settings.storage.clearConfirmationButton" = "すべて解除";
 "settings.storage.clearSuccess" = "すべての曲の登録を解除しました。音楽ファイルは変更していません。";
 "common.cancel" = "キャンセル";
-"status.storageChanged" = "今後読み込む音楽の保存先を更新しました。";
+"status.storageChanged" = "ライブラリの保存先を切り替えました。";
 "status.appleMusicNoFiles" = "Apple MusicのMediaフォルダに対応音声ファイルが見つかりませんでした。";
 "status.appleMusicImported" = "Apple Musicの原本を%d曲登録し、%d曲の参照先を原本へ戻しました。";
 "status.folderNoFiles" = "選択したフォルダに対応音声ファイルが見つかりませんでした。";

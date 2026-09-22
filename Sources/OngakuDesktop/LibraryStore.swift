@@ -104,6 +104,7 @@ final class LibraryStore: ObservableObject {
         didSet { eventsRevision &+= 1; schedulePresentation() }
     }
     @Published private(set) var playbackQueue: PlaybackQueueState?
+    @Published private(set) var isSwitchingLibrary = false
     @Published private(set) var syncedDisplayTags: [Track.ID: [String]] = [:]
     @Published private(set) var contentRevision = 0
     @Published private(set) var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:] {
@@ -1244,41 +1245,45 @@ final class LibraryStore: ObservableObject {
     func load() async {
         do {
             let result = try await repository.load()
-            tracks = result.document.tracks
-            playlists = result.document.playlists
-            playlistFolders = result.document.playlistFolders
-            playbackEvents = result.document.playbackEvents
-            playbackQueue = result.document.playbackQueue
-            loadDeviceSyncTags()
-            audioFeatures = (try? await audioFeatureCache.load(validTracks: tracks)) ?? [:]
-            audioFeatureRevision &+= 1
-            libraryID = result.document.libraryID
-            libraryCreatedAt = result.document.createdAt
-            contentRevision &+= 1
-            selectedTrackID = selectedTrackID ?? tracks.first?.id
-            if selectedTrackIDs.isEmpty, let selectedTrackID {
-                selectedTrackIDs = [selectedTrackID]
-            }
-            if result.unresolvedImportCount > 0 {
-                activity = .failed(
-                    L10n.format("status.importRecoveryIssues", result.unresolvedImportCount))
-            } else if result.recoveredImportCount > 0 {
-                activity = .notice(
-                    L10n.format("status.recoveredImports", result.recoveredImportCount))
-            } else if result.recoveredFromBackup {
-                activity = .notice(L10n.text("status.recoveredManifest"))
-            } else if result.migratedFromSchemaVersion != nil {
-                activity = .notice(
-                    L10n.format("status.libraryMigrated", LibraryDocument.currentSchema)
-                )
-            } else {
-                activity = .idle
-            }
-            scheduleSearchIndexSynchronization(document: result.document)
-            await waitForPresentation()
+            await applyLoadedLibrary(result)
         } catch {
             activity = .failed(error.localizedDescription)
         }
+    }
+
+    private func applyLoadedLibrary(_ result: LibraryLoadResult) async {
+        tracks = result.document.tracks
+        playlists = result.document.playlists
+        playlistFolders = result.document.playlistFolders
+        playbackEvents = result.document.playbackEvents
+        playbackQueue = result.document.playbackQueue
+        loadDeviceSyncTags()
+        audioFeatures = (try? await audioFeatureCache.load(validTracks: tracks)) ?? [:]
+        audioFeatureRevision &+= 1
+        libraryID = result.document.libraryID
+        libraryCreatedAt = result.document.createdAt
+        contentRevision &+= 1
+        selectedTrackID = selectedTrackID ?? tracks.first?.id
+        if selectedTrackIDs.isEmpty, let selectedTrackID {
+            selectedTrackIDs = [selectedTrackID]
+        }
+        if result.unresolvedImportCount > 0 {
+            activity = .failed(
+                L10n.format("status.importRecoveryIssues", result.unresolvedImportCount))
+        } else if result.recoveredImportCount > 0 {
+            activity = .notice(
+                L10n.format("status.recoveredImports", result.recoveredImportCount))
+        } else if result.recoveredFromBackup {
+            activity = .notice(L10n.text("status.recoveredManifest"))
+        } else if result.migratedFromSchemaVersion != nil {
+            activity = .notice(
+                L10n.format("status.libraryMigrated", LibraryDocument.currentSchema)
+            )
+        } else {
+            activity = .idle
+        }
+        scheduleSearchIndexSynchronization(document: result.document)
+        await waitForPresentation()
     }
 
     private func loadDeviceSyncTags() {
@@ -1318,7 +1323,9 @@ final class LibraryStore: ObservableObject {
         }.prefix(12))
     }
 
-    func switchLibrary(catalogURL: URL, mediaURL: URL) async {
+    func switchLibrary(catalogURL: URL, mediaURL: URL, preparedResult: LibraryLoadResult? = nil) async {
+        isSwitchingLibrary = true
+        defer { isSwitchingLibrary = false }
         presentationTask?.cancel()
         isPresentationScheduled = false
         presentationGeneration &+= 1
@@ -1356,7 +1363,11 @@ final class LibraryStore: ObservableObject {
         searchBackendStatus = .jsonFallback
         lastIssues = []
         contentRevision &+= 1
-        await load()
+        if let preparedResult {
+            await applyLoadedLibrary(preparedResult)
+        } else {
+            await load()
+        }
     }
 
     func startOngakuMixFeatureAnalysis() {
@@ -2409,6 +2420,24 @@ final class LibraryStore: ObservableObject {
         scheduleSearchIndexSynchronization(document: currentDocument())
     }
 
+    func isUsingCatalog(at url: URL) -> Bool {
+        deviceSyncTagsURL.deletingLastPathComponent().standardizedFileURL == url.standardizedFileURL
+    }
+
+    /// Validate and initialize the destination before replacing the active library.
+    func openStorageDirectory(_ mediaURL: URL) async throws {
+        isSwitchingLibrary = true
+        defer { isSwitchingLibrary = false }
+        playbackQueueSaveTask?.cancel()
+        if let playbackQueue { try await repository.save(playbackQueue: playbackQueue) }
+        let layout = PortableLibraryStorage(mediaURL: mediaURL)
+        let destination = LibraryRepository(rootURL: layout.rootURL, mediaURL: mediaURL)
+        try await destination.restorePreservedLibraryIfEmpty()
+        let loaded = try await destination.load()
+        try await ArtworkResolver.shared.configure(libraryRootURL: layout.rootURL)
+        await switchLibrary(catalogURL: layout.rootURL, mediaURL: mediaURL, preparedResult: loaded)
+    }
+
     func setMediaDirectory(_ url: URL) async throws {
         try await repository.setMediaDirectory(url)
         activity = .notice(L10n.text("status.storageChanged"))
@@ -2834,7 +2863,7 @@ final class LibraryStore: ObservableObject {
     }
 
     func schedulePlaybackQueueSave(_ state: PlaybackQueueState) {
-        guard playbackQueue != state else { return }
+        guard !isSwitchingLibrary, playbackQueue != state else { return }
         playbackQueue = state
         playbackQueueSaveTask?.cancel()
         playbackQueueSaveTask = Task { [weak self, repository] in

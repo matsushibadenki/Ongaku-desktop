@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct StorageSettingsView: View {
   @EnvironmentObject private var library: LibraryStore
   @EnvironmentObject private var player: PlaybackController
+  @EnvironmentObject private var libraryProfiles: LibraryProfileSettings
   @EnvironmentObject private var storage: LibraryStorageSettings
   @State private var isApplyingLocation = false
   @State private var isImportingMusicLibrary = false
@@ -96,9 +97,14 @@ struct StorageSettingsView: View {
 
           Button(L10n.text("settings.storage.automatic")) {
             Task {
-              storage.restoreAutomaticLocation()
-              _ = await applyCurrentLocation()
-              resultMessage = nil
+              isApplyingLocation = true
+              defer { isApplyingLocation = false }
+              do {
+                try await storage.activateAutomaticLocation { url in
+                  try await library.openStorageDirectory(url)
+                }
+                finishStorageSwitch()
+              } catch { errorMessage = error.localizedDescription }
             }
           }
           .buttonStyle(.bordered)
@@ -226,8 +232,10 @@ struct StorageSettingsView: View {
     Task { @MainActor in
       defer { isRegisteringDroppedFolder = false }
       do {
-        try storage.useSelectedDirectory(folderURL)
-        try await library.setMediaDirectory(storage.mediaDirectoryURL)
+        try await storage.activateDirectory(folderURL) { url in
+          try await library.openStorageDirectory(url)
+        }
+        finishStorageSwitch()
         let summary = await library.registerMediaFolderInPlace(storage.mediaDirectoryURL)
         resultMessage = L10n.format(
           "settings.storage.folderRegistrationResult",
@@ -255,10 +263,13 @@ struct StorageSettingsView: View {
     panel.begin { response in
       guard response == .OK, let parent = panel.url else { return }
       Task { @MainActor in
+        isApplyingLocation = true
+        defer { isApplyingLocation = false }
         do {
-          try storage.useSelectedDirectory(parent)
-          _ = await applyCurrentLocation()
-          resultMessage = nil
+          try await storage.activateDirectory(parent) { url in
+            try await library.openStorageDirectory(url)
+          }
+          finishStorageSwitch()
         } catch {
           errorMessage = error.localizedDescription
         }
@@ -281,11 +292,15 @@ struct StorageSettingsView: View {
     panel.begin { response in
       guard response == .OK, let libraryURL = panel.url else { return }
       Task { @MainActor in
+        isImportingMusicLibrary = true
+        defer { isImportingMusicLibrary = false }
         do {
-          try storage.useAppleMusicLibrary(libraryURL)
+          guard let mediaURL = try await resolveMusicMediaDirectory(for: libraryURL) else { return }
+          try await storage.activateAppleMusicLibrary(libraryURL, authorizedMediaURL: mediaURL) { url in
+            try await library.openStorageDirectory(url)
+          }
+          finishStorageSwitch()
           guard let musicLibraryMediaURL = storage.musicLibraryMediaURL else { return }
-          isImportingMusicLibrary = true
-          defer { isImportingMusicLibrary = false }
           let summary = await library.importAppleMusicMediaFolder(
             musicLibraryMediaURL,
             excluding: storage.mediaDirectoryURL
@@ -305,17 +320,42 @@ struct StorageSettingsView: View {
   }
 
   @MainActor
-  private func applyCurrentLocation() async -> Bool {
-    isApplyingLocation = true
-    defer { isApplyingLocation = false }
-    do {
-      try await library.setMediaDirectory(storage.mediaDirectoryURL)
-      errorMessage = nil
-      return true
-    } catch {
-      errorMessage = error.localizedDescription
-      return false
+  private func resolveMusicMediaDirectory(for libraryURL: URL) async throws -> URL? {
+    let didAccess = libraryURL.startAccessingSecurityScopedResource()
+    defer { if didAccess { libraryURL.stopAccessingSecurityScopedResource() } }
+    guard libraryURL.pathExtension.lowercased() == "musiclibrary" else {
+      throw AppleMusicSettingsReader.AppleMusicLibraryError.invalidPackage
     }
+    let media = try? AppleMusicSettingsReader.mediaFolder(forMusicLibrary: libraryURL)
+    if let media,
+       FileManager.default.isReadableFile(atPath: media.path),
+       FileManager.default.isWritableFile(atPath: media.path) {
+      return media
+    }
+
+    // A package selection does not grant access to a sibling Media folder on an external disk.
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.allowsMultipleSelection = false
+    panel.canCreateDirectories = false
+    panel.directoryURL = media ?? libraryURL.deletingLastPathComponent()
+    panel.message = L10n.text("settings.storage.authorizeMusicMedia")
+    panel.prompt = L10n.text("settings.storage.choosePanelConfirm")
+    return await withCheckedContinuation { continuation in
+      panel.begin { response in
+        continuation.resume(returning: response == .OK ? panel.url : nil)
+      }
+    }
+  }
+
+  @MainActor
+  private func finishStorageSwitch() {
+    libraryProfiles.adoptActiveStorageLocation(storage.mediaDirectoryURL)
+    player.clearCurrentTrack()
+    player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
+    errorMessage = nil
+    resultMessage = L10n.text("status.storageChanged")
   }
 
   @MainActor
@@ -348,6 +388,8 @@ struct StorageSettingsView: View {
   }
 
   private var isStorageOperationInProgress: Bool {
-    isApplyingLocation || isImportingMusicLibrary || isRegisteringDroppedFolder
+    isApplyingLocation || isImportingMusicLibrary || isRegisteringDroppedFolder || isClearingLibrary
+      || library.isSwitchingLibrary
+      || library.activity == .importing || library.activity == .verifying || library.activity == .relinking
   }
 }
