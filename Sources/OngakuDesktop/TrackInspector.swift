@@ -26,7 +26,7 @@ struct TrackInspector: View {
                             } label: {
                                 Label(L10n.text("track.play"), systemImage: "play.fill")
                             }
-                            .buttonStyle(.borderedProminent)
+                            .ongakuProminentButton()
 
                             Button(L10n.text("track.reveal")) {
                                 library.reveal(track)
@@ -480,7 +480,7 @@ private struct LyricsEditorView: View {
                     if isSaving { ProgressView().controlSize(.small) }
                     else { Text(L10n.text("metadataEditor.save")) }
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .keyboardShortcut(.defaultAction)
                 .disabled(!canSave || isSaving)
             }
@@ -711,7 +711,7 @@ private struct LRCLIBCandidatePicker: View {
                     guard let selected = selectedCandidate else { return }
                     onSelect(selected)
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .keyboardShortcut(.defaultAction)
                 .disabled(selectedCandidate == nil)
             }

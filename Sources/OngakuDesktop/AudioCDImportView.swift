@@ -478,7 +478,7 @@ struct AudioCDImportView: View {
                         systemImage: "exclamationmark.circle"
                     )
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppTheme.orangeStatus)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

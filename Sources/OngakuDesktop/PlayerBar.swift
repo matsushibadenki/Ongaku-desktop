@@ -45,6 +45,7 @@ struct PlayerBar: View {
             Divider().overlay(AppTheme.rule)
         }
         .frame(height: Self.layoutHeight)
+        .tint(AppTheme.playerControl)
     }
 
     @ViewBuilder
@@ -164,6 +165,7 @@ struct PlayerBar: View {
                     isShowingVolume.toggle()
                 } label: {
                     Image(systemName: volumeSymbol)
+                        .foregroundStyle(AppTheme.playerControl)
                         .frame(width: 22, height: 22)
                         .contentShape(Rectangle())
                 }
@@ -877,6 +879,7 @@ enum SpectrumPresentation {
 }
 
 struct PlayerTransportControls: View {
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
     @EnvironmentObject private var appleMusicPlayback: AppleMusicPlaybackController
@@ -893,6 +896,7 @@ struct PlayerTransportControls: View {
                 }
             } label: {
                 Image(systemName: "backward.fill")
+                    .foregroundStyle(AppTheme.playerControl)
                     .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
                     .contentShape(Rectangle())
             }
@@ -903,12 +907,12 @@ struct PlayerTransportControls: View {
 
             Button(action: primaryPlaybackAction) {
                 Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                    .frame(width: compact ? 24 : 30, height: compact ? 24 : 30)
+                    .foregroundStyle(colorScheme == .dark ? Color.black : Color.white)
+                    .frame(width: compact ? 30 : 38, height: compact ? 30 : 38)
+                    .background(AppTheme.playerControl, in: Circle())
                     .contentShape(Circle())
             }
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.circle)
-            .controlSize(compact ? .small : .regular)
+            .buttonStyle(.plain)
             .disabled(
                 (appleMusicPlayback.isWorking && !hasLocalPlaybackCandidate)
                     || (!hasLocalPlaybackCandidate && appleMusicPlayback.currentItem == nil)
@@ -925,6 +929,7 @@ struct PlayerTransportControls: View {
                 }
             } label: {
                 Image(systemName: "forward.fill")
+                    .foregroundStyle(AppTheme.playerControl)
                     .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
                     .contentShape(Rectangle())
             }
@@ -933,6 +938,7 @@ struct PlayerTransportControls: View {
             .help(L10n.text("player.next"))
             .accessibilityLabel(L10n.text("player.next"))
         }
+        .tint(AppTheme.playerControl)
     }
 
     private func primaryPlaybackAction() {
@@ -1049,9 +1055,7 @@ struct PlaybackModeMenu: View {
         .menuStyle(.button)
         .buttonStyle(.plain)
         .fixedSize()
-        .foregroundStyle(
-            player.playbackMode == .sequential ? AppTheme.secondaryInk : AppTheme.accent
-        )
+        .foregroundStyle(AppTheme.playerControl)
         .help(L10n.text(player.playbackMode.localizationKey))
         .accessibilityLabel(L10n.text("player.mode.title"))
         .accessibilityValue(L10n.text(player.playbackMode.localizationKey))
@@ -1081,6 +1085,7 @@ struct PlaybackQueueButton: View {
             isPresented.toggle()
         } label: {
             Image(systemName: "list.bullet")
+                .foregroundStyle(AppTheme.playerControl)
                 .frame(width: 22, height: 22)
                 .contentShape(Rectangle())
         }

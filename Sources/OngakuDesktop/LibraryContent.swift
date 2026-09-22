@@ -638,7 +638,7 @@ struct LibraryContent: View {
             } label: {
                 Label(L10n.text("playlist.empty.chooseSongs"), systemImage: "music.note")
             }
-            .buttonStyle(.borderedProminent)
+            .ongakuProminentButton()
             .controlSize(.large)
 
             Text(L10n.text("playlist.empty.dropHint"))
@@ -957,6 +957,7 @@ struct LibraryContent: View {
             playTrack(track)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
+        .tint(.blue)
         .overlay(alignment: .topTrailing) {
             if isSortingTracks {
                 HStack(spacing: 7) {
@@ -1010,6 +1011,7 @@ struct LibraryContent: View {
             .onEnded { gesture in
                 switch gesture {
                 case .first:
+                    TrackTableFocus.focusUnderCurrentPointer()
                     isTrackTableFocused = true
                     tableSelectedTrackIDs = [track.id]
                     library.updateTrackSelection([track.id], focusedID: track.id)
@@ -1017,6 +1019,7 @@ struct LibraryContent: View {
                 case .second:
                     let modifiers = NSEvent.modifierFlags.intersection([.command, .shift, .control])
                     guard modifiers.isEmpty else { return }
+                    TrackTableFocus.focusUnderCurrentPointer()
                     isTrackTableFocused = true
                     tableSelectedTrackIDs = [track.id]
                 }
@@ -1583,7 +1586,7 @@ private struct DuplicateLibraryView: View {
                 Button(L10n.text("duplicates.action.resolve")) {
                     pendingGroup = group
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
             }
         }
         .padding(AppTheme.spaceMD)
@@ -1789,6 +1792,26 @@ private struct AlbumGrid: View {
     }
 }
 
+@MainActor
+private enum TrackTableFocus {
+    static func focusUnderCurrentPointer() {
+        guard let event = NSApp.currentEvent,
+              let window = event.window,
+              let contentView = window.contentView else { return }
+
+        let point = contentView.convert(event.locationInWindow, from: nil)
+        var view: NSView? = contentView.hitTest(point)
+        while let candidate = view {
+            if let table = candidate as? NSTableView {
+                // SwiftUI cell gestures can leave the previous control as first responder.
+                DispatchQueue.main.async { window.makeFirstResponder(table) }
+                return
+            }
+            view = candidate.superview
+        }
+    }
+}
+
 private extension View {
     func detailTrackSelection(_ id: Track.ID, selection: Binding<Track.ID?>, focus: FocusState<Bool>.Binding) -> some View {
         frame(maxWidth: .infinity, alignment: .leading)
@@ -1796,6 +1819,7 @@ private extension View {
             .contentShape(Rectangle())
             .simultaneousGesture(TapGesture().onEnded {
                 guard NSEvent.modifierFlags.intersection([.command, .shift, .control]).isEmpty else { return }
+                TrackTableFocus.focusUnderCurrentPointer()
                 focus.wrappedValue = true
                 selection.wrappedValue = id
             })
@@ -1918,7 +1942,7 @@ private struct AlbumDetail: View {
                     } label: {
                         Label(L10n.text("album.play"), systemImage: "play.fill")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .controlSize(.large)
                     .disabled(album.tracks.isEmpty)
                 }
@@ -1974,6 +1998,7 @@ private struct AlbumDetail: View {
             }
             .width(min: 64, ideal: 72)
         }
+        .tint(.blue)
         .focused($isTrackTableFocused)
         .modifier(DetailTableSelectionSync(
             visibleIDs: album.sortedTracks.map(\.id),
@@ -2262,7 +2287,7 @@ private struct ArtistDetail: View {
                     } label: {
                         Label(L10n.text("artist.play"), systemImage: "play.fill")
                     }
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .disabled(artist.tracks.isEmpty)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -2384,6 +2409,7 @@ private struct ArtistDetail: View {
                 }
                 .width(min: 64, ideal: 72)
             }
+            .tint(.blue)
             .focused($isTrackTableFocused)
             .modifier(DetailTableSelectionSync(
                 visibleIDs: artist.sortedTracks.map(\.id),
@@ -2461,7 +2487,7 @@ private struct EmptyLibraryView: View {
                 Button(L10n.text("command.import")) {
                     NotificationCenter.default.post(name: .requestImport, object: nil)
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

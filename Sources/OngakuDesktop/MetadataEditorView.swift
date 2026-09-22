@@ -315,7 +315,7 @@ struct MetadataEditorView: View {
                     if isSaving { ProgressView().controlSize(.small) }
                     else { Text(L10n.text("metadataEditor.save")) }
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .keyboardShortcut(.defaultAction)
                 .disabled(!canSave || isSaving)
             }

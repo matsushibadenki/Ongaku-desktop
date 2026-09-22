@@ -74,7 +74,7 @@ struct SharedFolderMigrationView: View {
                         Label(L10n.format("libraryMigration.count.registered", preview.registeredCount), systemImage: "checkmark.circle")
                         if preview.unavailableCount > 0 {
                             Label(L10n.format("libraryMigration.count.unavailable", preview.unavailableCount), systemImage: "exclamationmark.triangle")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(AppTheme.orangeStatus)
                         }
                     }
                     .font(.caption)
@@ -198,7 +198,7 @@ struct SharedFolderMigrationView: View {
         switch status {
         case .ready: AppTheme.accent
         case .alreadyRegistered: .green
-        case .missing, .unsupported: .orange
+        case .missing, .unsupported: AppTheme.orangeStatus
         }
     }
 }

@@ -51,7 +51,19 @@ enum AppTheme {
     )
     static let accent = adaptive(
         light: ThemeRGB(red: 0.240, green: 0.240, blue: 0.240),
-        dark: ThemeRGB(red: 0.965, green: 0.565, blue: 0.180)
+        dark: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000)
+    )
+    static let prominentInk = adaptive(
+        light: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000),
+        dark: ThemeRGB(red: 0.000, green: 0.000, blue: 0.000)
+    )
+    static let orangeStatus = adaptive(
+        light: ThemeRGB(red: 1.000, green: 0.500, blue: 0.000),
+        dark: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000)
+    )
+    static let playerControl = adaptive(
+        light: ThemeRGB(red: 0.240, green: 0.240, blue: 0.240),
+        dark: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000)
     )
     static let good = adaptive(
         light: ThemeRGB(red: 0.300, green: 0.300, blue: 0.300),
@@ -59,7 +71,7 @@ enum AppTheme {
     )
     static let warning = adaptive(
         light: ThemeRGB(red: 0.400, green: 0.400, blue: 0.400),
-        dark: ThemeRGB(red: 0.955, green: 0.670, blue: 0.250)
+        dark: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000)
     )
     static let danger = adaptive(
         light: ThemeRGB(red: 0.180, green: 0.180, blue: 0.180),
@@ -91,6 +103,12 @@ enum AppTheme {
 }
 
 extension View {
+    func ongakuProminentButton() -> some View {
+        buttonStyle(.borderedProminent)
+            .tint(AppTheme.accent)
+            .foregroundStyle(AppTheme.prominentInk)
+    }
+
     func ongakuPanel() -> some View {
         background(AppTheme.surface)
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous))

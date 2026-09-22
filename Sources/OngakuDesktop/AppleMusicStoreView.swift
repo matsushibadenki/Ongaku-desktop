@@ -2228,7 +2228,7 @@ private struct AppleMusicPlaylistConversionSheet: View {
                             Text(L10n.text("appleMusic.conversion.create"))
                         }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .disabled(
                         selectedTrackIDs.isEmpty
                             || playlistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -2282,7 +2282,7 @@ private struct AppleMusicPlaylistConversionSheet: View {
     private func statusColor(_ status: AppleMusicPlaylistMatchStatus) -> Color {
         switch status {
         case .matched: AppTheme.good
-        case .ambiguous: .orange
+        case .ambiguous: AppTheme.orangeStatus
         case .missing, .duplicate: .secondary
         }
     }
@@ -2412,11 +2412,11 @@ private struct OngakuPlaylistAppleMusicExportSheet: View {
                             ? "checkmark.seal.fill" : "exclamationmark.triangle.fill"
                     )
                     .font(.callout.weight(.medium))
-                    .foregroundStyle(latestResult.failedTrackCount == 0 ? AppTheme.good : .orange)
+                    .foregroundStyle(latestResult.failedTrackCount == 0 ? AppTheme.good : AppTheme.orangeStatus)
                     if let failureDescription = latestResult.failureDescription {
                         Text(failureDescription)
                             .font(.caption)
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(AppTheme.orangeStatus)
                     }
                 }
                 if !controller.playlistExportHistory.isEmpty {
@@ -2447,7 +2447,7 @@ private struct OngakuPlaylistAppleMusicExportSheet: View {
                             Text(L10n.text("appleMusic.export.create"))
                         }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .disabled(
                         selectedItems.isEmpty
                             || exportName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -2534,7 +2534,7 @@ private struct OngakuPlaylistAppleMusicExportSheet: View {
     private func statusColor(_ status: AppleMusicPlaylistMatchStatus) -> Color {
         switch status {
         case .matched: AppTheme.good
-        case .ambiguous: .orange
+        case .ambiguous: AppTheme.orangeStatus
         case .missing, .duplicate: .secondary
         }
     }
@@ -2930,7 +2930,7 @@ struct AppleMusicStoreView: View {
                         Image(systemName: "play.fill")
                             .frame(width: 28, height: 28)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .buttonBorderShape(.circle)
                     .controlSize(.small)
                     .padding(8)
@@ -3086,7 +3086,7 @@ struct AppleMusicStoreView: View {
                         }
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
             } else {
                 Button(L10n.text("appleMusic.authorization.settings")) {
                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Media") {
@@ -3167,7 +3167,7 @@ struct AppleMusicStoreView: View {
                 } label: {
                     Label(L10n.text("appleMusic.library.newPlaylist"), systemImage: "plus")
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .disabled(!controller.hasCloudLibraryEnabled)
                 Button {
                     isShowingOngakuPlaylistExport = true
@@ -3284,7 +3284,7 @@ struct AppleMusicStoreView: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .disabled(
                     playlistName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         || controller.isWorking
@@ -3317,7 +3317,7 @@ struct AppleMusicStoreView: View {
                         systemImage: "arrow.down.to.line"
                     )
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .disabled(controller.isWorking || controller.playlistEntries.isEmpty)
                 Button(L10n.text("common.close")) {
                     isShowingPlaylistContents = false

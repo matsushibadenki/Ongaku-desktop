@@ -149,7 +149,7 @@ struct OngakuLibraryMigrationView: View {
                         L10n.format("libraryMigration.count.unavailable", preview.missingCount + preview.unsupportedCount),
                         systemImage: "exclamationmark.triangle"
                     )
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppTheme.orangeStatus)
                 }
             }
             .font(.caption)
@@ -203,7 +203,7 @@ struct OngakuLibraryMigrationView: View {
         switch status {
         case .ready: AppTheme.accent
         case .alreadyRegistered: .green
-        case .missing, .unsupported: .orange
+        case .missing, .unsupported: AppTheme.orangeStatus
         }
     }
 }

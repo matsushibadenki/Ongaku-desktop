@@ -67,6 +67,7 @@ struct PreferencesView: View {
                 .tag(section)
             }
             .listStyle(.sidebar)
+            .tint(.blue)
             .frame(width: 190)
             .frame(maxHeight: .infinity)
 

@@ -83,6 +83,7 @@ struct MiniPlayerView: View {
                             isShowingVolume.toggle()
                         } label: {
                             Image(systemName: volumeSymbol)
+                                .foregroundStyle(AppTheme.playerControl)
                                 .frame(width: 22, height: 22)
                                 .contentShape(Rectangle())
                         }
@@ -102,6 +103,7 @@ struct MiniPlayerView: View {
             height: WindowPresentationController.miniContentSize.height
         )
         .background(AppTheme.surface)
+        .tint(AppTheme.playerControl)
     }
 
     private var trackContext: String {

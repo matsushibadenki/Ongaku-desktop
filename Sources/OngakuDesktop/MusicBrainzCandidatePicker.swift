@@ -48,7 +48,7 @@ struct MusicBrainzCandidatePicker: View {
                         Text(L10n.text("musicbrainz.useSelected"))
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .keyboardShortcut(.defaultAction)
                 .disabled(selectedCandidate == nil || isApplying)
             }

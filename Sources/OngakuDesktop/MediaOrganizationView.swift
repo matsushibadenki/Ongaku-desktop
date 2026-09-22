@@ -103,7 +103,7 @@ struct MediaOrganizationView: View {
                         Label(L10n.format("mediaOrganization.count.move", preview.moveCount), systemImage: "arrow.right")
                         if preview.conflictCount > 0 {
                             Label(L10n.format("mediaOrganization.count.conflict", preview.conflictCount), systemImage: "doc.on.doc")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(AppTheme.orangeStatus)
                         }
                         Label(L10n.format("mediaOrganization.count.unchanged", preview.unchangedCount), systemImage: "checkmark.circle")
                         if preview.externalCount > 0 {
@@ -111,7 +111,7 @@ struct MediaOrganizationView: View {
                         }
                         if preview.unavailableCount > 0 {
                             Label(L10n.format("mediaOrganization.count.unavailable", preview.unavailableCount), systemImage: "exclamationmark.triangle")
-                                .foregroundStyle(.orange)
+                                .foregroundStyle(AppTheme.orangeStatus)
                         }
                     }
                     .font(.caption)
@@ -266,10 +266,10 @@ struct MediaOrganizationView: View {
     private func color(for status: MediaOrganizationStatus) -> Color {
         switch status {
         case .move: AppTheme.accent
-        case .conflict: .orange
+        case .conflict: AppTheme.orangeStatus
         case .unchanged: .green
         case .external: .secondary
-        case .unavailable: .orange
+        case .unavailable: AppTheme.orangeStatus
         }
     }
 }

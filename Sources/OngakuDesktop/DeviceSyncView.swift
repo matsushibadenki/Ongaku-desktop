@@ -203,7 +203,7 @@ struct DeviceSyncView: View {
                     Button(L10n.text("deviceSync.discovery.retry"), systemImage: "arrow.clockwise") {
                         sync.retryDiscovery()
                     }
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .accessibilityIdentifier("device-sync.retry")
                 }
 
@@ -306,7 +306,7 @@ struct DeviceSyncView: View {
                             Button(L10n.text("deviceSync.connect")) {
                                 sync.connect(to: phone)
                             }
-                            .buttonStyle(.borderedProminent)
+                            .ongakuProminentButton()
                             .disabled(connectingPhoneName != nil)
                             .accessibilityIdentifier("device-sync.connect.\(phone.id)")
                         }
@@ -341,7 +341,7 @@ struct DeviceSyncView: View {
             Link(destination: Self.mobileAppURL) {
                 Label(L10n.text("deviceSync.mobileApp.download"), systemImage: "arrow.up.right")
             }
-            .buttonStyle(.borderedProminent)
+            .ongakuProminentButton()
             .accessibilityHint(L10n.text("deviceSync.mobileApp.accessibilityHint"))
         }
         .padding(AppTheme.spaceMD)
@@ -836,7 +836,7 @@ struct DeviceSyncView: View {
             } label: {
                 Label(bulkStartTitle, systemImage: bulkStartIcon)
             }
-            .buttonStyle(.borderedProminent)
+            .ongakuProminentButton()
             .disabled(
                 sync.isBulkSyncing
                     || plannedOperationCount == 0
@@ -1368,7 +1368,7 @@ private struct OverlaySyncPreviewSheet: View {
                         Text(L10n.text("deviceSync.overlay.apply"))
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .disabled(selectedApplications.isEmpty || isApplying)
             }
             .padding(AppTheme.spaceLG)
@@ -1515,7 +1515,7 @@ private struct OverlaySyncPreviewSheet: View {
         switch status {
         case .different: AppTheme.accent
         case .identical: AppTheme.good
-        case .ambiguous: .orange
+        case .ambiguous: AppTheme.orangeStatus
         case .unmatched: .secondary
         }
     }
@@ -1636,7 +1636,7 @@ private struct PlaylistSyncPreviewSheet: View {
                             Text(L10n.text("deviceSync.playlist.apply"))
                         }
                     }
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .disabled(selectedApplications.isEmpty || isApplying)
                 }
             }
@@ -1746,7 +1746,7 @@ private struct PlaylistSyncPreviewSheet: View {
         switch status {
         case .new, .different: AppTheme.accent
         case .identical: AppTheme.good
-        case .conflicted: .orange
+        case .conflicted: AppTheme.orangeStatus
         }
     }
 }
@@ -1814,7 +1814,7 @@ private struct OverlaySyncAuditSheet: View {
                             systemImage: "exclamationmark.triangle"
                         )
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(AppTheme.orangeStatus)
                     }
 
                     if !entry.isUndone {
@@ -1831,7 +1831,7 @@ private struct OverlaySyncAuditSheet: View {
             if undoConflictCount > 0 {
                 Text(L10n.format("deviceSync.audit.undoConflicts", undoConflictCount))
                     .font(.caption)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppTheme.orangeStatus)
                     .padding(AppTheme.spaceMD)
             }
         }

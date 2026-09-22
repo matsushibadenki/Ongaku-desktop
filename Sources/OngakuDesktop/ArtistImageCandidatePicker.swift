@@ -71,7 +71,7 @@ struct ArtistImageCandidatePicker: View {
                         Text(L10n.text("artistImage.useSelected"))
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .keyboardShortcut(.defaultAction)
                 .disabled(selectedCandidate == nil || isDownloading)
             }

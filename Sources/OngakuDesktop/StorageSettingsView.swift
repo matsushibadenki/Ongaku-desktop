@@ -84,7 +84,7 @@ struct StorageSettingsView: View {
           Button(L10n.text("settings.storage.choose")) {
             chooseDirectory()
           }
-          .buttonStyle(.borderedProminent)
+          .ongakuProminentButton()
 
           Button(L10n.text("settings.storage.chooseMusicLibrary")) {
             chooseMusicLibrary()

@@ -338,7 +338,7 @@ struct LegacyLibraryMigrationView: View {
                         L10n.format("libraryMigration.count.unavailable", preview.missingCount + preview.unsupportedCount),
                         systemImage: "exclamationmark.triangle"
                     )
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppTheme.orangeStatus)
                 }
             }
             .font(.caption)
@@ -395,7 +395,7 @@ struct LegacyLibraryMigrationView: View {
         switch status {
         case .ready: AppTheme.accent
         case .alreadyRegistered: .green
-        case .missing, .unsupported: .orange
+        case .missing, .unsupported: AppTheme.orangeStatus
         }
     }
 }

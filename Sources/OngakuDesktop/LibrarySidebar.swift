@@ -232,6 +232,7 @@ struct LibrarySidebar: View {
                 .tag(SidebarDestination.section(.needsAttention))
             }
         }
+        .tint(.blue)
         .scrollContentBackground(.hidden)
         .background(AppTheme.sidebar)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -855,7 +856,7 @@ private struct PlaylistImportPreviewView: View {
                 Spacer()
                 Button(L10n.text("common.cancel")) { dismiss() }
                 Button(L10n.text("playlist.transfer.import.action"), action: performImport)
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .disabled(trimmedName.isEmpty || preview.matchedCount == 0 || isImporting)
             }
         }
@@ -969,7 +970,7 @@ private struct PlaylistFolderEditorView: View {
                 Spacer()
                 Button(L10n.text("common.cancel")) { dismiss() }
                 Button(L10n.text("playlist.editor.save"), action: save)
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .disabled(trimmedName.isEmpty || isSaving)
             }
         }
@@ -1078,7 +1079,7 @@ private struct SmartPlaylistEditorView: View {
                 Spacer()
                 Button(L10n.text("common.cancel")) { dismiss() }
                 Button(L10n.text("playlist.editor.save"), action: save)
-                    .buttonStyle(.borderedProminent)
+                    .ongakuProminentButton()
                     .disabled(trimmedName.isEmpty || isSaving)
             }
         }
@@ -1329,7 +1330,7 @@ private struct PlaylistEditorView: View {
                 Button(L10n.text("playlist.editor.save")) {
                     Task { await save() }
                 }
-                .buttonStyle(.borderedProminent)
+                .ongakuProminentButton()
                 .keyboardShortcut(.defaultAction)
                 .disabled(trimmedName.isEmpty || isSaving)
             }
