@@ -6,6 +6,30 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.9</title>
+            <pubDate>Wed, 23 Sep 2026 09:27:37 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.9</link>
+            <sparkle:version>15</sparkle:version>
+            <sparkle:shortVersionString>0.1.9</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[# Ongaku Desktop 0.1.9
+
+- スペクトラム背景の不透明度とバー色をアピアランスから調整できるようになりました。
+- ライト／ダークモードに合わせたスペクトラムの既定配色とガラス表現を改善しました。
+- ストレージを再選択した際の既存ライブラリ復旧と関連データの読み込みを改善しました。
+- ライブラリ表示、選択、再生中のアルバムアート更新に関する不具合を修正しました。
+- 音声エフェクト、操作性、安定性に関する改善を含みます。
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.9/OngakuDesktop-0.1.9-universal.dmg" length="8710595" type="application/octet-stream" sparkle:edSignature="4JYg+lMt+whrmooHSwitS1Nqbsnkc4diBiD2UeyL4wjDyBavuAOC1XAgRbS8f2lH+ey+b2vLL3ZyHBC+Q6bpAQ=="/>
+            <sparkle:deltas>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.9/OngakuDesktop15-7.delta" sparkle:deltaFrom="7" length="4336058" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="pwhFY7BOTcLUJiNnMPZdsD7TqgyAbU9B/wTPsJYdCgAPm1KqjSQR+uDUBMpAkURLrplm1YdwXs6CYBFdju+qBg=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.9/OngakuDesktop15-6.delta" sparkle:deltaFrom="6" length="4444470" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="dcasadRorzRELt0NXJJZD88zMAqy2YkrnGV2QCnrhSL/QWwrU7nyCbE61JyFENhIQIDWqtMLadilFo/IyAONCg=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.9/OngakuDesktop15-5.delta" sparkle:deltaFrom="5" length="4806718" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="aCBnmCtaJbJ4xyRSJbef4IYdlmeWu6IPs+K2m+bsqw9JtWqmftPIN2bhFSFRb1khbWsTd2EGu5iJT0iKuKcYDg=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.9/OngakuDesktop15-4.delta" sparkle:deltaFrom="4" length="4971538" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="CNChIo4oHDKOCzOERlr/vCnPid1ds3v7HcvEVHzsSkdngWgxm6Htj80vFAZWcX7n8CfKU+T5GTv0PLyb3eKHCw=="/>
+                <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.9/OngakuDesktop15-3.delta" sparkle:deltaFrom="3" length="5135442" type="application/octet-stream" sparkle:deltaFromSparkleExecutableSize="977840" sparkle:deltaFromSparkleLocales="de,he,ar,el,ja,fa,uk" sparkle:edSignature="9SdKOK2HuylIJqAX46IXufkjNg0UkNxR3KFcn1FuyBVJ/THkbfq9x74t4HNXa6dsswGPBpa1V4xjUf9NcxkpAg=="/>
+            </sparkle:deltas>
+        </item>
+        <item>
             <title>0.1.6</title>
             <pubDate>Fri, 04 Sep 2026 14:16:27 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.6</link>

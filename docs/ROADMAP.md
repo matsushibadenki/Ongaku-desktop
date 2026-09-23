@@ -44,7 +44,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 | [Next] | A6 機能別の配布資格を確認 | 署名UI、三言語・VoiceOver、音声経路、Mobile切断再開、Store双方向通信を証拠付きで判定。未合格機能は配布対象から外すか公開を延期し、その構成も検証 |
 
 - [Done] エフェクト10種の信号監査で接続・時間単位・出力保護を修正。278テストとApp Store Debugビルド成功。実機試聴と高レート制限は[検証記録](quality/EFFECT_SIGNAL_AUDIT_2026-09-05.md)を参照。
-- [Done] App Store版の起動時更新確認を英語・日本語・简体中文で実装。0.1.7は承認済み。LRCLIB直接検索を加えた0.1.8 build 14のUniversal Binaryを検証し、App Store Connectへアップロード済み。
+- [Done] App Store版の起動時更新確認を英語・日本語・简体中文で実装。0.1.7は承認済み。0.1.9 build 15のUniversal Binaryを検証し、App Store Connectへアップロード済み。Developer ID版も署名・公証し、Sparkle更新フィードを生成
 - [Done] macOS 26.6.2でControl Center同期中に発生したMainActor executorのクラッシュを解析し、Combine購読から明示的にMainActorへ移る通知境界へ修正。バックグラウンドexecutorからの通知を含む全281テストが成功。
 - [Done] 歌詞追加画面にLRCLIBの直接検索欄を追加。曲名・アーティスト・アルバム等の自由入力、Enter検索、候補比較と選択を英語・日本語・简体中文で提供。
 - [Done] 2026-09-05に全体設計を評価し、このリポジトリの実装範囲と配布判定を分離した
