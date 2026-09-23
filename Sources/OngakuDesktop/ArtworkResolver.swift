@@ -2,6 +2,7 @@
 import AppKit
 import CryptoKit
 import Foundation
+import ImageIO
 @preconcurrency import MusicKit
 import SwiftUI
 
@@ -116,34 +117,39 @@ struct ArtworkThumbnail: View {
     }
 
     var body: some View {
-        Group {
-            if let artwork {
-                Image(nsImage: artwork)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                fallback
+        GeometryReader { geometry in
+            Group {
+                if let artwork {
+                    Image(nsImage: artwork)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    fallback
+                }
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipped()
+            .clipShape(thumbnailShape)
+            .overlay {
+                thumbnailShape
+                    .stroke(AppTheme.rule.opacity(0.45), lineWidth: 1)
+            }
+            .overlay {
+                if isRefreshing {
+                    ProgressView()
+                        .controlSize(.small)
+                        .padding(AppTheme.spaceSM)
+                        .background(.regularMaterial, in: Circle())
+                } else if didRefresh {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(AppTheme.good)
+                        .padding(AppTheme.spaceXS)
+                        .background(.regularMaterial, in: Circle())
+                }
             }
         }
-        .clipShape(thumbnailShape)
-        .overlay {
-            thumbnailShape
-                .stroke(AppTheme.rule.opacity(0.45), lineWidth: 1)
-        }
-        .overlay {
-            if isRefreshing {
-                ProgressView()
-                    .controlSize(.small)
-                    .padding(AppTheme.spaceSM)
-                    .background(.regularMaterial, in: Circle())
-            } else if didRefresh {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(AppTheme.good)
-                    .padding(AppTheme.spaceXS)
-                    .background(.regularMaterial, in: Circle())
-            }
-        }
+        .aspectRatio(1, contentMode: .fit)
         .contentShape(thumbnailShape)
         .accessibilityHidden(true)
         .contextMenu {
@@ -200,7 +206,9 @@ struct ArtworkThumbnail: View {
             artwork = nil
             if let custom = await ArtworkResolver.shared.customArtworkData(for: subject),
                !Task.isCancelled {
-                artwork = NSImage(data: custom)
+                let image = await ArtworkDisplayDecoder.image(for: custom)
+                guard !Task.isCancelled else { return }
+                artwork = image
                 return
             }
             let urls = tracks.map(\.fileURL)
@@ -215,7 +223,9 @@ struct ArtworkThumbnail: View {
                 )
             }
             guard !Task.isCancelled, let data else { return }
-            artwork = NSImage(data: data)
+            let image = await ArtworkDisplayDecoder.image(for: data)
+            guard !Task.isCancelled else { return }
+            artwork = image
         }
     }
 
@@ -227,7 +237,7 @@ struct ArtworkThumbnail: View {
         isRefreshing = false
 
         guard !Task.isCancelled else { return }
-        guard let data, let refreshed = NSImage(data: data) else {
+        guard let data, let refreshed = await ArtworkDisplayDecoder.image(for: data) else {
             isShowingRefreshFailure = true
             return
         }
@@ -259,6 +269,24 @@ struct ArtworkThumbnail: View {
         case .circle:
             AnyShape(Circle())
         }
+    }
+}
+
+/// Decode only display-sized pixels off the UI thread; preserve the original
+/// bytes in the artwork repository for editing and export.
+private enum ArtworkDisplayDecoder {
+    static func image(for data: Data) async -> NSImage? {
+        let bitmap = await Task.detached(priority: .utility) {
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil as CGImage? }
+            return CGImageSourceCreateThumbnailAtIndex(source, 0, [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: 1024,
+                kCGImageSourceShouldCacheImmediately: true
+            ] as CFDictionary)
+        }.value
+        guard let bitmap else { return nil }
+        return NSImage(cgImage: bitmap, size: .zero)
     }
 }
 

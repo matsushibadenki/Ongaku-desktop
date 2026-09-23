@@ -1044,6 +1044,7 @@ struct LibraryContent: View {
 
     private func contextTracks(for track: Track) -> [Track] {
         let ids = contextTrackIDs(for: track)
+        guard ids.count > 1 else { return [track] }
         return sortedTracks.filter { ids.contains($0.id) }
     }
 

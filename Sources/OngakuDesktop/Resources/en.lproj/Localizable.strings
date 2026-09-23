@@ -1227,3 +1227,7 @@
 "appStoreUpdate.later" = "Later";
 
 "library.preparing" = "Preparing library…";
+
+"metadataEditor.artwork.dragHint" = "Drop a photo here. Drag the image to adjust the crop.";
+
+"metadataEditor.artwork.zoom" = "Photo zoom";

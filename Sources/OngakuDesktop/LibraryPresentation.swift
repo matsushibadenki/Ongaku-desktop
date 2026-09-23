@@ -39,11 +39,17 @@ actor LibraryPresentationWorker {
     private var duplicates: [DuplicateTrackGroup] = []
     private var totalBytes: Int64 = 0
     private var attentionCount = 0
+    private var cachedAlbums: [AlbumGroup]?
+    private var cachedAlbumSections: [AlbumSection]?
+    private var cachedArtists: [ArtistGroup]?
 
     func resolve(_ request: LibraryPresentationRequest) throws -> LibraryPresentation {
         try Task.checkCancellation()
         let tracksChanged = tracksRevision != request.tracksRevision
         if tracksChanged {
+            cachedAlbums = nil
+            cachedAlbumSections = nil
+            cachedArtists = nil
             var byID: [Track.ID: Track] = [:]
             var bytes: Int64 = 0
             var attention = 0
@@ -109,13 +115,31 @@ actor LibraryPresentationWorker {
             tracks: visible, mixCandidates: mixCandidates, mixSeed: mixSeed, allDuplicates: duplicates, statistics: statistics, tracksByID: tracksByID,
             totalBytes: totalBytes, attentionCount: attentionCount
         )
+        let canReuseGroups = request.playlist == nil
+            && request.filter.activeCount == 0 && request.searchIDs == nil
         if request.section == .albums {
-            result.albums = AlbumGroup.makeGroups(from: visible)
-            result.albumSections = AlbumSection.makeSections(from: result.albums)
+            if canReuseGroups, let cachedAlbums, let cachedAlbumSections {
+                result.albums = cachedAlbums
+                result.albumSections = cachedAlbumSections
+            } else {
+                result.albums = AlbumGroup.makeGroups(from: visible)
+                result.albumSections = AlbumSection.makeSections(from: result.albums)
+                try Task.checkCancellation()
+                if canReuseGroups {
+                    cachedAlbums = result.albums
+                    cachedAlbumSections = result.albumSections
+                }
+            }
         }
         try Task.checkCancellation()
         if request.section == .artists {
-            result.artists = ArtistGroup.makeGroups(from: visible)
+            if canReuseGroups, let cachedArtists {
+                result.artists = cachedArtists
+            } else {
+                result.artists = ArtistGroup.makeGroups(from: visible)
+                try Task.checkCancellation()
+                if canReuseGroups { cachedArtists = result.artists }
+            }
         }
         if request.section == .duplicates {
             // Analyze the complete catalog first so filters do not hide a

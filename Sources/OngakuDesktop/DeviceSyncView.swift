@@ -17,6 +17,9 @@ struct DeviceSyncView: View {
     @State private var isShowingPlaylistPreview = false
     @State private var isShowingOverlayAudit = false
     @State private var isConfirmingCheckpointDeletion = false
+    @State private var localSyncItems: [DeviceSyncItem] = []
+    @State private var artistChoices: [ArtistChoice] = []
+    @State private var albumChoices: [AlbumChoice] = []
 
     private static let mobileAppURL = URL(
         string: "https://apps.apple.com/jp/app/ongaku-%E9%99%90%E7%95%8C%E3%81%BE%E3%81%A7%E9%AB%98%E9%9F%B3%E8%B3%AA%E3%82%92%E6%B1%82%E3%82%81%E3%82%8B%E3%83%8F%E3%82%A4%E3%83%AC%E3%82%BE%E9%9F%B3%E6%A5%BD%E3%83%97%E3%83%AC%E3%83%BC%E3%83%A4%E3%83%BC/id6761979714"
@@ -119,6 +122,7 @@ struct DeviceSyncView: View {
             Text(L10n.text("deviceSync.resume.delete.message"))
         }
         .onAppear {
+            refreshLocalChoices()
             sync.updateLocalTracks(
                 library.tracks,
                 playbackEvents: library.playbackEvents,
@@ -128,6 +132,7 @@ struct DeviceSyncView: View {
             sync.start()
         }
         .onChange(of: library.contentRevision) {
+            refreshLocalChoices()
             sync.updateLocalTracks(
                 library.tracks,
                 playbackEvents: library.playbackEvents,
@@ -545,11 +550,8 @@ struct DeviceSyncView: View {
                     action: sync.downloadFromPhone
                 )
             } else {
-                let localItems = library.tracks
-                    .filter { $0.health == .verified }
-                    .map(DeviceSyncView.item(from:))
                 trackList(
-                    items: localItems,
+                    items: localSyncItems,
                     emptyKey: "deviceSync.mac.empty",
                     actionTitle: { _ in L10n.text("deviceSync.upload") },
                     actionIcon: "arrow.up.to.line",
@@ -862,23 +864,18 @@ struct DeviceSyncView: View {
         var id: String { selection.id }
     }
 
-    private var localSyncItems: [DeviceSyncItem] {
-        library.tracks
+    private func refreshLocalChoices() {
+        let items = library.tracks
             .filter { $0.health == .verified }
             .map(DeviceSyncView.item(from:))
             .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
-    }
-
-    private var artistChoices: [ArtistChoice] {
-        let grouped = Dictionary(grouping: localSyncItems) { item in
+        localSyncItems = items
+        let artists = Dictionary(grouping: items) { item in
             item.artist.isEmpty ? L10n.text("deviceSync.bulk.unknownArtist") : item.artist
         }
-        return grouped.map { ArtistChoice(name: $0.key, count: $0.value.count) }
+        artistChoices = artists.map { ArtistChoice(name: $0.key, count: $0.value.count) }
             .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
-    }
-
-    private var albumChoices: [AlbumChoice] {
-        let grouped = Dictionary(grouping: localSyncItems) { item in
+        let albums = Dictionary(grouping: items) { item in
             AlbumSelection(
                 artist: item.artist.isEmpty
                     ? L10n.text("deviceSync.bulk.unknownArtist")
@@ -888,7 +885,7 @@ struct DeviceSyncView: View {
                     : item.album
             )
         }
-        return grouped.map { AlbumChoice(selection: $0.key, count: $0.value.count) }
+        albumChoices = albums.map { AlbumChoice(selection: $0.key, count: $0.value.count) }
             .sorted {
                 if $0.selection.artist == $1.selection.artist {
                     return $0.selection.album.localizedStandardCompare($1.selection.album) == .orderedAscending

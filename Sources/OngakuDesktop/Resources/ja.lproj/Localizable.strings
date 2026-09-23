@@ -1227,3 +1227,7 @@
 "appStoreUpdate.later" = "あとで";
 
 "library.preparing" = "ライブラリを準備中…";
+
+"metadataEditor.artwork.dragHint" = "写真をドロップして登録。画像をドラッグして切り抜き位置を調整できます。";
+
+"metadataEditor.artwork.zoom" = "写真の拡大率";

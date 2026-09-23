@@ -197,6 +197,10 @@ struct MetadataEditorView: View {
     @State private var isSelectingArtwork = false
     @State private var selectedArtworkData: Data?
     @State private var selectedArtworkImage: NSImage?
+    @State private var artworkOffset: CGSize = .zero
+    @GestureState private var artworkDrag: CGSize = .zero
+    @State private var artworkCropChanged = false
+    @State private var artworkZoom = 1.0
     @State private var hasCustomArtwork = false
     @State private var shouldRemoveCustomArtwork = false
     @State private var selectedBulkFields: Set<TrackMetadataField> = []
@@ -327,8 +331,19 @@ struct MetadataEditorView: View {
         .onAppear {
             guard !isBulk else { return }
             Task {
-                hasCustomArtwork = await ArtworkResolver.shared
-                    .customArtworkData(for: sourceArtworkSubject) != nil
+                let data = await ArtworkResolver.shared.customArtworkData(for: sourceArtworkSubject)
+                hasCustomArtwork = data != nil
+                if selectedArtworkImage == nil, !shouldRemoveCustomArtwork, let data {
+                    selectedArtworkImage = NSImage(data: data)
+                }
+                if data == nil, !isArtist {
+                    let embedded = await EmbeddedArtworkCache.shared.firstArtworkData(
+                        for: targetTracks.map(\.fileURL)
+                    )
+                    if selectedArtworkImage == nil, !shouldRemoveCustomArtwork, let embedded {
+                        selectedArtworkImage = NSImage(data: embedded)
+                    }
+                }
                 if isArtist {
                     existingArtistAttribution = await ArtworkResolver.shared
                         .artistArtworkAttribution(for: sourceArtworkSubject)
@@ -807,7 +822,11 @@ struct MetadataEditorView: View {
 
             Group {
                 if let selectedArtworkImage {
+                    let offset = cropOffset(for: selectedArtworkImage)
                     Image(nsImage: selectedArtworkImage).resizable().scaledToFill()
+                        .frame(width: 144, height: 144)
+                        .scaleEffect(artworkZoom)
+                        .offset(offset)
                 } else {
                     ArtworkThumbnail(
                         tracks: targetTracks,
@@ -826,6 +845,61 @@ struct MetadataEditorView: View {
                     cornerRadius: AppTheme.radiusMedium,
                     style: .continuous
                 )))
+            .contentShape(Rectangle())
+            .gesture(DragGesture()
+                .updating($artworkDrag) { value, state, _ in state = value.translation }
+                .onEnded { value in
+                    guard let image = selectedArtworkImage else { return }
+                    artworkOffset = cropOffset(for: image, translation: value.translation)
+                    artworkCropChanged = true
+                })
+            .onDrop(of: [UTType.fileURL.identifier, UTType.image.identifier], isTargeted: nil) { providers in
+                guard let provider = providers.first else { return false }
+                if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                    provider.loadDataRepresentation(forTypeIdentifier: UTType.fileURL.identifier) { data, _ in
+                        guard let data, let url = URL(dataRepresentation: data, relativeTo: nil) else { return }
+                        Task { @MainActor in importArtwork(.success([url])) }
+                    }
+                } else {
+                    provider.loadDataRepresentation(forTypeIdentifier: UTType.image.identifier) { data, _ in
+                        Task { @MainActor in
+                            guard let data, data.count <= 12 * 1_024 * 1_024,
+                                  let image = NSImage(data: data) else {
+                                errorMessage = L10n.text("metadataEditor.artwork.invalid")
+                                return
+                            }
+                            selectedArtworkData = data
+                            selectedArtworkImage = image
+                            selectedArtistImageCandidate = nil
+                            existingArtistAttribution = nil
+                            shouldRemoveCustomArtwork = false
+                        }
+                    }
+                }
+                return true
+            }
+            .onChange(of: selectedArtworkImage) {
+                artworkOffset = .zero
+                artworkZoom = 1
+                artworkCropChanged = false
+            }
+
+            if selectedArtworkImage != nil {
+                Slider(value: $artworkZoom, in: 1...3)
+                    .accessibilityLabel(L10n.text("metadataEditor.artwork.zoom"))
+                    .frame(width: 144)
+                    .onChange(of: artworkZoom) {
+                        if let image = selectedArtworkImage {
+                            artworkOffset = cropOffset(for: image, translation: .zero)
+                            artworkCropChanged = true
+                        }
+                    }
+            }
+
+            Text(L10n.text("metadataEditor.artwork.dragHint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: 144)
 
             Button(L10n.text("metadataEditor.artwork.choose")) {
                 isSelectingArtwork = true
@@ -940,6 +1014,13 @@ struct MetadataEditorView: View {
     @MainActor
     private func save(organizing trackIDs: Set<Track.ID> = []) async {
         guard canSave else { return }
+        if (selectedArtworkData != nil || artworkCropChanged), let image = selectedArtworkImage {
+            guard let data = croppedArtworkData(image) else {
+                errorMessage = L10n.text("metadataEditor.artwork.invalid")
+                return
+            }
+            selectedArtworkData = data
+        }
         isSaving = true
         errorMessage = nil
         do {
@@ -1030,6 +1111,41 @@ struct MetadataEditorView: View {
         case .artist(_, let originalArtist, let trackIDs):
             return originalArtist == artist ? [] : Set(trackIDs)
         }
+    }
+
+    private func cropOffset(for image: NSImage, translation: CGSize? = nil) -> CGSize {
+        let drag = translation ?? artworkDrag
+        let scale = 144 * artworkZoom / max(1, min(image.size.width, image.size.height))
+        let limitX = max(0, (image.size.width * scale - 144) / 2)
+        let limitY = max(0, (image.size.height * scale - 144) / 2)
+        return CGSize(
+            width: min(limitX, max(-limitX, artworkOffset.width + drag.width)),
+            height: min(limitY, max(-limitY, artworkOffset.height + drag.height))
+        )
+    }
+
+    private func croppedArtworkData(_ image: NSImage) -> Data? {
+        let side = min(image.size.width, image.size.height) / artworkZoom
+        guard side > 0 else { return nil }
+        let offset = cropOffset(for: image, translation: .zero)
+        let source = CGRect(
+            x: (image.size.width - side) / 2 - offset.width * side / 144,
+            y: (image.size.height - side) / 2 + offset.height * side / 144,
+            width: side, height: side
+        )
+        let pixels = min(2048, max(1, Int(side)))
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
+            isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        ), let context = NSGraphicsContext(bitmapImageRep: bitmap) else { return nil }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = context
+        context.imageInterpolation = .high
+        image.draw(in: CGRect(x: 0, y: 0, width: pixels, height: pixels),
+                   from: source, operation: .copy, fraction: 1)
+        NSGraphicsContext.restoreGraphicsState()
+        return bitmap.representation(using: .png, properties: [:])
     }
 
     private func persistArtworkChange() async throws {

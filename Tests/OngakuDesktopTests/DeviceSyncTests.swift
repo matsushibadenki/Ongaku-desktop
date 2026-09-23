@@ -4,6 +4,31 @@ import Testing
 
 @Suite("Device sync protocol")
 struct DeviceSyncTests {
+    @Test("Local copy index follows library replacement and duplicate hashes")
+    @MainActor
+    func localCopyIndexFollowsLibraryReplacement() {
+        let controller = PhoneSyncController()
+        let item = makeItem()
+        let first = Track(
+            id: UUID(), title: item.title, artist: item.artist, album: item.album,
+            duration: 180, fileSize: item.fileSize,
+            managedPath: "/tmp/sync-index-first.flac", sha256: item.sha256,
+            addedAt: .distantPast, health: .verified
+        )
+        let duplicate = Track(
+            id: UUID(), title: item.title, artist: item.artist, album: item.album,
+            duration: 180, fileSize: item.fileSize,
+            managedPath: "/tmp/sync-index-second.flac", sha256: item.sha256,
+            addedAt: .distantPast, health: .verified
+        )
+        controller.updateLocalTracks([first, duplicate])
+        #expect(controller.hasLocalCopy(of: item))
+        controller.updateLocalTracks([duplicate])
+        #expect(controller.hasLocalCopy(of: item))
+        controller.updateLocalTracks([])
+        #expect(!controller.hasLocalCopy(of: item))
+    }
+
     @Test("Bonjour discovery starts and stops at most once per lifecycle transition")
     func nearbyBrowserLifecycleIsIdempotent() {
         var lifecycle = NearbyBrowserLifecycle()

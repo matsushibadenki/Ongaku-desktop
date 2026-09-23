@@ -4,6 +4,21 @@ import Testing
 
 @Suite("Asynchronous library presentation", .serialized)
 struct LibraryPresentationTests {
+    @Test("Returning to albums reuses current groups and edits invalidate them")
+    func albumCacheInvalidation() async throws {
+        var tracks = LargeLibraryFixture.makeDocument(trackCount: 40).tracks
+        let worker = LibraryPresentationWorker()
+        let first = try await worker.resolve(request(tracks, section: .albums))
+        _ = try await worker.resolve(request(tracks, section: .artists))
+        let again = try await worker.resolve(request(tracks, section: .albums))
+        #expect(again.albums.map(\.id) == first.albums.map(\.id))
+        tracks[0].duration += 100
+        let edited = try await worker.resolve(request(tracks, tracksRevision: 2, section: .albums))
+        let id = tracks[0].albumID
+        #expect(edited.albums.first { $0.id == id }!.totalDuration
+            == first.albums.first { $0.id == id }!.totalDuration + 100)
+    }
+
     @Test("Album and artist snapshots retain grouping, ordering, and durations")
     func grouping() async throws {
         let tracks = LargeLibraryFixture.makeDocument(trackCount: 40).tracks

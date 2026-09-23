@@ -1227,3 +1227,7 @@
 "appStoreUpdate.later" = "稍后";
 
 "library.preparing" = "正在准备资料库…";
+
+"metadataEditor.artwork.dragHint" = "拖入照片以添加。拖动图片可调整裁剪位置。";
+
+"metadataEditor.artwork.zoom" = "照片缩放";

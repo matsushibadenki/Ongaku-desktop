@@ -41,7 +41,9 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     @Published private(set) var connectionState: DeviceSyncConnectionState = .disconnected
     @Published private(set) var discoveredPhones: [DiscoveredPhone] = []
     @Published private(set) var usbMobileDevices: [USBMobileDevice] = []
-    @Published private(set) var remoteItems: [DeviceSyncItem] = []
+    @Published private(set) var remoteItems: [DeviceSyncItem] = [] {
+        didSet { remoteHashes = Set(remoteItems.map(\.sha256)) }
+    }
     @Published private(set) var remoteStorageInfo: DeviceStorageInfo?
     @Published private(set) var remoteOverlays: [DeviceSyncTrackOverlay] = []
     @Published private(set) var remotePlaylistOverlays: [DeviceSyncPlaylistOverlay] = []
@@ -74,6 +76,8 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private let lock = NSLock()
     private var peersByID: [String: MCPeerID] = [:]
     private var localItems: [UUID: DeviceSyncItem] = [:]
+    private var localHashes: Set<String> = []
+    private var remoteHashes: Set<String> = []
     private var localURLs: [UUID: URL] = [:]
     private var localOverlays: [DeviceSyncTrackOverlay] = []
     private var localPlaylistOverlays: [DeviceSyncPlaylistOverlay] = []
@@ -203,6 +207,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         }
         lock.withLock {
             localItems = items
+            localHashes = Set(items.values.map(\.sha256))
             localURLs = urls
             localOverlays = tracks.map { track in
                 let trackStatistics = statistics[track.id] ?? TrackPlaybackStatistics()
@@ -560,11 +565,11 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     }
 
     func hasLocalCopy(of item: DeviceSyncItem) -> Bool {
-        lock.withLock { localItems.values.contains(where: { $0.sha256 == item.sha256 }) }
+        lock.withLock { localHashes.contains(item.sha256) }
     }
 
     func hasRemoteCopy(of item: DeviceSyncItem) -> Bool {
-        remoteItems.contains { $0.sha256 == item.sha256 }
+        remoteHashes.contains(item.sha256)
     }
 
     private func resetBulkSync() {
