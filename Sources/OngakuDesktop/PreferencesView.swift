@@ -342,6 +342,7 @@ private struct PlaybackSettingsView: View {
 }
 
 private struct AppearanceSettingsView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var appearance: AppAppearanceSettings
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
     @EnvironmentObject private var trackTableSettings: TrackTableSettings
@@ -435,6 +436,78 @@ private struct AppearanceSettingsView: View {
                     }
 
                     HStack(alignment: .center, spacing: AppTheme.spaceLG) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(L10n.text("settings.meter.spectrumOpacity.title"))
+                                .font(.callout.weight(.medium))
+                            Text(L10n.text("settings.meter.spectrumOpacity.description"))
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.secondaryInk)
+                        }
+                        .frame(width: 290, alignment: .leading)
+
+                        HStack(spacing: AppTheme.spaceSM) {
+                            Slider(
+                                value: $meterSettings.spectrumBackgroundOpacity,
+                                in: PlayerMeterSettings.spectrumBackgroundOpacityRange,
+                                step: 0.05
+                            )
+                            .accessibilityLabel(
+                                L10n.text("settings.meter.spectrumOpacity.title")
+                            )
+                            Text(
+                                meterSettings.spectrumBackgroundOpacity,
+                                format: .percent.precision(.fractionLength(0))
+                            )
+                            .font(.callout.monospacedDigit())
+                            .frame(width: 42, alignment: .trailing)
+                        }
+                        .frame(width: 180)
+                    }
+                    .disabled(meterSettings.style != .spectrum)
+                    .opacity(meterSettings.style == .spectrum ? 1 : 0.42)
+
+                    HStack(alignment: .center, spacing: AppTheme.spaceLG) {
+                        Text(L10n.text("settings.meter.spectrumColor.title"))
+                            .font(.callout.weight(.medium))
+                            .frame(width: 290, alignment: .leading)
+
+                        HStack(spacing: AppTheme.spaceSM) {
+                            ForEach(SpectrumBarColor.allCases) { option in
+                                Button {
+                                    meterSettings.spectrumBarColor = option
+                                } label: {
+                                    Circle()
+                                        .fill(spectrumColorSwatch(for: option))
+                                        .frame(width: 22, height: 22)
+                                        .overlay {
+                                            Circle()
+                                                .strokeBorder(AppTheme.rule, lineWidth: 1)
+                                        }
+                                        .overlay {
+                                            Circle()
+                                                .strokeBorder(
+                                                    meterSettings.spectrumBarColor == option
+                                                        ? AppTheme.ink : Color.clear,
+                                                    lineWidth: 2
+                                                )
+                                                .padding(-3)
+                                        }
+                                        .contentShape(Circle())
+                                }
+                                .buttonStyle(.plain)
+                                .help(L10n.text(option.localizationKey))
+                                .accessibilityLabel(L10n.text(option.localizationKey))
+                                .accessibilityAddTraits(
+                                    meterSettings.spectrumBarColor == option ? .isSelected : []
+                                )
+                            }
+                        }
+                        .frame(width: 180, alignment: .leading)
+                    }
+                    .disabled(meterSettings.style != .spectrum)
+                    .opacity(meterSettings.style == .spectrum ? 1 : 0.42)
+
+                    HStack(alignment: .center, spacing: AppTheme.spaceLG) {
                         Text(L10n.text("settings.meter.backlight.title"))
                             .font(.callout.weight(.medium))
                             .frame(width: 290, alignment: .leading)
@@ -485,6 +558,19 @@ private struct AppearanceSettingsView: View {
             }
         }
         .scrollIndicators(.automatic)
+    }
+
+    private func spectrumColorSwatch(for option: SpectrumBarColor) -> AnyShapeStyle {
+        if option == .automatic {
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [.black, .white],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+        }
+        return AnyShapeStyle(option.color(isDark: colorScheme == .dark))
     }
 }
 
@@ -576,6 +662,7 @@ private struct GeneralSettingsView: View {
             }
         }
     }
+
 }
 
 @ViewBuilder

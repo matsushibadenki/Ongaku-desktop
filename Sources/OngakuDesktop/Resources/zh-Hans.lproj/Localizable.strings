@@ -884,6 +884,15 @@
 "settings.meter.description" = "选择主播放器左右两侧显示的仪表。";
 "settings.meter.style.spectrum" = "频谱";
 "settings.meter.style.vu" = "VU表";
+"settings.meter.spectrumOpacity.title" = "频谱背景不透明度";
+"settings.meter.spectrumOpacity.description" = "数值越低，玻璃背景越透明。";
+"settings.meter.spectrumColor.title" = "频谱条颜色";
+"settings.meter.spectrumColor.automatic" = "自动";
+"settings.meter.spectrumColor.white" = "白色";
+"settings.meter.spectrumColor.black" = "黑色";
+"settings.meter.spectrumColor.cyan" = "浅蓝色";
+"settings.meter.spectrumColor.green" = "绿色";
+"settings.meter.spectrumColor.orange" = "橙色";
 "settings.meter.backlight.title" = "VU背光";
 "settings.meter.backlight.cyan" = "浅蓝色";
 "settings.meter.backlight.green" = "绿色";

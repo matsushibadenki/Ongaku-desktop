@@ -884,6 +884,15 @@
 "settings.meter.description" = "Choose the meters shown on the left and right sides of the main player.";
 "settings.meter.style.spectrum" = "Spectrum";
 "settings.meter.style.vu" = "VU meters";
+"settings.meter.spectrumOpacity.title" = "Spectrum background opacity";
+"settings.meter.spectrumOpacity.description" = "Lower values make the glass background more transparent.";
+"settings.meter.spectrumColor.title" = "Spectrum bar color";
+"settings.meter.spectrumColor.automatic" = "Automatic";
+"settings.meter.spectrumColor.white" = "White";
+"settings.meter.spectrumColor.black" = "Black";
+"settings.meter.spectrumColor.cyan" = "Cyan";
+"settings.meter.spectrumColor.green" = "Green";
+"settings.meter.spectrumColor.orange" = "Orange";
 "settings.meter.backlight.title" = "VU backlight";
 "settings.meter.backlight.cyan" = "Cyan";
 "settings.meter.backlight.green" = "Green";

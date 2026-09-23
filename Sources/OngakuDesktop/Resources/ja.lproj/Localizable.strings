@@ -884,6 +884,15 @@
 "settings.meter.description" = "メインプレーヤーの左右に表示するメーターを選択します。";
 "settings.meter.style.spectrum" = "スペクトラム";
 "settings.meter.style.vu" = "VUメーター";
+"settings.meter.spectrumOpacity.title" = "スペクトラム背景の不透明度";
+"settings.meter.spectrumOpacity.description" = "値を下げるほどガラス背景が透明になります。";
+"settings.meter.spectrumColor.title" = "スペクトラムバーの色";
+"settings.meter.spectrumColor.automatic" = "自動";
+"settings.meter.spectrumColor.white" = "白";
+"settings.meter.spectrumColor.black" = "黒";
+"settings.meter.spectrumColor.cyan" = "水色";
+"settings.meter.spectrumColor.green" = "グリーン";
+"settings.meter.spectrumColor.orange" = "オレンジ";
 "settings.meter.backlight.title" = "VUバックライト";
 "settings.meter.backlight.cyan" = "水色";
 "settings.meter.backlight.green" = "グリーン";

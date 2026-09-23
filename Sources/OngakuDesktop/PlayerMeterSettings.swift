@@ -48,11 +48,42 @@ enum VUMeterBacklight: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum SpectrumBarColor: String, CaseIterable, Identifiable, Sendable {
+    case automatic
+    case white
+    case black
+    case cyan
+    case green
+    case orange
+
+    var id: String { rawValue }
+
+    var localizationKey: String {
+        "settings.meter.spectrumColor.\(rawValue)"
+    }
+
+    func color(isDark: Bool) -> Color {
+        switch self {
+        case .automatic: isDark ? .white : .black
+        case .white: .white
+        case .black: .black
+        case .cyan: Color(red: 0.25, green: 0.88, blue: 1.0)
+        case .green: Color(red: 0.38, green: 1.0, blue: 0.52)
+        case .orange: Color(red: 1.0, green: 0.48, blue: 0.14)
+        }
+    }
+}
+
 @MainActor
 final class PlayerMeterSettings: ObservableObject {
     nonisolated static let styleDefaultsKey = "player.meter.style.v1"
     nonisolated static let backlightDefaultsKey = "player.meter.backlight.v1"
     nonisolated static let barPositionDefaultsKey = "player.bar.position.v1"
+    nonisolated static let spectrumBackgroundOpacityDefaultsKey =
+        "player.meter.spectrumBackgroundOpacity.v1"
+    nonisolated static let spectrumBarColorDefaultsKey = "player.meter.spectrumBarColor.v1"
+    nonisolated static let defaultSpectrumBackgroundOpacity = 1.0
+    nonisolated static let spectrumBackgroundOpacityRange = 0.0...1.0
 
     @Published var style: PlayerMeterStyle {
         didSet { defaults.set(style.rawValue, forKey: Self.styleDefaultsKey) }
@@ -66,6 +97,24 @@ final class PlayerMeterSettings: ObservableObject {
         didSet { defaults.set(barPosition.rawValue, forKey: Self.barPositionDefaultsKey) }
     }
 
+    @Published var spectrumBackgroundOpacity: Double {
+        didSet {
+            let clamped = min(
+                max(spectrumBackgroundOpacity, Self.spectrumBackgroundOpacityRange.lowerBound),
+                Self.spectrumBackgroundOpacityRange.upperBound
+            )
+            if spectrumBackgroundOpacity != clamped {
+                spectrumBackgroundOpacity = clamped
+            } else {
+                defaults.set(clamped, forKey: Self.spectrumBackgroundOpacityDefaultsKey)
+            }
+        }
+    }
+
+    @Published var spectrumBarColor: SpectrumBarColor {
+        didSet { defaults.set(spectrumBarColor.rawValue, forKey: Self.spectrumBarColorDefaultsKey) }
+    }
+
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -76,5 +125,18 @@ final class PlayerMeterSettings: ObservableObject {
             .flatMap(VUMeterBacklight.init(rawValue:)) ?? .cyan
         barPosition = defaults.string(forKey: Self.barPositionDefaultsKey)
             .flatMap(PlayerBarPosition.init(rawValue:)) ?? .bottom
+        spectrumBarColor = defaults.string(forKey: Self.spectrumBarColorDefaultsKey)
+            .flatMap(SpectrumBarColor.init(rawValue:)) ?? .automatic
+        if defaults.object(forKey: Self.spectrumBackgroundOpacityDefaultsKey) != nil {
+            spectrumBackgroundOpacity = min(
+                max(
+                    defaults.double(forKey: Self.spectrumBackgroundOpacityDefaultsKey),
+                    Self.spectrumBackgroundOpacityRange.lowerBound
+                ),
+                Self.spectrumBackgroundOpacityRange.upperBound
+            )
+        } else {
+            spectrumBackgroundOpacity = Self.defaultSpectrumBackgroundOpacity
+        }
     }
 }

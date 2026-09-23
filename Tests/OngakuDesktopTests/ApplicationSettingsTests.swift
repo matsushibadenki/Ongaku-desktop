@@ -183,15 +183,25 @@ struct ApplicationSettingsTests {
         #expect(settings.style == .spectrum)
         #expect(settings.backlight == .cyan)
         #expect(settings.barPosition == .bottom)
+        #expect(settings.spectrumBackgroundOpacity == 1.0)
+        #expect(settings.spectrumBarColor == .automatic)
 
         settings.style = .vu
         settings.backlight = .orange
         settings.barPosition = .top
+        settings.spectrumBackgroundOpacity = 0.45
+        settings.spectrumBarColor = .cyan
 
         let restored = PlayerMeterSettings(defaults: defaults)
         #expect(restored.style == .vu)
         #expect(restored.backlight == .orange)
         #expect(restored.barPosition == .top)
+        #expect(restored.spectrumBackgroundOpacity == 0.45)
+        #expect(restored.spectrumBarColor == .cyan)
+
+        restored.spectrumBackgroundOpacity = 2
+        #expect(restored.spectrumBackgroundOpacity == 1)
+        #expect(defaults.double(forKey: PlayerMeterSettings.spectrumBackgroundOpacityDefaultsKey) == 1)
     }
 
     @Test("Song list columns and sorting persist")

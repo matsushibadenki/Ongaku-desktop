@@ -53,7 +53,11 @@ struct PlayerBar: View {
         Group {
             switch meterSettings.style {
             case .spectrum:
-                ChannelSpectrumView(channel: channel, bands: bands)
+                ChannelSpectrumView(
+                    channel: channel,
+                    bands: bands,
+                    barColor: meterSettings.spectrumBarColor
+                )
             case .vu:
                 ChannelVUMeterView(
                     channel: channel,
@@ -67,7 +71,9 @@ struct PlayerBar: View {
         .padding(.vertical, AppTheme.spaceSM)
         .background {
             if meterSettings.style == .spectrum {
-                SpectrumGlassBackground()
+                SpectrumGlassBackground(
+                    backgroundOpacity: meterSettings.spectrumBackgroundOpacity
+                )
             } else {
                 AppTheme.surface
             }
@@ -660,6 +666,9 @@ private struct SpotlightCone: Shape {
 private struct ChannelSpectrumView: View {
     let channel: String
     let bands: [Double]
+    let barColor: SpectrumBarColor
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -671,7 +680,11 @@ private struct ChannelSpectrumView: View {
                 ZStack(alignment: .bottom) {
                     HStack(alignment: .bottom, spacing: 2) {
                         ForEach(Array(bands.enumerated()), id: \.offset) { _, value in
-                            SpectrumBar(value: value, availableHeight: proxy.size.height)
+                            SpectrumBar(
+                                value: value,
+                                availableHeight: proxy.size.height,
+                                color: barColor.color(isDark: colorScheme == .dark)
+                            )
                         }
                     }
                 }
@@ -696,6 +709,8 @@ private struct ChannelSpectrumView: View {
 }
 
 private struct SpectrumGlassBackground: View {
+    let backgroundOpacity: Double
+
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.displayScale) private var displayScale
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -703,25 +718,31 @@ private struct SpectrumGlassBackground: View {
     private var isDark: Bool { colorScheme == .dark }
     private var pixel: CGFloat { 1 / max(displayScale, 1) }
     var body: some View {
-        SpectrumBackdropBlur(isDark: isDark)
+        SpectrumBackdropBlur(isDark: isDark, opacity: backgroundOpacity)
         .overlay {
             if reduceTransparency {
                 (isDark ? Color.black : Color.white)
                     .allowsHitTesting(false)
             } else if isDark {
-                Color.black.opacity(0.80)
+                Color.black.opacity(backgroundOpacity)
+                    .allowsHitTesting(false)
+            } else if backgroundOpacity >= 0.999 {
+                Color.white
                     .allowsHitTesting(false)
             } else {
-                LinearGradient(
-                    colors: [
-                        .white.opacity(0.15),
-                        .clear,
-                        .black.opacity(0.04),
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .allowsHitTesting(false)
+                Color.white.opacity(backgroundOpacity)
+                    .overlay {
+                        LinearGradient(
+                            colors: [
+                                .white.opacity(0.15 * backgroundOpacity),
+                                .clear,
+                                .black.opacity(0.04 * backgroundOpacity),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    }
+                    .allowsHitTesting(false)
             }
         }
         .overlay {
@@ -742,13 +763,14 @@ private struct SpectrumGlassBackground: View {
 
 private struct SpectrumBackdropBlur: NSViewRepresentable {
     let isDark: Bool
+    let opacity: Double
 
     func makeNSView(context: Context) -> SpectrumGlassView {
         let view = SpectrumGlassView()
         view.blendingMode = .behindWindow
         view.material = .underWindowBackground
         view.state = .active
-        view.alphaValue = 0.80
+        view.alphaValue = opacity
         view.wantsLayer = true
         view.layerUsesCoreImageFilters = true
         view.layer?.masksToBounds = true
@@ -758,6 +780,7 @@ private struct SpectrumBackdropBlur: NSViewRepresentable {
     func updateNSView(_ view: SpectrumGlassView, context: Context) {
         // Match the app's appearance override, including when it differs from macOS.
         view.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
+        view.alphaValue = opacity
     }
 }
 
@@ -842,12 +865,12 @@ private struct SpectrumGlassReflection: View {
                 endPoint: .bottomTrailing
             )
             LinearGradient(
-                colors: [.white.opacity(0.14), .clear, .black.opacity(0.04)],
+                colors: [.white.opacity(0.14), .clear, .white.opacity(0.04)],
                 startPoint: .top,
                 endPoint: .bottom
             )
         }
-        .opacity(colorScheme == .dark ? 0.75 : 1)
+        .opacity(colorScheme == .dark ? 0.375 : 0.5)
         .clipped()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
@@ -857,10 +880,11 @@ private struct SpectrumGlassReflection: View {
 private struct SpectrumBar: View {
     let value: Double
     let availableHeight: CGFloat
+    let color: Color
 
     var body: some View {
         Capsule()
-            .fill(Color.white)
+            .fill(color)
             .frame(maxWidth: .infinity)
             .frame(height: max(2, availableHeight * SpectrumPresentation.height(for: value)))
             .opacity(value > 0.015 ? 1 : 0.24)
