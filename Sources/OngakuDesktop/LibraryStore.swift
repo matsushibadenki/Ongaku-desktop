@@ -170,6 +170,7 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var presentationRevision = 0
     @Published private(set) var isPresentationUpdating = false
     private let presentationWorker = LibraryPresentationWorker()
+    private let fallbackSearchWorker = CatalogFallbackSearchWorker()
     private var presentationTask: Task<Void, Never>?
     private var presentationGeneration = 0
     private var isPresentationScheduled = false
@@ -2912,8 +2913,9 @@ final class LibraryStore: ObservableObject {
         let sourceManifestURL = FileManager.default.fileExists(atPath: manifestURL.path)
             ? manifestURL : nil
 
-        searchIndexSynchronizationTask = Task { [weak self, searchIndex] in
+        searchIndexSynchronizationTask = Task { [weak self, searchIndex, fallbackSearchWorker] in
             do {
+                await fallbackSearchWorker.discardOtherLibrary(document.libraryID)
                 let parity: SQLiteCatalogPrototype.ParityReport
                 if await searchIndex.hasInstalledDatabase() {
                     do {
@@ -2974,13 +2976,14 @@ final class LibraryStore: ObservableObject {
         let resultLimit = max(tracks.count, 1)
         let query = searchText
         let fallbackTracks = tracks
+        let fallbackLibraryID = libraryID
         guard searchBackendStatus == .sqlite else {
             indexedSearchTrackIDs = nil
             indexedSearchQuery = nil
-            indexedSearchTask = Task { [weak self] in
-                guard let ids = await Self.fallbackSearchIDs(
-                    in: fallbackTracks,
-                    query: query
+            indexedSearchTask = Task { [weak self, fallbackSearchWorker] in
+                guard let ids = try? await fallbackSearchWorker.search(
+                    tracks: fallbackTracks, libraryID: fallbackLibraryID,
+                    revision: expectedTracksRevision, query: query
                 ), !Task.isCancelled, let self,
                       self.tracksRevision == expectedTracksRevision,
                       Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
@@ -2990,7 +2993,7 @@ final class LibraryStore: ObservableObject {
             return
         }
 
-        indexedSearchTask = Task { [weak self, searchIndex] in
+        indexedSearchTask = Task { [weak self, searchIndex, fallbackSearchWorker] in
             do {
                 let ids = try await searchIndex.search(query, limit: resultLimit)
                 guard !Task.isCancelled, let self,
@@ -3002,36 +3005,15 @@ final class LibraryStore: ObservableObject {
                 guard !Task.isCancelled, let self,
                       self.tracksRevision == expectedTracksRevision else { return }
                 self.searchBackendStatus = .jsonFallback
-                guard let ids = await Self.fallbackSearchIDs(
-                    in: fallbackTracks,
-                    query: query
+                guard let ids = try? await fallbackSearchWorker.search(
+                    tracks: fallbackTracks, libraryID: fallbackLibraryID,
+                    revision: expectedTracksRevision, query: query
                 ), !Task.isCancelled,
                       self.tracksRevision == expectedTracksRevision,
                       Self.normalizedSearchQuery(self.searchText) == normalizedQuery else { return }
                 self.indexedSearchTrackIDs = ids
                 self.indexedSearchQuery = normalizedQuery
             }
-        }
-    }
-
-    private nonisolated static func fallbackSearchIDs(
-        in tracks: [Track],
-        query: String
-    ) async -> Set<Track.ID>? {
-        let task = Task.detached(priority: .userInitiated) { () -> Set<Track.ID>? in
-            var result = Set<Track.ID>()
-            for track in tracks {
-                guard !Task.isCancelled else { return nil }
-                if CatalogSearch.matches(track, query: query) {
-                    result.insert(track.id)
-                }
-            }
-            return result
-        }
-        return await withTaskCancellationHandler {
-            await task.value
-        } onCancel: {
-            task.cancel()
         }
     }
 

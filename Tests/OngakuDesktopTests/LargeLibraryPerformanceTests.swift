@@ -180,6 +180,78 @@ struct LargeLibraryPerformanceTests {
         print("ONGAKU_M3_CI coldLoadAndFirstPage=\(presentationSeconds)s indexedSearchP95=\(searchP95)s")
     }
 
+    @Test("Opt-in 100,000-track cold fallback preparation benchmark")
+    func fallbackPreparationBenchmark() async throws {
+        guard ProcessInfo.processInfo.environment["ONGAKU_RUN_FALLBACK_BENCHMARK"] == "1"
+        else { return }
+        let tracks = LargeLibraryFixture.makeDocument().tracks
+        let libraryID = UUID()
+        let clock = ContinuousClock()
+        var coldSamples: [Double] = []
+        var warmSamples: [Double] = []
+        var urlPreparationSamples: [Double] = []
+        var directPreparationSamples: [Double] = []
+        for sample in 0..<3 {
+            func prepare(_ legacy: Bool) -> [String] {
+                let start = clock.now
+                let text = legacy
+                    ? tracks.map { CatalogSearch.searchableText(for: $0, fileName: $0.fileURL.lastPathComponent) }
+                    : tracks.map(CatalogSearch.searchableText)
+                let elapsed = seconds(start.duration(to: clock.now))
+                if legacy { urlPreparationSamples.append(elapsed) }
+                else { directPreparationSamples.append(elapsed) }
+                return text
+            }
+            // Alternate order to reduce the effect of cache warming.
+            let first = prepare(sample.isMultiple(of: 2))
+            let second = prepare(!sample.isMultiple(of: 2))
+            #expect(first == second)
+        }
+        print("ONGAKU_FILENAME_PREPARATION_100K samples=3 urlMax=\(urlPreparationSamples.max()!)s "
+            + "directMax=\(directPreparationSamples.max()!)s")
+        let expected: Set<Track.ID>
+        do {
+            let preparationStart = clock.now
+            let prepared = tracks.map(CatalogSearch.searchableText)
+            let preparationSeconds = seconds(preparationStart.duration(to: clock.now))
+            let scanStart = clock.now
+            expected = Set(tracks.indices.filter { prepared[$0].contains("track") }.map { tracks[$0].id })
+            let scanSeconds = seconds(scanStart.duration(to: clock.now))
+            print("ONGAKU_FALLBACK_PHASES_100K textPreparation=\(preparationSeconds)s "
+                + "scanAndIDs=\(scanSeconds)s textBytes=\(prepared.reduce(0) { $0 + $1.utf8.count })")
+        }
+        for _ in 0..<3 {
+            let worker = CatalogFallbackSearchWorker()
+            var start = clock.now
+            let cold = try await worker.search(
+                tracks: tracks, libraryID: libraryID, revision: 1, query: "Track"
+            )
+            coldSamples.append(seconds(start.duration(to: clock.now)))
+            #expect(cold == expected)
+            #expect(await worker.cachedTextBytes > 0)
+            start = clock.now
+            let warm = try await worker.search(
+                tracks: tracks, libraryID: libraryID, revision: 1, query: "Track"
+            )
+            warmSamples.append(seconds(start.duration(to: clock.now)))
+            #expect(warm == expected)
+        }
+        let ascii = tracks.map { "\($0.artist)\u{1f}\($0.album)" }
+        let legacyStart = clock.now
+        let legacy = ascii.map { $0.folding(
+            options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+            locale: Locale(identifier: "en_US_POSIX")
+        ) }
+        let legacySeconds = seconds(legacyStart.duration(to: clock.now))
+        let optimizedStart = clock.now
+        let optimized = ascii.map(CatalogSearch.normalize)
+        let optimizedSeconds = seconds(optimizedStart.duration(to: clock.now))
+        #expect(optimized == legacy)
+        print("ONGAKU_FALLBACK_100K samples=3 coldMax=\(coldSamples.max()!)s "
+            + "warmMax=\(warmSamples.max()!)s asciiLegacy=\(legacySeconds)s "
+            + "asciiOptimized=\(optimizedSeconds)s")
+    }
+
     @Test("Opt-in 100,000-track asynchronous presentation benchmark")
     func presentationBenchmark() async throws {
         guard ProcessInfo.processInfo.environment["ONGAKU_RUN_PRESENTATION_BENCHMARK"] == "1"
@@ -215,6 +287,31 @@ struct LargeLibraryPerformanceTests {
             searchSamples.append(seconds(start.duration(to: clock.now)))
             #expect(search.tracks.map(\.id) == [tracks[99_999].id])
         }
+        // Include edits with a large, unchanged playback history. This exercises
+        // cache invalidation that section-only samples intentionally avoid.
+        var editedTracks = tracks
+        let history = tracks.map { PlaybackEvent(trackID: $0.id, kind: .completed) }
+        let historyWorker = LibraryPresentationWorker()
+        func historyRequest(_ revision: Int) -> LibraryPresentationRequest {
+            LibraryPresentationRequest(
+                tracks: editedTracks, events: history, tracksRevision: revision, eventsRevision: 1,
+                section: .songs, playlist: nil, filter: LibraryFilterCriteria(),
+                searchIDs: [tracks[0].id], audioFeatures: [:]
+            )
+        }
+        _ = try await historyWorker.resolve(historyRequest(1))
+        var editSamples: [Double] = []
+        for sample in 0..<10 {
+            editedTracks[0].comments = "Metadata edit \(sample)"
+            editedTracks[0].playCount = sample
+            let start = clock.now
+            let snapshot = try await historyWorker.resolve(historyRequest(sample + 2))
+            editSamples.append(seconds(start.duration(to: clock.now)))
+            #expect(snapshot.tracks.map(\.id) == [tracks[0].id])
+            #expect(snapshot.statistics[tracks[0].id]?.playCount == sample + 1)
+        }
+        print("ONGAKU_PRESENTATION_HISTORY_100K events=\(history.count) samples=10 "
+            + "metadataEditP95=\(percentile95(editSamples))s")
         // This measures worker computation, not SwiftUI rendering or index I/O.
         print("ONGAKU_PRESENTATION_100K samples=10 initial=\(initialSeconds)s "
             + "albumP95=\(percentile95(albumSamples))s artistP95=\(percentile95(artistSamples))s "

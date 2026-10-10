@@ -1,5 +1,89 @@
 import Foundation
 
+/// Owns fallback text preparation away from MainActor. Edits retain the text of
+/// unchanged rows; changing the query only scans the prepared text. A cancelled
+/// preparation cannot publish a partially updated catalog.
+actor CatalogFallbackSearchWorker {
+    private let maximumTextBytes: Int
+    private(set) var cachedTextBytes = 0
+    private var libraryID: UUID?
+    private var revision = -1
+    private var cachedTracks: [Track] = []
+    private var cachedText: [String] = []
+
+    init(maximumTextBytes: Int = 64 * 1_024 * 1_024) {
+        self.maximumTextBytes = max(0, maximumTextBytes)
+    }
+
+    func discardOtherLibrary(_ libraryID: UUID) {
+        guard !Task.isCancelled, self.libraryID != libraryID else { return }
+        clear()
+    }
+
+    private func clear() {
+        libraryID = nil
+        revision = -1
+        cachedTracks = []
+        cachedText = []
+        cachedTextBytes = 0
+    }
+
+    func search(
+        tracks: [Track], libraryID: UUID, revision: Int, query: String
+    ) throws -> Set<Track.ID> {
+        try Task.checkCancellation()
+        let normalizedQuery = CatalogSearch.normalize(query)
+        var result = Set<Track.ID>()
+        if self.libraryID != libraryID || self.revision != revision {
+            var preparedText: [String]? = []
+            preparedText?.reserveCapacity(tracks.count)
+            var textBytes = 0
+            for index in tracks.indices {
+                try Task.checkCancellation()
+                let text: String
+                if self.libraryID == libraryID, cachedTracks.indices.contains(index),
+                   cachedTracks[index] == tracks[index] {
+                    text = cachedText[index]
+                } else {
+                    text = CatalogSearch.searchableText(for: tracks[index])
+                }
+                if normalizedQuery.isEmpty || text.contains(normalizedQuery) {
+                    result.insert(tracks[index].id)
+                }
+                if preparedText != nil {
+                    let bytes = text.utf8.count
+                    if bytes <= maximumTextBytes - textBytes {
+                        textBytes += bytes
+                        preparedText?.append(text)
+                    } else {
+                        // Oversized catalogs still search correctly, but their
+                        // derived text is streamed rather than kept in memory.
+                        preparedText = nil
+                    }
+                }
+            }
+            try Task.checkCancellation()
+            if let preparedText {
+                cachedTracks = tracks
+                cachedText = preparedText
+                cachedTextBytes = textBytes
+                self.libraryID = libraryID
+                self.revision = revision
+            } else {
+                clear()
+            }
+            return result
+        }
+        for index in cachedTracks.indices {
+            try Task.checkCancellation()
+            if normalizedQuery.isEmpty || cachedText[index].contains(normalizedQuery) {
+                result.insert(cachedTracks[index].id)
+            }
+        }
+        return result
+    }
+}
+
 /// Immutable input captured on MainActor. The worker owns all full-catalog
 /// derivation; publishing a result never reads mutable UI state off actor.
 struct LibraryPresentationRequest: Sendable {
@@ -36,7 +120,9 @@ actor LibraryPresentationWorker {
     private var eventsRevision = -1
     private var tracksByID: [Track.ID: Track] = [:]
     private var statistics: [Track.ID: TrackPlaybackStatistics] = [:]
+    private var historyStatistics: [Track.ID: TrackPlaybackStatistics] = [:]
     private var duplicates: [DuplicateTrackGroup] = []
+    private var duplicateCandidateKeys: [Track.ID: String] = [:]
     private var totalBytes: Int64 = 0
     private var attentionCount = 0
     private var cachedAlbums: [AlbumGroup]?
@@ -51,26 +137,63 @@ actor LibraryPresentationWorker {
             cachedAlbumSections = nil
             cachedArtists = nil
             var byID: [Track.ID: Track] = [:]
+            var candidateKeys: [Track.ID: String] = [:]
+            candidateKeys.reserveCapacity(request.tracks.count)
             var bytes: Int64 = 0
             var attention = 0
+            var membershipChanged = tracksByID.count != request.tracks.count
             byID.reserveCapacity(request.tracks.count)
             for track in request.tracks {
                 try Task.checkCancellation()
+                if let previous = tracksByID[track.id] {
+                    if previous.title != track.title || previous.artist != track.artist
+                        || previous.duration != track.duration || previous.sha256 != track.sha256 {
+                        membershipChanged = true
+                    }
+                } else {
+                    membershipChanged = true
+                }
+                if let previous = tracksByID[track.id],
+                    previous.title == track.title, previous.artist == track.artist,
+                    let key = duplicateCandidateKeys[track.id] {
+                    candidateKeys[track.id] = key
+                } else {
+                    candidateKeys[track.id] = DuplicateTrackAnalyzer.candidateKey(for: track)
+                }
                 byID[track.id] = track
                 bytes += track.fileSize
                 if track.health != .verified { attention += 1 }
             }
-            let groups = DuplicateTrackAnalyzer.groups(in: request.tracks)
+            let groups = membershipChanged
+                ? DuplicateTrackAnalyzer.groups(in: request.tracks, candidateKeys: candidateKeys)
+                : DuplicateTrackAnalyzer.refreshedGroups(duplicates, tracksByID: byID)
             try Task.checkCancellation()
+            duplicateCandidateKeys = candidateKeys
             duplicates = groups
             tracksByID = byID
             totalBytes = bytes
             attentionCount = attention
         }
         if tracksChanged || eventsRevision != request.eventsRevision {
-            statistics = PlaybackStatisticsResolver.statistics(
-                events: request.events, tracks: request.tracks
-            )
+            let history = eventsRevision == request.eventsRevision
+                ? historyStatistics
+                : PlaybackStatisticsResolver.statistics(events: request.events)
+            try Task.checkCancellation()
+            var combined = history
+            for track in request.tracks {
+                try Task.checkCancellation()
+                var value = history[track.id] ?? TrackPlaybackStatistics()
+                value.playCount += track.playCount
+                value.skipCount += track.syncedSkipCount
+                if let syncedDate = track.syncedLastPlayedAt,
+                   value.lastPlayedAt.map({ syncedDate > $0 }) ?? true {
+                    value.lastPlayedAt = syncedDate
+                }
+                combined[track.id] = value
+            }
+            try Task.checkCancellation()
+            historyStatistics = history
+            statistics = combined
             // Commit the cache keys only after every dependent cache is ready.
             tracksRevision = request.tracksRevision
             eventsRevision = request.eventsRevision

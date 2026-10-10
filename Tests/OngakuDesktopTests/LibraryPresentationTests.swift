@@ -4,6 +4,247 @@ import Testing
 
 @Suite("Asynchronous library presentation", .serialized)
 struct LibraryPresentationTests {
+    @Test("Fast filename extraction preserves file URL semantics and search text")
+    func fileNameCompatibility() {
+        let paths = [
+            "/Music/Track 001.m4a", "/音楽/夜の曲.flac", "/音乐/简体中文歌曲.mp3",
+            "/Music/Àlpha Ｓong.m4a", "/Music/e\u{301}.mp3", "/Music/😀.caf",
+            "/Music/100% %2F # ? +.m4a", "/Music/file\\name.m4a", "/Music/a\nb.m4a",
+            "/Music//Track.m4a", "//Music/Track.m4a", "/Music/../Track.m4a",
+            "/音楽/Track.m4a", "/Music/a\u{0}b.m4a",
+            "/Music/.hidden", "/", "/Music/", "/Music/.", "/Music/..",
+            "relative/Track.m4a", "Track.m4a", "", ".", "..", "~/Music/Track.m4a",
+        ]
+        var track = LargeLibraryFixture.makeDocument(trackCount: 1).tracks[0]
+        for path in paths {
+            track.managedPath = path
+            let expected = track.fileURL.lastPathComponent
+            #expect(CatalogSearch.fileName(forPath: path).utf8.elementsEqual(expected.utf8))
+            #expect(CatalogSearch.searchableText(for: track).utf8.elementsEqual(
+                CatalogSearch.searchableText(for: track, fileName: expected).utf8
+            ))
+        }
+    }
+
+    @Test("Search text keeps the original field separators and optional-number order")
+    func searchTextCompatibility() {
+        var tracks = LargeLibraryFixture.makeDocument(trackCount: 3).tracks
+        tracks[0].releaseYear = 2026
+        tracks[0].trackNumber = 1
+        tracks[0].trackCount = 12
+        tracks[0].discNumber = 2
+        tracks[0].discCount = 3
+        tracks[0].movementNumber = 4
+        tracks[0].movementCount = 5
+        tracks[0].beatsPerMinute = 120
+        tracks[0].rating = 5
+        tracks[0].playCount = 42
+        tracks[1].releaseYear = -1
+        tracks[1].comments = "Àlpha\u{1f}音楽 简体中文"
+        tracks[1].rating = 0
+        tracks[1].playCount = Int.max
+        for track in tracks {
+            // The pre-optimization representation is also persisted in SQLite.
+            let strings = [
+                track.title, track.artist, track.artistSortName,
+                track.album, track.albumSortName, track.albumArtist,
+                track.albumArtistSortName, track.composer, track.composerSortName,
+                track.grouping, track.genre, track.participantCredits,
+                track.workName, track.movementName, track.copyright,
+                track.isrc, track.comments, "", "", track.fileURL.lastPathComponent,
+            ]
+            let numbers = [
+                track.releaseYear, track.trackNumber, track.trackCount,
+                track.discNumber, track.discCount, track.movementNumber,
+                track.movementCount, track.beatsPerMinute, track.rating, track.playCount,
+            ].compactMap { $0.map(String.init) }
+            let expected = (strings + numbers).joined(separator: "\u{1f}").folding(
+                options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            )
+            #expect(CatalogSearch.searchableText(for: track) == expected)
+        }
+    }
+
+    @Test("Search normalization preserves POSIX folding for ASCII and multilingual text")
+    func normalizationParity() {
+        let ascii = String(decoding: Array(UInt8(0)...UInt8(127)), as: UTF8.self)
+        for value in ["", ascii, "Track 123 / ARTIST", "Àlpha Ｓong", "音楽の夜", "简体中文歌曲",
+                      "İıßΣς", "e\u{301}", "😀\u{1f}Album", "ＡＢＣ１２３"] {
+            #expect(CatalogSearch.normalize(value) == value.folding(
+                options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            ))
+        }
+    }
+
+    @Test("Oversized fallback text remains searchable without retaining the text cache")
+    func boundedFallbackSearchCache() async throws {
+        let tracks = LargeLibraryFixture.makeDocument(trackCount: 40).tracks
+        let libraryID = UUID()
+        let worker = CatalogFallbackSearchWorker(maximumTextBytes: 32)
+        for query in ["Track 000000", "楽曲 000001", "曲目 000002"] {
+            #expect(try await worker.search(
+                tracks: tracks, libraryID: libraryID, revision: 1, query: query
+            ) == Set(tracks.filter { CatalogSearch.matches($0, query: query) }.map(\.id)))
+            #expect(await worker.cachedTextBytes == 0)
+        }
+        let retained = CatalogFallbackSearchWorker()
+        _ = try await retained.search(tracks: tracks, libraryID: libraryID, revision: 1, query: "Track")
+        #expect(await retained.cachedTextBytes > 0)
+        await retained.discardOtherLibrary(UUID())
+        #expect(await retained.cachedTextBytes == 0)
+    }
+
+    @Test("Fallback text remains correct across edits, reordering, removal, and library switches")
+    func fallbackSearchCache() async throws {
+        let worker = CatalogFallbackSearchWorker()
+        let libraryID = UUID()
+        var tracks = LargeLibraryFixture.makeDocument(trackCount: 40).tracks
+        var revision = 1
+        func verify(_ query: String) async throws {
+            let expected = Set(tracks.filter { CatalogSearch.matches($0, query: query) }.map(\.id))
+            #expect(try await worker.search(
+                tracks: tracks, libraryID: libraryID, revision: revision, query: query
+            ) == expected)
+        }
+        for query in ["track", "楽", "目", "missing"] { try await verify(query) }
+        tracks[0].title = "Àlpha Ｓong"
+        tracks[0].lyrics = TrackLyrics(plainText: "hidden lyric", source: .manual)
+        tracks[0].rating = 5
+        tracks[0].managedPath = "/Disposable/Renamed.caf"
+        revision += 1
+        for query in ["alpha", "ＳＯＮＧ", "hidden lyric", "Renamed.caf", "5"] {
+            try await verify(query)
+        }
+        tracks.swapAt(0, 1)
+        revision += 1
+        try await verify("alpha")
+        tracks.removeFirst()
+        revision += 1
+        try await verify("楽曲 000001")
+        let snapshot = tracks
+        let cancelled = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await worker.search(
+                tracks: snapshot, libraryID: libraryID, revision: 100, query: "alpha"
+            )
+        }
+        await #expect(throws: CancellationError.self) { try await cancelled.value }
+        try await verify("alpha")
+        var otherLibrary = snapshot
+        otherLibrary[0].title = "Other library"
+        #expect(try await worker.search(
+            tracks: otherLibrary, libraryID: UUID(), revision: revision, query: "Other library"
+        ) == [otherLibrary[0].id])
+        #expect(try await worker.search(
+            tracks: [], libraryID: libraryID, revision: revision + 1, query: "alpha"
+        ).isEmpty)
+    }
+
+    @Test("Cached duplicate keys preserve fresh analysis across all metadata changes")
+    func duplicateCacheInvalidation() async throws {
+        let worker = LibraryPresentationWorker()
+        var tracks = LargeLibraryFixture.makeDocument(trackCount: 6).tracks
+        var revision = 0
+        func verify() async throws {
+            revision += 1
+            let result = try await worker.resolve(request(
+                tracks, tracksRevision: revision, section: .duplicates
+            ))
+            let expected = DuplicateTrackAnalyzer.groups(in: tracks)
+            #expect(result.allDuplicates.map(\.id) == expected.map(\.id))
+            #expect(result.allDuplicates.map(\.kind) == expected.map(\.kind))
+            #expect(result.allDuplicates.map(\.recommendedTrackID) == expected.map(\.recommendedTrackID))
+            #expect(result.allDuplicates.map { $0.tracks } == expected.map { $0.tracks })
+        }
+        tracks[0].title = "Àlpha Ｓong"
+        tracks[1].title = "alpha song"
+        tracks[0].artist = "音楽"
+        tracks[1].artist = "音楽"
+        tracks[1].duration = tracks[0].duration + 2
+        try await verify()
+        tracks[1].fileSize += 1_000_000
+        tracks[1].comments = "Updated metadata"
+        try await verify()
+        tracks[1].rating = 5
+        tracks[1].lyrics = TrackLyrics(plainText: "Updated lyrics", source: .manual)
+        tracks[1].health = .verified
+        tracks[1].addedAt = tracks[0].addedAt.addingTimeInterval(-10)
+        try await verify()
+        tracks.reverse()
+        try await verify()
+        tracks.reverse()
+        tracks[1].duration += 10
+        try await verify()
+        tracks[0].sha256 = "shared-hash"
+        tracks[1].sha256 = "shared-hash"
+        try await verify()
+        tracks[1].title = "独立的歌曲"
+        tracks[1].artist = "另一位艺术家"
+        try await verify()
+        tracks[1].sha256 = "different-hash"
+        try await verify()
+        tracks.reverse()
+        try await verify()
+        tracks[0] = LargeLibraryFixture.makeDocument(trackCount: 7).tracks[6]
+        try await verify()
+        tracks.removeLast()
+        try await verify()
+        tracks.removeAll()
+        try await verify()
+    }
+
+    @Test("Cached history matches direct statistics across track edits and history replacement")
+    func historyCacheInvalidation() async throws {
+        let worker = LibraryPresentationWorker()
+        var tracks = LargeLibraryFixture.makeDocument(trackCount: 4).tracks
+        let older = Date(timeIntervalSince1970: 100)
+        let newer = Date(timeIntervalSince1970: 200)
+        let orphanID = UUID()
+        var events = [
+            PlaybackEvent(trackID: tracks[0].id, kind: .completed, occurredAt: older),
+            PlaybackEvent(trackID: tracks[0].id, kind: .skipped, occurredAt: newer),
+            PlaybackEvent(trackID: tracks[1].id, kind: .started, occurredAt: newer),
+            PlaybackEvent(trackID: orphanID, kind: .completed, occurredAt: older),
+        ]
+        var tracksRevision = 1
+        var eventsRevision = 1
+        func verify() async throws {
+            let snapshot = try await worker.resolve(request(
+                tracks, events: events, tracksRevision: tracksRevision,
+                eventsRevision: eventsRevision, section: .frequentlyPlayed
+            ))
+            let expected = PlaybackStatisticsResolver.statistics(events: events, tracks: tracks)
+            #expect(Set(snapshot.statistics.keys) == Set(expected.keys))
+            for (id, value) in expected {
+                #expect(snapshot.statistics[id]?.playCount == value.playCount)
+                #expect(snapshot.statistics[id]?.skipCount == value.skipCount)
+                #expect(snapshot.statistics[id]?.lastPlayedAt == value.lastPlayedAt)
+            }
+        }
+        try await verify()
+        tracks[0].playCount = 9
+        tracks[0].syncedSkipCount = 3
+        tracks[0].syncedLastPlayedAt = newer.addingTimeInterval(10)
+        tracks[1].syncedLastPlayedAt = older
+        tracksRevision += 1
+        try await verify()
+        tracks.removeFirst()
+        tracksRevision += 1
+        try await verify()
+        events[0].kind = .started
+        events[1].occurredAt = older
+        eventsRevision += 1
+        try await verify()
+        events.removeAll()
+        eventsRevision += 1
+        try await verify()
+        tracks.removeAll()
+        tracksRevision += 1
+        try await verify()
+    }
+
     @Test("Returning to albums reuses current groups and edits invalidate them")
     func albumCacheInvalidation() async throws {
         var tracks = LargeLibraryFixture.makeDocument(trackCount: 40).tracks

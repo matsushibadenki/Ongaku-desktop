@@ -276,7 +276,9 @@ struct TrackDeletionResult: Sendable {
 }
 
 enum DuplicateTrackAnalyzer {
-    nonisolated static func groups(in tracks: [Track]) -> [DuplicateTrackGroup] {
+    nonisolated static func groups(
+        in tracks: [Track], candidateKeys: [Track.ID: String] = [:]
+    ) -> [DuplicateTrackGroup] {
         guard tracks.count > 1 else { return [] }
         var sets = DuplicateTrackDisjointSet(ids: tracks.map(\.id))
 
@@ -287,7 +289,7 @@ enum DuplicateTrackAnalyzer {
         }
 
         let candidates = Dictionary(grouping: tracks) { track in
-            "\(normalized(track.title))\u{1f}\(normalized(track.artist))"
+            candidateKeys[track.id] ?? candidateKey(for: track)
         }
         for (key, matches) in candidates where !key.hasPrefix("\u{1f}") && matches.count > 1 {
             let ordered = matches.sorted { $0.duration < $1.duration }
@@ -300,21 +302,35 @@ enum DuplicateTrackAnalyzer {
         }
 
         let grouped = Dictionary(grouping: tracks) { sets.root(of: $0.id) }
-        return grouped.values.compactMap { matches in
-            guard matches.count > 1 else { return nil }
-            let ordered = matches.sorted(by: isPreferred)
-            let hashes = Set(matches.map(\.sha256).filter { !$0.isEmpty })
-            let kind: DuplicateMatchKind = hashes.count == 1 && !hashes.isEmpty
-                ? .exact : .possible
-            let ids = matches.map { $0.id.uuidString }.sorted().joined(separator: ":")
-            return DuplicateTrackGroup(
-                id: ids,
-                kind: kind,
-                tracks: ordered,
-                recommendedTrackID: ordered[0].id
-            )
-        }
-        .sorted {
+        return orderedGroups(grouped.values.compactMap(makeGroup))
+    }
+
+    /// Membership remains valid when IDs, title, artist, hash and duration do
+    /// not change. Refresh every Track and recommendation from current data.
+    nonisolated static func refreshedGroups(
+        _ groups: [DuplicateTrackGroup], tracksByID: [Track.ID: Track]
+    ) -> [DuplicateTrackGroup] {
+        orderedGroups(groups.compactMap { group in
+            makeGroup(group.tracks.compactMap { tracksByID[$0.id] })
+        })
+    }
+
+    private nonisolated static func makeGroup(_ matches: [Track]) -> DuplicateTrackGroup? {
+        guard matches.count > 1 else { return nil }
+        let ordered = matches.sorted(by: isPreferred)
+        let hashes = Set(matches.map(\.sha256).filter { !$0.isEmpty })
+        let kind: DuplicateMatchKind = hashes.count == 1 && !hashes.isEmpty
+            ? .exact : .possible
+        let ids = matches.map { $0.id.uuidString }.sorted().joined(separator: ":")
+        return DuplicateTrackGroup(
+            id: ids, kind: kind, tracks: ordered, recommendedTrackID: ordered[0].id
+        )
+    }
+
+    private nonisolated static func orderedGroups(
+        _ groups: [DuplicateTrackGroup]
+    ) -> [DuplicateTrackGroup] {
+        groups.sorted {
             if $0.kind != $1.kind { return $0.kind == .exact }
             let lhs = $0.tracks.first?.title ?? ""
             let rhs = $1.tracks.first?.title ?? ""
@@ -322,15 +338,18 @@ enum DuplicateTrackAnalyzer {
         }
     }
 
+    nonisolated static func candidateKey(for track: Track) -> String {
+        "\(normalized(track.title))\u{1f}\(normalized(track.artist))"
+    }
+
     private nonisolated static func normalized(_ value: String) -> String {
-        value.folding(
+        let folded = value.folding(
             options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
             locale: Locale(identifier: "en_US_POSIX")
         )
-        .unicodeScalars
-        .filter { CharacterSet.alphanumerics.contains($0) }
-        .map(String.init)
-        .joined()
+        return String(String.UnicodeScalarView(
+            folded.unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) }
+        ))
     }
 
     private nonisolated static func isPreferred(_ lhs: Track, _ rhs: Track) -> Bool {
@@ -538,7 +557,16 @@ struct TrackMetadataPatch: Equatable, Sendable {
 
 enum CatalogSearch {
     static func normalize(_ value: String) -> String {
-        value.folding(
+        // POSIX folding only lowercases A...Z for ASCII. Keep the Foundation
+        // path for every non-ASCII scalar, including width and accent folding.
+        if value.utf8.allSatisfy({ $0 < 128 }) {
+            var bytes = Array(value.utf8)
+            for index in bytes.indices where bytes[index] >= 65 && bytes[index] <= 90 {
+                bytes[index] += 32
+            }
+            return String(decoding: bytes, as: UTF8.self)
+        }
+        return value.folding(
             options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
             locale: Locale(identifier: "en_US_POSIX")
         )
@@ -550,7 +578,24 @@ enum CatalogSearch {
         return searchableText(for: track).contains(normalizedQuery)
     }
 
+    static func fileName(forPath path: String) -> String {
+        if path.hasPrefix("/"), !path.hasSuffix("/"), let slash = path.lastIndex(of: "/") {
+            let component = path[path.index(after: slash)...]
+            // macOS file URLs may decompose Unicode filenames. Preserve that
+            // behavior by limiting the direct extraction to non-NUL ASCII.
+            if component != ".", component != "..",
+               component.utf8.allSatisfy({ $0 > 0 && $0 < 128 }) {
+                return String(component)
+            }
+        }
+        return URL(fileURLWithPath: path).lastPathComponent
+    }
+
     static func searchableText(for track: Track) -> String {
+        searchableText(for: track, fileName: fileName(forPath: track.managedPath))
+    }
+
+    static func searchableText(for track: Track, fileName: String) -> String {
         let lyrics = track.lyrics.map { value in
             ([value.plainText] + value.syncedLines.map(\.text)).joined(separator: " ")
         } ?? ""
@@ -564,21 +609,27 @@ enum CatalogSearch {
                 reference.mediaFormat,
             ].compactMap { $0 }.joined(separator: " ")
         } ?? ""
-        let numbers = [
-            track.releaseYear, track.trackNumber, track.trackCount,
-            track.discNumber, track.discCount, track.movementNumber,
-            track.movementCount, track.beatsPerMinute, track.rating,
-            track.playCount,
-        ].compactMap { $0.map(String.init) }
-        return normalize(([
+        var text = [
             track.title, track.artist, track.artistSortName,
             track.album, track.albumSortName, track.albumArtist,
             track.albumArtistSortName, track.composer, track.composerSortName,
             track.grouping, track.genre, track.participantCredits,
             track.workName, track.movementName, track.copyright,
             track.isrc, track.comments, lyrics, musicBrainz,
-            track.fileURL.lastPathComponent,
-        ] + numbers).joined(separator: "\u{1f}"))
+            fileName,
+        ].joined(separator: "\u{1f}")
+        for number in [
+            track.releaseYear, track.trackNumber, track.trackCount,
+            track.discNumber, track.discCount, track.movementNumber,
+            track.movementCount, track.beatsPerMinute, track.rating,
+            track.playCount,
+        ] {
+            if let number {
+                text.append("\u{1f}")
+                text.append(String(number))
+            }
+        }
+        return normalize(text)
     }
 }
 
