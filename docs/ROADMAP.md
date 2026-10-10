@@ -22,9 +22,10 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 
 ## 2. ステータス
 
-- `[Done]` 現在のコードベースに実装済み
-- `[Next]` 最優先で着手する未完了項目
-- `[Later]` 計画済みだが、直近の着手対象ではない項目
+- 🟢 `[Done]` 現在のコードベースに実装済み
+- 🟠 `[Next]` 最優先で着手する未完了項目
+- 🔴 `[Later]` 計画済みだが、直近の着手対象ではない項目
+- ⭕️ `[Pending]` 開発環境で検証できず、実機・署名・権限などの条件待ちの項目
 
 `[Done]` は当該リポジトリで実装を確認できる範囲、`[Next]` は下記の現在の6作業、`[Later]` はその後の作業を表す。実装済みと配布確認済みは分ける。配布可能と判定するには「13. 完了条件」の証拠を全て必要とし、未実施は合格に数えない。旧品質文書の「終了判定」は、その文書に記載された自動試験範囲の記録として読む。
 
@@ -65,6 +66,8 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] A3の第3段階として、標準ビュー・スマートプレイリスト・詳細フィルタ・検索結果の絞り込み、アルバム／アーティスト分類、重複・再生統計・Ongaku Mixの表示用集計を専用actorへ移した。同一ターンの変更をまとめ、キャンセル・世代照合で古い結果の反映を防ぐ。曲表は集計結果のrevisionで再ソートし、再生中インスペクタの曲参照もキャッシュを使う。[検証記録](quality/ASYNC_LIBRARY_MILESTONE_2026-09-12.md)を参照
 - [Done] GitHub Actions run 34678611788の失敗8件を特定。検索索引の完了と表示集計の完了を区別し、スマートプレイリスト・検索の試験を表示完了後の値で検証するよう修正。保存失敗時の検索復旧も追加し、全291テストが成功。待機時間の固定延長や性能閾値の緩和は行っていない
 - [Done] A5の補修として、設定画面へ画像取得設定を渡し、Control Centerの画像取得経路も既定で通信しない設定へ変更。取得設定の切替でサムネイルを再評価し、自動取得無効時は期限切れの保存済み画像も表示する。三言語の説明にアーティスト画像の取得先も含めた
+- 🟢 [Done] A3の検索中断をSQLite内部へ伝播する。入力変更で不要になった検索は、開始前・結果取得中・SQLite VM実行中に中断し、索引障害とは区別する。中断後の接続再利用と三言語検索の回帰試験を追加した。検証範囲は[記録](quality/SQLITE_SEARCH_CANCELLATION_2026-10-10.md)を参照。
+- 🟢 [Done] A3の索引更新後のparity検証を全曲1回のテキスト生成へまとめ、英日中・歌詞・古い索引・キャンセルの一致契約を維持する。10万曲の実再生中／索引更新中／両者同時のproduction snapshot計測も追加した。実画面の製品目標とは分けて[検証記録](quality/SEARCH_INDEX_PARITY_2026-10-10.md)で管理する。
 - [Next] A3の残りとして、実画面のRelease初回表示2秒・入力から結果表示p95 300ms・ピーク512MiBを計測し、再生中／索引更新中の条件で改善する。2026-09-08のDebug測定11.27秒はJSON再読込と先頭ページ準備の時間で、事前の保存時間とSwiftUI描画は含まない。2026-09-12に同じCIゲートは通過したが、実画面の製品目標の合格には数えない
 - [Done] A3実画面ゲートの計測基盤として、一時ディレクトリだけを受け付ける専用起動モードと決定論的な10万曲fixture生成を追加した。計測時はユーザーのライブラリ、更新確認、ファイル存在確認、端末同期、外部ストア通信から分離する。Release UIテストは初回表示、10検索のp95、各計測点のRSSを製品目標に対して判定し、通常のUIテストでは明示的にスキップする
 - [Done] A3のUI性能ゲートで、初回表示は曲表の先頭曲が実際に描画されるまで、検索は最後の文字を入力した時点から各クエリ固有の曲が描画されるまで計測する。前回の検索結果が残った「1件」表示による誤合格を防ぐ。計測値の取得と製品目標の判定は引き続き[Next]。
@@ -76,9 +79,9 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - [Done] アルバムのイニシャル分類で、日本語文字を含むタイトルに`albumSortName`がある場合は読み仮名の先頭を優先する。読みがない既存データと英字タイトルは従来の分類を維持する
 - [Next] A4の次段階として、チャンク転送のファイルI/O・checkpoint・転送中辞書を専用actorへ移し、現在Xcode 27が警告するDispatchQueueクロージャーからMainActor状態への参照を解消する
 - [Done] 上記A4境界変更をXcode 27.0で全296テスト、通常macOS Debug、Mac App Store Release、iOS Simulator Debugの順に検証した。並列Xcodeビルドは同一DerivedDataのDBロックを起こすため構成ビルドを直列化し、3構成すべて成功した
-- [Next] `ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
-- [Next] 2026-09-15の実行ではReleaseアプリ／UIテストのビルドは成功したが、XcodeのUIテストランナーがAutomation Modeの有効化でタイムアウトし、計測本体の開始前に終了した。macOSのUIオートメーション権限を復旧後に上記コマンドを再実行し、数値が得られるまではA3の製品目標を合格扱いにしない
-- [Next] 2026-09-23のRelease UI計測再実行は、UIテストランナーがアプリへ接続する前にsignal killで終了したため数値なし。ローカルkeychainに有効な開発用署名IDは0件だった。署名可能な環境で実画面ゲートを再実行して判定する。
+- ⭕️ [Pending] `ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
+- ⭕️ [Pending] 2026-09-15の実行ではReleaseアプリ／UIテストのビルドは成功したが、XcodeのUIテストランナーがAutomation Modeの有効化でタイムアウトし、計測本体の開始前に終了した。macOSのUIオートメーション権限を復旧後に上記コマンドを再実行し、数値が得られるまではA3の製品目標を合格扱いにしない
+- ⭕️ [Pending] 2026-09-23のRelease UI計測再実行は、UIテストランナーがアプリへ接続する前にsignal killで終了したため数値なし。ローカルkeychainに有効な開発用署名IDは0件だった。署名可能な環境で実画面ゲートを再実行して判定する。
 - [Done] 曲・アーティスト・アルバムのセルクリックでTableのFocusStateも更新し、選択だけ変わって非アクティブのグレー表示になる経路を修正した。Debugビルド成功。実画面検証はユーザー操作との競合により未完了
 - [Done] 曲・アルバム・アーティストの曲表でウィンドウ活動状態に基づく白文字固定を撤去し、行の文字・状態アイコンを標準Tableの配色へ統一した。Debugビルド成功。曲一覧でライト／ダークの選択・選択解除と非アクティブ選択を実画面確認し、外観設定を元のライトへ戻した
 - [Done] 曲一覧、アルバム詳細、アーティスト詳細のすべてで、楽曲行のダブルクリックをTable標準のprimary actionへ統一し、対象曲を選択してその画面の並び順を再生キューとして再生する。単クリック選択とダブルクリックの競合を除去した

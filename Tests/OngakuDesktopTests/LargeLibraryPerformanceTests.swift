@@ -1,9 +1,120 @@
+import AVFoundation
 import Foundation
 import Testing
 @testable import OngakuDesktop
 
 @Suite("Large library performance fixture", .serialized)
 struct LargeLibraryPerformanceTests {
+    @Test("Opt-in 100,000-track search during real playback and index updates")
+    @MainActor
+    func searchWorkloadBenchmark() async throws {
+        guard ProcessInfo.processInfo.environment["ONGAKU_RUN_SEARCH_WORKLOAD_BENCHMARK"] == "1"
+        else { return }
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-Search-Workload-100k-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let audioURL = root.appendingPathComponent("Playback.caf")
+        try writePlaybackFixture(to: audioURL)
+        var document = LargeLibraryFixture.makeDocument()
+        document.tracks[0].managedPath = audioURL.path
+        document.tracks[0].duration = 180
+        document.tracks[0].fileSize = Int64(try audioURL.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(document: document)
+        let index = SQLiteCatalogPrototype(rootURL: root)
+        let store = LibraryStore(repository: repository, searchIndex: index)
+        await store.load()
+        try await waitForWorkloadState { store.searchBackendStatus == .sqlite && !store.isPresentationUpdating }
+
+        // Include SQLite result comparison in both measurements. The baseline
+        // reproduces the previous per-query normalization without changing disk.
+        let parityQueries = ["a", "1", "夜", "音", "T", "Tra", "A", "Art", "Alb", "楽", "楽曲", "曲", "曲目"]
+        let clock = ContinuousClock()
+        var started = clock.now
+        for query in parityQueries {
+            let expected = Set(document.tracks.filter { CatalogSearch.matches($0, query: query) }.map(\.id))
+            #expect(Set(try await index.search(query, limit: document.tracks.count)) == expected)
+        }
+        let legacyParity = seconds(started.duration(to: clock.now))
+        started = clock.now
+        #expect(try await index.verifySearchParity(document: document, queries: parityQueries).isMatch)
+        let batchedParity = seconds(started.duration(to: clock.now))
+        print("ONGAKU_PARITY_100K queries=\(parityQueries.count) legacy=\(legacyParity)s batched=\(batchedParity)s")
+
+        let player = PlaybackController()
+        player.volume = 0
+        defer { player.pauseForExternalPlayback() }
+        for condition in ["playback", "index-update", "playback-and-index-update"] {
+            let playsAudio = condition != "index-update"
+            let updatesIndex = condition != "playback"
+            if playsAudio {
+                player.play(document.tracks[0], queue: [document.tracks[0]])
+                try #require(player.isPlaying, "Real audio playback did not start: \(player.errorMessage ?? "unknown")")
+                try await waitForWorkloadState { player.elapsed > 0 }
+            } else {
+                player.pauseForExternalPlayback()
+            }
+            let initialElapsed = player.elapsed
+            var samples: [Double] = []
+            for sample in 0..<10 {
+                let target = store.tracks[sample * 3 + 3]
+                let title: String
+                if updatesIndex {
+                    title = "Updated \(condition) \(sample)"
+                    try await store.updateTrackMetadata(
+                        id: target.id, title: title, artist: target.artist, album: target.album
+                    )
+                    // The query starts while the production store has invalidated
+                    // its index, exercising JSON fallback and the later handoff.
+                    try #require(store.searchBackendStatus == .synchronizing)
+                } else {
+                    title = target.title
+                }
+                let start = clock.now
+                store.searchText = title
+                try await waitForWorkloadState {
+                    !store.isPresentationUpdating && !store.isLocalSearchPending
+                        && store.filteredTracks.map(\.id) == [target.id]
+                }
+                samples.append(seconds(start.duration(to: clock.now)))
+                #expect(player.isPlaying == playsAudio)
+                if updatesIndex {
+                    try await waitForWorkloadState { store.searchBackendStatus == .sqlite }
+                    await store.waitForPresentation()
+                    #expect(store.filteredTracks.map(\.id) == [target.id])
+                }
+            }
+            if playsAudio { #expect(player.elapsed > initialElapsed) }
+            print("ONGAKU_SEARCH_WORKLOAD_100K condition=\(condition) samples=10 resultP95=\(percentile95(samples))s "
+                + "audioElapsed=\(player.elapsed)s outputRate=\(player.outputSampleRate)Hz")
+        }
+    }
+
+    @MainActor
+    private func waitForWorkloadState(_ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(180))
+        while !condition() {
+            try #require(ContinuousClock.now < deadline, "Timed out waiting for the production search/audio state")
+            try await Task.sleep(for: .milliseconds(2))
+        }
+    }
+
+    private func writePlaybackFixture(to url: URL) throws {
+        let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2))
+        let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4_410))
+        buffer.frameLength = buffer.frameCapacity
+        let channels = try #require(buffer.floatChannelData)
+        for frame in 0..<Int(buffer.frameLength) {
+            let sample = Float(0.1 * sin(2 * .pi * 440 * Double(frame) / format.sampleRate))
+            channels[0][frame] = sample
+            channels[1][frame] = sample
+        }
+        let file = try AVAudioFile(forWriting: url, settings: format.settings)
+        // Fixed 180-second PCM fixture, generated with a 35 KiB working buffer.
+        for _ in 0..<1_800 { try file.write(from: buffer) }
+    }
+
     @Test("The 100,000-track fixture is deterministic and relationally consistent")
     func fullFixtureIntegrity() {
         let document = LargeLibraryFixture.makeDocument()

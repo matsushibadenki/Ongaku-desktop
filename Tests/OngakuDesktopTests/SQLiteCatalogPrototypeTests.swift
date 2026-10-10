@@ -1,9 +1,93 @@
 import Foundation
+import SQLite3
 import Testing
 @testable import OngakuDesktop
 
 @Suite("SQLite catalog prototype", .serialized)
 struct SQLiteCatalogPrototypeTests {
+    @Test("Batched parity preserves multilingual metadata matches and reports every stale query")
+    func batchedParity() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-SQLite-Batched-Parity-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prototype = SQLiteCatalogPrototype(rootURL: root)
+        var document = LargeLibraryFixture.makeDocument(trackCount: 200)
+        document.tracks[0].title = "Àlpha Ｓong"
+        document.tracks[0].lyrics = TrackLyrics(plainText: "hidden lyric", source: .manual)
+        _ = try await prototype.migrate(document: document)
+        let queries = ["a", "LPH", "ＳＯＮＧ", "楽", "目", "楽曲", "曲目", "hidden lyric", "missing", "a"]
+        let initial = try await prototype.verifySearchParity(document: document, queries: queries)
+        #expect(initial.isMatch)
+        #expect(initial.checkedQueries == queries)
+
+        document.tracks[0].title = "Renamed"
+        let staleQueries = ["alpha", "renamed", "楽", "alpha"]
+        let stale = try await prototype.verifySearchParity(document: document, queries: staleQueries)
+        #expect(stale.mismatchedQueries == ["alpha", "renamed", "alpha"])
+        _ = try await prototype.synchronizeSearchIndex(document: document)
+        #expect(try await prototype.verifySearchParity(document: document, queries: staleQueries).isMatch)
+        #expect(try await prototype.verifySearchParity(document: document, queries: []).isMatch)
+
+        let finalDocument = document
+        let cancelled = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            return try await prototype.verifySearchParity(document: finalDocument, queries: queries)
+        }
+        await #expect(throws: CancellationError.self) { try await cancelled.value }
+        #expect(try await prototype.verifySearchParity(document: document, queries: ["renamed"]).isMatch)
+    }
+
+    @Test("Cancellation interrupts SQLite before its first result and removes the handler")
+    func interruptsRunningStatement() async throws {
+        let task = Task.detached {
+            var database: OpaquePointer?
+            #expect(sqlite3_open(":memory:", &database) == SQLITE_OK)
+            let db = try #require(database)
+            defer { sqlite3_close(db) }
+            var stepResult: Int32 = SQLITE_OK
+            #expect(throws: CancellationError.self) {
+                try SQLiteCatalogPrototype.withSearchCancellation(db) {
+                    // Cancel after installing the handler, then execute enough
+                    // VM instructions to exercise cancellation inside SQLite.
+                    withUnsafeCurrentTask { $0?.cancel() }
+                    stepResult = sqlite3_exec(db, """
+                        WITH RECURSIVE n(x) AS (
+                            VALUES(0) UNION ALL SELECT x + 1 FROM n WHERE x < 100000
+                        ) SELECT sum(x) FROM n
+                        """, nil, nil, nil)
+                }
+            }
+            #expect(stepResult == SQLITE_INTERRUPT)
+            // The same connection remains usable even while this task is
+            // cancelled: the scoped callback must have been removed.
+            #expect(sqlite3_exec(db, """
+                WITH RECURSIVE n(x) AS (
+                    VALUES(0) UNION ALL SELECT x + 1 FROM n WHERE x < 1000
+                ) SELECT sum(x) FROM n
+                """, nil, nil, nil) == SQLITE_OK)
+        }
+        try await task.value
+    }
+
+    @Test("Cancelled searches throw cancellation and subsequent multilingual searches work")
+    func cancelledSearchRecovery() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("Ongaku-SQLite-Cancel-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let prototype = SQLiteCatalogPrototype(rootURL: root)
+        let document = LargeLibraryFixture.makeDocument(trackCount: 200)
+        _ = try await prototype.migrate(document: document)
+        for query in ["a", "楽", "目", "楽曲", "曲目", "track", "missing"] {
+            let task = Task {
+                withUnsafeCurrentTask { $0?.cancel() }
+                return try await prototype.search(query)
+            }
+            await #expect(throws: CancellationError.self) { try await task.value }
+            let expected = Set(document.tracks.filter { CatalogSearch.matches($0, query: query) }.map(\.id))
+            #expect(Set(try await prototype.search(query, limit: 200)) == expected)
+        }
+    }
+
     @Test("JSON migrates transactionally, supports indexed search, and rolls back")
     func migrationSearchAndRollback() async throws {
         let root = FileManager.default.temporaryDirectory

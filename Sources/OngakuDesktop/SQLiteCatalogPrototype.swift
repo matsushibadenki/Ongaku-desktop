@@ -126,57 +126,85 @@ actor SQLiteCatalogPrototype {
     }
 
     func search(_ query: String, limit: Int = 200) throws -> [Track.ID] {
+        try Task.checkCancellation()
         let normalizedQuery = CatalogSearch.normalize(query)
         guard !normalizedQuery.isEmpty, limit > 0 else { return [] }
         // WAL databases may need to recreate their shared-memory sidecar after
         // the staged file is installed under its final name.
         return try withOpenDatabase(readOnly: false) { database in
-            let usesTrigramIndex = normalizedQuery.count >= 3
-            let sql = usesTrigramIndex
-                ? """
-                    SELECT track_id FROM track_search
-                    WHERE track_search MATCH ?
-                    ORDER BY bm25(track_search), track_id
-                    LIMIT ?
-                    """
-                : """
-                    SELECT id FROM track
-                    WHERE instr(title_search, ?) > 0
-                       OR instr(artist_search, ?) > 0
-                       OR instr(album_search, ?) > 0
-                       OR instr(metadata_search, ?) > 0
-                    ORDER BY title_search, id
-                    LIMIT ?
-                    """
-            return try withStatement(database, sql: sql) { statement in
-                if usesTrigramIndex {
-                    try bind(
-                        quotedFTSExpression(for: normalizedQuery),
-                        to: 1,
-                        in: statement,
-                        database: database
-                    )
-                    try bind(Int64(limit), to: 2, in: statement, database: database)
-                } else {
-                    try bind(normalizedQuery, to: 1, in: statement, database: database)
-                    try bind(normalizedQuery, to: 2, in: statement, database: database)
-                    try bind(normalizedQuery, to: 3, in: statement, database: database)
-                    try bind(normalizedQuery, to: 4, in: statement, database: database)
-                    try bind(Int64(limit), to: 5, in: statement, database: database)
-                }
-                var ids: [Track.ID] = []
-                while true {
-                    let result = sqlite3_step(statement)
-                    if result == SQLITE_DONE { break }
-                    guard result == SQLITE_ROW else { throw sqliteError(database) }
-                    guard let text = sqlite3_column_text(statement, 0),
-                          let id = UUID(uuidString: String(cString: text)) else {
-                        throw PrototypeError.invalidCatalog("SQLite returned an invalid track UUID.")
+            try Self.withSearchCancellation(database) {
+                let usesTrigramIndex = normalizedQuery.count >= 3
+                let sql = usesTrigramIndex
+                    ? """
+                        SELECT track_id FROM track_search
+                        WHERE track_search MATCH ?
+                        ORDER BY bm25(track_search), track_id
+                        LIMIT ?
+                        """
+                    : """
+                        SELECT id FROM track
+                        WHERE instr(title_search, ?) > 0
+                           OR instr(artist_search, ?) > 0
+                           OR instr(album_search, ?) > 0
+                           OR instr(metadata_search, ?) > 0
+                        ORDER BY title_search, id
+                        LIMIT ?
+                        """
+                return try withStatement(database, sql: sql) { statement in
+                    if usesTrigramIndex {
+                        try bind(
+                            quotedFTSExpression(for: normalizedQuery),
+                            to: 1,
+                            in: statement,
+                            database: database
+                        )
+                        try bind(Int64(limit), to: 2, in: statement, database: database)
+                    } else {
+                        try bind(normalizedQuery, to: 1, in: statement, database: database)
+                        try bind(normalizedQuery, to: 2, in: statement, database: database)
+                        try bind(normalizedQuery, to: 3, in: statement, database: database)
+                        try bind(normalizedQuery, to: 4, in: statement, database: database)
+                        try bind(Int64(limit), to: 5, in: statement, database: database)
                     }
-                    ids.append(id)
+                    var ids: [Track.ID] = []
+                    while true {
+                        try Task.checkCancellation()
+                        let result = sqlite3_step(statement)
+                        // Translate SQLITE_INTERRUPT into cancellation, not an
+                        // index failure that could trigger JSON fallback.
+                        try Task.checkCancellation()
+                        if result == SQLITE_DONE { break }
+                        guard result == SQLITE_ROW else { throw sqliteError(database) }
+                        guard let text = sqlite3_column_text(statement, 0),
+                              let id = UUID(uuidString: String(cString: text)) else {
+                            throw PrototypeError.invalidCatalog("SQLite returned an invalid track UUID.")
+                        }
+                        ids.append(id)
+                    }
+                    return ids
                 }
-                return ids
             }
+        }
+    }
+
+    /// Keep the progress handler scoped to the synchronous SQLite operation.
+    /// It executes on the Swift task's thread, including before the first row.
+    nonisolated static func withSearchCancellation<T>(
+        _ database: OpaquePointer,
+        operation: () throws -> T
+    ) throws -> T {
+        try Task.checkCancellation()
+        sqlite3_progress_handler(database, 1_000, { _ in
+            Task.isCancelled ? 1 : 0
+        }, nil)
+        defer { sqlite3_progress_handler(database, 0, nil, nil) }
+        do {
+            let result = try operation()
+            try Task.checkCancellation()
+            return result
+        } catch {
+            try Task.checkCancellation()
+            throw error
         }
     }
 
@@ -189,21 +217,7 @@ actor SQLiteCatalogPrototype {
             try validate(document: document, identities: identities, in: database)
         }
 
-        var mismatches: [String] = []
-        for query in queries {
-            let jsonIDs = Set(
-                document.tracks.lazy
-                    .filter { CatalogSearch.matches($0, query: query) }
-                    .map(\.id)
-            )
-            let sqliteIDs = Set(try search(query, limit: max(document.tracks.count, 1)))
-            if jsonIDs != sqliteIDs { mismatches.append(query) }
-        }
-        return ParityReport(
-            trackCount: document.tracks.count,
-            checkedQueries: queries,
-            mismatchedQueries: mismatches
-        )
+        return try verifySearchParity(document: document, queries: queries)
     }
 
     func synchronizeSearchIndex(document: LibraryDocument) throws
@@ -320,11 +334,28 @@ actor SQLiteCatalogPrototype {
         document: LibraryDocument,
         queries: [String]
     ) throws -> ParityReport {
+        try Task.checkCancellation()
+        let normalizedQueries = queries.map(CatalogSearch.normalize)
+        // Stream the catalog once. Generating and normalizing all metadata for
+        // every query made parity verification dominate each index update.
+        // Keep only matching IDs, rather than a second full text corpus.
+        var expectedIDs = Array(repeating: [Track.ID](), count: queries.count)
+        if !queries.isEmpty {
+            for track in document.tracks {
+                try Task.checkCancellation()
+                let text = CatalogSearch.searchableText(for: track)
+                for index in normalizedQueries.indices {
+                    if normalizedQueries[index].isEmpty || text.contains(normalizedQueries[index]) {
+                        expectedIDs[index].append(track.id)
+                    }
+                }
+            }
+        }
         var mismatches: [String] = []
-        for query in queries {
-            let jsonIDs = Set(document.tracks.lazy.filter {
-                CatalogSearch.matches($0, query: query)
-            }.map(\.id))
+        for (index, query) in queries.enumerated() {
+            try Task.checkCancellation()
+            let jsonIDs = Set(expectedIDs[index])
+            expectedIDs[index].removeAll(keepingCapacity: false)
             let sqliteIDs = Set(try search(query, limit: max(document.tracks.count, 1)))
             if jsonIDs != sqliteIDs { mismatches.append(query) }
         }
