@@ -5,7 +5,7 @@
 "command.automaticUpsampling" = "Automatic Upsampling up to 384 kHz";
 "toolbar.importHelp" = "Import music files into the library";
 "toolbar.sidebarToggleHelp" = "Show or hide the sidebar";
-"storage.migration.failed" = "Library migration could not finish. Check folder access and free space, then restart the app. Existing data has been preserved.";
+"storage.migration.failed" = "Library migration could not finish. Check folder access and free space, then select the same media folder below to retry. Existing data has been preserved.";
 "command.importCD" = "Import from CD…";
 "toolbar.importCDHelp" = "Import tracks from an audio CD into the library";
 "command.importURL" = "Import from URL…";
@@ -1231,3 +1231,10 @@
 "metadataEditor.artwork.dragHint" = "Drop a photo here. Drag the image to adjust the crop.";
 
 "metadataEditor.artwork.zoom" = "Photo zoom";
+
+"storage.migration.retry" = "Select Folder and Repair…";
+"storage.migration.sameFolder" = "Select a folder containing your library. Ongaku will check its contents and repair the saved library location.";
+"storage.migration.notFound" = "No existing Ongaku library was found. Select Ongaku Media or a folder containing Ongaku Library Data. No empty library was created.";
+"storage.migration.ambiguous" = "Multiple libraries were found. Select the folder containing the library you want to recover.";
+"storage.migration.scanLimit" = "The selected folder contains too many folders to check. Select a folder closer to Ongaku Media.";
+"storage.migration.checking" = "Checking the selected folder…";

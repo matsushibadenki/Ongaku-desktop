@@ -6,6 +6,70 @@ import Testing
 
 @Suite("Application settings")
 struct ApplicationSettingsTests {
+    @Test("Migration recovery discovers moved libraries and rejects ambiguous or missing data")
+    @MainActor
+    func automaticMigrationDiscovery() throws {
+        let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+            .appendingPathComponent(UUID().uuidString)
+        let selected = root.appendingPathComponent("Selected")
+        let oldMedia = root.appendingPathComponent("Old/Ongaku Media")
+        let media = selected.appendingPathComponent("Music/Media.localized/Ongaku Media")
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let suite = "Recovery-\(UUID())"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: root)
+        }
+        let profiles = LibraryProfileSettings(defaultMediaURL: oldMedia, defaults: defaults,
+                                             applicationSupportURL: root.appendingPathComponent("Support"))
+        let oldCatalog = profiles.activeProfile.catalogURL
+        try FileManager.default.createDirectory(at: catalog, withIntermediateDirectories: true)
+        let document = LargeLibraryFixture.makeDocument(trackCount: 3)
+        let bytes = try JSONEncoder().encode(document)
+        try bytes.write(to: catalog.appendingPathComponent("library-v1.json"))
+        let found = try LibraryMigrationRecovery.findMediaDirectory(
+            in: selected, expectedMedia: oldMedia, expectedCatalog: oldCatalog
+        )
+        #expect(found.path == media.path)
+        #expect(try LibraryMigrationRecovery.findMediaDirectory(
+            in: catalog, expectedMedia: oldMedia, expectedCatalog: oldCatalog
+        ).path == media.path)
+        try profiles.repairMigration(at: found)
+        #expect(profiles.activeProfile.mediaURL.path == media.path)
+        #expect(profiles.activeProfile.catalogURL.path == catalog.path)
+        #expect(try Data(contentsOf: catalog.appendingPathComponent("library-v1.json")) == bytes)
+        let blocked = root.appendingPathComponent("Blocked")
+        try Data("blocked".utf8).write(to: blocked)
+        let inactive = LibraryProfile(
+            id: UUID(), name: "Unavailable", catalogPath: root.appendingPathComponent("InactiveCatalog").path,
+            mediaPath: blocked.path, isArchived: false, createdAt: .now
+        )
+        defaults.set(try JSONEncoder().encode([profiles.activeProfile, inactive]),
+                     forKey: LibraryProfileSettings.profilesKey)
+        let restarted = LibraryProfileSettings(defaultMediaURL: media, defaults: defaults,
+                                               applicationSupportURL: root.appendingPathComponent("Support"))
+        #expect(restarted.migrationError == nil)
+        #expect(restarted.activeProfile.catalogURL.path == catalog.path)
+        #expect(restarted.profiles.first { $0.id == inactive.id }?.mediaPath == blocked.path)
+        let otherCatalog = selected.appendingPathComponent("Another/Ongaku Media/Ongaku Library Data")
+        try FileManager.default.createDirectory(at: otherCatalog, withIntermediateDirectories: true)
+        try bytes.write(to: otherCatalog.appendingPathComponent("library-v1.json"))
+        #expect(throws: NSError.self) {
+            try LibraryMigrationRecovery.findMediaDirectory(in: selected, expectedMedia: oldMedia, expectedCatalog: oldCatalog)
+        }
+        // A known existing location is preferred when multiple libraries exist.
+        #expect(try LibraryMigrationRecovery.findMediaDirectory(
+            in: selected, expectedMedia: media, expectedCatalog: catalog
+        ).path == media.path)
+        let empty = root.appendingPathComponent("Empty")
+        try FileManager.default.createDirectory(at: empty, withIntermediateDirectories: true)
+        #expect(throws: NSError.self) {
+            try LibraryMigrationRecovery.findMediaDirectory(in: empty, expectedMedia: oldMedia, expectedCatalog: oldCatalog)
+        }
+        #expect(try FileManager.default.contentsOfDirectory(atPath: empty.path).isEmpty)
+    }
+
     @Test("App Store versions use numeric semantic comparison")
     func appStoreVersionComparison() {
         #expect(AppVersionComparison.isNewer("0.1.7", than: "0.1.6"))
@@ -112,7 +176,37 @@ struct ApplicationSettingsTests {
         let failed = LibraryProfileSettings(defaultMediaURL: media, defaults: defaults, applicationSupportURL: support)
         #expect(failed.migrationError != nil)
         #expect(try Data(contentsOf: legacy.appendingPathComponent("library-v1.json")) == bytes)
+        #expect(throws: NSError.self) {
+            try failed.retryMigration(at: root.appendingPathComponent("Different"))
+        }
+        #expect(failed.migrationError != nil)
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("Different").path))
+        #expect(throws: NSError.self) { try failed.retryMigration(at: media) }
+        #expect(try Data(contentsOf: legacy.appendingPathComponent("library-v1.json")) == bytes)
         try FileManager.default.removeItem(at: media)
+        #expect(failed.canAuthorizeMigration(using: root))
+        #expect(failed.canAuthorizeMigration(using: media))
+        #expect(!failed.canAuthorizeMigration(using: root.appendingPathComponent("Media-other")))
+        let alias = root.appendingPathComponent("Alias")
+        try FileManager.default.createSymbolicLink(at: alias, withDestinationURL: root)
+        #expect(failed.canAuthorizeMigration(using: alias))
+        let storage = LibraryStorageSettings(defaults: defaults, freshMusicDirectoryURL: root)
+        let originalLocation = storage.mediaDirectoryURL
+        var preparedWrongFolder = false
+        #expect(throws: NSError.self) {
+            try storage.authorizeMigrationAccess(
+                selecting: root.appendingPathComponent("Media-other"), mediaURL: media
+            ) { preparedWrongFolder = true }
+        }
+        #expect(!preparedWrongFolder)
+        try storage.authorizeMigrationAccess(selecting: root, mediaURL: media) {
+            try failed.retryMigration(at: media)
+        }
+        #expect(storage.mediaDirectoryURL == originalLocation)
+        #expect(failed.migrationError == nil)
+        #expect(try Data(contentsOf: failed.activeProfile.catalogURL.appendingPathComponent("library-v1.json")) == bytes)
+        // Repeating recovery and restarting must not create a different catalog.
+        try failed.retryMigration(at: media)
         let restored = LibraryProfileSettings(defaultMediaURL: media, defaults: defaults, applicationSupportURL: support)
         #expect(restored.migrationError == nil)
         #expect(restored.activeProfile.catalogURL == PortableLibraryStorage(mediaURL: media).rootURL)

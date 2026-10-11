@@ -5,7 +5,7 @@
 "command.automaticUpsampling" = "自动升频至最高384 kHz";
 "toolbar.importHelp" = "将音乐文件导入资料库";
 "toolbar.sidebarToggleHelp" = "显示或隐藏侧边栏";
-"storage.migration.failed" = "无法完成资料库迁移。请检查文件夹访问权限和可用空间，然后重新启动应用。现有数据已保留。";
+"storage.migration.failed" = "无法完成资料库迁移。请检查文件夹访问权限和可用空间，然后通过下方按钮选择同一媒体文件夹并重试。现有数据已保留。";
 "command.importCD" = "从CD导入…";
 "toolbar.importCDHelp" = "将音频CD中的曲目导入资料库";
 "command.importURL" = "从URL导入…";
@@ -1231,3 +1231,10 @@
 "metadataEditor.artwork.dragHint" = "拖入照片以添加。拖动图片可调整裁剪位置。";
 
 "metadataEditor.artwork.zoom" = "照片缩放";
+
+"storage.migration.retry" = "选择文件夹并自动修复…";
+"storage.migration.sameFolder" = "请选择包含资料库的文件夹。Ongaku 将检查其中的内容并修正已保存的资料库位置。";
+"storage.migration.notFound" = "未找到现有的 Ongaku 资料库。请选择 Ongaku Media 或包含 Ongaku Library Data 的文件夹。未创建空资料库。";
+"storage.migration.ambiguous" = "找到了多个资料库。请选择包含要恢复的资料库的文件夹。";
+"storage.migration.scanLimit" = "所选文件夹包含过多子文件夹。请选择更接近 Ongaku Media 的文件夹。";
+"storage.migration.checking" = "正在检查所选文件夹…";

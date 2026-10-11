@@ -186,6 +186,8 @@ final class SoftwareUpdateController: ObservableObject {
 @main
 struct OngakuDesktopApp: App {
     private let qualificationConfiguration: LibraryQualificationConfiguration?
+    @State private var isRecoveringMigration = false
+    @State private var migrationRecoveryError: String?
     @StateObject private var storage: LibraryStorageSettings
     @StateObject private var libraryProfiles: LibraryProfileSettings
     @StateObject private var library: LibraryStore
@@ -253,14 +255,64 @@ struct OngakuDesktopApp: App {
         _library = StateObject(wrappedValue: LibraryStore(repository: repository))
     }
 
+    @MainActor
+    private func recoverLibraryMigration() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = libraryProfiles.activeProfile.mediaURL
+        panel.message = L10n.text("storage.migration.sameFolder")
+        guard panel.runModal() == .OK, let selected = panel.url else { return }
+        isRecoveringMigration = true
+        migrationRecoveryError = nil
+        Task { @MainActor in
+            defer { isRecoveringMigration = false }
+            do {
+                let didAccess = selected.startAccessingSecurityScopedResource()
+                defer { if didAccess { selected.stopAccessingSecurityScopedResource() } }
+                let expectedMedia = libraryProfiles.activeProfile.mediaURL
+                let expectedCatalog = libraryProfiles.activeProfile.catalogURL
+                let destination = try await Task.detached {
+                    try LibraryMigrationRecovery.findMediaDirectory(
+                        in: selected, expectedMedia: expectedMedia, expectedCatalog: expectedCatalog
+                    )
+                }.value
+                try storage.authorizeMigrationAccess(selecting: selected, mediaURL: destination) {
+                    try libraryProfiles.repairMigration(at: destination)
+                }
+                storage.activateProfileMediaDirectory(destination)
+            } catch {
+                migrationRecoveryError = error.localizedDescription
+            }
+        }
+    }
+
     var body: some Scene {
         Window("Ongaku", id: "main") {
             Group {
                 if qualificationConfiguration == nil, let error = libraryProfiles.migrationError {
                     VStack(spacing: 16) {
                         Text(L10n.text("storage.migration.failed")).font(.headline)
+                            .fixedSize(horizontal: false, vertical: true)
                         Text(error).textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(libraryProfiles.activeProfile.mediaURL.path)
+                            .font(.caption).textSelection(.enabled)
+                        Button(L10n.text("storage.migration.retry")) {
+                            recoverLibraryMigration()
+                        }
+                        .disabled(isRecoveringMigration)
+                        if isRecoveringMigration {
+                            ProgressView(L10n.text("storage.migration.checking"))
+                        }
+                        if let migrationRecoveryError {
+                            Text(migrationRecoveryError).textSelection(.enabled)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 640)
                     .padding(24)
                 } else if windowPresentation.isMiniPlayer {
                     MiniPlayerView()
@@ -286,7 +338,7 @@ struct OngakuDesktopApp: App {
                 .environment(\.locale, language.selectedLanguage.locale ?? .current)
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
-                .task {
+                .task(id: libraryProfiles.migrationError == nil) {
                     if let qualificationConfiguration {
                         try? await LibraryQualificationFixture.prepare(qualificationConfiguration)
                         await library.load()
@@ -300,7 +352,12 @@ struct OngakuDesktopApp: App {
                     try? await ArtworkResolver.shared.configure(
                         libraryRootURL: libraryProfiles.activeProfile.catalogURL
                     )
-                    await library.load()
+                    let profile = libraryProfiles.activeProfile
+                    if library.isUsingCatalog(at: profile.catalogURL) {
+                        await library.load()
+                    } else {
+                        await library.switchLibrary(catalogURL: profile.catalogURL, mediaURL: profile.mediaURL)
+                    }
                     await library.refreshFileAvailability(force: true)
                     phoneSync.updateLocalTracks(
                         library.tracks,

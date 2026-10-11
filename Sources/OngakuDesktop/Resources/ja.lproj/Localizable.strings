@@ -5,7 +5,7 @@
 "command.automaticUpsampling" = "最大384 kHzへ自動アップサンプリング";
 "toolbar.importHelp" = "音楽ファイルをライブラリへ読み込みます";
 "toolbar.sidebarToggleHelp" = "サイドバーを表示または非表示にします";
-"storage.migration.failed" = "ライブラリの移行を完了できませんでした。フォルダのアクセス権と空き容量を確認して、アプリを再起動してください。既存データは保持されています。";
+"storage.migration.failed" = "ライブラリの移行を完了できませんでした。フォルダのアクセス権と空き容量を確認し、下のボタンから同じメディアフォルダを選択して再試行してください。既存データは保持されています。";
 "command.importCD" = "CDから読み込む…";
 "toolbar.importCDHelp" = "オーディオCDの楽曲をライブラリへ読み込みます";
 "command.importURL" = "URLから読み込む…";
@@ -1231,3 +1231,10 @@
 "metadataEditor.artwork.dragHint" = "写真をドロップして登録。画像をドラッグして切り抜き位置を調整できます。";
 
 "metadataEditor.artwork.zoom" = "写真の拡大率";
+
+"storage.migration.retry" = "フォルダを選択して自動修復…";
+"storage.migration.sameFolder" = "ライブラリが入っているフォルダを選択してください。中を確認して、保存されているライブラリの場所を修正します。";
+"storage.migration.notFound" = "既存のOngakuライブラリが見つかりませんでした。Ongaku Media、またはOngaku Library Dataを含むフォルダを選択してください。空のライブラリは作成していません。";
+"storage.migration.ambiguous" = "複数のライブラリが見つかりました。復旧するライブラリが入っているフォルダを選択してください。";
+"storage.migration.scanLimit" = "確認するフォルダが多すぎます。Ongaku Mediaに近いフォルダを選択してください。";
+"storage.migration.checking" = "選択したフォルダを確認しています…";
