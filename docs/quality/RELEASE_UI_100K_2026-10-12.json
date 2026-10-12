@@ -1,0 +1,60 @@
+{
+  "method": "CUA native input + AX state observation; includes tooling wait; metadata fixture; Apple Music token failure visible",
+  "trackCount": 100000,
+  "pid": 65173,
+  "searches": [
+    {
+      "query": "Track 000000",
+      "observedMs": 1030,
+      "correct": true
+    },
+    {
+      "query": "Track 000003",
+      "observedMs": 688,
+      "correct": true
+    },
+    {
+      "query": "Track 000006",
+      "observedMs": 1067,
+      "correct": true
+    },
+    {
+      "query": "Track 000009",
+      "observedMs": 998,
+      "correct": true
+    },
+    {
+      "query": "Track 000012",
+      "observedMs": 990,
+      "correct": true
+    },
+    {
+      "query": "Track 000015",
+      "observedMs": 1047,
+      "correct": true
+    },
+    {
+      "query": "Track 000018",
+      "observedMs": 1017,
+      "correct": true
+    },
+    {
+      "query": "Track 000021",
+      "observedMs": 684,
+      "correct": true
+    },
+    {
+      "query": "Track 000024",
+      "observedMs": 1015,
+      "correct": true
+    },
+    {
+      "query": "Track 000027",
+      "observedMs": 948,
+      "correct": true
+    }
+  ],
+  "observedP95Ms": 1067,
+  "observedPeakRSSMiB": 1250.4375,
+  "postSearchRSSMiB": 1079.640625
+}

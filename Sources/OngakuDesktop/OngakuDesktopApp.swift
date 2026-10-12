@@ -23,7 +23,7 @@ enum AppVersionComparison {
 }
 
 /// An explicit, temporary-library launch mode used by the Release UI qualification.
-/// It is intentionally unavailable for paths outside the process temporary directory,
+/// It accepts only descendants of the process or UI test runner temporary directory,
 /// so an accidental launch argument can never redirect or overwrite a user's library.
 struct LibraryQualificationConfiguration: Sendable {
     static let rootArgument = "--ongaku-qualification-root"
@@ -43,9 +43,14 @@ struct LibraryQualificationConfiguration: Sendable {
               arguments.indices.contains(rootIndex + 1) else { return nil }
 
         let rootURL = URL(fileURLWithPath: arguments[rootIndex + 1], isDirectory: true)
-            .standardizedFileURL
-        let temporaryRoot = FileManager.default.temporaryDirectory.standardizedFileURL
-        guard rootURL.path.hasPrefix(temporaryRoot.path + "/") else { return nil }
+            .resolvingSymlinksInPath().standardizedFileURL
+        let temporaryRoots = [
+            FileManager.default.temporaryDirectory,
+            FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
+                "Library/Containers/com.ongaku.desktop.uitests.xctrunner/Data/tmp", isDirectory: true
+            ),
+        ].map { $0.resolvingSymlinksInPath().standardizedFileURL }
+        guard temporaryRoots.contains(where: { rootURL.path.hasPrefix($0.path + "/") }) else { return nil }
 
         var trackCount: Int?
         if let prepareIndex = arguments.firstIndex(of: prepareArgument),
@@ -212,17 +217,26 @@ struct OngakuDesktopApp: App {
         NSWindow.allowsAutomaticWindowTabbing = false
         let qualificationConfiguration = LibraryQualificationConfiguration.current
         self.qualificationConfiguration = qualificationConfiguration
-        let storage = LibraryStorageSettings()
+        let storageDefaults = qualificationConfiguration.flatMap {
+            UserDefaults(suiteName: "Ongaku.Qualification." + $0.rootURL.lastPathComponent)
+        } ?? .standard
+        let storage = LibraryStorageSettings(
+            defaults: storageDefaults,
+            freshMusicDirectoryURL: qualificationConfiguration?.rootURL.appendingPathComponent("Media")
+        )
         _storage = StateObject(wrappedValue: storage)
-        let libraryProfiles = LibraryProfileSettings(defaultMediaURL: storage.mediaDirectoryURL)
+        let libraryProfiles = LibraryProfileSettings(
+            defaultMediaURL: storage.mediaDirectoryURL, defaults: storageDefaults,
+            applicationSupportURL: qualificationConfiguration?.rootURL.appendingPathComponent("Support")
+        )
         if qualificationConfiguration == nil {
             storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
         }
         _libraryProfiles = StateObject(wrappedValue: libraryProfiles)
-        _language = StateObject(wrappedValue: AppLanguageSettings())
-        _appearance = StateObject(wrappedValue: AppAppearanceSettings())
+        _language = StateObject(wrappedValue: AppLanguageSettings(defaults: storageDefaults))
+        _appearance = StateObject(wrappedValue: AppAppearanceSettings(defaults: storageDefaults))
         _meterSettings = StateObject(wrappedValue: PlayerMeterSettings())
-        _trackTableSettings = StateObject(wrappedValue: TrackTableSettings())
+        _trackTableSettings = StateObject(wrappedValue: TrackTableSettings(defaults: storageDefaults))
         _socialPrivacy = StateObject(wrappedValue: SocialPrivacySettings())
         _artworkPrivacy = StateObject(wrappedValue: ArtworkPrivacySettings())
         let player = PlaybackController()

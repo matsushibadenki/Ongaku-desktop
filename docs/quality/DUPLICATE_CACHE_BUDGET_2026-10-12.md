@@ -16,7 +16,7 @@ A3のメモリ目標に向け、LibraryPresentationWorkerが保持する重複�
 
 `swift test --filter ApplicationSettingsTests`: 23テスト成功。ログ: /tmp/ongaku-storage-source-final-tests.log。
 
-ローカル署名付きApp Store Debugビルド成功。ログ: /tmp/ongaku-cache-budget-final-build.log。今回の変更はコードと検証用ビルドに反映し、起動中のインストール版は置き換えていない。
+ローカル署名付きApp Store Debugビルド成功。ログ: /tmp/ongaku-cache-budget-final-build.log。同日の追加検証で `/Applications/OngakuDesktop.app` に反映した。以前の版は `/Applications/OngakuDesktop-pre-performance-20261012.app` に保存した。10万曲の実画面検証は `RELEASE_UI_100K_2026-10-12.md` に記録する。
 
 🟢 [Done] 重複判定キーの保持上限と上限超過時の結果一致、保存先分類の修正。
 

@@ -83,11 +83,10 @@ final class OngakuDesktopUITests: XCTestCase {
         app.launch()
         XCTAssertTrue(waitForVisibleCount("100000", in: app, timeout: 20))
         XCTAssertTrue(
-            renderedTrack(named: "Track 000000", in: app).waitForExistence(timeout: 20),
+            waitForRenderedTrack(named: "Track 000000", in: app, timeout: 20),
             "The initial song table did not render its first track."
         )
         let initialDisplaySeconds = launchStarted.duration(to: .now).seconds
-        XCTAssertLessThan(initialDisplaySeconds, 2.0)
 
         let searchField = app.searchFields.firstMatch
         XCTAssertTrue(searchField.waitForExistence(timeout: 5))
@@ -120,13 +119,15 @@ final class OngakuDesktopUITests: XCTestCase {
         let sortedDurations = searchDurations.sorted()
         let p95 = sortedDurations[Int(ceil(Double(sortedDurations.count) * 0.95)) - 1]
         print(
-            "ONGAKU_A3_UI initialDisplay=\(initialDisplaySeconds)s "
+            "ONGAKU_A3_UI pid=\(launchedProcessID ?? 0) initialDisplay=\(initialDisplaySeconds)s "
                 + "searchP95=\(p95)s observedRSS=\(observedPeakRSSMiB)MiB"
         )
+        app.terminate()
+        continueAfterFailure = true
+        XCTAssertLessThan(initialDisplaySeconds, 2.0)
         XCTAssertLessThan(p95, 0.3, "Release UI search p95 was \(p95) seconds.")
         XCTAssertGreaterThan(observedPeakRSSMiB, 0, "Could not sample resident memory.")
         XCTAssertLessThan(observedPeakRSSMiB, 512)
-        app.terminate()
     }
 
     @MainActor
@@ -153,7 +154,7 @@ final class OngakuDesktopUITests: XCTestCase {
         guard count.waitForExistence(timeout: timeout) else { return false }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            if count.label.filter(\.isNumber) == expectedDigits { return true }
+            if (count.value as? String ?? count.label).filter(\.isNumber) == expectedDigits { return true }
             RunLoop.current.run(until: Date().addingTimeInterval(0.02))
         }
         return false
@@ -165,11 +166,12 @@ final class OngakuDesktopUITests: XCTestCase {
         in app: XCUIApplication,
         timeout: TimeInterval
     ) -> Bool {
-        let result = renderedTrack(named: title, in: app)
+        let result = app.outlines["library.track-table"].children(matching: .outlineRow).firstMatch
         let count = app.staticTexts["library.visible-count"]
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
-            if result.exists, count.exists, count.label.filter(\.isNumber) == "1" {
+            if result.exists, result.debugDescription.contains(title), count.exists,
+               (count.value as? String ?? count.label).filter(\.isNumber) == "1" {
                 return true
             }
             RunLoop.current.run(until: Date().addingTimeInterval(0.02))
@@ -178,10 +180,15 @@ final class OngakuDesktopUITests: XCTestCase {
     }
 
     @MainActor
-    private func renderedTrack(named title: String, in app: XCUIApplication) -> XCUIElement {
-        app.descendants(matching: .tableRow)
-            .matching(NSPredicate(format: "value CONTAINS %@", title))
-            .firstMatch
+    private func waitForRenderedTrack(named title: String, in app: XCUIApplication, timeout: TimeInterval) -> Bool {
+        let firstTitle = app.outlines["library.track-table"].children(matching: .outlineRow).firstMatch
+        guard firstTitle.waitForExistence(timeout: timeout) else { return false }
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if firstTitle.debugDescription.contains(title) { return true }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.02))
+        }
+        return false
     }
 
     private func residentMemoryMiB(processID: Int32) -> Double? {

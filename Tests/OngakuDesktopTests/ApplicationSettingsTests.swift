@@ -178,6 +178,22 @@ struct ApplicationSettingsTests {
         #expect(!FileManager.default.fileExists(atPath: external.path))
     }
 
+    @Test("UI qualification accepts only process or runner temporary roots")
+    func qualificationTemporaryRoots() throws {
+        let scratch = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: scratch) }
+        try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
+        #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-root", scratch.path]) != nil)
+        let runner = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
+            "Library/Containers/com.ongaku.desktop.uitests.xctrunner/Data/tmp/Qualification-Test")
+        #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-root", runner.path]) != nil)
+        let music = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Music")
+        #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-root", music.path]) == nil)
+        let link = scratch.appendingPathComponent("Escaped")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: music)
+        #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-root", link.path]) == nil)
+    }
+
     @Test("App Store versions use numeric semantic comparison")
     func appStoreVersionComparison() {
         #expect(AppVersionComparison.isNewer("0.1.7", than: "0.1.6"))

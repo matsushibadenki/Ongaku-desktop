@@ -84,6 +84,8 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - 🟢 [Done] 2026-10-12に実ライブラリの保存先フォルダを認可済み親内で一時改名し、起動時に手動選択なしで新パスへ追従して4,356曲・29.38GBを表示することを確認。元の名前へ戻した後も自動追従し、libraryIDと全曲IDを保持。音楽フォルダは移動していない。ボリューム改名・認可範囲外への移動は別途保留。[実機記録](quality/LIBRARY_MIGRATION_RECOVERY_2026-10-11.md)を参照。
 - 🟢 [Done] A3の重複判定キー保持をUTF-8換算16MiBに制限。超過したキーは判定時に計算し、全曲の判定を維持する。0／32バイト予算・長い多言語メタデータ・編集・並べ替え・空カタログを関連36テストで確認。実機で見つかった外付けprofileの誤ったApplication Support説明も補修し、設定23テスト成功。署名付きビルド成功。全体RSSと表示性能は引き続き保留。[検証記録](quality/DUPLICATE_CACHE_BUDGET_2026-10-12.md)を参照。
 - 🟠[Next] A3の残りとして、実画面のRelease初回表示2秒・入力から結果表示p95 300ms・ピーク512MiBを計測し、再生中／索引更新中の条件で改善する。2026-09-08のDebug測定11.27秒はJSON再読込と先頭ページ準備の時間で、事前の保存時間とSwiftUI描画は含まない。2026-09-12に同じCIゲートは通過したが、実画面の製品目標の合格には数えない
+- 🟢 [Done] 2026-10-12、重複キー保持上限などをインストール版に反映し既存4,356曲を再確認。10万曲のRelease実画面をCUAで操作し、再起動後の10検索すべてで正しい1曲表示を確認。操作／観測待ち込みp95 1067ms、観測RSS最大1250.44MiB／検索後1079.64MiB。512MiB目標は未達。詳細は[測定記録](quality/RELEASE_UI_100K_2026-10-12.md)。
+- 🟠 [Next] 上記10万曲の常駐メモリ削減と、観測ツールの待ちを除く検索時間の計測。XCTestのAX階層取得が滞留するため、初回2秒・検索300msの自動ゲートは未完了。
 - 🟢 [Done] A3実画面ゲートの計測基盤として、一時ディレクトリだけを受け付ける専用起動モードと決定論的な10万曲fixture生成を追加した。計測時はユーザーのライブラリ、更新確認、ファイル存在確認、端末同期、外部ストア通信から分離する。Release UIテストは初回表示、10検索のp95、各計測点のRSSを製品目標に対して判定し、通常のUIテストでは明示的にスキップする
 - 🟢 [Done] A3のUI性能ゲートで、初回表示は曲表の先頭曲が実際に描画されるまで、検索は最後の文字を入力した時点から各クエリ固有の曲が描画されるまで計測する。前回の検索結果が残った「1件」表示による誤合格を防ぐ。計測値の取得と製品目標の判定は引き続き[Next]。
 - 🟢 [Done] A4の音声境界の第1段階として、通常再生と次曲先読みで使う音声ファイルopen処理を`PlaybackController`へ注入可能にした。実エンジンを起動せずopen失敗を発生させ、対象曲・停止状態・ユーザー向けエラーを検証する自動試験を追加した
@@ -94,7 +96,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - 🟢 [Done] アルバムのイニシャル分類で、日本語文字を含むタイトルに`albumSortName`がある場合は読み仮名の先頭を優先する。読みがない既存データと英字タイトルは従来の分類を維持する
 - 🟠 [Next] A4の次段階として、チャンク転送のファイルI/O・checkpoint・転送中辞書を専用actorへ移し、現在Xcode 27が警告するDispatchQueueクロージャーからMainActor状態への参照を解消する
 - 🟢 [Done] 上記A4境界変更をXcode 27.0で全296テスト、通常macOS Debug、Mac App Store Release、iOS Simulator Debugの順に検証した。並列Xcodeビルドは同一DerivedDataのDBロックを起こすため構成ビルドを直列化し、3構成すべて成功した
-- ⭕️ [Pending] `ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
+- ⭕️ [Pending] `TEST_RUNNER_ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
 - ⭕️ [Pending] 2026-09-15の実行ではReleaseアプリ／UIテストのビルドは成功したが、XcodeのUIテストランナーがAutomation Modeの有効化でタイムアウトし、計測本体の開始前に終了した。macOSのUIオートメーション権限を復旧後に上記コマンドを再実行し、数値が得られるまではA3の製品目標を合格扱いにしない
 - ⭕️ [Pending] 2026-09-23のRelease UI計測再実行は、UIテストランナーがアプリへ接続する前にsignal killで終了したため数値なし。ローカルkeychainに有効な開発用署名IDは0件だった。署名可能な環境で実画面ゲートを再実行して判定する。
 - 🟢 [Done] 曲・アーティスト・アルバムのセルクリックでTableのFocusStateも更新し、選択だけ変わって非アクティブのグレー表示になる経路を修正した。Debugビルド成功。実画面検証はユーザー操作との競合により未完了

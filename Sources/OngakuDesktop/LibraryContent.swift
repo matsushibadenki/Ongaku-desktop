@@ -566,6 +566,7 @@ struct LibraryContent: View {
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(AppTheme.secondaryInk)
                         .accessibilityIdentifier("library.visible-count")
+                        .accessibilityValue(String(library.filteredTracks.count))
                 }
             }
             Spacer()
@@ -957,6 +958,7 @@ struct LibraryContent: View {
             playTrack(track)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
+        .accessibilityIdentifier("library.track-table")
         .tint(.blue)
         .overlay(alignment: .topTrailing) {
             if isSortingTracks {
