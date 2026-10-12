@@ -123,6 +123,13 @@ actor LibraryPresentationWorker {
     private var historyStatistics: [Track.ID: TrackPlaybackStatistics] = [:]
     private var duplicates: [DuplicateTrackGroup] = []
     private var duplicateCandidateKeys: [Track.ID: String] = [:]
+    private let maximumDuplicateKeyBytes: Int
+    private(set) var cachedDuplicateKeyBytes = 0
+
+    init(maximumDuplicateKeyBytes: Int = 16 * 1_024 * 1_024) {
+        self.maximumDuplicateKeyBytes = max(0, maximumDuplicateKeyBytes)
+    }
+
     private var totalBytes: Int64 = 0
     private var attentionCount = 0
     private var cachedAlbums: [AlbumGroup]?
@@ -138,7 +145,8 @@ actor LibraryPresentationWorker {
             cachedArtists = nil
             var byID: [Track.ID: Track] = [:]
             var candidateKeys: [Track.ID: String] = [:]
-            candidateKeys.reserveCapacity(request.tracks.count)
+            candidateKeys.reserveCapacity(min(request.tracks.count, maximumDuplicateKeyBytes))
+            var candidateKeyBytes = 0
             var bytes: Int64 = 0
             var attention = 0
             var membershipChanged = tracksByID.count != request.tracks.count
@@ -153,12 +161,22 @@ actor LibraryPresentationWorker {
                 } else {
                     membershipChanged = true
                 }
-                if let previous = tracksByID[track.id],
-                    previous.title == track.title, previous.artist == track.artist,
-                    let key = duplicateCandidateKeys[track.id] {
-                    candidateKeys[track.id] = key
-                } else {
-                    candidateKeys[track.id] = DuplicateTrackAnalyzer.candidateKey(for: track)
+                if candidateKeyBytes < maximumDuplicateKeyBytes {
+                    let key: String
+                    if let previous = tracksByID[track.id],
+                        previous.title == track.title, previous.artist == track.artist,
+                        let cached = duplicateCandidateKeys[track.id] {
+                        key = cached
+                    } else {
+                        key = DuplicateTrackAnalyzer.candidateKey(for: track)
+                    }
+                    let keyBytes = key.utf8.count
+                    if keyBytes <= maximumDuplicateKeyBytes - candidateKeyBytes {
+                        candidateKeys[track.id] = key
+                        candidateKeyBytes += keyBytes
+                    }
+                    // The analyzer computes uncached keys when needed; reaching
+                    // the retention budget never drops tracks from analysis.
                 }
                 byID[track.id] = track
                 bytes += track.fileSize
@@ -169,6 +187,7 @@ actor LibraryPresentationWorker {
                 : DuplicateTrackAnalyzer.refreshedGroups(duplicates, tracksByID: byID)
             try Task.checkCancellation()
             duplicateCandidateKeys = candidateKeys
+            cachedDuplicateKeyBytes = candidateKeyBytes
             duplicates = groups
             tracksByID = byID
             totalBytes = bytes

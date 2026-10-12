@@ -264,6 +264,7 @@ struct OngakuDesktopApp: App {
         panel.directoryURL = libraryProfiles.activeProfile.mediaURL
         panel.message = L10n.text("storage.migration.sameFolder")
         guard panel.runModal() == .OK, let selected = panel.url else { return }
+        let wasMigrationBlocked = libraryProfiles.migrationError != nil
         isRecoveringMigration = true
         migrationRecoveryError = nil
         Task { @MainActor in
@@ -273,15 +274,22 @@ struct OngakuDesktopApp: App {
                 defer { if didAccess { selected.stopAccessingSecurityScopedResource() } }
                 let expectedMedia = libraryProfiles.activeProfile.mediaURL
                 let expectedCatalog = libraryProfiles.activeProfile.catalogURL
+                let expectedLibraryID = libraryProfiles.recoveryLibraryID
                 let destination = try await Task.detached {
                     try LibraryMigrationRecovery.findMediaDirectory(
-                        in: selected, expectedMedia: expectedMedia, expectedCatalog: expectedCatalog
+                        in: selected, expectedMedia: expectedMedia, expectedCatalog: expectedCatalog,
+                        expectedLibraryID: expectedLibraryID
                     )
                 }.value
                 try storage.authorizeMigrationAccess(selecting: selected, mediaURL: destination) {
                     try libraryProfiles.repairMigration(at: destination)
                 }
                 storage.activateProfileMediaDirectory(destination)
+                if !wasMigrationBlocked {
+                    let profile = libraryProfiles.activeProfile
+                    await library.switchLibrary(catalogURL: profile.catalogURL, mediaURL: profile.mediaURL)
+                    await library.refreshFileAvailability(force: true)
+                }
             } catch {
                 migrationRecoveryError = error.localizedDescription
             }
@@ -321,6 +329,14 @@ struct OngakuDesktopApp: App {
                         .frame(minWidth: 1_160, minHeight: 620)
                 }
             }
+                .alert(L10n.text("storage.migration.recoveryFailed"), isPresented: Binding(
+                    get: { migrationRecoveryError != nil && libraryProfiles.migrationError == nil },
+                    set: { if !$0 { migrationRecoveryError = nil } }
+                )) {
+                    Button(L10n.text("common.ok"), role: .cancel) { migrationRecoveryError = nil }
+                } message: {
+                    Text(migrationRecoveryError ?? "")
+                }
                 .background(WindowMiniaturizeBridge(controller: windowPresentation))
                 .environmentObject(library)
                 .environmentObject(player)
@@ -419,6 +435,10 @@ struct OngakuDesktopApp: App {
                 }
                 .onChange(of: player.queueState) {
                     library.schedulePlaybackQueueSave(player.queueState)
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .requestLibraryRecovery)) { _ in
+                    guard !isRecoveringMigration else { return }
+                    recoverLibraryMigration()
                 }
                 .onReceive(player.playbackEventPublisher) { event in
                     guard !library.isSwitchingLibrary,
@@ -567,6 +587,7 @@ struct OngakuDesktopApp: App {
 }
 
 extension Notification.Name {
+    static let requestLibraryRecovery = Notification.Name("OngakuDesktop.requestLibraryRecovery")
     static let requestImport = Notification.Name("OngakuDesktop.requestImport")
     static let requestCDImport = Notification.Name("OngakuDesktop.requestCDImport")
     static let requestURLImport = Notification.Name("OngakuDesktop.requestURLImport")

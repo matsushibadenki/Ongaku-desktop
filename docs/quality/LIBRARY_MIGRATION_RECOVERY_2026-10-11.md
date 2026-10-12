@@ -39,3 +39,64 @@ App Store schemeのDebugビルド（arm64／x86_64、CODE_SIGNING_ALLOWED=NO）�
 修復は既存の移行処理を使い、成功後は修正されたカタログに接続して読み込みを再開する。失敗時はprofileの参照を元に戻す。復旧時はactive profileだけを移行し、起動時もinactive profileの失敗でactive profileを停止しない。inactiveの元データは保持し、未移行profileがある場合は共用アートワークを削除しない。
 
 設定20テスト成功。移動した保存先の検出と参照修正、元カタログの内容保持、複数候補／未検出、既知の保存先優先、別profileのアクセス障害を伴う再起動を検証した。単体試験は実sandboxや実ボリュームの書込制限を再現しない。OSの書込制限を無条件に変更する処理は追加していない。
+
+## 2026-10-12: 実アプリでの自動修復・再起動検証
+
+最初に起動した/Applications版は2026-09-24の旧ビルドで、内蔵Musicの14曲を表示していた。これを外付けライブラリの復旧成功とは扱わない。当初SUBは未マウントだったが、その後マウントされたため実データで確認を継続した。一時fixtureによる代替確認は行っていない。
+
+最新ソースをApp Store schemeのDebug構成でローカルad-hoc署名した。codesign --verify --deep --strict成功。app-sandbox、user-selected.read-write、bookmarks.app-scopeの有効なentitlementsを確認した。Developer ID／App Store配布用署名の検証ではない。
+
+通常時も設定→ストレージから自動修復を実行できるボタンを追加し、説明はinfo.circleのhelpに置いた。移行エラーがない状態で修復した場合もカタログを再読み込みする。失敗時には理由をalertで表示する。英語・日本語・简体中文に対応。
+
+実操作はcua_replで以下を行った。
+
+1. ストレージ設定の通常のフォルダ選択から、SUBのMedia.localized/Ongaku Mediaにある既存カタログを開く。内蔵14曲と外付け4,356曲は異なるlibraryIDだったため、先に対象を選択した。
+2. 「フォルダを選択して自動修復」から親のMedia.localizedを選択。内部の既存Ongaku Mediaを自動検出し、認可bookmarkを保持して再読み込み。
+3. 主画面の4,356曲・29.38GBと実際の曲行をAXおよびスクリーンショットで確認。移行エラーなし。
+4. 検証したアプリを/Applications/OngakuDesktop.appへ更新。旧版は/Applications/OngakuDesktop-pre-recovery-20261012.appとして保持し、/tmpにもコピーを保存。
+5. アプリを終了し、更新した/Applications版を再起動。4,356曲・29.38GB、曲行、検証済み表示が再表示されることを確認。復旧済みの外付けライブラリを開いた状態で終了。
+
+🟢 [Done] 実sandboxアプリでの親フォルダ選択→自動検出→カタログ再読み込み→再起動後の一覧表示。設定関連20テストも成功（/tmp/ongaku-live-recovery-settings-tests.log）。署名付きビルドログ: /tmp/ongaku-live-recovery-final-build.log。
+
+🟢 [Done] 保存先が変更された際に通常画面から再選択して復旧できる入口を設置。特定のボリューム名を実装に固定していない。
+
+⭕️ [Pending] 物理ボリューム名の変更や実音楽ディレクトリの移動を伴う実機試験、起動時の移行エラーそのものからの実機再現、配布署名条件での検証。移動したカタログの探索は単体試験済みだが、今回の実機試験では同じマウント名の既存データを使用した。
+
+## 2026-10-12: 再接続時のbookmark解決先への追従
+
+自動修復の成功時に、認可した親フォルダのパスとカタログlibraryIDを記録する。起動時にsecurity-scoped bookmarkが新しい場所へ解決された場合、親からの相対位置を新しい親へ適用し、同じlibraryIDのカタログが認可範囲内に存在するときだけprofileのmedia／catalog参照を更新する。bookmarkと復旧記録も新しいパスに保存する。
+
+🟢 [Done] 設定21テスト成功。移動した親への対応、別libraryID拒否、似た接頭辞の別フォルダ拒否、リンク経由の認可範囲外への脱出拒否を確認した。ログ: /tmp/ongaku-reconnect-root-tests.log。署名付きビルド成功: /tmp/ongaku-reconnect-root-build.log。/Applications版へ更新し、前版はOngakuDesktop-pre-reconnect-20261012.appとして保持した。
+
+既存の認可記録には親パスとlibraryIDがない場合がある。その場合は従来の復元を維持し、次の自動修復成功時に新しい記録を作る。親からの相対位置まで変わった場合は、設定から現在のフォルダを選んで再探索する。
+
+⭕️ [Pending] 実ボリューム改名や物理的な移動後のbookmark自動解決を伴う実機試験。今回の移動ケースは一時ディレクトリの検証であり、前節の4,356曲での実機再起動確認とは区別する。
+
+## 2026-10-12: 階層変更後の再探索と未認可時の保全
+
+bookmarkが解決された親の相対位置に同じカタログがない場合は、認可した親の中を保存済みlibraryIDで再探索する。保存済みIDを明示した検索では、元のパスに存在する別IDを優先しない。複数の同一ID候補がある場合も選択せず停止する。手動の自動修復も保存済みIDを使う。
+
+認可bookmarkが欠落・破損・復元不能、またはカタログが見つからない場合は、該当profileを移行対象から外す。active profileなら復旧画面を表示する。旧保存先に空の管理ディレクトリを生成せず、旧カタログを保持する。
+
+🟢 [Done] 設定22テスト成功。認可された親内での階層変更、旧位置の別ID拒否、複数候補、欠落／破損した認可情報による空ライブラリ生成防止を確認。ログ: /tmp/ongaku-reconnect-safe-tests.log。
+
+⭕️ [Pending] 実ボリューム名・実音楽フォルダの改名と再接続を伴う自動追従。ユーザーの実音楽フォルダを試験のために移動・改名していない。
+
+署名付きビルドも成功（/tmp/ongaku-reconnect-safe-build.log）。/Applications版を更新し、前版をOngakuDesktop-pre-layout-20261012.appとして保持した。
+
+## 2026-10-12: 実保存先変更の往復検証
+
+🟢 [Done] /Applicationsの最新sandboxアプリで、認可済みの親Media.localized配下にある実ライブラリフォルダの改名と復元を試験した。
+
+1. 最新プロセスを起動し、設定の自動修復で親フォルダを認可。migrationLocationsの親パスとlibraryIDが保存されたことを確認。
+2. アプリを終了。Ongaku Mediaの中がOngaku Library Dataだけであることを確認し、カタログを/tmpへバックアップした。
+3. 同じ親配下でOngaku MediaをOngaku Media-AutoFollow-20261012へ一時改名。元のパスが存在しないことを確認。
+4. アプリを起動。追加のフォルダ選択なしで4,356曲・29.38GBが表示され、ストレージ設定と保存済みprofileのmedia／catalogパスが改名先へ更新されたことを確認。
+5. アプリ終了後、同じlibraryIDと全4,356曲IDの保持を照合し、フォルダを元の名前へ復元。
+6. 再起動でも手動選択なしで同じ4,356曲を表示。元の保存先へprofileが戻ったことを確認し、その状態でアプリを開いたままにした。
+
+実音楽ファイルを含むMusicフォルダは移動・改名していない。一時改名先は残っていない。検証の制御情報は/tmp/ongaku-autofollow-check-20261012.json、開始前カタログのコピーは/tmp/ongaku-autofollow-library-backup-20261012.jsonに保持した。単体試験だけではなく実際の起動時のID再探索を確認した。
+
+⭕️ [Pending] ボリューム自体の改名・別ボリュームへの移動や認可範囲外の移動。今回確認したのは認可済み親フォルダ内の保存先改名とその復元。
+
+🟠 [Next] 実画面で、外部profileへパス変更した際の保存元説明がApplication Supportと表示されることを確認した。保存先パスと読み込みは正しいが、この説明ラベルは修正対象。

@@ -1238,3 +1238,5 @@
 "storage.migration.ambiguous" = "Multiple libraries were found. Select the folder containing the library you want to recover.";
 "storage.migration.scanLimit" = "The selected folder contains too many folders to check. Select a folder closer to Ongaku Media.";
 "storage.migration.checking" = "Checking the selected folder…";
+
+"storage.migration.recoveryFailed" = "Could not repair the library";

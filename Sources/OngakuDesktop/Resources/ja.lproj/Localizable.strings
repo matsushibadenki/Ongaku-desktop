@@ -1238,3 +1238,5 @@
 "storage.migration.ambiguous" = "複数のライブラリが見つかりました。復旧するライブラリが入っているフォルダを選択してください。";
 "storage.migration.scanLimit" = "確認するフォルダが多すぎます。Ongaku Mediaに近いフォルダを選択してください。";
 "storage.migration.checking" = "選択したフォルダを確認しています…";
+
+"storage.migration.recoveryFailed" = "ライブラリを修復できませんでした";

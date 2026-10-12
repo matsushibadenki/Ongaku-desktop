@@ -113,6 +113,18 @@ struct StorageSettingsView: View {
         }
         .disabled(isStorageOperationInProgress)
 
+        HStack(spacing: AppTheme.spaceSM) {
+          Button(L10n.text("storage.migration.retry")) {
+            NotificationCenter.default.post(name: .requestLibraryRecovery, object: nil)
+          }
+          .buttonStyle(.bordered)
+          .disabled(isStorageOperationInProgress)
+          Image(systemName: "info.circle")
+            .foregroundStyle(AppTheme.secondaryInk)
+            .help(L10n.text("storage.migration.sameFolder"))
+            .accessibilityLabel(L10n.text("storage.migration.sameFolder"))
+        }
+
         if isImportingMusicLibrary || isRegisteringDroppedFolder {
           HStack(spacing: AppTheme.spaceXS) {
             ProgressView()

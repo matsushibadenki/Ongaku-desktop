@@ -1238,3 +1238,5 @@
 "storage.migration.ambiguous" = "找到了多个资料库。请选择包含要恢复的资料库的文件夹。";
 "storage.migration.scanLimit" = "所选文件夹包含过多子文件夹。请选择更接近 Ongaku Media 的文件夹。";
 "storage.migration.checking" = "正在检查所选文件夹…";
+
+"storage.migration.recoveryFailed" = "无法修复资料库";

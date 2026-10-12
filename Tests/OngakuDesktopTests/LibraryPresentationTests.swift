@@ -142,6 +142,40 @@ struct LibraryPresentationTests {
         ).isEmpty)
     }
 
+    @Test("Duplicate analysis remains complete when the retained key budget is exceeded")
+    func boundedDuplicateKeys() async throws {
+        var tracks = LargeLibraryFixture.makeDocument(trackCount: 6).tracks
+        tracks[0].title = "Àlpha Ｓong"
+        tracks[1].title = "alpha song"
+        tracks[1].artist = tracks[0].artist
+        tracks[1].duration = tracks[0].duration
+        tracks[2].sha256 = "shared-hash"
+        tracks[3].sha256 = "shared-hash"
+        tracks[4].title = String(repeating: "长い音楽タイトル", count: 100)
+        for budget in [0, 32, 16 * 1_024 * 1_024] {
+            let worker = LibraryPresentationWorker(maximumDuplicateKeyBytes: budget)
+            for revision in 1...3 {
+                let snapshot = try await worker.resolve(request(
+                    tracks, tracksRevision: revision, section: .duplicates
+                ))
+                let expected = DuplicateTrackAnalyzer.groups(in: tracks)
+                #expect(Set(snapshot.allDuplicates.map(\.id)) == Set(expected.map(\.id)))
+                for group in expected {
+                    let actual = snapshot.allDuplicates.first { $0.id == group.id }
+                    #expect(actual?.kind == group.kind)
+                    #expect(actual?.tracks == group.tracks)
+                    #expect(actual?.recommendedTrackID == group.recommendedTrackID)
+                }
+                #expect(await worker.cachedDuplicateKeyBytes <= budget)
+                tracks.reverse()
+                tracks[0].comments = "Updated metadata \(revision)"
+            }
+            let empty = try await worker.resolve(request([], tracksRevision: 4, section: .duplicates))
+            #expect(empty.allDuplicates.isEmpty)
+            #expect(await worker.cachedDuplicateKeyBytes == 0)
+        }
+    }
+
     @Test("Cached duplicate keys preserve fresh analysis across all metadata changes")
     func duplicateCacheInvalidation() async throws {
         let worker = LibraryPresentationWorker()

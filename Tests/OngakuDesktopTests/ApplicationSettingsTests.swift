@@ -70,6 +70,114 @@ struct ApplicationSettingsTests {
         #expect(try FileManager.default.contentsOfDirectory(atPath: empty.path).isEmpty)
     }
 
+    @Test("Resolved recovery bookmarks reconnect only the same library inside the new root")
+    func movedRecoveryRoot() throws {
+        let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let oldRoot = root.appendingPathComponent("OldVolume")
+        let newRoot = root.appendingPathComponent("RenamedVolume")
+        let oldMedia = oldRoot.appendingPathComponent("Media/Ongaku Media")
+        let newMedia = newRoot.appendingPathComponent("Media/Ongaku Media")
+        let catalog = PortableLibraryStorage(mediaURL: newMedia).rootURL
+        try FileManager.default.createDirectory(at: catalog, withIntermediateDirectories: true)
+        let id = UUID().uuidString
+        try JSONSerialization.data(withJSONObject: ["libraryID": id]).write(
+            to: catalog.appendingPathComponent("library-v1.json"))
+        #expect(LibraryMigrationRecovery.relocatedMedia(
+            originalMedia: oldMedia, originalRoot: oldRoot, resolvedRoot: newRoot, libraryID: id
+        )?.path == newMedia.path)
+        #expect(LibraryMigrationRecovery.relocatedMedia(
+            originalMedia: oldMedia, originalRoot: oldRoot, resolvedRoot: newRoot, libraryID: UUID().uuidString
+        ) == nil)
+        #expect(LibraryMigrationRecovery.relocatedMedia(
+            originalMedia: root.appendingPathComponent("OldVolume-other/Media"),
+            originalRoot: oldRoot, resolvedRoot: newRoot, libraryID: id
+        ) == nil)
+        // A link inside the selected root must not escape its permission boundary.
+        let escapedRoot = root.appendingPathComponent("Escaped")
+        try FileManager.default.createDirectory(at: escapedRoot, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: escapedRoot.appendingPathComponent("Media"),
+                                                 withDestinationURL: newRoot.appendingPathComponent("Media"))
+        #expect(LibraryMigrationRecovery.relocatedMedia(
+            originalMedia: oldMedia, originalRoot: oldRoot, resolvedRoot: escapedRoot, libraryID: id
+        ) == nil)
+        let rearranged = newRoot.appendingPathComponent("NewLayout/Library")
+        try FileManager.default.createDirectory(at: rearranged.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try FileManager.default.moveItem(at: newMedia, to: rearranged)
+        let wrongCatalog = PortableLibraryStorage(mediaURL: newMedia).rootURL
+        try FileManager.default.createDirectory(at: wrongCatalog, withIntermediateDirectories: true)
+        try JSONSerialization.data(withJSONObject: ["libraryID": UUID().uuidString]).write(
+            to: wrongCatalog.appendingPathComponent("library-v1.json"))
+        #expect(try LibraryMigrationRecovery.reconnectedMedia(
+            originalMedia: oldMedia, originalRoot: oldRoot, resolvedRoot: newRoot, libraryID: id
+        ).path == rearranged.path)
+        #expect(throws: NSError.self) {
+            try LibraryMigrationRecovery.reconnectedMedia(
+                originalMedia: oldMedia, originalRoot: oldRoot, resolvedRoot: newRoot, libraryID: UUID().uuidString
+            )
+        }
+        let duplicate = newRoot.appendingPathComponent("Duplicate")
+        try FileManager.default.copyItem(at: rearranged, to: duplicate)
+        #expect(throws: NSError.self) {
+            try LibraryMigrationRecovery.reconnectedMedia(
+                originalMedia: oldMedia, originalRoot: oldRoot, resolvedRoot: newRoot, libraryID: id
+            )
+        }
+        #expect(FileManager.default.fileExists(atPath: PortableLibraryStorage(mediaURL: rearranged).rootURL.path))
+    }
+
+    @Test("Missing recovery grants never create an empty replacement library")
+    @MainActor
+    func missingRecoveryGrant() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let support = root.appendingPathComponent("Support")
+        let legacy = support.appendingPathComponent("Ongaku Desktop")
+        let media = root.appendingPathComponent("Disconnected/Ongaku Media")
+        let suite = "MissingGrant-\(UUID())"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: root)
+        }
+        try FileManager.default.createDirectory(at: legacy, withIntermediateDirectories: true)
+        let bytes = Data("original catalog".utf8)
+        try bytes.write(to: legacy.appendingPathComponent("library-v1.json"))
+        defaults.set([media.standardizedFileURL.path: ["rootPath": root.path, "libraryID": UUID().uuidString]],
+                     forKey: LibraryStorageSettings.migrationLocationsKey)
+        for corruptedBookmark in [false, true] {
+            if corruptedBookmark {
+                defaults.set([media.standardizedFileURL.path: Data("invalid bookmark".utf8)],
+                             forKey: LibraryStorageSettings.migrationAccessKey)
+            }
+            let profiles = LibraryProfileSettings(defaultMediaURL: media, defaults: defaults,
+                                                 applicationSupportURL: support)
+            #expect(profiles.migrationError != nil)
+            #expect(!FileManager.default.fileExists(atPath: media.path))
+            #expect(try Data(contentsOf: legacy.appendingPathComponent("library-v1.json")) == bytes)
+        }
+    }
+
+    @Test("Profile reconnection reports the actual storage location category")
+    @MainActor
+    func reconnectedStorageSource() {
+        let suite = "StorageSource-\(UUID())"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let settings = LibraryStorageSettings(defaults: defaults, freshMusicDirectoryURL: root)
+        let external = root.appendingPathComponent("External/Ongaku Media")
+        settings.activateProfileMediaDirectory(external)
+        #expect(settings.source == .userSelected)
+        #expect(settings.mediaDirectoryURL.path == external.path)
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        settings.activateProfileMediaDirectory(support.appendingPathComponent("Ongaku Desktop/Media"))
+        #expect(settings.source == .applicationSupport)
+        settings.activateProfileMediaDirectory(external.appendingPathComponent("Renamed"))
+        #expect(settings.source == .userSelected)
+        #expect(!FileManager.default.fileExists(atPath: external.path))
+    }
+
     @Test("App Store versions use numeric semantic comparison")
     func appStoreVersionComparison() {
         #expect(AppVersionComparison.isNewer("0.1.7", than: "0.1.6"))
