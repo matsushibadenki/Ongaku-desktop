@@ -160,6 +160,7 @@ struct LibraryContent: View {
     @EnvironmentObject private var trackTableSettings: TrackTableSettings
     @State private var sortOrder = [KeyPathComparator(\Track.title)]
     @State private var sortedTracks: [Track] = []
+    @State private var trackTableIdentity = UUID()
     @FocusState private var isTrackTableFocused: Bool
     @State private var tableSelectedTrackIDs: Set<Track.ID> = []
     @State private var isSortingTracks = false
@@ -298,8 +299,10 @@ struct LibraryContent: View {
             }
             .frame(minHeight: 190, idealHeight: 330)
 
-            appleMusicUnifiedResults
-                .frame(minHeight: 180, idealHeight: 280)
+            if !LibraryQualificationConfiguration.isEnabled {
+                appleMusicUnifiedResults
+                    .frame(minHeight: 180, idealHeight: 280)
+            }
         }
     }
 
@@ -463,6 +466,7 @@ struct LibraryContent: View {
 
     private func scheduleUnifiedSearch(_ rawQuery: String) {
         unifiedSearchTask?.cancel()
+        guard !LibraryQualificationConfiguration.isEnabled else { return }
         let query = rawQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         unifiedSearchTask = Task {
             if !query.isEmpty {
@@ -958,6 +962,7 @@ struct LibraryContent: View {
             playTrack(track)
         }
         .tableStyle(.inset(alternatesRowBackgrounds: true))
+        .id(trackTableIdentity)
         .accessibilityIdentifier("library.track-table")
         .tint(.blue)
         .overlay(alignment: .topTrailing) {
@@ -1287,6 +1292,12 @@ struct LibraryContent: View {
             await MainActor.run {
                 guard request == trackSortRequest,
                       generation == trackSortGeneration else { return }
+                // AppKit can measure every inserted row to retain the old top
+                // row when a narrow search expands to a large catalog. Recreate
+                // the table for bulk changes so only visible rows are prepared.
+                if abs(result.count - sortedTracks.count) >= 1_000 {
+                    trackTableIdentity = UUID()
+                }
                 sortedTracks = result
                 isSortingTracks = false
                 trackSortTask = nil

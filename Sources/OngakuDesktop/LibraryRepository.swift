@@ -52,6 +52,20 @@ actor LibraryRepository {
         var schemaVersion: Int?
     }
 
+    /// Reuse the parser's container for the header and current document. Calling
+    /// JSONDecoder twice would parse the entire track array twice, even though
+    /// the header itself contains only one field.
+    private struct CatalogEnvelope: Decodable {
+        let header: SchemaHeader
+        let document: LibraryDocument?
+
+        init(from decoder: any Decoder) throws {
+            header = try SchemaHeader(from: decoder)
+            document = header.schemaVersion == LibraryDocument.currentSchema
+                ? try LibraryDocument(from: decoder) : nil
+        }
+    }
+
     private struct LegacyLibraryDocument: Decodable {
         var schemaVersion: Int?
         var updatedAt: Date?
@@ -1258,10 +1272,13 @@ actor LibraryRepository {
 
     private func decodeDocument(at url: URL) throws -> DecodedLibraryDocument {
         let data = try Data(contentsOf: url)
-        if let header = try? decoder.decode(SchemaHeader.self, from: data) {
+        if let envelope = try? decoder.decode(CatalogEnvelope.self, from: data) {
+            let header = envelope.header
             switch header.schemaVersion ?? 0 {
             case LibraryDocument.currentSchema:
-                let document = try decoder.decode(LibraryDocument.self, from: data)
+                guard let document = envelope.document else {
+                    throw CocoaError(.fileReadCorruptFile)
+                }
                 return DecodedLibraryDocument(
                     document: document,
                     migratedFromSchemaVersion: nil

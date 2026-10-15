@@ -1,0 +1,164 @@
+{
+  "date": "2026-10-15",
+  "trackCount": 100000,
+  "fixture": {
+    "path": "/Users/littlebuddha/Library/Containers/com.ongaku.desktop.uitests.xctrunner/Data/tmp/OngakuCoWQualification-20261015/library-v1.json",
+    "sha256": "172f658961a4a9f65a2bd37361ab12f05839e13c2c34c61e0f71484f178804a6",
+    "bytes": 58266874
+  },
+  "manifestUnchanged": true,
+  "method": "CUA native input + AX state observation; includes tooling waits; metadata-only fixture; external search disabled; maximized windows",
+  "baseline": {
+    "pid": 58065,
+    "queries": [
+      {
+        "query": "Track 000000",
+        "observedMs": 715,
+        "correct": true
+      },
+      {
+        "query": "Track 000003",
+        "observedMs": 610,
+        "correct": true
+      },
+      {
+        "query": "Track 000006",
+        "observedMs": 600,
+        "correct": true
+      },
+      {
+        "query": "Track 000009",
+        "observedMs": 605,
+        "correct": true
+      },
+      {
+        "query": "Track 000012",
+        "observedMs": 649,
+        "correct": true
+      },
+      {
+        "query": "Track 000015",
+        "observedMs": 618,
+        "correct": true
+      },
+      {
+        "query": "Track 000018",
+        "observedMs": 610,
+        "correct": true
+      },
+      {
+        "query": "Track 000021",
+        "observedMs": 630,
+        "correct": true
+      },
+      {
+        "query": "Track 000024",
+        "observedMs": 616,
+        "correct": true
+      },
+      {
+        "query": "Track 000027",
+        "observedMs": 749,
+        "correct": true
+      }
+    ],
+    "observedP95Ms": 749,
+    "postSearchRSSKiB": 233136,
+    "postSearchPhysicalFootprintMiB": 577.7,
+    "physicalFootprintPeakDisplay": "1.3G",
+    "observedPeakRSSMiB": 1269.84375,
+    "rssSamples": 1453
+  },
+  "optimized": {
+    "pid": 69666,
+    "queries": [
+      {
+        "query": "Track 000000",
+        "observedMs": 652,
+        "correct": true
+      },
+      {
+        "query": "Track 000003",
+        "observedMs": 712,
+        "correct": true
+      },
+      {
+        "query": "Track 000006",
+        "observedMs": 811,
+        "correct": true
+      },
+      {
+        "query": "Track 000009",
+        "observedMs": 578,
+        "correct": true
+      },
+      {
+        "query": "Track 000012",
+        "observedMs": 593,
+        "correct": true
+      },
+      {
+        "query": "Track 000015",
+        "observedMs": 566,
+        "correct": true
+      },
+      {
+        "query": "Track 000018",
+        "observedMs": 577,
+        "correct": true
+      },
+      {
+        "query": "Track 000021",
+        "observedMs": 573,
+        "correct": true
+      },
+      {
+        "query": "Track 000024",
+        "observedMs": 660,
+        "correct": true
+      },
+      {
+        "query": "Track 000027",
+        "observedMs": 668,
+        "correct": true
+      }
+    ],
+    "observedP95Ms": 811,
+    "postSearchRSSKiB": 492544,
+    "postSearchPhysicalFootprintMiB": 270.1,
+    "restoredCatalogRSSKiB": 302288,
+    "restoredCatalogPhysicalFootprintMiB": 338.8,
+    "physicalFootprintPeakMiB": 451.2,
+    "restoreChecks": [
+      {
+        "query": "Track 000027",
+        "filteredCorrect": true,
+        "restored100k": true,
+        "stateObservationMs": 3466
+      },
+      {
+        "query": "楽曲 000001",
+        "filteredCorrect": true,
+        "restored100k": true,
+        "stateObservationMs": 2277
+      },
+      {
+        "query": "曲目 000002",
+        "filteredCorrect": true,
+        "restored100k": true,
+        "stateObservationMs": 3747
+      }
+    ],
+    "observedPeakRSSMiB": 603.625,
+    "rssSamples": 1690
+  },
+  "excludedPIDs": {
+    "52009": "fixture generation",
+    "53029": "preliminary baseline",
+    "54364": "unqualified app relaunched by UI tooling; terminated",
+    "54466": "preliminary optimized with another comparison app running",
+    "61548": "CoW-only build; search clear hung before bulk table recreation fix"
+  },
+  "postSearchFootprintReductionPercent": 53.24562921931799,
+  "observedPeakRSSReductionPercent": 52.464624092531075
+}

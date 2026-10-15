@@ -1,0 +1,23 @@
+baseline-postsearch
+Process:         OngakuDesktop [58065]
+Date/Time:       2026-10-15 15:30:13.225 +0900
+OS Version:      macOS 27.0.1 (26A434)
+Analysis Tool:   /usr/bin/vmmap
+Physical footprint:         577.7M
+Physical footprint (peak):  1.3G
+
+fixed-postsearch
+Process:         OngakuDesktop [69666]
+Date/Time:       2026-10-15 15:41:02.601 +0900
+OS Version:      macOS 27.0.1 (26A434)
+Analysis Tool:   /usr/bin/vmmap
+Physical footprint:         270.1M
+Physical footprint (peak):  451.2M
+
+fixed-restored
+Process:         OngakuDesktop [69666]
+Date/Time:       2026-10-15 15:42:21.497 +0900
+OS Version:      macOS 27.0.1 (26A434)
+Analysis Tool:   /usr/bin/vmmap
+Physical footprint:         338.8M
+Physical footprint (peak):  451.2M

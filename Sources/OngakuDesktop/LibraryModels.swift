@@ -197,52 +197,360 @@ enum LyricsTimeline {
 }
 
 struct Track: Identifiable, Codable, Hashable, Sendable {
-    let id: UUID
-    var title: String
-    var artist: String
-    var album: String
-    var artistSortName: String = ""
-    var albumSortName: String = ""
-    var albumArtist: String = ""
-    var albumArtistSortName: String = ""
-    var composer: String = ""
-    var composerSortName: String = ""
-    var grouping: String = ""
-    var genre: String = ""
-    var participantCredits: String = ""
-    var workName: String = ""
-    var movementName: String = ""
-    var movementNumber: Int?
-    var movementCount: Int?
-    var beatsPerMinute: Int?
-    var copyright: String = ""
-    var isrc: String = ""
-    var releaseYear: Int?
-    var trackNumber: Int?
-    var trackCount: Int?
-    var discNumber: Int?
-    var discCount: Int?
-    var isCompilation: Bool = false
-    var playCount: Int = 0
-    var syncedSkipCount: Int = 0
-    var syncedLastPlayedAt: Date? = nil
-    var syncedOverlayUpdatedAt: Date? = nil
-    var comments: String = ""
-    var lyrics: TrackLyrics? = nil
-    var musicBrainzReference: MusicBrainzReference? = nil
-    var duration: TimeInterval
-    var fileSize: Int64
-    var managedPath: String
-    var sha256: String
-    var addedAt: Date
-    var lastVerifiedAt: Date?
-    var health: FileHealth
-    var artistID: UUID = UUID()
-    var albumID: UUID = UUID()
-    var isPinned: Bool = false
-    var isFavorite: Bool = false
-    var rating: Int = 0
-    var isExcludedFromPlayback: Bool = false
+    private struct Value: Hashable, Sendable {
+        let id: UUID
+        var title: String
+        var artist: String
+        var album: String
+        var artistSortName: String = ""
+        var albumSortName: String = ""
+        var albumArtist: String = ""
+        var albumArtistSortName: String = ""
+        var composer: String = ""
+        var composerSortName: String = ""
+        var grouping: String = ""
+        var genre: String = ""
+        var participantCredits: String = ""
+        var workName: String = ""
+        var movementName: String = ""
+        var movementNumber: Int?
+        var movementCount: Int?
+        var beatsPerMinute: Int?
+        var copyright: String = ""
+        var isrc: String = ""
+        var releaseYear: Int?
+        var trackNumber: Int?
+        var trackCount: Int?
+        var discNumber: Int?
+        var discCount: Int?
+        var isCompilation: Bool = false
+        var playCount: Int = 0
+        var syncedSkipCount: Int = 0
+        var syncedLastPlayedAt: Date? = nil
+        var syncedOverlayUpdatedAt: Date? = nil
+        var comments: String = ""
+        var lyrics: TrackLyrics? = nil
+        var musicBrainzReference: MusicBrainzReference? = nil
+        var duration: TimeInterval
+        var fileSize: Int64
+        var managedPath: String
+        var sha256: String
+        var addedAt: Date
+        var lastVerifiedAt: Date?
+        var health: FileHealth
+        var artistID: UUID = UUID()
+        var albumID: UUID = UUID()
+        var isPinned: Bool = false
+        var isFavorite: Bool = false
+        var rating: Int = 0
+        var isExcludedFromPlayback: Bool = false
+    }
+
+    // A shared box is never mutated until this value has exclusive ownership.
+    // Copies crossing actors therefore retain value semantics without duplicating
+    // every metadata field in each catalog array, dictionary and table row.
+    private final class Storage: @unchecked Sendable {
+        var value: Value
+        init(_ value: Value) { self.value = value }
+    }
+
+    private var storage: Storage
+
+    private mutating func makeUnique() {
+        if !isKnownUniquelyReferenced(&storage) {
+            storage = Storage(storage.value)
+        }
+    }
+
+    var id: UUID {
+        get { storage.value.id }
+    }
+    var title: String {
+        get { storage.value.title }
+        set { makeUnique(); storage.value.title = newValue }
+    }
+    var artist: String {
+        get { storage.value.artist }
+        set { makeUnique(); storage.value.artist = newValue }
+    }
+    var album: String {
+        get { storage.value.album }
+        set { makeUnique(); storage.value.album = newValue }
+    }
+    var artistSortName: String {
+        get { storage.value.artistSortName }
+        set { makeUnique(); storage.value.artistSortName = newValue }
+    }
+    var albumSortName: String {
+        get { storage.value.albumSortName }
+        set { makeUnique(); storage.value.albumSortName = newValue }
+    }
+    var albumArtist: String {
+        get { storage.value.albumArtist }
+        set { makeUnique(); storage.value.albumArtist = newValue }
+    }
+    var albumArtistSortName: String {
+        get { storage.value.albumArtistSortName }
+        set { makeUnique(); storage.value.albumArtistSortName = newValue }
+    }
+    var composer: String {
+        get { storage.value.composer }
+        set { makeUnique(); storage.value.composer = newValue }
+    }
+    var composerSortName: String {
+        get { storage.value.composerSortName }
+        set { makeUnique(); storage.value.composerSortName = newValue }
+    }
+    var grouping: String {
+        get { storage.value.grouping }
+        set { makeUnique(); storage.value.grouping = newValue }
+    }
+    var genre: String {
+        get { storage.value.genre }
+        set { makeUnique(); storage.value.genre = newValue }
+    }
+    var participantCredits: String {
+        get { storage.value.participantCredits }
+        set { makeUnique(); storage.value.participantCredits = newValue }
+    }
+    var workName: String {
+        get { storage.value.workName }
+        set { makeUnique(); storage.value.workName = newValue }
+    }
+    var movementName: String {
+        get { storage.value.movementName }
+        set { makeUnique(); storage.value.movementName = newValue }
+    }
+    var movementNumber: Int? {
+        get { storage.value.movementNumber }
+        set { makeUnique(); storage.value.movementNumber = newValue }
+    }
+    var movementCount: Int? {
+        get { storage.value.movementCount }
+        set { makeUnique(); storage.value.movementCount = newValue }
+    }
+    var beatsPerMinute: Int? {
+        get { storage.value.beatsPerMinute }
+        set { makeUnique(); storage.value.beatsPerMinute = newValue }
+    }
+    var copyright: String {
+        get { storage.value.copyright }
+        set { makeUnique(); storage.value.copyright = newValue }
+    }
+    var isrc: String {
+        get { storage.value.isrc }
+        set { makeUnique(); storage.value.isrc = newValue }
+    }
+    var releaseYear: Int? {
+        get { storage.value.releaseYear }
+        set { makeUnique(); storage.value.releaseYear = newValue }
+    }
+    var trackNumber: Int? {
+        get { storage.value.trackNumber }
+        set { makeUnique(); storage.value.trackNumber = newValue }
+    }
+    var trackCount: Int? {
+        get { storage.value.trackCount }
+        set { makeUnique(); storage.value.trackCount = newValue }
+    }
+    var discNumber: Int? {
+        get { storage.value.discNumber }
+        set { makeUnique(); storage.value.discNumber = newValue }
+    }
+    var discCount: Int? {
+        get { storage.value.discCount }
+        set { makeUnique(); storage.value.discCount = newValue }
+    }
+    var isCompilation: Bool {
+        get { storage.value.isCompilation }
+        set { makeUnique(); storage.value.isCompilation = newValue }
+    }
+    var playCount: Int {
+        get { storage.value.playCount }
+        set { makeUnique(); storage.value.playCount = newValue }
+    }
+    var syncedSkipCount: Int {
+        get { storage.value.syncedSkipCount }
+        set { makeUnique(); storage.value.syncedSkipCount = newValue }
+    }
+    var syncedLastPlayedAt: Date? {
+        get { storage.value.syncedLastPlayedAt }
+        set { makeUnique(); storage.value.syncedLastPlayedAt = newValue }
+    }
+    var syncedOverlayUpdatedAt: Date? {
+        get { storage.value.syncedOverlayUpdatedAt }
+        set { makeUnique(); storage.value.syncedOverlayUpdatedAt = newValue }
+    }
+    var comments: String {
+        get { storage.value.comments }
+        set { makeUnique(); storage.value.comments = newValue }
+    }
+    var lyrics: TrackLyrics? {
+        get { storage.value.lyrics }
+        set { makeUnique(); storage.value.lyrics = newValue }
+    }
+    var musicBrainzReference: MusicBrainzReference? {
+        get { storage.value.musicBrainzReference }
+        set { makeUnique(); storage.value.musicBrainzReference = newValue }
+    }
+    var duration: TimeInterval {
+        get { storage.value.duration }
+        set { makeUnique(); storage.value.duration = newValue }
+    }
+    var fileSize: Int64 {
+        get { storage.value.fileSize }
+        set { makeUnique(); storage.value.fileSize = newValue }
+    }
+    var managedPath: String {
+        get { storage.value.managedPath }
+        set { makeUnique(); storage.value.managedPath = newValue }
+    }
+    var sha256: String {
+        get { storage.value.sha256 }
+        set { makeUnique(); storage.value.sha256 = newValue }
+    }
+    var addedAt: Date {
+        get { storage.value.addedAt }
+        set { makeUnique(); storage.value.addedAt = newValue }
+    }
+    var lastVerifiedAt: Date? {
+        get { storage.value.lastVerifiedAt }
+        set { makeUnique(); storage.value.lastVerifiedAt = newValue }
+    }
+    var health: FileHealth {
+        get { storage.value.health }
+        set { makeUnique(); storage.value.health = newValue }
+    }
+    var artistID: UUID {
+        get { storage.value.artistID }
+        set { makeUnique(); storage.value.artistID = newValue }
+    }
+    var albumID: UUID {
+        get { storage.value.albumID }
+        set { makeUnique(); storage.value.albumID = newValue }
+    }
+    var isPinned: Bool {
+        get { storage.value.isPinned }
+        set { makeUnique(); storage.value.isPinned = newValue }
+    }
+    var isFavorite: Bool {
+        get { storage.value.isFavorite }
+        set { makeUnique(); storage.value.isFavorite = newValue }
+    }
+    var rating: Int {
+        get { storage.value.rating }
+        set { makeUnique(); storage.value.rating = newValue }
+    }
+    var isExcludedFromPlayback: Bool {
+        get { storage.value.isExcludedFromPlayback }
+        set { makeUnique(); storage.value.isExcludedFromPlayback = newValue }
+    }
+
+    init(
+        id: UUID,
+        title: String,
+        artist: String,
+        album: String,
+        artistSortName: String = "",
+        albumSortName: String = "",
+        albumArtist: String = "",
+        albumArtistSortName: String = "",
+        composer: String = "",
+        composerSortName: String = "",
+        grouping: String = "",
+        genre: String = "",
+        participantCredits: String = "",
+        workName: String = "",
+        movementName: String = "",
+        movementNumber: Int? = nil,
+        movementCount: Int? = nil,
+        beatsPerMinute: Int? = nil,
+        copyright: String = "",
+        isrc: String = "",
+        releaseYear: Int? = nil,
+        trackNumber: Int? = nil,
+        trackCount: Int? = nil,
+        discNumber: Int? = nil,
+        discCount: Int? = nil,
+        isCompilation: Bool = false,
+        playCount: Int = 0,
+        syncedSkipCount: Int = 0,
+        syncedLastPlayedAt: Date? = nil,
+        syncedOverlayUpdatedAt: Date? = nil,
+        comments: String = "",
+        lyrics: TrackLyrics? = nil,
+        musicBrainzReference: MusicBrainzReference? = nil,
+        duration: TimeInterval,
+        fileSize: Int64,
+        managedPath: String,
+        sha256: String,
+        addedAt: Date,
+        lastVerifiedAt: Date? = nil,
+        health: FileHealth,
+        artistID: UUID = UUID(),
+        albumID: UUID = UUID(),
+        isPinned: Bool = false,
+        isFavorite: Bool = false,
+        rating: Int = 0,
+        isExcludedFromPlayback: Bool = false
+    ) {
+        storage = Storage(Value(
+            id: id,
+            title: title,
+            artist: artist,
+            album: album,
+            artistSortName: artistSortName,
+            albumSortName: albumSortName,
+            albumArtist: albumArtist,
+            albumArtistSortName: albumArtistSortName,
+            composer: composer,
+            composerSortName: composerSortName,
+            grouping: grouping,
+            genre: genre,
+            participantCredits: participantCredits,
+            workName: workName,
+            movementName: movementName,
+            movementNumber: movementNumber,
+            movementCount: movementCount,
+            beatsPerMinute: beatsPerMinute,
+            copyright: copyright,
+            isrc: isrc,
+            releaseYear: releaseYear,
+            trackNumber: trackNumber,
+            trackCount: trackCount,
+            discNumber: discNumber,
+            discCount: discCount,
+            isCompilation: isCompilation,
+            playCount: playCount,
+            syncedSkipCount: syncedSkipCount,
+            syncedLastPlayedAt: syncedLastPlayedAt,
+            syncedOverlayUpdatedAt: syncedOverlayUpdatedAt,
+            comments: comments,
+            lyrics: lyrics,
+            musicBrainzReference: musicBrainzReference,
+            duration: duration,
+            fileSize: fileSize,
+            managedPath: managedPath,
+            sha256: sha256,
+            addedAt: addedAt,
+            lastVerifiedAt: lastVerifiedAt,
+            health: health,
+            artistID: artistID,
+            albumID: albumID,
+            isPinned: isPinned,
+            isFavorite: isFavorite,
+            rating: rating,
+            isExcludedFromPlayback: isExcludedFromPlayback
+        ))
+    }
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.storage === rhs.storage || lhs.storage.value == rhs.storage.value
+    }
+
+    func hash(into hasher: inout Hasher) {
+        storage.value.hash(into: &hasher)
+    }
 
     var fileURL: URL { URL(fileURLWithPath: managedPath) }
 }
@@ -1444,10 +1752,19 @@ extension Track {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        title = try container.decode(String.self, forKey: .title)
-        artist = try container.decode(String.self, forKey: .artist)
-        album = try container.decode(String.self, forKey: .album)
+        self.init(
+            id: try container.decode(UUID.self, forKey: .id),
+            title: try container.decode(String.self, forKey: .title),
+            artist: try container.decode(String.self, forKey: .artist),
+            album: try container.decode(String.self, forKey: .album),
+            duration: try container.decode(TimeInterval.self, forKey: .duration),
+            fileSize: try container.decode(Int64.self, forKey: .fileSize),
+            managedPath: try container.decode(String.self, forKey: .managedPath),
+            sha256: try container.decode(String.self, forKey: .sha256),
+            addedAt: try container.decode(Date.self, forKey: .addedAt),
+            health: try container.decode(FileHealth.self, forKey: .health)
+        )
+
         artistSortName = try container.decodeIfPresent(String.self, forKey: .artistSortName) ?? ""
         albumSortName = try container.decodeIfPresent(String.self, forKey: .albumSortName) ?? ""
         albumArtist = try container.decodeIfPresent(String.self, forKey: .albumArtist) ?? ""
@@ -1483,13 +1800,8 @@ extension Track {
             MusicBrainzReference.self,
             forKey: .musicBrainzReference
         )
-        duration = try container.decode(TimeInterval.self, forKey: .duration)
-        fileSize = try container.decode(Int64.self, forKey: .fileSize)
-        managedPath = try container.decode(String.self, forKey: .managedPath)
-        sha256 = try container.decode(String.self, forKey: .sha256)
-        addedAt = try container.decode(Date.self, forKey: .addedAt)
+
         lastVerifiedAt = try container.decodeIfPresent(Date.self, forKey: .lastVerifiedAt)
-        health = try container.decode(FileHealth.self, forKey: .health)
 
         // Schema 1 and interrupted-import journals predate persistent group IDs.
         // Temporary values are normalized at the document migration boundary.
