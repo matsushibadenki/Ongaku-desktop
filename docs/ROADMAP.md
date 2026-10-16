@@ -32,7 +32,8 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 ## 3. 現在地
 
 - 🟢 [Done] 0.1.10（build 16）へ更新し、Developer ID版とApp Store版のUniversalアーカイブを作成。全332テストの再実行に成功。
-- ⭕️ [Pending] 0.1.10の公開：App Store Connectへのアップロード完了とApple側の処理・審査、公証プロファイル `ongaku-notary` の認証更新を待つ。未公証のGitHub配布物は公開しない。[配布記録](quality/RELEASE_0.1.10_2026-10-16.md)。
+- 🟢 [Done] 0.1.10のDeveloper ID版をApple公証・staple・Gatekeeper検証後、GitHubへ公開。署名済みSparkle更新フィードと差分5件を生成。
+- ⭕️ [Pending] App Store 0.1.10（16）はアップロード済み。再ログイン後も配信詳細にエラーが発生するため、ビルド関連付けと審査提出は未完了。[配布記録](quality/RELEASE_0.1.10_2026-10-16.md)。
 
 - 🟢 [Done] VUメーターの黒い外枠を中間グレーのグラデーションへ変更し、内縁も無彩色へ統一。Releaseビルド成功、インストール版の左右VUメーターで実画面確認済み。
 
