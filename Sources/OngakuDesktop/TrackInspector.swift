@@ -12,7 +12,7 @@ struct TrackInspector: View {
         Group {
             if let track = inspectedTrack {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: AppTheme.spaceLG) {
+                    VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
                         artwork(for: track)
                         identity(track)
                         lyricsPanel(track)
@@ -33,8 +33,8 @@ struct TrackInspector: View {
                             }
                         }
                     }
-                    .padding(AppTheme.spaceLG)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(AppTheme.spaceMD)
                 }
             } else {
                 ContentUnavailableView(
@@ -88,7 +88,7 @@ struct TrackInspector: View {
     private func identity(_ track: Track) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(track.title)
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(size: 22, weight: .medium))
                 .foregroundStyle(AppTheme.ink)
             Text(track.artist)
                 .font(.body)

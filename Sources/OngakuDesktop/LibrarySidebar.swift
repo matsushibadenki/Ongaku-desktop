@@ -234,7 +234,7 @@ struct LibrarySidebar: View {
         }
         .tint(.blue)
         .scrollContentBackground(.hidden)
-        .background(AppTheme.sidebar)
+        .background(AppTheme.metal)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             librarySummary
         }

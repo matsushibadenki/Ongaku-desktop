@@ -1240,3 +1240,6 @@
 "storage.migration.checking" = "正在检查所选文件夹…";
 
 "storage.migration.recoveryFailed" = "无法修复资料库";
+
+"storage.migration.create.title" = "要创建新资料库吗？";
+"storage.migration.create.message" = "在所选文件夹中未找到 Ongaku 资料库文件。是否在新的子文件夹中创建独立的空资料库？原资料库和现有文件将保留。";

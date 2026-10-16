@@ -557,7 +557,7 @@ struct LibraryContent: View {
             }
             VStack(alignment: .leading, spacing: 3) {
                 Text(contentTitle)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .light))
                     .foregroundStyle(AppTheme.ink)
                 if let playlist = library.selectedPlaylist,
                    !playlist.description.isEmpty {

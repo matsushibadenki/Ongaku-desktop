@@ -1240,3 +1240,6 @@
 "storage.migration.checking" = "Checking the selected folder…";
 
 "storage.migration.recoveryFailed" = "Could not repair the library";
+
+"storage.migration.create.title" = "Create a new library?";
+"storage.migration.create.message" = "No Ongaku library files were found in the selected folder. Create a separate empty library in a new subfolder? Your previous library and existing files will be kept.";

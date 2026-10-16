@@ -8,7 +8,7 @@ import Testing
 struct ApplicationSettingsTests {
     @Test("Migration recovery discovers moved libraries and rejects ambiguous or missing data")
     @MainActor
-    func automaticMigrationDiscovery() throws {
+    func automaticMigrationDiscovery() async throws {
         let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
             .appendingPathComponent(UUID().uuidString)
         let selected = root.appendingPathComponent("Selected")
@@ -68,6 +68,40 @@ struct ApplicationSettingsTests {
             try LibraryMigrationRecovery.findMediaDirectory(in: empty, expectedMedia: oldMedia, expectedCatalog: oldCatalog)
         }
         #expect(try FileManager.default.contentsOfDirectory(atPath: empty.path).isEmpty)
+        do {
+            _ = try LibraryMigrationRecovery.findMediaDirectory(in: empty, expectedMedia: oldMedia, expectedCatalog: oldCatalog)
+            Issue.record("Empty selection should require confirmation")
+        } catch {
+            #expect(LibraryMigrationRecovery.canOfferCreation(after: error))
+        }
+        let preserved = profiles.activeProfile
+        try profiles.createLibraryAfterRecoveryConfirmation(in: empty)
+        #expect(profiles.activeLibraryID != preserved.id)
+        #expect(profiles.profiles.contains { $0 == preserved })
+        #expect(try Data(contentsOf: preserved.catalogURL.appendingPathComponent("library-v1.json")) == bytes)
+        #expect(profiles.migrationError == nil)
+        let repository = LibraryRepository(rootURL: profiles.activeProfile.catalogURL,
+                                           mediaURL: profiles.activeProfile.mediaURL)
+        #expect(FileManager.default.fileExists(atPath: profiles.activeProfile.catalogURL.appendingPathComponent("library-v1.json").path))
+        let created = try await repository.load()
+        #expect(created.document.tracks.isEmpty)
+        #expect(created.document.libraryID == profiles.activeLibraryID)
+        let incomplete = root.appendingPathComponent("Incomplete/Ongaku Library Data")
+        try FileManager.default.createDirectory(at: incomplete, withIntermediateDirectories: true)
+        do {
+            _ = try LibraryMigrationRecovery.findMediaDirectory(in: incomplete, expectedMedia: oldMedia,
+                                                               expectedCatalog: oldCatalog, expectedLibraryID: UUID().uuidString)
+            Issue.record("Incomplete catalog must not be treated as an empty selection")
+        } catch {
+            #expect(!LibraryMigrationRecovery.canOfferCreation(after: error))
+        }
+        do {
+            _ = try LibraryMigrationRecovery.findMediaDirectory(in: media, expectedMedia: oldMedia,
+                                                               expectedCatalog: oldCatalog, expectedLibraryID: UUID().uuidString)
+            Issue.record("A different library must not offer creation")
+        } catch {
+            #expect(!LibraryMigrationRecovery.canOfferCreation(after: error))
+        }
     }
 
     @Test("Resolved recovery bookmarks reconnect only the same library inside the new root")
@@ -184,6 +218,9 @@ struct ApplicationSettingsTests {
         defer { try? FileManager.default.removeItem(at: scratch) }
         try FileManager.default.createDirectory(at: scratch, withIntermediateDirectories: true)
         #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-root", scratch.path]) != nil)
+        #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-root", scratch.path,
+                                                                   "--ongaku-qualification-recovery"])?.exercisesRecovery == true)
+        #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-recovery"]) == nil)
         let runner = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(
             "Library/Containers/com.ongaku.desktop.uitests.xctrunner/Data/tmp/Qualification-Test")
         #expect(LibraryQualificationConfiguration.parse(arguments: ["app", "--ongaku-qualification-root", runner.path]) != nil)

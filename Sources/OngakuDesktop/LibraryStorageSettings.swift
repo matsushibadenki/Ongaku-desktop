@@ -5,6 +5,11 @@ import Foundation
 /// Files that define an Ongaku library live beside its managed music so the
 /// complete library can be moved to another Mac as one folder.
 enum LibraryMigrationRecovery {
+    /// Only a completed scan with no library artifacts may offer creation.
+    nonisolated static func canOfferCreation(after error: Error) -> Bool {
+        let error = error as NSError
+        return error.domain == "OngakuMigration" && error.code == 7
+    }
     nonisolated static func catalogIdentity(at catalog: URL) -> String? {
         guard let data = try? Data(contentsOf: catalog.appendingPathComponent("library-v1.json")),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
@@ -56,6 +61,7 @@ enum LibraryMigrationRecovery {
         var queue: [(URL, Int)] = [(root, 0)]
         var visited = 0
         var candidates: [String: URL] = [:]
+        var foundRelatedData = false
         while visited < queue.count {
             try Task.checkCancellation()
             guard visited < 4_096 else {
@@ -72,6 +78,10 @@ enum LibraryMigrationRecovery {
                 .resolvingSymlinksInPath().standardizedFileURL
             let catalog = PortableLibraryStorage(mediaURL: media).rootURL
             let hasCatalog = fileManager.fileExists(atPath: catalog.appendingPathComponent("library-v1.json").path)
+            if directory.lastPathComponent == PortableLibraryStorage.directoryName || hasCatalog
+                || fileManager.fileExists(atPath: directory.appendingPathComponent(".ongaku-library.json").path) {
+                foundRelatedData = true
+            }
             if hasCatalog || (directory.lastPathComponent == "Ongaku Media"
                 && (directory.path == expected.path || hasLegacyCatalog)) {
                 let candidateID = identity(catalog)
@@ -89,6 +99,11 @@ enum LibraryMigrationRecovery {
                 options: [.skipsHiddenFiles]
             )
             for child in children {
+                if child.lastPathComponent.hasPrefix("library-v1.")
+                    || child.lastPathComponent.hasPrefix("library-schema-")
+                    || child.lastPathComponent == "storage-recovery-v1.json" {
+                    foundRelatedData = true
+                }
                 let values = try child.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
                 if values.isDirectory == true, values.isSymbolicLink != true {
                     guard queue.count < 4_096 else {
@@ -102,7 +117,7 @@ enum LibraryMigrationRecovery {
         }
         if let exact = candidates[expected.path] { return exact }
         guard candidates.count == 1, let match = candidates.values.first else {
-            throw NSError(domain: "OngakuMigration", code: 3, userInfo: [
+            throw NSError(domain: "OngakuMigration", code: candidates.isEmpty && !foundRelatedData ? 7 : 3, userInfo: [
                 NSLocalizedDescriptionKey: L10n.text(candidates.isEmpty
                     ? "storage.migration.notFound" : "storage.migration.ambiguous"),
             ])
@@ -596,6 +611,13 @@ final class LibraryProfileSettings: ObservableObject {
             fileManager: fileManager
         )
         let marker = ExternalLibraryMarker(libraryID: id, createdAt: .now)
+        // Initialize the manifest before publishing the new profile. The root
+        // is unique, so no existing library or audio file is overwritten.
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(LibraryDocument(libraryID: id)).write(
+            to: catalog.appendingPathComponent("library-v1.json"), options: .atomic
+        )
         try JSONEncoder().encode(marker).write(
             to: root.appendingPathComponent(Self.externalMarkerName),
             options: .atomic
@@ -627,6 +649,13 @@ final class LibraryProfileSettings: ObservableObject {
         guard let profile = profiles.first(where: { $0.id == id && !$0.isArchived }),
               connectionState(for: profile) == .connected else { return }
         activeLibraryID = id
+    }
+
+    /// Called only after the recovery UI explicitly confirms a separate library.
+    /// Keep the previous profile so reconnecting its drive can recover it later.
+    func createLibraryAfterRecoveryConfirmation(in directory: URL) throws {
+        try createExternalLibrary(named: L10n.text("libraryProfile.defaultName"), in: directory)
+        migrationError = nil
     }
 
     func connectionState(for profile: LibraryProfile) -> LibraryProfileConnectionState {

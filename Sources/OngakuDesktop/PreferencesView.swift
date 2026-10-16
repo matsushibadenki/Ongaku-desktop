@@ -67,9 +67,11 @@ struct PreferencesView: View {
                 .tag(section)
             }
             .listStyle(.sidebar)
+            .scrollContentBackground(.hidden)
             .tint(.blue)
             .frame(width: 190)
             .frame(maxHeight: .infinity)
+            .background(AppTheme.preferencesSidebar)
 
             Divider()
 

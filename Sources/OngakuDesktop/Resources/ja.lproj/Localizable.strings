@@ -1240,3 +1240,6 @@
 "storage.migration.checking" = "選択したフォルダを確認しています…";
 
 "storage.migration.recoveryFailed" = "ライブラリを修復できませんでした";
+
+"storage.migration.create.title" = "新しいライブラリを作成しますか？";
+"storage.migration.create.message" = "選択したフォルダにOngakuのライブラリファイルが見つかりませんでした。新しいサブフォルダに空のライブラリを作成しますか？以前のライブラリと既存のファイルは保持されます。";

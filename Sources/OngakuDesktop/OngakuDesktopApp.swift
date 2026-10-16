@@ -31,6 +31,7 @@ struct LibraryQualificationConfiguration: Sendable {
 
     let rootURL: URL
     let preparationTrackCount: Int?
+    var exercisesRecovery = false
 
     static var current: Self? {
         parse(arguments: ProcessInfo.processInfo.arguments)
@@ -59,7 +60,8 @@ struct LibraryQualificationConfiguration: Sendable {
            (1...100_000).contains(requestedCount) {
             trackCount = requestedCount
         }
-        return Self(rootURL: rootURL, preparationTrackCount: trackCount)
+        return Self(rootURL: rootURL, preparationTrackCount: trackCount,
+                    exercisesRecovery: arguments.contains("--ongaku-qualification-recovery"))
     }
 }
 
@@ -229,7 +231,7 @@ struct OngakuDesktopApp: App {
             defaultMediaURL: storage.mediaDirectoryURL, defaults: storageDefaults,
             applicationSupportURL: qualificationConfiguration?.rootURL.appendingPathComponent("Support")
         )
-        if qualificationConfiguration == nil {
+        if qualificationConfiguration == nil || qualificationConfiguration?.exercisesRecovery == true {
             storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
         }
         _libraryProfiles = StateObject(wrappedValue: libraryProfiles)
@@ -254,7 +256,7 @@ struct OngakuDesktopApp: App {
             )
         )
         let repository: LibraryRepository
-        if let qualificationConfiguration {
+        if let qualificationConfiguration, !qualificationConfiguration.exercisesRecovery {
             repository = LibraryRepository(
                 rootURL: qualificationConfiguration.rootURL,
                 mediaURL: qualificationConfiguration.rootURL
@@ -289,12 +291,27 @@ struct OngakuDesktopApp: App {
                 let expectedMedia = libraryProfiles.activeProfile.mediaURL
                 let expectedCatalog = libraryProfiles.activeProfile.catalogURL
                 let expectedLibraryID = libraryProfiles.recoveryLibraryID
-                let destination = try await Task.detached {
-                    try LibraryMigrationRecovery.findMediaDirectory(
-                        in: selected, expectedMedia: expectedMedia, expectedCatalog: expectedCatalog,
-                        expectedLibraryID: expectedLibraryID
-                    )
-                }.value
+                let destination: URL
+                do {
+                    destination = try await Task.detached {
+                        try LibraryMigrationRecovery.findMediaDirectory(
+                            in: selected, expectedMedia: expectedMedia, expectedCatalog: expectedCatalog,
+                            expectedLibraryID: expectedLibraryID
+                        )
+                    }.value
+                } catch {
+                    guard LibraryMigrationRecovery.canOfferCreation(after: error) else { throw error }
+                    let confirmation = NSAlert()
+                    confirmation.messageText = L10n.text("storage.migration.create.title")
+                    confirmation.informativeText = L10n.text("storage.migration.create.message")
+                        + "\n\n" + selected.path
+                    confirmation.addButton(withTitle: L10n.text("common.cancel"))
+                    confirmation.addButton(withTitle: L10n.text("common.create"))
+                    guard confirmation.runModal() == .alertSecondButtonReturn else { return }
+                    try libraryProfiles.createLibraryAfterRecoveryConfirmation(in: selected)
+                    storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
+                    return
+                }
                 try storage.authorizeMigrationAccess(selecting: selected, mediaURL: destination) {
                     try libraryProfiles.repairMigration(at: destination)
                 }
@@ -313,7 +330,8 @@ struct OngakuDesktopApp: App {
     var body: some Scene {
         Window("Ongaku", id: "main") {
             Group {
-                if qualificationConfiguration == nil, let error = libraryProfiles.migrationError {
+                if (qualificationConfiguration == nil || qualificationConfiguration?.exercisesRecovery == true),
+                   let error = libraryProfiles.migrationError {
                     VStack(spacing: 16) {
                         Text(L10n.text("storage.migration.failed")).font(.headline)
                             .fixedSize(horizontal: false, vertical: true)
@@ -336,6 +354,10 @@ struct OngakuDesktopApp: App {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 640)
                     .padding(24)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // The main window is transparent for the player's backdrop.
+                    // Recovery must cover the entire window, including unused space.
+                    .background(AppTheme.canvas.ignoresSafeArea())
                 } else if windowPresentation.isMiniPlayer {
                     MiniPlayerView()
                 } else {
@@ -369,7 +391,7 @@ struct OngakuDesktopApp: App {
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
                 .task(id: libraryProfiles.migrationError == nil) {
-                    if let qualificationConfiguration {
+                    if let qualificationConfiguration, !qualificationConfiguration.exercisesRecovery {
                         try? await LibraryQualificationFixture.prepare(qualificationConfiguration)
                         await library.load()
                         player.updateAudioFeatures(library.audioFeatures)
@@ -395,7 +417,7 @@ struct OngakuDesktopApp: App {
                         playlists: library.playlists,
                         displayTags: library.syncedDisplayTags
                     )
-                    phoneSync.start()
+                    if qualificationConfiguration == nil { phoneSync.start() }
                     player.updateAudioFeatures(library.audioFeatures)
                     player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
                 }
@@ -415,7 +437,7 @@ struct OngakuDesktopApp: App {
                     player.updateAudioFeatures(library.audioFeatures)
                 }
                 .onChange(of: libraryProfiles.activeLibraryID) {
-                    guard qualificationConfiguration == nil else { return }
+                    guard qualificationConfiguration == nil || qualificationConfiguration?.exercisesRecovery == true else { return }
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
                     Task {

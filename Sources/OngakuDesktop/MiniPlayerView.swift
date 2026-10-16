@@ -42,7 +42,7 @@ struct MiniPlayerView: View {
                         .font(.caption2.monospacedDigit())
                         .foregroundStyle(AppTheme.secondaryInk)
                         .frame(width: 31, alignment: .trailing)
-                    Slider(
+                    PlaybackProgressSlider(
                         value: Binding(
                             get: { displayedElapsed },
                             set: { newValue in

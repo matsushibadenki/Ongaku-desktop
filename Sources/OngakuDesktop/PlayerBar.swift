@@ -1,8 +1,9 @@
-/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5
- * component: persistent player transport · genre: atmospheric · theme: Midnight
+/* Hallmark · pre-emit critique: P4 H4 E4 S5 R4 V4
+ * component: persistent player transport · mobile hardware palette
  * states: native macOS default · hover · focus · active · disabled · playback feedback
  */
 import CoreImage
+import AppKit
 import SwiftUI
 
 struct PlayerBar: View {
@@ -32,7 +33,7 @@ struct PlayerBar: View {
                     centerPlayerArea
                         .frame(width: blockWidth * 2)
                         .frame(maxHeight: .infinity)
-                        .background(AppTheme.surface)
+                        .background(AppTheme.metal)
                     meterCell(
                         channel: "R",
                         level: player.stereoLevels.right,
@@ -114,7 +115,7 @@ struct PlayerBar: View {
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(AppTheme.secondaryInk)
                     .frame(width: 42, alignment: .trailing)
-                Slider(
+                PlaybackProgressSlider(
                     value: Binding(
                         get: { displayedElapsed },
                         set: { newValue in
@@ -248,6 +249,67 @@ struct PlayerBar: View {
  * states: idle · active · overload · reduced motion
  * contrast: dark ink on warm illuminated dial
  */
+/// Retain native keyboard, dragging and accessibility behavior while coloring
+/// only the elapsed portion; SwiftUI's macOS Slider does not honor this tint.
+struct PlaybackProgressSlider: NSViewRepresentable {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.colorScheme) private var colorScheme
+
+    init(value: Binding<Double>, in range: ClosedRange<Double>) {
+        _value = value
+        self.range = range
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(value: $value) }
+
+    func makeNSView(context: Context) -> NSSlider {
+        let slider = NSSlider()
+        slider.cell = PlaybackProgressSliderCell()
+        slider.isContinuous = true
+        slider.target = context.coordinator
+        slider.action = #selector(Coordinator.changed(_:))
+        slider.setAccessibilityLabel(L10n.text("miniPlayer.progress"))
+        slider.setAccessibilityIdentifier("player.playback-progress")
+        return slider
+    }
+
+    func updateNSView(_ slider: NSSlider, context: Context) {
+        context.coordinator.value = $value
+        slider.minValue = range.lowerBound
+        slider.maxValue = range.upperBound
+        slider.doubleValue = min(max(value, range.lowerBound), range.upperBound)
+        slider.isEnabled = isEnabled
+        slider.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
+        slider.setAccessibilityLabel(L10n.text("miniPlayer.progress"))
+        slider.needsDisplay = true
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        var value: Binding<Double>
+        init(value: Binding<Double>) { self.value = value }
+        @objc func changed(_ sender: NSSlider) { value.wrappedValue = sender.doubleValue }
+    }
+}
+
+final class PlaybackProgressSliderCell: NSSliderCell {
+    override func drawBar(inside rect: NSRect, flipped: Bool) {
+        let track = NSRect(x: rect.minX, y: rect.midY - 2, width: rect.width, height: 4)
+        let outline = NSBezierPath(roundedRect: track, xRadius: 2, yRadius: 2)
+        NSColor(AppTheme.rule).setFill()
+        outline.fill()
+        guard isEnabled, maxValue > minValue else { return }
+        let fraction = min(max((doubleValue - minValue) / (maxValue - minValue), 0), 1)
+        NSGraphicsContext.saveGraphicsState()
+        defer { NSGraphicsContext.restoreGraphicsState() }
+        outline.addClip()
+        NSColor(AppTheme.playbackAccent).setFill()
+        NSRect(x: track.minX, y: track.minY, width: track.width * fraction, height: track.height).fill()
+    }
+}
+
 struct ChannelVUMeterView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -571,10 +633,10 @@ struct VUMeterNeedle: View, @MainActor Animatable {
 }
 
 private enum MeterPalette {
-    static let frameTop = Color(red: 0.13, green: 0.12, blue: 0.10)
-    static let frameBottom = Color(red: 0.025, green: 0.027, blue: 0.026)
+    static let frameTop = Color(white: 0.42)
+    static let frameBottom = Color(white: 0.30)
     static let outerRim = Color.white.opacity(0.12)
-    static let innerRim = Color(red: 0.08, green: 0.065, blue: 0.045).opacity(0.72)
+    static let innerRim = Color(white: 0.24).opacity(0.72)
     static let dialTop = Color(red: 0.95, green: 0.89, blue: 0.72)
     static let dialMiddle = Color(red: 0.84, green: 0.75, blue: 0.56)
     static let dialBottom = Color(red: 0.64, green: 0.52, blue: 0.34)
@@ -921,22 +983,21 @@ struct PlayerTransportControls: View {
             } label: {
                 Image(systemName: "backward.fill")
                     .foregroundStyle(AppTheme.playerControl)
-                    .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
+                    .frame(width: compact ? 24 : 32, height: compact ? 24 : 32)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(OngakuTransportButtonStyle())
             .disabled(player.currentTrack == nil && appleMusicPlayback.currentItem == nil)
             .help(L10n.text("player.previous"))
             .accessibilityLabel(L10n.text("player.previous"))
 
             Button(action: primaryPlaybackAction) {
                 Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                    .foregroundStyle(colorScheme == .dark ? Color.black : Color.white)
-                    .frame(width: compact ? 30 : 38, height: compact ? 30 : 38)
-                    .background(AppTheme.playerControl, in: Circle())
+                    .foregroundStyle(AppTheme.ink)
+                    .frame(width: compact ? 32 : 44, height: compact ? 32 : 44)
                     .contentShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(OngakuTransportButtonStyle(primary: true, active: isPlaying))
             .disabled(
                 (appleMusicPlayback.isWorking && !hasLocalPlaybackCandidate)
                     || (!hasLocalPlaybackCandidate && appleMusicPlayback.currentItem == nil)
@@ -954,10 +1015,10 @@ struct PlayerTransportControls: View {
             } label: {
                 Image(systemName: "forward.fill")
                     .foregroundStyle(AppTheme.playerControl)
-                    .frame(width: compact ? 22 : 28, height: compact ? 22 : 28)
+                    .frame(width: compact ? 24 : 32, height: compact ? 24 : 32)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(OngakuTransportButtonStyle())
             .disabled(player.currentTrack == nil && appleMusicPlayback.currentItem == nil)
             .help(L10n.text("player.next"))
             .accessibilityLabel(L10n.text("player.next"))
