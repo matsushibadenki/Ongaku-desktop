@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A10000000000000000000001 /* LibraryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* LibraryPresentation.swift */; };
 		200000000000000000000001 /* OngakuDesktopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* OngakuDesktopApp.swift */; };
 		200000000000000000000002 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000002 /* DesignTokens.swift */; };
 		200000000000000000000003 /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* Localization.swift */; };
@@ -48,6 +47,10 @@
 		200000000000000000000026 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = C00000000000000000000002 /* Sparkle */; };
 		200000000000000000000027 /* ArtworkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000038 /* ArtworkResolver.swift */; };
 		200000000000000000000028 /* MetadataEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000039 /* MetadataEditorView.swift */; };
+		200000000000000000000029 /* Packaging/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Packaging/Assets.xcassets */; };
+		20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000041 /* SQLiteCatalogPrototype.swift */; };
+		20000000000000000000002B /* SystemNowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000042 /* SystemNowPlayingController.swift */; };
+		20000000000000000000002C /* PlayerMeterSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000043 /* PlayerMeterSettings.swift */; };
 		20000000000000000000002D /* AudioFileMetadataWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000044 /* AudioFileMetadataWriter.swift */; };
 		20000000000000000000002E /* PlaylistTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000045 /* PlaylistTransfer.swift */; };
 		20000000000000000000002F /* LRCLIBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000046 /* LRCLIBService.swift */; };
@@ -55,6 +58,7 @@
 		200000000000000000000031 /* MusicBrainzCandidatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000048 /* MusicBrainzCandidatePicker.swift */; };
 		200000000000000000000032 /* AudioCDImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000049 /* AudioCDImportView.swift */; };
 		200000000000000000000033 /* AppleMusicStoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004A /* AppleMusicStoreView.swift */; };
+		200000000000000000000034 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
 		200000000000000000000035 /* AppleMusicPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* AppleMusicPlaybackController.swift */; };
 		200000000000000000000036 /* AudioFeatureAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000050 /* AudioFeatureAnalysis.swift */; };
 		200000000000000000000037 /* URLAudioImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000051 /* URLAudioImportView.swift */; };
@@ -65,30 +69,95 @@
 		200000000000000000000042 /* DeviceSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000056 /* DeviceSyncModels.swift */; };
 		200000000000000000000043 /* PhoneSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000057 /* PhoneSyncController.swift */; };
 		200000000000000000000044 /* DeviceSyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000058 /* DeviceSyncView.swift */; };
-		200000000000000000000045 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000059 /* PrivacyInfo.xcprivacy */; };
-		U20000000000000000000001 /* OngakuDesktopUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = U10000000000000000000001 /* OngakuDesktopUITests.swift */; };
-		D20000000000000000000001 /* OngakuMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* OngakuMobileApp.swift */; };
-		D20000000000000000000002 /* MobileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* MobileContentView.swift */; };
-		D20000000000000000000003 /* MobileSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000003 /* MobileSyncController.swift */; };
-		D20000000000000000000004 /* DeviceSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000000B /* DeviceSyncModels.swift */; };
-		D20000000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000010 /* Localizable.strings */; };
-		D20000000000000000000006 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000011 /* InfoPlist.strings */; };
-		D20000000000000000000007 /* LibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000012 /* LibraryModels.swift */; };
-		D20000000000000000000008 /* AudioFeatureAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000013 /* AudioFeatureAnalysis.swift */; };
-		D20000000000000000000009 /* SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* SharedMusicModels.swift */; };
-		D2000000000000000000000A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000015 /* PrivacyInfo.xcprivacy */; };
+		200000000000000000000045 /* Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000059 /* Resources/PrivacyInfo.xcprivacy */; };
 		200000000000000000000046 /* SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005A /* SharedMusicModels.swift */; };
 		200000000000000000000047 /* AudioSignalPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005B /* AudioSignalPath.swift */; };
 		200000000000000000000048 /* SocialPrivacySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005C /* SocialPrivacySettings.swift */; };
 		200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005D /* SocialPrivacySettingsView.swift */; };
 		20000000000000000000004A /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005E /* DeviceChunkTransfer.swift */; };
 		20000000000000000000004B /* ArtistImageCandidatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005F /* ArtistImageCandidatePicker.swift */; };
-		D2000000000000000000000B /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* DeviceChunkTransfer.swift */; };
-		200000000000000000000034 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
-		200000000000000000000029 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Assets.xcassets */; };
-		20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000041 /* SQLiteCatalogPrototype.swift */; };
-		20000000000000000000002B /* SystemNowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000042 /* SystemNowPlayingController.swift */; };
-		20000000000000000000002C /* PlayerMeterSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000043 /* PlayerMeterSettings.swift */; };
+		A10000000000000000000001 /* LibraryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* LibraryPresentation.swift */; };
+		D20000000000000000000001 /* OngakuMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* OngakuMobileApp.swift */; };
+		D20000000000000000000002 /* MobileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* MobileContentView.swift */; };
+		D20000000000000000000003 /* MobileSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000003 /* MobileSyncController.swift */; };
+		D20000000000000000000004 /* ../OngakuDesktop/DeviceSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1000000000000000000000B /* ../OngakuDesktop/DeviceSyncModels.swift */; };
+		D20000000000000000000005 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000010 /* Localizable.strings */; };
+		D20000000000000000000006 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000011 /* InfoPlist.strings */; };
+		D20000000000000000000007 /* ../OngakuDesktop/LibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000012 /* ../OngakuDesktop/LibraryModels.swift */; };
+		D20000000000000000000008 /* ../OngakuDesktop/AudioFeatureAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000013 /* ../OngakuDesktop/AudioFeatureAnalysis.swift */; };
+		D20000000000000000000009 /* ../OngakuDesktop/SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* ../OngakuDesktop/SharedMusicModels.swift */; };
+		D2000000000000000000000A /* Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000015 /* Resources/PrivacyInfo.xcprivacy */; };
+		D2000000000000000000000B /* ../OngakuDesktop/DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* ../OngakuDesktop/DeviceChunkTransfer.swift */; };
+		E8DA8E8E30825B1B00B38A1B /* OngakuDesktopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* OngakuDesktopApp.swift */; };
+		E8DA8E8F30825B1B00B38A1B /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000002 /* DesignTokens.swift */; };
+		E8DA8E9030825B1B00B38A1B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* Localization.swift */; };
+		E8DA8E9130825B1B00B38A1B /* LibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000004 /* LibraryModels.swift */; };
+		E8DA8E9230825B1B00B38A1B /* SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005A /* SharedMusicModels.swift */; };
+		E8DA8E9330825B1B00B38A1B /* AudioFeatureAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000050 /* AudioFeatureAnalysis.swift */; };
+		E8DA8E9430825B1B00B38A1B /* LibraryRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000005 /* LibraryRepository.swift */; };
+		E8DA8E9530825B1B00B38A1B /* SQLiteCatalogPrototype.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000041 /* SQLiteCatalogPrototype.swift */; };
+		E8DA8E9630825B1B00B38A1B /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000006 /* LibraryStore.swift */; };
+		E8DA8E9730825B1B00B38A1B /* LibraryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* LibraryPresentation.swift */; };
+		E8DA8E9830825B1B00B38A1B /* PlaylistTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000045 /* PlaylistTransfer.swift */; };
+		E8DA8E9930825B1B00B38A1B /* LRCLIBService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000046 /* LRCLIBService.swift */; };
+		E8DA8E9A30825B1B00B38A1B /* MusicBrainzService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000047 /* MusicBrainzService.swift */; };
+		E8DA8E9B30825B1B00B38A1B /* MusicBrainzCandidatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000048 /* MusicBrainzCandidatePicker.swift */; };
+		E8DA8E9C30825B1B00B38A1B /* ArtistImageCandidatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005F /* ArtistImageCandidatePicker.swift */; };
+		E8DA8E9D30825B1B00B38A1B /* AudioCDImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000049 /* AudioCDImportView.swift */; };
+		E8DA8E9E30825B1B00B38A1B /* URLAudioImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000051 /* URLAudioImportView.swift */; };
+		E8DA8E9F30825B1B00B38A1B /* LegacyLibraryMigrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000052 /* LegacyLibraryMigrationView.swift */; };
+		E8DA8EA030825B1B00B38A1B /* OngakuLibraryMigrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000053 /* OngakuLibraryMigrationView.swift */; };
+		E8DA8EA130825B1B00B38A1B /* SharedFolderMigrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000054 /* SharedFolderMigrationView.swift */; };
+		E8DA8EA230825B1B00B38A1B /* MediaOrganizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000055 /* MediaOrganizationView.swift */; };
+		E8DA8EA330825B1B00B38A1B /* DeviceSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000056 /* DeviceSyncModels.swift */; };
+		E8DA8EA430825B1B00B38A1B /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005E /* DeviceChunkTransfer.swift */; };
+		E8DA8EA530825B1B00B38A1B /* PhoneSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000057 /* PhoneSyncController.swift */; };
+		E8DA8EA630825B1B00B38A1B /* DeviceSyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000058 /* DeviceSyncView.swift */; };
+		E8DA8EA730825B1B00B38A1B /* AppleMusicStoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004A /* AppleMusicStoreView.swift */; };
+		E8DA8EA830825B1B00B38A1B /* AppleMusicPlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* AppleMusicPlaybackController.swift */; };
+		E8DA8EA930825B1B00B38A1B /* LibraryStorageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000031 /* LibraryStorageSettings.swift */; };
+		E8DA8EAA30825B1B00B38A1B /* AppLanguageSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000033 /* AppLanguageSettings.swift */; };
+		E8DA8EAB30825B1B00B38A1B /* AppAppearanceSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000035 /* AppAppearanceSettings.swift */; };
+		E8DA8EAC30825B1B00B38A1B /* PlayerMeterSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000043 /* PlayerMeterSettings.swift */; };
+		E8DA8EAD30825B1B00B38A1B /* WindowPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000036 /* WindowPresentationController.swift */; };
+		E8DA8EAE30825B1B00B38A1B /* PlaybackController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000007 /* PlaybackController.swift */; };
+		E8DA8EAF30825B1B00B38A1B /* AudioSignalPath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005B /* AudioSignalPath.swift */; };
+		E8DA8EB030825B1B00B38A1B /* SocialPrivacySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005C /* SocialPrivacySettings.swift */; };
+		E8DA8EB130825B1B00B38A1B /* SocialPrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005D /* SocialPrivacySettingsView.swift */; };
+		E8DA8EB230825B1B00B38A1B /* SystemNowPlayingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000042 /* SystemNowPlayingController.swift */; };
+		E8DA8EB330825B1B00B38A1B /* AudioOutputManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000011 /* AudioOutputManager.swift */; };
+		E8DA8EB430825B1B00B38A1B /* AudioEffectPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000021 /* AudioEffectPreset.swift */; };
+		E8DA8EB530825B1B00B38A1B /* AudioEffectNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000022 /* AudioEffectNode.swift */; };
+		E8DA8EB630825B1B00B38A1B /* AudioEffectModuleRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000023 /* AudioEffectModuleRegistry.swift */; };
+		E8DA8EB730825B1B00B38A1B /* SimulationAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000024 /* SimulationAudioEffect.swift */; };
+		E8DA8EB830825B1B00B38A1B /* EqualizerAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000025 /* EqualizerAudioEffect.swift */; };
+		E8DA8EB930825B1B00B38A1B /* BodyAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000026 /* BodyAudioEffect.swift */; };
+		E8DA8EBA30825B1B00B38A1B /* ExciterAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000027 /* ExciterAudioEffect.swift */; };
+		E8DA8EBB30825B1B00B38A1B /* OptoFETAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000028 /* OptoFETAudioEffect.swift */; };
+		E8DA8EBC30825B1B00B38A1B /* WarmAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000029 /* WarmAudioEffect.swift */; };
+		E8DA8EBD30825B1B00B38A1B /* GlossAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002A /* GlossAudioEffect.swift */; };
+		E8DA8EBE30825B1B00B38A1B /* SpaceAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002B /* SpaceAudioEffect.swift */; };
+		E8DA8EBF30825B1B00B38A1B /* BBEAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002C /* BBEAudioEffect.swift */; };
+		E8DA8EC030825B1B00B38A1B /* HighQualityEnhancementAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002D /* HighQualityEnhancementAudioEffect.swift */; };
+		E8DA8EC130825B1B00B38A1B /* RotaryKnob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002E /* RotaryKnob.swift */; };
+		E8DA8EC230825B1B00B38A1B /* EffectsRackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002F /* EffectsRackView.swift */; };
+		E8DA8EC330825B1B00B38A1B /* MiniToggleSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000030 /* MiniToggleSwitch.swift */; };
+		E8DA8EC430825B1B00B38A1B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000008 /* ContentView.swift */; };
+		E8DA8EC530825B1B00B38A1B /* LibrarySidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000009 /* LibrarySidebar.swift */; };
+		E8DA8EC630825B1B00B38A1B /* LibraryContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000A /* LibraryContent.swift */; };
+		E8DA8EC730825B1B00B38A1B /* ArtworkResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000038 /* ArtworkResolver.swift */; };
+		E8DA8EC830825B1B00B38A1B /* MetadataEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000039 /* MetadataEditorView.swift */; };
+		E8DA8EC930825B1B00B38A1B /* AudioFileMetadataWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000044 /* AudioFileMetadataWriter.swift */; };
+		E8DA8ECA30825B1B00B38A1B /* TrackInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000B /* TrackInspector.swift */; };
+		E8DA8ECB30825B1B00B38A1B /* PlayerBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000000C /* PlayerBar.swift */; };
+		E8DA8ECC30825B1B00B38A1B /* MiniPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000037 /* MiniPlayerView.swift */; };
+		E8DA8ECD30825B1B00B38A1B /* StorageSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000032 /* StorageSettingsView.swift */; };
+		E8DA8ECE30825B1B00B38A1B /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000034 /* PreferencesView.swift */; };
+		E8DA8ECF30825B1B00B38A1B /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000010 /* Localizable.strings */; };
+		E8DA8ED030825B1B00B38A1B /* Packaging/Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000040 /* Packaging/Assets.xcassets */; };
+		E8DA8ED130825B1B00B38A1B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
+		E8DA8ED230825B1B00B38A1B /* Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000059 /* Resources/PrivacyInfo.xcprivacy */; };
+		U20000000000000000000001 /* OngakuDesktopUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = U10000000000000000000001 /* OngakuDesktopUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,7 +171,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		A10000000000000000000002 /* LibraryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPresentation.swift; sourceTree = "<group>"; };
 		100000000000000000000001 /* OngakuDesktopApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuDesktopApp.swift; sourceTree = "<group>"; };
 		100000000000000000000002 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
 		100000000000000000000003 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
@@ -112,48 +180,6 @@
 		100000000000000000000007 /* PlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackController.swift; sourceTree = "<group>"; };
 		100000000000000000000008 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		100000000000000000000009 /* LibrarySidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySidebar.swift; sourceTree = "<group>"; };
-		100000000000000000000045 /* PlaylistTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistTransfer.swift; sourceTree = "<group>"; };
-		100000000000000000000046 /* LRCLIBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRCLIBService.swift; sourceTree = "<group>"; };
-		100000000000000000000047 /* MusicBrainzService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicBrainzService.swift; sourceTree = "<group>"; };
-		100000000000000000000048 /* MusicBrainzCandidatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicBrainzCandidatePicker.swift; sourceTree = "<group>"; };
-		100000000000000000000049 /* AudioCDImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCDImportView.swift; sourceTree = "<group>"; };
-		10000000000000000000004A /* AppleMusicStoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicStoreView.swift; sourceTree = "<group>"; };
-		10000000000000000000004F /* AppleMusicPlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicPlaybackController.swift; sourceTree = "<group>"; };
-		100000000000000000000050 /* AudioFeatureAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFeatureAnalysis.swift; sourceTree = "<group>"; };
-		100000000000000000000051 /* URLAudioImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLAudioImportView.swift; sourceTree = "<group>"; };
-		100000000000000000000052 /* LegacyLibraryMigrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyLibraryMigrationView.swift; sourceTree = "<group>"; };
-		100000000000000000000053 /* OngakuLibraryMigrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuLibraryMigrationView.swift; sourceTree = "<group>"; };
-		100000000000000000000054 /* SharedFolderMigrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedFolderMigrationView.swift; sourceTree = "<group>"; };
-		100000000000000000000055 /* MediaOrganizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaOrganizationView.swift; sourceTree = "<group>"; };
-		100000000000000000000056 /* DeviceSyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSyncModels.swift; sourceTree = "<group>"; };
-		100000000000000000000057 /* PhoneSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSyncController.swift; sourceTree = "<group>"; };
-		100000000000000000000058 /* DeviceSyncView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSyncView.swift; sourceTree = "<group>"; };
-		100000000000000000000059 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		10000000000000000000005B /* AudioSignalPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSignalPath.swift; sourceTree = "<group>"; };
-		10000000000000000000005C /* SocialPrivacySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettings.swift; sourceTree = "<group>"; };
-		10000000000000000000005D /* SocialPrivacySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettingsView.swift; sourceTree = "<group>"; };
-		10000000000000000000005E /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceChunkTransfer.swift; sourceTree = "<group>"; };
-		10000000000000000000005F /* ArtistImageCandidatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistImageCandidatePicker.swift; sourceTree = "<group>"; };
-		D10000000000000000000016 /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceChunkTransfer.swift; sourceTree = "<group>"; };
-		D10000000000000000000001 /* OngakuMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuMobileApp.swift; sourceTree = "<group>"; };
-		D10000000000000000000002 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
-		D10000000000000000000003 /* MobileSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSyncController.swift; sourceTree = "<group>"; };
-		D10000000000000000000004 /* OngakuMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D10000000000000000000005 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
-		D10000000000000000000006 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/Localizable.strings; sourceTree = "<group>"; };
-		D10000000000000000000007 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
-		D10000000000000000000008 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		D10000000000000000000009 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		D1000000000000000000000A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
-		D1000000000000000000000B /* DeviceSyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceSyncModels.swift; sourceTree = "<group>"; };
-		D10000000000000000000012 /* LibraryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/LibraryModels.swift; sourceTree = "<group>"; };
-		D10000000000000000000013 /* AudioFeatureAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/AudioFeatureAnalysis.swift; sourceTree = "<group>"; };
-		D10000000000000000000014 /* SharedMusicModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/SharedMusicModels.swift; sourceTree = "<group>"; };
-		D10000000000000000000015 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		10000000000000000000005A /* SharedMusicModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedMusicModels.swift; sourceTree = "<group>"; };
-		10000000000000000000004B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		10000000000000000000004C /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		10000000000000000000004D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		10000000000000000000000A /* LibraryContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryContent.swift; sourceTree = "<group>"; };
 		10000000000000000000000B /* TrackInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackInspector.swift; sourceTree = "<group>"; };
 		10000000000000000000000C /* PlayerBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerBar.swift; sourceTree = "<group>"; };
@@ -161,6 +187,7 @@
 		10000000000000000000000E /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		10000000000000000000000F /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		100000000000000000000011 /* AudioOutputManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputManager.swift; sourceTree = "<group>"; };
+		100000000000000000000020 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		100000000000000000000021 /* AudioEffectPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEffectPreset.swift; sourceTree = "<group>"; };
 		100000000000000000000022 /* AudioEffectNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEffectNode.swift; sourceTree = "<group>"; };
 		100000000000000000000023 /* AudioEffectModuleRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEffectModuleRegistry.swift; sourceTree = "<group>"; };
@@ -186,12 +213,54 @@
 		100000000000000000000037 /* MiniPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MiniPlayerView.swift; sourceTree = "<group>"; };
 		100000000000000000000038 /* ArtworkResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtworkResolver.swift; sourceTree = "<group>"; };
 		100000000000000000000039 /* MetadataEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetadataEditorView.swift; sourceTree = "<group>"; };
-		100000000000000000000044 /* AudioFileMetadataWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFileMetadataWriter.swift; sourceTree = "<group>"; };
-		100000000000000000000040 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Packaging/Assets.xcassets; sourceTree = SOURCE_ROOT; };
+		100000000000000000000040 /* Packaging/Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Packaging/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		100000000000000000000041 /* SQLiteCatalogPrototype.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLiteCatalogPrototype.swift; sourceTree = "<group>"; };
 		100000000000000000000042 /* SystemNowPlayingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemNowPlayingController.swift; sourceTree = "<group>"; };
 		100000000000000000000043 /* PlayerMeterSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerMeterSettings.swift; sourceTree = "<group>"; };
-		100000000000000000000020 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		100000000000000000000044 /* AudioFileMetadataWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFileMetadataWriter.swift; sourceTree = "<group>"; };
+		100000000000000000000045 /* PlaylistTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistTransfer.swift; sourceTree = "<group>"; };
+		100000000000000000000046 /* LRCLIBService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LRCLIBService.swift; sourceTree = "<group>"; };
+		100000000000000000000047 /* MusicBrainzService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicBrainzService.swift; sourceTree = "<group>"; };
+		100000000000000000000048 /* MusicBrainzCandidatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicBrainzCandidatePicker.swift; sourceTree = "<group>"; };
+		100000000000000000000049 /* AudioCDImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCDImportView.swift; sourceTree = "<group>"; };
+		10000000000000000000004A /* AppleMusicStoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicStoreView.swift; sourceTree = "<group>"; };
+		10000000000000000000004B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		10000000000000000000004C /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		10000000000000000000004D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		10000000000000000000004F /* AppleMusicPlaybackController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleMusicPlaybackController.swift; sourceTree = "<group>"; };
+		100000000000000000000050 /* AudioFeatureAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFeatureAnalysis.swift; sourceTree = "<group>"; };
+		100000000000000000000051 /* URLAudioImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLAudioImportView.swift; sourceTree = "<group>"; };
+		100000000000000000000052 /* LegacyLibraryMigrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyLibraryMigrationView.swift; sourceTree = "<group>"; };
+		100000000000000000000053 /* OngakuLibraryMigrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuLibraryMigrationView.swift; sourceTree = "<group>"; };
+		100000000000000000000054 /* SharedFolderMigrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedFolderMigrationView.swift; sourceTree = "<group>"; };
+		100000000000000000000055 /* MediaOrganizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaOrganizationView.swift; sourceTree = "<group>"; };
+		100000000000000000000056 /* DeviceSyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSyncModels.swift; sourceTree = "<group>"; };
+		100000000000000000000057 /* PhoneSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneSyncController.swift; sourceTree = "<group>"; };
+		100000000000000000000058 /* DeviceSyncView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceSyncView.swift; sourceTree = "<group>"; };
+		100000000000000000000059 /* Resources/PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		10000000000000000000005A /* SharedMusicModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedMusicModels.swift; sourceTree = "<group>"; };
+		10000000000000000000005B /* AudioSignalPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSignalPath.swift; sourceTree = "<group>"; };
+		10000000000000000000005C /* SocialPrivacySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettings.swift; sourceTree = "<group>"; };
+		10000000000000000000005D /* SocialPrivacySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettingsView.swift; sourceTree = "<group>"; };
+		10000000000000000000005E /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceChunkTransfer.swift; sourceTree = "<group>"; };
+		10000000000000000000005F /* ArtistImageCandidatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistImageCandidatePicker.swift; sourceTree = "<group>"; };
+		A10000000000000000000002 /* LibraryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPresentation.swift; sourceTree = "<group>"; };
+		D10000000000000000000001 /* OngakuMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuMobileApp.swift; sourceTree = "<group>"; };
+		D10000000000000000000002 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
+		D10000000000000000000003 /* MobileSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSyncController.swift; sourceTree = "<group>"; };
+		D10000000000000000000004 /* OngakuMobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuMobile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D10000000000000000000005 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D10000000000000000000006 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/Localizable.strings; sourceTree = "<group>"; };
+		D10000000000000000000007 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		D10000000000000000000008 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D10000000000000000000009 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = Resources/ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		D1000000000000000000000A /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "Resources/zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		D1000000000000000000000B /* ../OngakuDesktop/DeviceSyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceSyncModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000012 /* ../OngakuDesktop/LibraryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/LibraryModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000013 /* ../OngakuDesktop/AudioFeatureAnalysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/AudioFeatureAnalysis.swift; sourceTree = "<group>"; };
+		D10000000000000000000014 /* ../OngakuDesktop/SharedMusicModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/SharedMusicModels.swift; sourceTree = "<group>"; };
+		D10000000000000000000015 /* Resources/PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		D10000000000000000000016 /* ../OngakuDesktop/DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceChunkTransfer.swift; sourceTree = "<group>"; };
 		S10000000000000000000001 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		U10000000000000000000001 /* OngakuDesktopUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuDesktopUITests.swift; sourceTree = "<group>"; };
 		U10000000000000000000002 /* OngakuDesktopUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OngakuDesktopUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -206,14 +275,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		S30000000000000000000001 /* Frameworks */ = {
+		D30000000000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		D30000000000000000000001 /* Frameworks */ = {
+		S30000000000000000000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -235,8 +304,8 @@
 			children = (
 				400000000000000000000002 /* OngakuDesktop */,
 				D40000000000000000000001 /* OngakuMobile */,
-				U40000000000000000000001 /* OngakuDesktopUITests */,
-				100000000000000000000040 /* Assets.xcassets */,
+				U40000000000000000000001 /* Tests/OngakuDesktopUITests */,
+				100000000000000000000040 /* Packaging/Assets.xcassets */,
 				400000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -311,38 +380,11 @@
 				100000000000000000000034 /* PreferencesView.swift */,
 				100000000000000000000010 /* Localizable.strings */,
 				10000000000000000000004E /* InfoPlist.strings */,
-				100000000000000000000059 /* PrivacyInfo.xcprivacy */,
+				100000000000000000000059 /* Resources/PrivacyInfo.xcprivacy */,
 			);
 			name = OngakuDesktop;
 			path = Sources/OngakuDesktop;
 			sourceTree = "<group>";
-		};
-		D40000000000000000000001 /* OngakuMobile */ = {
-			isa = PBXGroup;
-			children = (
-				D10000000000000000000001 /* OngakuMobileApp.swift */,
-				D10000000000000000000002 /* MobileContentView.swift */,
-				D10000000000000000000003 /* MobileSyncController.swift */,
-				D1000000000000000000000B /* DeviceSyncModels.swift */,
-				D10000000000000000000016 /* DeviceChunkTransfer.swift */,
-				D10000000000000000000012 /* LibraryModels.swift */,
-				D10000000000000000000013 /* AudioFeatureAnalysis.swift */,
-				D10000000000000000000014 /* SharedMusicModels.swift */,
-				D10000000000000000000010 /* Localizable.strings */,
-				D10000000000000000000011 /* InfoPlist.strings */,
-				D10000000000000000000015 /* PrivacyInfo.xcprivacy */,
-			);
-			name = OngakuMobile;
-			path = Sources/OngakuMobile;
-			sourceTree = "<group>";
-		};
-		U40000000000000000000001 /* OngakuDesktopUITests */ = {
-			isa = PBXGroup;
-			children = (
-				U10000000000000000000001 /* OngakuDesktopUITests.swift */,
-			);
-			path = Tests/OngakuDesktopUITests;
-			sourceTree = SOURCE_ROOT;
 		};
 		400000000000000000000003 /* Products */ = {
 			isa = PBXGroup;
@@ -354,6 +396,33 @@
 			);
 			name = Products;
 			sourceTree = "<group>";
+		};
+		D40000000000000000000001 /* OngakuMobile */ = {
+			isa = PBXGroup;
+			children = (
+				D10000000000000000000001 /* OngakuMobileApp.swift */,
+				D10000000000000000000002 /* MobileContentView.swift */,
+				D10000000000000000000003 /* MobileSyncController.swift */,
+				D1000000000000000000000B /* ../OngakuDesktop/DeviceSyncModels.swift */,
+				D10000000000000000000016 /* ../OngakuDesktop/DeviceChunkTransfer.swift */,
+				D10000000000000000000012 /* ../OngakuDesktop/LibraryModels.swift */,
+				D10000000000000000000013 /* ../OngakuDesktop/AudioFeatureAnalysis.swift */,
+				D10000000000000000000014 /* ../OngakuDesktop/SharedMusicModels.swift */,
+				D10000000000000000000010 /* Localizable.strings */,
+				D10000000000000000000011 /* InfoPlist.strings */,
+				D10000000000000000000015 /* Resources/PrivacyInfo.xcprivacy */,
+			);
+			name = OngakuMobile;
+			path = Sources/OngakuMobile;
+			sourceTree = "<group>";
+		};
+		U40000000000000000000001 /* Tests/OngakuDesktopUITests */ = {
+			isa = PBXGroup;
+			children = (
+				U10000000000000000000001 /* OngakuDesktopUITests.swift */,
+			);
+			path = Tests/OngakuDesktopUITests;
+			sourceTree = SOURCE_ROOT;
 		};
 /* End PBXGroup section */
 
@@ -378,25 +447,6 @@
 			productReference = 100000000000000000000020 /* OngakuDesktop.app */;
 			productType = "com.apple.product-type.application";
 		};
-		S50000000000000000000001 /* OngakuDesktopAppStore */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = S90000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuDesktopAppStore" */;
-			buildPhases = (
-				S60000000000000000000001 /* Sources */,
-				S30000000000000000000001 /* Frameworks */,
-				S70000000000000000000001 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = OngakuDesktopAppStore;
-			packageProductDependencies = (
-			);
-			productName = OngakuDesktop;
-			productReference = S10000000000000000000001 /* OngakuDesktop.app */;
-			productType = "com.apple.product-type.application";
-		};
 		D50000000000000000000001 /* OngakuMobile */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D90000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuMobile" */;
@@ -414,6 +464,25 @@
 			);
 			productName = OngakuMobile;
 			productReference = D10000000000000000000004 /* OngakuMobile.app */;
+			productType = "com.apple.product-type.application";
+		};
+		S50000000000000000000001 /* OngakuDesktopAppStore */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = S90000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuDesktopAppStore" */;
+			buildPhases = (
+				S60000000000000000000001 /* Sources */,
+				S30000000000000000000001 /* Frameworks */,
+				S70000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = OngakuDesktopAppStore;
+			packageProductDependencies = (
+			);
+			productName = OngakuDesktop;
+			productReference = S10000000000000000000001 /* OngakuDesktop.app */;
 			productType = "com.apple.product-type.application";
 		};
 		U50000000000000000000001 /* OngakuDesktopUITests */ = {
@@ -442,19 +511,19 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2660;
-				LastUpgradeCheck = 2660;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					500000000000000000000001 = {
 						CreatedOnToolsVersion = 26.6;
 						DevelopmentTeam = 3WH28SSRZC;
 						ProvisioningStyle = Automatic;
 					};
-					S50000000000000000000001 = {
+					D50000000000000000000001 = {
 						CreatedOnToolsVersion = 26.6;
 						DevelopmentTeam = 3WH28SSRZC;
 						ProvisioningStyle = Automatic;
 					};
-					D50000000000000000000001 = {
+					S50000000000000000000001 = {
 						CreatedOnToolsVersion = 26.6;
 						DevelopmentTeam = 3WH28SSRZC;
 						ProvisioningStyle = Automatic;
@@ -477,7 +546,7 @@
 			);
 			mainGroup = 400000000000000000000001;
 			packageReferences = (
-				C00000000000000000000001 /* XCLocalSwiftPackageReference "Sparkle" */,
+				C00000000000000000000001 /* XCLocalSwiftPackageReference "Vendor/Sparkle" */,
 			);
 			productRefGroup = 400000000000000000000003 /* Products */;
 			projectDirPath = "";
@@ -497,20 +566,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				20000000000000000000000D /* Localizable.strings in Resources */,
-				200000000000000000000029 /* Assets.xcassets in Resources */,
+				200000000000000000000029 /* Packaging/Assets.xcassets in Resources */,
 				200000000000000000000034 /* InfoPlist.strings in Resources */,
-				200000000000000000000045 /* PrivacyInfo.xcprivacy in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		S70000000000000000000001 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				20000000000000000000000D /* Localizable.strings in Resources */,
-				200000000000000000000029 /* Assets.xcassets in Resources */,
-				200000000000000000000034 /* InfoPlist.strings in Resources */,
-				200000000000000000000045 /* PrivacyInfo.xcprivacy in Resources */,
+				200000000000000000000045 /* Resources/PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -520,7 +578,18 @@
 			files = (
 				D20000000000000000000005 /* Localizable.strings in Resources */,
 				D20000000000000000000006 /* InfoPlist.strings in Resources */,
-				D2000000000000000000000A /* PrivacyInfo.xcprivacy in Resources */,
+				D2000000000000000000000A /* Resources/PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		S70000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8DA8ECF30825B1B00B38A1B /* Localizable.strings in Resources */,
+				E8DA8ED030825B1B00B38A1B /* Packaging/Assets.xcassets in Resources */,
+				E8DA8ED130825B1B00B38A1B /* InfoPlist.strings in Resources */,
+				E8DA8ED230825B1B00B38A1B /* Resources/PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -606,78 +675,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		S60000000000000000000001 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				200000000000000000000001 /* OngakuDesktopApp.swift in Sources */,
-				200000000000000000000002 /* DesignTokens.swift in Sources */,
-				200000000000000000000003 /* Localization.swift in Sources */,
-				200000000000000000000004 /* LibraryModels.swift in Sources */,
-				200000000000000000000046 /* SharedMusicModels.swift in Sources */,
-				200000000000000000000036 /* AudioFeatureAnalysis.swift in Sources */,
-				200000000000000000000005 /* LibraryRepository.swift in Sources */,
-				20000000000000000000002A /* SQLiteCatalogPrototype.swift in Sources */,
-				200000000000000000000006 /* LibraryStore.swift in Sources */,
-				A10000000000000000000001 /* LibraryPresentation.swift in Sources */,
-				20000000000000000000002E /* PlaylistTransfer.swift in Sources */,
-				20000000000000000000002F /* LRCLIBService.swift in Sources */,
-				200000000000000000000030 /* MusicBrainzService.swift in Sources */,
-				200000000000000000000031 /* MusicBrainzCandidatePicker.swift in Sources */,
-				20000000000000000000004B /* ArtistImageCandidatePicker.swift in Sources */,
-				200000000000000000000032 /* AudioCDImportView.swift in Sources */,
-				200000000000000000000037 /* URLAudioImportView.swift in Sources */,
-				200000000000000000000038 /* LegacyLibraryMigrationView.swift in Sources */,
-				200000000000000000000039 /* OngakuLibraryMigrationView.swift in Sources */,
-				200000000000000000000040 /* SharedFolderMigrationView.swift in Sources */,
-				200000000000000000000041 /* MediaOrganizationView.swift in Sources */,
-				200000000000000000000042 /* DeviceSyncModels.swift in Sources */,
-				20000000000000000000004A /* DeviceChunkTransfer.swift in Sources */,
-				200000000000000000000043 /* PhoneSyncController.swift in Sources */,
-				200000000000000000000044 /* DeviceSyncView.swift in Sources */,
-				200000000000000000000033 /* AppleMusicStoreView.swift in Sources */,
-				200000000000000000000035 /* AppleMusicPlaybackController.swift in Sources */,
-				20000000000000000000001F /* LibraryStorageSettings.swift in Sources */,
-				200000000000000000000021 /* AppLanguageSettings.swift in Sources */,
-				200000000000000000000023 /* AppAppearanceSettings.swift in Sources */,
-				20000000000000000000002C /* PlayerMeterSettings.swift in Sources */,
-				200000000000000000000024 /* WindowPresentationController.swift in Sources */,
-				200000000000000000000007 /* PlaybackController.swift in Sources */,
-				200000000000000000000047 /* AudioSignalPath.swift in Sources */,
-				200000000000000000000048 /* SocialPrivacySettings.swift in Sources */,
-				200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */,
-				20000000000000000000002B /* SystemNowPlayingController.swift in Sources */,
-				20000000000000000000000E /* AudioOutputManager.swift in Sources */,
-				20000000000000000000000F /* AudioEffectPreset.swift in Sources */,
-				200000000000000000000010 /* AudioEffectNode.swift in Sources */,
-				200000000000000000000011 /* AudioEffectModuleRegistry.swift in Sources */,
-				200000000000000000000012 /* SimulationAudioEffect.swift in Sources */,
-				200000000000000000000013 /* EqualizerAudioEffect.swift in Sources */,
-				200000000000000000000014 /* BodyAudioEffect.swift in Sources */,
-				200000000000000000000015 /* ExciterAudioEffect.swift in Sources */,
-				200000000000000000000016 /* OptoFETAudioEffect.swift in Sources */,
-				200000000000000000000017 /* WarmAudioEffect.swift in Sources */,
-				200000000000000000000018 /* GlossAudioEffect.swift in Sources */,
-				200000000000000000000019 /* SpaceAudioEffect.swift in Sources */,
-				20000000000000000000001A /* BBEAudioEffect.swift in Sources */,
-				20000000000000000000001B /* HighQualityEnhancementAudioEffect.swift in Sources */,
-				20000000000000000000001C /* RotaryKnob.swift in Sources */,
-				20000000000000000000001D /* EffectsRackView.swift in Sources */,
-				20000000000000000000001E /* MiniToggleSwitch.swift in Sources */,
-				200000000000000000000008 /* ContentView.swift in Sources */,
-				200000000000000000000009 /* LibrarySidebar.swift in Sources */,
-				20000000000000000000000A /* LibraryContent.swift in Sources */,
-				200000000000000000000027 /* ArtworkResolver.swift in Sources */,
-				200000000000000000000028 /* MetadataEditorView.swift in Sources */,
-				20000000000000000000002D /* AudioFileMetadataWriter.swift in Sources */,
-				20000000000000000000000B /* TrackInspector.swift in Sources */,
-				20000000000000000000000C /* PlayerBar.swift in Sources */,
-				200000000000000000000025 /* MiniPlayerView.swift in Sources */,
-				200000000000000000000020 /* StorageSettingsView.swift in Sources */,
-				200000000000000000000022 /* PreferencesView.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		D60000000000000000000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -685,11 +682,83 @@
 				D20000000000000000000001 /* OngakuMobileApp.swift in Sources */,
 				D20000000000000000000002 /* MobileContentView.swift in Sources */,
 				D20000000000000000000003 /* MobileSyncController.swift in Sources */,
-				D20000000000000000000004 /* DeviceSyncModels.swift in Sources */,
-				D2000000000000000000000B /* DeviceChunkTransfer.swift in Sources */,
-				D20000000000000000000007 /* LibraryModels.swift in Sources */,
-				D20000000000000000000008 /* AudioFeatureAnalysis.swift in Sources */,
-				D20000000000000000000009 /* SharedMusicModels.swift in Sources */,
+				D20000000000000000000004 /* ../OngakuDesktop/DeviceSyncModels.swift in Sources */,
+				D2000000000000000000000B /* ../OngakuDesktop/DeviceChunkTransfer.swift in Sources */,
+				D20000000000000000000007 /* ../OngakuDesktop/LibraryModels.swift in Sources */,
+				D20000000000000000000008 /* ../OngakuDesktop/AudioFeatureAnalysis.swift in Sources */,
+				D20000000000000000000009 /* ../OngakuDesktop/SharedMusicModels.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		S60000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E8DA8E8E30825B1B00B38A1B /* OngakuDesktopApp.swift in Sources */,
+				E8DA8E8F30825B1B00B38A1B /* DesignTokens.swift in Sources */,
+				E8DA8E9030825B1B00B38A1B /* Localization.swift in Sources */,
+				E8DA8E9130825B1B00B38A1B /* LibraryModels.swift in Sources */,
+				E8DA8E9230825B1B00B38A1B /* SharedMusicModels.swift in Sources */,
+				E8DA8E9330825B1B00B38A1B /* AudioFeatureAnalysis.swift in Sources */,
+				E8DA8E9430825B1B00B38A1B /* LibraryRepository.swift in Sources */,
+				E8DA8E9530825B1B00B38A1B /* SQLiteCatalogPrototype.swift in Sources */,
+				E8DA8E9630825B1B00B38A1B /* LibraryStore.swift in Sources */,
+				E8DA8E9730825B1B00B38A1B /* LibraryPresentation.swift in Sources */,
+				E8DA8E9830825B1B00B38A1B /* PlaylistTransfer.swift in Sources */,
+				E8DA8E9930825B1B00B38A1B /* LRCLIBService.swift in Sources */,
+				E8DA8E9A30825B1B00B38A1B /* MusicBrainzService.swift in Sources */,
+				E8DA8E9B30825B1B00B38A1B /* MusicBrainzCandidatePicker.swift in Sources */,
+				E8DA8E9C30825B1B00B38A1B /* ArtistImageCandidatePicker.swift in Sources */,
+				E8DA8E9D30825B1B00B38A1B /* AudioCDImportView.swift in Sources */,
+				E8DA8E9E30825B1B00B38A1B /* URLAudioImportView.swift in Sources */,
+				E8DA8E9F30825B1B00B38A1B /* LegacyLibraryMigrationView.swift in Sources */,
+				E8DA8EA030825B1B00B38A1B /* OngakuLibraryMigrationView.swift in Sources */,
+				E8DA8EA130825B1B00B38A1B /* SharedFolderMigrationView.swift in Sources */,
+				E8DA8EA230825B1B00B38A1B /* MediaOrganizationView.swift in Sources */,
+				E8DA8EA330825B1B00B38A1B /* DeviceSyncModels.swift in Sources */,
+				E8DA8EA430825B1B00B38A1B /* DeviceChunkTransfer.swift in Sources */,
+				E8DA8EA530825B1B00B38A1B /* PhoneSyncController.swift in Sources */,
+				E8DA8EA630825B1B00B38A1B /* DeviceSyncView.swift in Sources */,
+				E8DA8EA730825B1B00B38A1B /* AppleMusicStoreView.swift in Sources */,
+				E8DA8EA830825B1B00B38A1B /* AppleMusicPlaybackController.swift in Sources */,
+				E8DA8EA930825B1B00B38A1B /* LibraryStorageSettings.swift in Sources */,
+				E8DA8EAA30825B1B00B38A1B /* AppLanguageSettings.swift in Sources */,
+				E8DA8EAB30825B1B00B38A1B /* AppAppearanceSettings.swift in Sources */,
+				E8DA8EAC30825B1B00B38A1B /* PlayerMeterSettings.swift in Sources */,
+				E8DA8EAD30825B1B00B38A1B /* WindowPresentationController.swift in Sources */,
+				E8DA8EAE30825B1B00B38A1B /* PlaybackController.swift in Sources */,
+				E8DA8EAF30825B1B00B38A1B /* AudioSignalPath.swift in Sources */,
+				E8DA8EB030825B1B00B38A1B /* SocialPrivacySettings.swift in Sources */,
+				E8DA8EB130825B1B00B38A1B /* SocialPrivacySettingsView.swift in Sources */,
+				E8DA8EB230825B1B00B38A1B /* SystemNowPlayingController.swift in Sources */,
+				E8DA8EB330825B1B00B38A1B /* AudioOutputManager.swift in Sources */,
+				E8DA8EB430825B1B00B38A1B /* AudioEffectPreset.swift in Sources */,
+				E8DA8EB530825B1B00B38A1B /* AudioEffectNode.swift in Sources */,
+				E8DA8EB630825B1B00B38A1B /* AudioEffectModuleRegistry.swift in Sources */,
+				E8DA8EB730825B1B00B38A1B /* SimulationAudioEffect.swift in Sources */,
+				E8DA8EB830825B1B00B38A1B /* EqualizerAudioEffect.swift in Sources */,
+				E8DA8EB930825B1B00B38A1B /* BodyAudioEffect.swift in Sources */,
+				E8DA8EBA30825B1B00B38A1B /* ExciterAudioEffect.swift in Sources */,
+				E8DA8EBB30825B1B00B38A1B /* OptoFETAudioEffect.swift in Sources */,
+				E8DA8EBC30825B1B00B38A1B /* WarmAudioEffect.swift in Sources */,
+				E8DA8EBD30825B1B00B38A1B /* GlossAudioEffect.swift in Sources */,
+				E8DA8EBE30825B1B00B38A1B /* SpaceAudioEffect.swift in Sources */,
+				E8DA8EBF30825B1B00B38A1B /* BBEAudioEffect.swift in Sources */,
+				E8DA8EC030825B1B00B38A1B /* HighQualityEnhancementAudioEffect.swift in Sources */,
+				E8DA8EC130825B1B00B38A1B /* RotaryKnob.swift in Sources */,
+				E8DA8EC230825B1B00B38A1B /* EffectsRackView.swift in Sources */,
+				E8DA8EC330825B1B00B38A1B /* MiniToggleSwitch.swift in Sources */,
+				E8DA8EC430825B1B00B38A1B /* ContentView.swift in Sources */,
+				E8DA8EC530825B1B00B38A1B /* LibrarySidebar.swift in Sources */,
+				E8DA8EC630825B1B00B38A1B /* LibraryContent.swift in Sources */,
+				E8DA8EC730825B1B00B38A1B /* ArtworkResolver.swift in Sources */,
+				E8DA8EC830825B1B00B38A1B /* MetadataEditorView.swift in Sources */,
+				E8DA8EC930825B1B00B38A1B /* AudioFileMetadataWriter.swift in Sources */,
+				E8DA8ECA30825B1B00B38A1B /* TrackInspector.swift in Sources */,
+				E8DA8ECB30825B1B00B38A1B /* PlayerBar.swift in Sources */,
+				E8DA8ECC30825B1B00B38A1B /* MiniPlayerView.swift in Sources */,
+				E8DA8ECD30825B1B00B38A1B /* StorageSettingsView.swift in Sources */,
+				E8DA8ECE30825B1B00B38A1B /* PreferencesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -712,16 +781,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		10000000000000000000004E /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				10000000000000000000004B /* en */,
-				10000000000000000000004C /* ja */,
-				10000000000000000000004D /* zh-Hans */,
-			);
-			name = InfoPlist.strings;
-			sourceTree = "<group>";
-		};
 		100000000000000000000010 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -730,6 +789,16 @@
 				10000000000000000000000F /* zh-Hans */,
 			);
 			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		10000000000000000000004E /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				10000000000000000000004B /* en */,
+				10000000000000000000004C /* ja */,
+				10000000000000000000004D /* zh-Hans */,
+			);
+			name = InfoPlist.strings;
 			sourceTree = "<group>";
 		};
 		D10000000000000000000010 /* Localizable.strings */ = {
@@ -759,15 +828,45 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -777,15 +876,44 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "arm64 x86_64";
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -795,6 +923,7 @@
 			buildSettings = {
 				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 16;
@@ -806,7 +935,10 @@
 				INFOPLIST_FILE = Packaging/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.1.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
@@ -824,7 +956,8 @@
 			buildSettings = {
 				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "Developer ID Application";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 16;
 				DEAD_CODE_STRIPPING = YES;
@@ -835,7 +968,10 @@
 				INFOPLIST_FILE = Packaging/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 0.1.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
@@ -848,70 +984,10 @@
 			};
 			name = Release;
 		};
-		SB0000000000000000000001 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktopAppStore.entitlements;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 16;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 3WH28SSRZC;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Packaging/AppStoreInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
-				PRODUCT_NAME = OngakuDesktop;
-				SDKROOT = macosx;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG APP_STORE $(inherited)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-			};
-			name = Debug;
-		};
-		SB0000000000000000000002 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktopAppStore.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 16;
-				DEAD_CODE_STRIPPING = YES;
-				DEVELOPMENT_TEAM = 3WH28SSRZC;
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = Packaging/AppStoreInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.10;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
-				PRODUCT_NAME = OngakuDesktop;
-				SDKROOT = macosx;
-				SUPPORTED_PLATFORMS = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "APP_STORE $(inherited)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_STRICT_CONCURRENCY = complete;
-				SWIFT_VERSION = 6.0;
-			};
-			name = Release;
-		};
 		DA0000000000000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
@@ -934,6 +1010,7 @@
 		DA0000000000000000000002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
@@ -953,10 +1030,81 @@
 			};
 			name = Release;
 		};
+		SB0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktopAppStore.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 16;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 3WH28SSRZC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Packaging/AppStoreInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.10;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
+				PRODUCT_NAME = OngakuDesktop;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG APP_STORE $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		SB0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktopAppStore.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 16;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 3WH28SSRZC;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Packaging/AppStoreInfo.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Ongaku Desktop";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MARKETING_VERSION = 0.1.10;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
+				PRODUCT_NAME = OngakuDesktop;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "APP_STORE $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
 		UA0000000000000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop.uitests;
@@ -970,7 +1118,9 @@
 		UA0000000000000000000002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop.uitests;
@@ -1002,20 +1152,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		S90000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuDesktopAppStore" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				SB0000000000000000000001 /* Debug */,
-				SB0000000000000000000002 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		D90000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuMobile" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DA0000000000000000000001 /* Debug */,
 				DA0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		S90000000000000000000001 /* Build configuration list for PBXNativeTarget "OngakuDesktopAppStore" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				SB0000000000000000000001 /* Debug */,
+				SB0000000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -1032,7 +1182,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		C00000000000000000000001 /* XCLocalSwiftPackageReference "Sparkle" */ = {
+		C00000000000000000000001 /* XCLocalSwiftPackageReference "Vendor/Sparkle" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Vendor/Sparkle;
 		};
@@ -1041,7 +1191,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		C00000000000000000000002 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = C00000000000000000000001 /* XCLocalSwiftPackageReference "Sparkle" */;
+			package = C00000000000000000000001 /* XCLocalSwiftPackageReference "Vendor/Sparkle" */;
 			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
