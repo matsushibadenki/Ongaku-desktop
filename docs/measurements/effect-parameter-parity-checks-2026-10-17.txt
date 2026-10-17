@@ -1,0 +1,47 @@
+ongaku-mac-continuity.log
+PASS: 48 desktop continuous-control PCM cases
+PASS: rejected unprotected continuity defect
+PASS: rejected mute continuity defect
+
+ongaku-ios-transition-1017.log
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 48 shipping effect/automatic-DSP transitions, latest-request coalescing, handoff deferral and stop cancellation
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: continuity guards reject output muting during parameter gestures
+
+ongaku-ios-continuity-gain.log
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 72 shipping analysis/gain/loudness and restore-phase transition cases, both channels
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: gain guards reject duplicate planning and gain writes from inactive-only edits
+PASS: continuity guards reject output muting during parameter gestures
+
+ongaku-mac-transition-state.log
+✔ Test run with 4 tests in 1 suite passed after 0.009 seconds.
+
+ongaku-mac-transition-qualified-tests.log
+✔ Test run with 14 tests in 4 suites passed after 11.761 seconds.
+
+ongaku-effect-policy-meter-handoff.log
+PASS: intersample calibration sample=0.7919596 reconstructed8x=1.1202172 reconstructed16x=1.1202172
+PASS: continuously rendered +6 dB EQ converges to weighted gain target 4.8 dB: 4.8
+PASS: measured feedback changes rendered output by 0.15775332 versus estimate-only control
+PASS: 3 continuous PCM feedback / nonlinear / changing latency stereo cases
+
+ongaku-effect-policy-meter.log
+PASS: legacy store: fresh/delayed/stale/reordered PCM, settings/source invalidation, handoff and contention
+PASS: duplicate reads preserve gain; 26 fresh observations converge to 4.799822 dB
+PASS: modern store: fresh/delayed/stale/reordered PCM, settings/source invalidation, handoff and contention
+PASS: duplicate reads preserve gain; 26 fresh observations converge to 4.799822 dB
+PASS: nonfinite/future/missing timestamps and mismatched buffer windows rejected
+PASS: deliberately bypassing measurement freshness fails the regression guard
+
+ongaku-effect-continuity-ios-build.log
+** BUILD SUCCEEDED **
+
+ongaku-mac-continuity-xcode.log
+** BUILD SUCCEEDED **
+
+ongaku-mac-continuity-store-xcode.log
+** BUILD SUCCEEDED **
+

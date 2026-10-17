@@ -4,6 +4,14 @@
 
 2026-09-05再設計: [全体設計レビュー](ARCHITECTURE_REVIEW_2026-09-05.md)と[ADR-0003](adr/0003-stabilization-and-component-boundaries.md)に基づき、機能拡張より保存・応答性・実機品質を優先する。
 
+## Effect parameter parity — 2026-10-17
+
+- 🟢 [Done] Prioritize Mac continuous-control parity after final true-peak integration. Share the exact eight-step / nominal 10 ms interpolation policy with iPhone, coalesce rapid gestures, skip unchanged module writes, preserve output volume, hold continuous updates during active song overlaps, and reject queued updates after OFF/stop/seek/rebuild. iPhone's existing interpolation behavior is retained.
+- 🟢 [Done] Pass 48 Mac waveform cases across Basic/Pro, 44.1/48/96 kHz output and ordinary/true-peak paths, plus immediate-write/mute negative controls. Pass 4 Mac state tests and 14 integrated qualification tests; recheck iPhone 48 effect cases, 72 gain cases, meter freshness and 3 combined feedback cases. Both Mac products and the iPhone Simulator build pass. See [validation and measured limits](EFFECT_PARAMETER_PARITY_VALIDATION.md).
+- 🟠 [Next] Protect Mac enable/disable and OFF/restore commits, including latency/topology changes and song overlaps. Continuous parameter updates now match iPhone; Mac bypass still applies immediately. Retain saved settings, cancellation and final-output protection.
+- ⭕️ [Pending] Physical iPhone/Mac listening during gestures, OFF/restore, seek and song transitions; device clock/tap timing, UI-load scheduling and sustained CPU/energy behavior. Keep ordinary true-peak activation pending the existing device gates.
+- 🔴 [Later] Replace control-rate updates with validated sample-accurate parameter/bypass ramps on both platforms; measure residual/alias behavior before nonlinear oversampling.
+
 ## Audio fidelity policy — 2026-10-17
 
 - 🟢 [Done] Use the same 96 kHz effect-rack policy as iPhone, keeping file clocks and actual hardware output separate. The source mixer converts into the rack; 192 kHz files retain Space. Controller coverage and nine offline source/Space/output paths passed.

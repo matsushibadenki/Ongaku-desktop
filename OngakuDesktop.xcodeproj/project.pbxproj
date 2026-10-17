@@ -164,6 +164,10 @@
 		A202610170000000000000021 /* FinalOutputProtection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000011 /* FinalOutputProtection.swift */; };
 		A202610170000000000000022 /* TruePeakAudioUnit.mm in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000012 /* TruePeakAudioUnit.mm */; };
 		A202610170000000000000023 /* TruePeakAudioUnit.mm in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000012 /* TruePeakAudioUnit.mm */; };
+		A202610170000000000000050 /* EffectTransitionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000040 /* EffectTransitionPolicy.swift */; };
+		A202610170000000000000051 /* EffectTransitionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000040 /* EffectTransitionPolicy.swift */; };
+		A202610170000000000000052 /* EffectParameterTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000041 /* EffectParameterTransition.swift */; };
+		A202610170000000000000053 /* EffectParameterTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000041 /* EffectParameterTransition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -274,6 +278,8 @@
 		A202610170000000000000003 /* IntegratedLoudnessMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegratedLoudnessMeter.swift; sourceTree = "<group>"; };
 		A202610170000000000000011 /* FinalOutputProtection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/FinalOutputProtection.swift; sourceTree = SOURCE_ROOT; };
 		A202610170000000000000012 /* TruePeakAudioUnit.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Sources/OngakuAudioDSP/TruePeakAudioUnit.mm; sourceTree = SOURCE_ROOT; };
+		A202610170000000000000040 /* EffectTransitionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/EffectTransitionPolicy.swift; sourceTree = SOURCE_ROOT; };
+		A202610170000000000000041 /* EffectParameterTransition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/EffectParameterTransition.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -359,6 +365,8 @@
 				A202610170000000000000003 /* IntegratedLoudnessMeter.swift */,
 				A202610170000000000000011 /* FinalOutputProtection.swift */,
 				A202610170000000000000012 /* TruePeakAudioUnit.mm */,
+				A202610170000000000000040 /* EffectTransitionPolicy.swift */,
+				A202610170000000000000041 /* EffectParameterTransition.swift */,
 				A202610170000000000000001 /* AudioProcessingPolicy.swift */,
 				10000000000000000000005B /* AudioSignalPath.swift */,
 				10000000000000000000005C /* SocialPrivacySettings.swift */,
@@ -621,6 +629,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A202610170000000000000052 /* EffectParameterTransition.swift in Sources */,
+				A202610170000000000000050 /* EffectTransitionPolicy.swift in Sources */,
 				A202610170000000000000022 /* TruePeakAudioUnit.mm in Sources */,
 				A202610170000000000000020 /* FinalOutputProtection.swift in Sources */,
 				200000000000000000000001 /* OngakuDesktopApp.swift in Sources */,
@@ -712,6 +722,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A202610170000000000000053 /* EffectParameterTransition.swift in Sources */,
+				A202610170000000000000051 /* EffectTransitionPolicy.swift in Sources */,
 				A202610170000000000000004 /* IntegratedLoudnessMeter.swift in Sources */,
 				A202610170000000000000002 /* AudioProcessingPolicy.swift in Sources */,
 				A202610170000000000000023 /* TruePeakAudioUnit.mm in Sources */,

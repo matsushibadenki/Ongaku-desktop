@@ -995,6 +995,19 @@ final class PlaybackController: ObservableObject {
     private let effectOutputProtection = EffectOutputProtection()
     private let finalOutputProtection = FinalOutputProtection()
     private let effectPipeline: [AudioEffectNode]
+    private lazy var effectParameterTransition = EffectParameterTransition(
+        isAudible: { [weak self] in
+            guard let self else { return false }
+            return self.primaryPlayerNode.isPlaying || self.secondaryPlayerNode.isPlaying
+        },
+        shouldDefer: { [weak self] in
+            guard let prepared = self?.prerolledTrack,
+                  prepared.crossfadeDuration > 0,
+                  let start = prepared.crossfadeStartHostTime else { return false }
+            return mach_absolute_time() >= start
+        },
+        commit: { [weak self] settings in self?.commitEffectSettings(settings) }
+    )
     private let outputManager = AudioOutputManager()
     private let audioFileOpener: (URL) throws -> AVAudioFile
     private var audioFile: AVAudioFile?
@@ -1087,7 +1100,7 @@ final class PlaybackController: ObservableObject {
         effectPipeline.forEach { $0.attach(to: engine) }
         effectOutputProtection.attach(to: engine)
         finalOutputProtection.attach(to: engine)
-        effectSettings.forEach(applyEffectSetting)
+        applyEffectSettings(immediately: true, force: true)
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
         sourceMixerNode.outputVolume = 1
@@ -1175,7 +1188,7 @@ final class PlaybackController: ObservableObject {
         guard effectsBypassed != bypassed else { return }
         effectsBypassed = bypassed
         UserDefaults.standard.set(bypassed, forKey: Self.effectsBypassedKey)
-        effectSettings.forEach(applyEffectSetting)
+        applyEffectSettings()
         logSignalPath(reason: "dsp-bypass-changed")
     }
 
@@ -1198,7 +1211,7 @@ final class PlaybackController: ObservableObject {
         guard let index = effectSettings.firstIndex(where: { $0.kind == kind }) else { return }
         let wasEnabled = effectSettings[index].isEnabled
         effectSettings[index] = RealtimeAudioEffectSetting(kind: kind, isEnabled: wasEnabled)
-        applyEffectSetting(effectSettings[index])
+        applyEffectSettings()
         persistEffectSettings()
     }
 
@@ -1658,7 +1671,7 @@ final class PlaybackController: ObservableObject {
         effectOutputProtection.connect(from: upstream, engine: engine, format: processingFormat,
                                        destination: finalOutputProtection.inputNode(in: engine))
         // Reapply sample-rate-dependent settings after the new format is connected.
-        effectSettings.forEach(applyEffectSetting)
+        applyEffectSettings(immediately: true, force: true)
         let hardwareFormat = engine.outputNode.inputFormat(forBus: 0)
         try finalOutputProtection.connect(engine: engine, outputFormat: hardwareFormat)
         finalOutputProtection.setVolume(volume, engine: engine)
@@ -2135,6 +2148,7 @@ final class PlaybackController: ObservableObject {
         }
         primaryPlayerNode.stop()
         secondaryPlayerNode.stop()
+        applyEffectSettings(immediately: true)
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
         if resetActivePlayer { activePlayerIndex = 0 }
@@ -2264,16 +2278,27 @@ final class PlaybackController: ObservableObject {
     ) {
         guard let index = effectSettings.firstIndex(where: { $0.kind == kind }) else { return }
         mutation(&effectSettings[index])
-        applyEffectSetting(effectSettings[index])
+        applyEffectSettings()
         persistEffectSettings()
         logSignalPath(reason: "dsp-setting-changed")
     }
 
-    private func applyEffectSetting(_ setting: RealtimeAudioEffectSetting) {
-        var effectiveSetting = setting
-        if effectsBypassed { effectiveSetting.isEnabled = false }
-        effectPipeline.first(where: { $0.kind == setting.kind })?.apply(setting: effectiveSetting)
-        effectOutputProtection.setEnabled(effectPipeline.contains { $0.isEnabled })
+    private func applyEffectSettings(immediately: Bool = false, force: Bool = false) {
+        let effective = effectSettings.map { setting in
+            var result = setting
+            if effectsBypassed { result.isEnabled = false }
+            return result
+        }
+        effectParameterTransition.apply(effective, immediately: immediately, force: force)
+    }
+
+    private func commitEffectSettings(_ settings: [RealtimeAudioEffectSetting]) {
+        let wasEnabled = effectPipeline.contains { $0.isEnabled }
+        for setting in settings {
+            effectPipeline.first(where: { $0.kind == setting.kind })?.apply(setting: setting)
+        }
+        let isEnabled = effectPipeline.contains { $0.isEnabled }
+        if wasEnabled != isEnabled { effectOutputProtection.setEnabled(isEnabled) }
     }
 
     private func persistEffectSettings() {
