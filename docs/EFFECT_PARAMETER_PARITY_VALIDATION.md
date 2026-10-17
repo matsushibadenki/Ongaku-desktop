@@ -1,5 +1,7 @@
 # Effect parameter continuity across iPhone and Mac — 2026-10-17
 
+> Historical checkpoint before bypass protection. Current ON/OFF behavior and the expanded regression matrix are documented in [Mac bypass protection](EFFECT_BYPASS_PROTECTION_VALIDATION.md). The immediate-bypass statements and OFF/restore measurements below describe that earlier checkpoint.
+
 ## Priority and scope
 
 Both roadmaps were reviewed after final-output true-peak integration. Physical output qualification remains pending. The next audio improvement selected was the desktop's immediate parameter writes: iPhone already interpolated continuous controls, while Mac applied each slider value directly to the Audio Units. Aligning this existing playback behavior takes priority over new acoustic profiles or nonlinear oversampling. Desktop A3/A4 library/search/transfer work remains on its existing roadmap; it is not marked complete by this change.
@@ -61,7 +63,7 @@ swift test -Xswiftc -DONGAKU_ENABLE_TRUE_PEAK \
 
 ## Next and pending
 
-🟠 [Next] Protect Mac enable/disable and OFF/restore commits with a validated short envelope or crossfade, including changes to latency/topology and interactions with song overlaps. Preserve saved settings, latest-target handling, cancellation and final-output protection. Match iPhone's documented behavior before pursuing more complex ramps.
+🟢 [Done] Superseded by [bypass protection](EFFECT_BYPASS_PROTECTION_VALIDATION.md): protect Mac enable/disable and OFF/restore commits with a validated short envelope or crossfade, including changes to latency/topology and interactions with song overlaps. Preserve saved settings, latest-target handling, cancellation and final-output protection. Match iPhone's documented behavior before pursuing more complex ramps.
 
 🔴 [Later] Sample-accurate parameter/bypass ramps on both platforms, with latency-aware waveform comparisons and residual/alias analysis before introducing nonlinear oversampling.
 

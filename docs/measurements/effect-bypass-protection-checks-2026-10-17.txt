@@ -1,0 +1,40 @@
+ON/OFF protection qualification — 2026-10-17
+
+Control-thread timing and offline PCM only. Physical listening and timing remain Pending.
+
+Mac ordinary focused tests
+✔ Test run with 19 tests in 4 suites passed after 12.356 seconds.
+
+Mac true-peak qualification focused tests
+✔ Test run with 19 tests in 4 suites passed after 8.139 seconds.
+
+iPhone transition regression
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 48 shipping effect/automatic-DSP transitions, latest-request coalescing, handoff deferral and stop cancellation
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: continuity guards reject output muting during parameter gestures
+
+iPhone gain regression
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 72 shipping analysis/gain/loudness and restore-phase transition cases, both channels
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: gain guards reject duplicate planning and gain writes from inactive-only edits
+PASS: continuity guards reject output muting during parameter gestures
+
+iPhone Simulator Debug build
+** BUILD SUCCEEDED **
+
+Mac Debug build
+** BUILD SUCCEEDED **
+
+Mac App Store Debug build
+** BUILD SUCCEEDED **
+
+Mac offline transition PCM and negative controls
+PASS: 96 desktop transition PCM cases
+PASS: rejected unprotected continuity defect
+PASS: rejected mute continuity defect
+PASS: rejected unsafe-bypass continuity defect
+
+Shared EffectTransitionPolicy and true-peak DSP/AU sources: byte-identical.
+Negative controls intentionally fail; no production test failures.

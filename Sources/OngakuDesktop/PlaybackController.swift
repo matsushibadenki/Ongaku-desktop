@@ -1004,7 +1004,11 @@ final class PlaybackController: ObservableObject {
             guard let prepared = self?.prerolledTrack,
                   prepared.crossfadeDuration > 0,
                   let start = prepared.crossfadeStartHostTime else { return false }
-            return mach_absolute_time() >= start
+            return mach_absolute_time() + AVAudioTime.hostTime(forSeconds: EffectTransitionPolicy.protectionWindow) >= start
+        },
+        setEnvelope: { [weak self] gain in
+            guard let self else { return }
+            self.finalOutputProtection.setTransitionGain(gain, engine: self.engine)
         },
         commit: { [weak self] settings in self?.commitEffectSettings(settings) }
     )
@@ -2044,6 +2048,8 @@ final class PlaybackController: ObservableObject {
         let targetNode: AVAudioPlayerNode
         let crossfadeStartHostTime: UInt64?
         if transitionPlan.crossfadeDuration > 0 {
+            // The regular playback tick retries preparation after the short protection ramp.
+            guard !effectParameterTransition.isProtectingOutput else { return }
             targetNode = standbyPlayerNode
             targetNode.stop()
             targetNode.volume = 0

@@ -1,0 +1,73 @@
+Playback continuity verification — 2026-10-17
+Physical iPhone built-in speaker / Mac listening: Pending
+
+Transport
+PASS: startup waits for render before fading
+PASS: pause intent, silent drain, position and restart
+PASS: rapid resume cancels old gains and pause without rescheduling
+PASS: stop invalidates transport callbacks before new playback
+PASS: seek cancellation and paused seek
+PASS: latest seek wins, including immediate seek/play callers
+PASS: missing render ends in paused state
+PASS: EOF cannot override pause/seek; resume replaces an already-ended schedule
+TRANSPORT_PCM rate=44100.0 fadeIn=false maxStep=0.0003630072
+TRANSPORT_PCM rate=44100.0 fadeIn=true maxStep=0.0003629923
+TRANSPORT_PCM rate=48000.0 fadeIn=false maxStep=0.00033335388
+TRANSPORT_PCM rate=48000.0 fadeIn=true maxStep=0.00033335388
+TRANSPORT_PCM rate=96000.0 fadeIn=false maxStep=0.00016668439
+TRANSPORT_PCM rate=96000.0 fadeIn=true maxStep=0.00016669929
+PASS: 6 stock-mixer PCM fade cases
+PASS: PCM guard rejects abrupt source start/stop
+
+Gain reference
+PASS: preserved unmeasured reference across quiet/hot upgrades; new track resets
+PASS: preserved measured reference across quiet/hot upgrades; new track resets
+PASS: reference guard rejects gain changes caused by late analysis
+
+Effects
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 48 shipping effect/automatic-DSP transitions, latest-request coalescing, handoff deferral and stop cancellation
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: continuity guards reject output muting during parameter gestures
+
+Gain/loudness
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 72 shipping analysis/gain/loudness and restore-phase transition cases, both channels
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: gain guards reject duplicate planning and gain writes from inactive-only edits
+PASS: continuity guards reject output muting during parameter gestures
+
+Simulator production engine
+PASS: requested Precision Sinc still reports actual streaming_open failure: stage=streaming_open reason=preparation_failed errorDomain="NSCocoaErrorDomain" errorCode=260
+PASS: next-track cache retains offline_open failure instead of manufacturing capacity_exceeded
+PASS: native ready before quality conversion (2452 ms on simulator)
+PASS: old source remains playing through graph startup and first render; session commit preserves the running node
+PASS: decoded fallback resumes with fade-in and a live enabled EQ, retaining the Music asset identity
+PASS: rapid pause/resume preserves the live schedule and rejects the stale physical pause
+PASS: pause drains at zero; paused seek and default resume restore output only after render startup
+PASS: pause cancels an in-flight seek without restarting or leaving output muted on resume
+PASS: failed Precision Sinc source preparation retains its stage and leaves native playback running
+PASS: preparation reaching fixture EOF safely defers the handoff
+PASS: quality handoff preserves input gain and automatic EQ, including a subsequent effect edit
+PASS: audible native stream upgrades without resetting the seek position; latest effects sampled at commit
+PASS: pause before incoming start and rapid resume during a live quality overlap preserve transport and gain
+PASS: current and following tracks stored in bounded disk cache while playback continues
+PASS: cached quality reused; completed upgrade cannot resume an explicitly paused track
+PASS: stopping invalidates an in-flight quality handoff
+PASS: a cancelled/stopped provisional render cannot report handoff readiness
+COMPLETE
+
+iPhone app build
+** BUILD SUCCEEDED **
+
+Mac focused tests
+✔ Test run with 19 tests in 4 suites passed after 8.061 seconds.
+
+Shipping source SHA-256
+d538126592057c6ba3d8ebca6dc377170412883da69381bf3e20017de813197f  audio/HiResPlaybackEngine.swift
+4531000145621fbfd6d3717b6028d70b8f383596a505965d20f208e3a7bd639c  audio/EffectTransitionPolicy.swift
+
+Timers in the extracted fixture are deterministic; PCM renders standard Apple mixer nodes.
+The Simulator audit uses the production engine and local fixtures, not the physical Music daemon.
+Immediate destructive stop/load/recovery and Mac transport/late analysis parity remain Next.
+No claim of physical inaudibility or ordinary true-peak activation.

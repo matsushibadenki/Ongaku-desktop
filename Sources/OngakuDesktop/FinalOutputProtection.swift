@@ -14,6 +14,8 @@ final class FinalOutputProtection {
         #endif
     }
 
+    private var userVolume: Float = 1
+    private var transitionGain: Float = 1
     private let conversionMixer = AVAudioMixerNode()
     let protector: AVAudioUnitEffect?
     var isEnabled: Bool { protector != nil }
@@ -36,7 +38,17 @@ final class FinalOutputProtection {
     }
 
     func setVolume(_ volume: Double, engine: AVAudioEngine) {
-        let gain = Float(volume.isFinite ? min(1, max(0, volume)) : 0)
+        userVolume = Float(volume.isFinite ? min(1, max(0, volume)) : 0)
+        updateGain(engine: engine)
+    }
+
+    func setTransitionGain(_ gain: Float, engine: AVAudioEngine) {
+        transitionGain = gain.isFinite ? min(1, max(0, gain)) : 0
+        updateGain(engine: engine)
+    }
+
+    private func updateGain(engine: AVAudioEngine) {
+        let gain = userVolume * transitionGain
         if isEnabled {
             conversionMixer.outputVolume = gain
             engine.mainMixerNode.outputVolume = 1

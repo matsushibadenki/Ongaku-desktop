@@ -1,0 +1,54 @@
+Audio preparation diagnostics — 2026-10-17
+Final successful runs; device/account/memory-pressure checks remain Pending.
+
+Diagnostic regression
+PASS: readable metadata passes the real offline preflight
+PASS: missing/corrupt sources retain offline_open, preparation_failed and original domain/code
+PASS: live memory, buffer size and frame-count limits differ from invalid metadata
+PASS: snapshot/cache size limits are distinct from timeout/copy failures
+PASS: non-Precision mode has its own unsupported_mode reason
+PASS: preflight and nested-stage cancellation preserve CancellationError
+PASS: inner stages survive outer catches; single-line logs retain domain/code without arbitrary userInfo
+PASS: actual streaming worker failure is streaming_open, not Precision Sinc
+PASS: preparation diagnostic regressions complete
+PASS: rejected the former capacity-for-all failure classification
+
+Streaming file regression
+PASS: worker-opened stereo PCM preserves all 8,192 samples and format
+PASS: incomplete staging files never reach the audio decoder
+PASS: MainActor continued for 30 ticks during a simulated 200 ms file open
+PASS: cancelled in-flight open cannot deliver its file
+PASS: already-cancelled requests perform no file I/O
+PASS: file-opening errors propagate to the existing recovery path
+
+Music asset regression
+PASS: passthrough preserves stereo PCM and timing; scoped snapshot cleanup preserves original
+PASS: cancelled preparation never publishes a snapshot
+PASS: unsupported passthrough falls back to disk PCM with exact stereo samples/rate/timing
+PASS: PCM fallback rejects oversize and cancellation
+PASS: stalled preparation times out and cancels its worker
+PASS: an unreadable exported container is discarded and decoded instead
+
+Remote resilience regression
+PASS: retry limits, network loss, backoff, strict ranges, encoding, truncation and slow-request cancellation
+PASS: one OAuth refresh, bounded repeated 401 and fractional metadata timestamps
+PASS: changed revision/checksum rejected and discarded; queued transfer cancels before writer becomes free
+PASS: clear/eviction protect playback and transfers; leases release; cache stays within budget
+
+Production-engine Simulator audit (iOS 26.2 SE)
+PASS: requested Precision Sinc still reports actual streaming_open failure: stage=streaming_open reason=preparation_failed errorDomain="NSCocoaErrorDomain" errorCode=260
+PASS: next-track cache retains offline_open failure instead of manufacturing capacity_exceeded
+PASS: native ready before quality conversion (2009 ms on simulator)
+PASS: old source remains playing through graph startup and first render; session commit preserves the running node
+PASS: decoded fallback resumes with fade-in and a live enabled EQ, retaining the Music asset identity
+PASS: failed Precision Sinc source preparation retains its stage and leaves native playback running
+PASS: preparation reaching fixture EOF safely defers the handoff
+PASS: audible native stream upgrades without resetting the seek position; latest effects sampled at commit
+PASS: current and following tracks stored in bounded disk cache while playback continues
+PASS: cached quality reused; completed upgrade cannot resume an explicitly paused track
+PASS: stopping invalidates an in-flight quality handoff
+PASS: a cancelled/stopped provisional render cannot report handoff readiness
+COMPLETE
+
+iPhone Simulator Debug build
+** BUILD SUCCEEDED **

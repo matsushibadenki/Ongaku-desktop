@@ -107,4 +107,88 @@ struct EffectParameterTransitionTests {
         #expect(ramp.applied[.equalizer] == setting(0.7))
         #expect(clock.events.isEmpty)
     }
+    @Test("Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits")
+    func protectedBypass() {
+        let clock = EffectClock()
+        var gain: Float = 1
+        var commits: [(Double, Float, RealtimeAudioEffectSetting)] = []
+        let ramp = EffectParameterTransition(isAudible: { true }, shouldDefer: { false },
+            setEnvelope: { gain = $0 }, schedule: clock.schedule) { values in
+                for value in values { commits.append((clock.now, gain, value)) }
+            }
+        ramp.apply([setting(0)], immediately: true); commits.removeAll()
+        ramp.apply([setting(0, enabled: false)])
+        clock.advance(0.004)
+        #expect(gain > 0 && gain < 1 && commits.isEmpty)
+        ramp.apply([setting(0.9, enabled: false)])
+        clock.advance(0.0081)
+        #expect(commits.count == 1 && commits[0].1 == 0)
+        #expect(commits[0].2 == setting(0.9, enabled: false))
+        ramp.apply([setting(0.7)]) // An ON during restore queues a fresh protected commit.
+        clock.advance(0.1)
+        #expect(commits.count == 2 && commits[1].1 == 0)
+        #expect(ramp.applied[.equalizer] == setting(0.7))
+        #expect(gain == 1 && !ramp.isProtectingOutput && clock.events.isEmpty)
+    }
+
+    @Test("Active and unexpectedly late overlaps never freeze the output muted")
+    func protectedOverlap() {
+        for late in [false, true] {
+            let clock = EffectClock()
+            var deferred = !late, gain: Float = 1
+            var writes = 0
+            let ramp = EffectParameterTransition(isAudible: { true }, shouldDefer: { deferred },
+                setEnvelope: { gain = $0 }, schedule: clock.schedule) { _ in writes += 1 }
+            ramp.apply([setting(0)], immediately: true)
+            ramp.apply([setting(1, enabled: false)])
+            clock.advance(0.004)
+            deferred = true
+            clock.advance(0.1)
+            #expect(gain == 1 && writes == 1)
+            #expect(!ramp.isProtectingOutput)
+            ramp.apply([setting(0.6, enabled: false)])
+            deferred = false
+            clock.advance(0.2)
+            #expect(ramp.applied[.equalizer] == setting(0.6, enabled: false))
+            #expect(writes == 2 && gain == 1 && clock.events.isEmpty)
+        }
+    }
+
+    @Test("Stop or rebuild in either envelope phase cancels callbacks before resume")
+    func stopDuringProtection() {
+        for stopTime in [0.004, 0.012] {
+            for force in [false, true] {
+                let clock = EffectClock()
+                var gain: Float = 1, writes = 0
+                var audible = true
+                let ramp = EffectParameterTransition(isAudible: { audible }, shouldDefer: { false },
+                    setEnvelope: { gain = $0 }, schedule: clock.schedule) { _ in writes += 1 }
+                ramp.apply([setting(0)], immediately: true)
+                ramp.apply([setting(0.9, enabled: false)])
+                clock.advance(stopTime)
+                audible = false
+                ramp.apply([setting(0.3)], immediately: true, force: force)
+                #expect(gain == 1 && !ramp.isProtectingOutput)
+                let count = writes
+                audible = true
+                clock.advance(0.1)
+                #expect(writes == count && gain == 1 && ramp.applied[.equalizer] == setting(0.3))
+            }
+        }
+    }
+
+    @Test("Transport becoming inaudible without an explicit cancel restores the envelope")
+    func naturalCompletion() {
+        let clock = EffectClock()
+        var gain: Float = 1, audible = true
+        let ramp = EffectParameterTransition(isAudible: { audible }, shouldDefer: { false },
+            setEnvelope: { gain = $0 }, schedule: clock.schedule) { _ in }
+        ramp.apply([setting(0)], immediately: true)
+        ramp.apply([setting(1, enabled: false)])
+        clock.advance(0.004); audible = false
+        clock.advance(0.1)
+        #expect(gain == 1 && !ramp.isProtectingOutput && clock.events.isEmpty)
+        #expect(ramp.applied[.equalizer] == setting(1, enabled: false))
+    }
+
 }

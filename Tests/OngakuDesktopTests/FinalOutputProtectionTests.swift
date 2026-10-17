@@ -86,4 +86,24 @@ struct FinalOutputProtectionTests {
         let output = try #require(AVAudioFormat(standardFormatWithSampleRate: 4_000, channels: 2))
         #expect(throws: (any Error).self) { try stage.connect(engine: engine, outputFormat: output) }
     }
+    @Test("Transition envelope multiplies the latest user volume before final protection")
+    func independentEnvelope() throws {
+        for enabled in [false, true] {
+            let engine = AVAudioEngine(), stage = FinalOutputProtection(enabled: enabled)
+            stage.attach(to: engine)
+            let mixer = try #require(stage.inputNode(in: engine) as? AVAudioMixerNode)
+            stage.setVolume(0.8, engine: engine)
+            stage.setTransitionGain(0.25, engine: engine)
+            #expect(abs(mixer.outputVolume - 0.2) < 0.000001)
+            stage.setVolume(0.4, engine: engine)
+            #expect(abs(mixer.outputVolume - 0.1) < 0.000001)
+            stage.setTransitionGain(0, engine: engine)
+            stage.setVolume(0.7, engine: engine)
+            #expect(mixer.outputVolume == 0)
+            stage.setTransitionGain(1, engine: engine)
+            #expect(mixer.outputVolume == 0.7)
+            if enabled { #expect(engine.mainMixerNode.outputVolume == 1) }
+        }
+    }
+
 }

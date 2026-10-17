@@ -4,11 +4,33 @@
 
 2026-09-05再設計: [全体設計レビュー](ARCHITECTURE_REVIEW_2026-09-05.md)と[ADR-0003](adr/0003-stabilization-and-component-boundaries.md)に基づき、機能拡張より保存・応答性・実機品質を優先する。
 
+## iPhone speaker continuity coordination — 2026-10-17
+
+- 🟢 [Done] Coordinate the reported iPhone built-in-speaker volume jumps/clicks: retain normalization and applied automatic EQ through same-track quality replacement, defer new automatic analysis until explicit tuning/new prepared playback, and add independent start/pause/seek protection with stale-callback and EOF guards.
+- 🟢 [Done] Keep `EffectTransitionPolicy` byte-identical across both apps. Pass Mac's 19 focused effect-transition/final-output/fidelity tests; record iPhone transport PCM/state/gain-reference regressions, 17 production-engine Simulator checks, the ordinary app build and the 48 effect / 72 gain cases. See [shared evidence and scope](PLAYBACK_CONTINUITY_VALIDATION.md).
+- 🟠 [Next] Apply these acceptance criteria to Mac transport and late album-analysis gain updates. Mac's existing effect ON/OFF protection is separate from user transport fading. Also extend iPhone's protection to destructive track/resource teardown and qualify sample-accurate handoff/tails.
+- ⭕️ [Pending] Confirm the reported symptom on a physical iPhone built-in speaker, then verify applicable Mac/output-route behavior. Validate audible start/stop, real overlap, UI load, session changes and sustained CPU/energy. Shared math and offline tests do not establish physical inaudibility.
+
+## iPhone preparation diagnostics coordination — 2026-10-17
+
+- 🟢 [Done] Track the iPhone native-first/Precision Sinc diagnostic update: actual streaming and offline stages, explicit capacity limits versus other failures, original error domain/code and prepared/failed/cancelled worker outcomes. The Mac app has no equivalent Precision Sinc preparation pipeline; this does not change its audio routing or ON/OFF protection.
+- 🟢 [Done] Record passing diagnostic/streaming/asset/remote regressions, the 12-check iPhone production-engine Simulator audit and Simulator build. See [shared verification record and scope](PREPARATION_DIAGNOSTICS_VALIDATION.md).
+- ⭕️ [Pending] Physical iPhone Music assets, account/session timing and live memory-pressure diagnostics. Existing Mac/iPhone acoustic, output-device and true-peak qualification gates remain Pending.
+
+## Effect ON/OFF protection — 2026-10-17
+
+- 🟢 [Done] Protect Mac module ON/OFF and global OFF/restore with the iPhone-identical envelope policy: nominal 8 ms descent, commit at zero, 16 ms recovery without a silent hold. Multiply the latest user volume by an independent protection gain before the final true-peak candidate; keep its downstream mixer at unity.
+- 🟢 [Done] Coalesce rapid toggles, defer shared-rack commits around song crossfades, recover and retry if overlap begins during descent, and cancel queued gains/settings on stop/pause/seek/rebuild. Stop/resume cannot leave the protection gain attenuated. Continuous controls retain their existing interpolation.
+- 🟢 [Done] Pass 96 Mac PCM cases covering Basic/Pro, 44.1/48/96 kHz, ordinary/candidate output, OFF/edit/restore, overlap and stop/resume in both ramp phases. Reject 3 intentional faults. Pass 19 focused tests in each Mac build, iPhone 48 effect and 72 gain cases, and all three app builds. See [verification, measurements and scope](EFFECT_BYPASS_PROTECTION_VALIDATION.md).
+- 🟠 [Next] Add latency-aligned bypass reference/residual measurements, particularly Space/Gloss/reverb tails, to define acceptance criteria before sample-accurate protection. The current envelope does not compensate algorithm latency.
+- ⭕️ [Pending] Physical iPhone/Mac listening for clicks and brief attenuation, live file crossfades, stop/resume/seek tails, main-queue/UI contention, output changes and sustained CPU/energy/thermal behavior. Keep ordinary true-peak activation pending its existing device gates.
+- 🔴 [Later] Sample-accurate ramps on both platforms and residual/alias-driven nonlinear oversampling.
+
 ## Effect parameter parity — 2026-10-17
 
 - 🟢 [Done] Prioritize Mac continuous-control parity after final true-peak integration. Share the exact eight-step / nominal 10 ms interpolation policy with iPhone, coalesce rapid gestures, skip unchanged module writes, preserve output volume, hold continuous updates during active song overlaps, and reject queued updates after OFF/stop/seek/rebuild. iPhone's existing interpolation behavior is retained.
 - 🟢 [Done] Pass 48 Mac waveform cases across Basic/Pro, 44.1/48/96 kHz output and ordinary/true-peak paths, plus immediate-write/mute negative controls. Pass 4 Mac state tests and 14 integrated qualification tests; recheck iPhone 48 effect cases, 72 gain cases, meter freshness and 3 combined feedback cases. Both Mac products and the iPhone Simulator build pass. See [validation and measured limits](EFFECT_PARAMETER_PARITY_VALIDATION.md).
-- 🟠 [Next] Protect Mac enable/disable and OFF/restore commits, including latency/topology changes and song overlaps. Continuous parameter updates now match iPhone; Mac bypass still applies immediately. Retain saved settings, cancellation and final-output protection.
+- 🟢 [Done] Mac ON/OFF protection now shares iPhone’s nominal 8 ms descent / 16 ms recovery policy, keeps user volume independent, defers during song overlap and cancels on stop/rebuild. See [current bypass implementation and validation](EFFECT_BYPASS_PROTECTION_VALIDATION.md). Latency compensation and device audibility remain separate work.
 - ⭕️ [Pending] Physical iPhone/Mac listening during gestures, OFF/restore, seek and song transitions; device clock/tap timing, UI-load scheduling and sustained CPU/energy behavior. Keep ordinary true-peak activation pending the existing device gates.
 - 🔴 [Later] Replace control-rate updates with validated sample-accurate parameter/bypass ramps on both platforms; measure residual/alias behavior before nonlinear oversampling.
 

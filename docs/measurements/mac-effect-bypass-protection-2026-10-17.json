@@ -1,0 +1,965 @@
+{
+  "cases" : [
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.028111532330513,
+      "minimumWindowRMSRatio" : 0.97930220625458175,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028111532330513,
+      "scenario" : "coalesce",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.029884552583098412,
+      "minimumWindowRMSRatio" : 0.97136465655998949,
+      "outputRate" : 44100,
+      "samplePeak" : 0.029884552583098412,
+      "scenario" : "gesture",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.028111372143030167,
+      "minimumWindowRMSRatio" : 0.96152771384145985,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028111372143030167,
+      "scenario" : "overlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.028356950730085373,
+      "minimumWindowRMSRatio" : 0.0040181439688544533,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028356950730085373,
+      "scenario" : "offRestore",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.028774041682481766,
+      "minimumWindowRMSRatio" : 0.0038723529823445194,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028774041682481766,
+      "scenario" : "bypassOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.028774041682481766,
+      "minimumWindowRMSRatio" : 0.0038723529823445194,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028774041682481766,
+      "scenario" : "lateOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028375927358865738,
+      "minimumWindowRMSRatio" : 0.11918640370363297,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028375927358865738,
+      "scenario" : "stopOut",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028375927358865738,
+      "minimumWindowRMSRatio" : 0.048969560544447295,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028375927358865738,
+      "scenario" : "stopIn",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.038910891860723495,
+      "minimumWindowRMSRatio" : 0.98128741351180615,
+      "outputRate" : 44100,
+      "samplePeak" : 0.038910891860723495,
+      "scenario" : "coalesce",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.1410050094127655,
+      "minimumWindowRMSRatio" : 0.96548922106451218,
+      "outputRate" : 44100,
+      "samplePeak" : 0.1410050094127655,
+      "scenario" : "gesture",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.035513356328010559,
+      "minimumWindowRMSRatio" : 0.97175505089290737,
+      "outputRate" : 44100,
+      "samplePeak" : 0.035513356328010559,
+      "scenario" : "overlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.050799869000911713,
+      "minimumWindowRMSRatio" : 0.0042748359568103326,
+      "outputRate" : 44100,
+      "samplePeak" : 0.050799869000911713,
+      "scenario" : "offRestore",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.052127435803413391,
+      "minimumWindowRMSRatio" : 0.0038646213335003549,
+      "outputRate" : 44100,
+      "samplePeak" : 0.052127435803413391,
+      "scenario" : "bypassOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.052127435803413391,
+      "minimumWindowRMSRatio" : 0.0038646213335003549,
+      "outputRate" : 44100,
+      "samplePeak" : 0.052127435803413391,
+      "scenario" : "lateOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.048851426690816879,
+      "minimumWindowRMSRatio" : 0.11425585448672325,
+      "outputRate" : 44100,
+      "samplePeak" : 0.048851426690816879,
+      "scenario" : "stopOut",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.048723906278610229,
+      "minimumWindowRMSRatio" : 0.050133751164871738,
+      "outputRate" : 44100,
+      "samplePeak" : 0.048723906278610229,
+      "scenario" : "stopIn",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.028264189139008522,
+      "minimumWindowRMSRatio" : 0.97956633947113247,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028111532330513,
+      "scenario" : "coalesce",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.030066493898630142,
+      "minimumWindowRMSRatio" : 0.97958366483948223,
+      "outputRate" : 44100,
+      "samplePeak" : 0.029884552583098412,
+      "scenario" : "gesture",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.02838616818189621,
+      "minimumWindowRMSRatio" : 0.9796433209280242,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028111372143030167,
+      "scenario" : "overlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.028399674221873283,
+      "minimumWindowRMSRatio" : 0.002480287499854501,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028356950730085373,
+      "scenario" : "offRestore",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.028774041682481766,
+      "minimumWindowRMSRatio" : 0.001767658528736279,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028774041682481766,
+      "scenario" : "bypassOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.028774041682481766,
+      "minimumWindowRMSRatio" : 0.001767658528736279,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028774041682481766,
+      "scenario" : "lateOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028511056676506996,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028373276814818382,
+      "scenario" : "stopOut",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028511056676506996,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 44100,
+      "samplePeak" : 0.028373276814818382,
+      "scenario" : "stopIn",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.040248975157737732,
+      "minimumWindowRMSRatio" : 0.98758621831352622,
+      "outputRate" : 44100,
+      "samplePeak" : 0.038910891860723495,
+      "scenario" : "coalesce",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.14303620159626007,
+      "minimumWindowRMSRatio" : 0.98165101588863624,
+      "outputRate" : 44100,
+      "samplePeak" : 0.1410050094127655,
+      "scenario" : "gesture",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.035623136907815933,
+      "minimumWindowRMSRatio" : 0.99076717420437854,
+      "outputRate" : 44100,
+      "samplePeak" : 0.035513356328010559,
+      "scenario" : "overlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.051088869571685791,
+      "minimumWindowRMSRatio" : 0.0040218893083214914,
+      "outputRate" : 44100,
+      "samplePeak" : 0.050799869000911713,
+      "scenario" : "offRestore",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.052864622324705124,
+      "minimumWindowRMSRatio" : 0.0022043692268450374,
+      "outputRate" : 44100,
+      "samplePeak" : 0.052127435803413391,
+      "scenario" : "bypassOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.052864622324705124,
+      "minimumWindowRMSRatio" : 0.0022043692268450374,
+      "outputRate" : 44100,
+      "samplePeak" : 0.052127435803413391,
+      "scenario" : "lateOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049584250897169113,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 44100,
+      "samplePeak" : 0.048996567726135254,
+      "scenario" : "stopOut",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049584444612264633,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 44100,
+      "samplePeak" : 0.049052879214286804,
+      "scenario" : "stopIn",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.028170086443424225,
+      "minimumWindowRMSRatio" : 0.9799935980727621,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028170086443424225,
+      "scenario" : "coalesce",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.02982342429459095,
+      "minimumWindowRMSRatio" : 0.97474629738696283,
+      "outputRate" : 48000,
+      "samplePeak" : 0.02982342429459095,
+      "scenario" : "gesture",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.028177786618471146,
+      "minimumWindowRMSRatio" : 0.96162405253633143,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028177786618471146,
+      "scenario" : "overlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.028170086443424225,
+      "minimumWindowRMSRatio" : 0.00015789707829977893,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028170086443424225,
+      "scenario" : "offRestore",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.029158372431993484,
+      "minimumWindowRMSRatio" : 0.0013867004212333273,
+      "outputRate" : 48000,
+      "samplePeak" : 0.029158372431993484,
+      "scenario" : "bypassOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.029158372431993484,
+      "minimumWindowRMSRatio" : 0.0013867004212333273,
+      "outputRate" : 48000,
+      "samplePeak" : 0.029158372431993484,
+      "scenario" : "lateOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028461746871471405,
+      "minimumWindowRMSRatio" : 0.046096232470115898,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028461746871471405,
+      "scenario" : "stopOut",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028461730107665062,
+      "minimumWindowRMSRatio" : 0.010038298839369337,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028461730107665062,
+      "scenario" : "stopIn",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.032314710319042206,
+      "minimumWindowRMSRatio" : 0.98159869355722973,
+      "outputRate" : 48000,
+      "samplePeak" : 0.032314710319042206,
+      "scenario" : "coalesce",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.13843396306037903,
+      "minimumWindowRMSRatio" : 0.95299135650345801,
+      "outputRate" : 48000,
+      "samplePeak" : 0.13843396306037903,
+      "scenario" : "gesture",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.03435058519244194,
+      "minimumWindowRMSRatio" : 0.97189139069584718,
+      "outputRate" : 48000,
+      "samplePeak" : 0.03435058519244194,
+      "scenario" : "overlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.044513978064060211,
+      "minimumWindowRMSRatio" : 0.00011177230305912889,
+      "outputRate" : 48000,
+      "samplePeak" : 0.044513978064060211,
+      "scenario" : "offRestore",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.041255578398704529,
+      "minimumWindowRMSRatio" : 0.0013513892371853227,
+      "outputRate" : 48000,
+      "samplePeak" : 0.041255578398704529,
+      "scenario" : "bypassOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.041255578398704529,
+      "minimumWindowRMSRatio" : 0.0013513892371853227,
+      "outputRate" : 48000,
+      "samplePeak" : 0.041255578398704529,
+      "scenario" : "lateOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049014806747436523,
+      "minimumWindowRMSRatio" : 0.063267684754873613,
+      "outputRate" : 48000,
+      "samplePeak" : 0.049014806747436523,
+      "scenario" : "stopOut",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.04968608170747757,
+      "minimumWindowRMSRatio" : 0.010554249864350166,
+      "outputRate" : 48000,
+      "samplePeak" : 0.04968608170747757,
+      "scenario" : "stopIn",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.028266506269574165,
+      "minimumWindowRMSRatio" : 0.96875926747097729,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028170086443424225,
+      "scenario" : "coalesce",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.030029278248548508,
+      "minimumWindowRMSRatio" : 0.96878316876127801,
+      "outputRate" : 48000,
+      "samplePeak" : 0.02982342429459095,
+      "scenario" : "gesture",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.028375128284096718,
+      "minimumWindowRMSRatio" : 0.96888291481795208,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028177786618471146,
+      "scenario" : "overlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.028603002429008484,
+      "minimumWindowRMSRatio" : 0.0042052624270382784,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028170086443424225,
+      "scenario" : "offRestore",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.030356502160429955,
+      "minimumWindowRMSRatio" : 0.0038644288091791794,
+      "outputRate" : 48000,
+      "samplePeak" : 0.029158372431993484,
+      "scenario" : "bypassOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.030356502160429955,
+      "minimumWindowRMSRatio" : 0.0038644288091791794,
+      "outputRate" : 48000,
+      "samplePeak" : 0.029158372431993484,
+      "scenario" : "lateOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028510097414255142,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028461750596761703,
+      "scenario" : "stopOut",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028510097414255142,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 48000,
+      "samplePeak" : 0.028461750596761703,
+      "scenario" : "stopIn",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.032723616808652878,
+      "minimumWindowRMSRatio" : 0.97179145368243147,
+      "outputRate" : 48000,
+      "samplePeak" : 0.032314710319042206,
+      "scenario" : "coalesce",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.13985739648342133,
+      "minimumWindowRMSRatio" : 0.94679511798785454,
+      "outputRate" : 48000,
+      "samplePeak" : 0.13825510442256927,
+      "scenario" : "gesture",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.034881658852100372,
+      "minimumWindowRMSRatio" : 0.97960277454429656,
+      "outputRate" : 48000,
+      "samplePeak" : 0.03435058519244194,
+      "scenario" : "overlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.046377759426832199,
+      "minimumWindowRMSRatio" : 0.0040932989014610139,
+      "outputRate" : 48000,
+      "samplePeak" : 0.044513978064060211,
+      "scenario" : "offRestore",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.042148645967245102,
+      "minimumWindowRMSRatio" : 0.0037920377872345456,
+      "outputRate" : 48000,
+      "samplePeak" : 0.041255578398704529,
+      "scenario" : "bypassOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.042148645967245102,
+      "minimumWindowRMSRatio" : 0.0037920377872345456,
+      "outputRate" : 48000,
+      "samplePeak" : 0.041255578398704529,
+      "scenario" : "lateOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049589749425649643,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 48000,
+      "samplePeak" : 0.049156252294778824,
+      "scenario" : "stopOut",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049589879810810089,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 48000,
+      "samplePeak" : 0.049156378954648972,
+      "scenario" : "stopIn",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.028240097686648369,
+      "minimumWindowRMSRatio" : 0.96595516900489442,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028240097686648369,
+      "scenario" : "coalesce",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.030041743069887161,
+      "minimumWindowRMSRatio" : 0.96404700643457553,
+      "outputRate" : 96000,
+      "samplePeak" : 0.030041743069887161,
+      "scenario" : "gesture",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.028362071141600609,
+      "minimumWindowRMSRatio" : 0.96518113459762467,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028362071141600609,
+      "scenario" : "overlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.028382569551467896,
+      "minimumWindowRMSRatio" : 0.00069574946713303989,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028382569551467896,
+      "scenario" : "offRestore",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.030921541154384613,
+      "minimumWindowRMSRatio" : 5.6186643435810668e-05,
+      "outputRate" : 96000,
+      "samplePeak" : 0.030921541154384613,
+      "scenario" : "bypassOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.030921541154384613,
+      "minimumWindowRMSRatio" : 5.6186643435810668e-05,
+      "outputRate" : 96000,
+      "samplePeak" : 0.030921541154384613,
+      "scenario" : "lateOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028461789712309837,
+      "minimumWindowRMSRatio" : 0.025964247963849767,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028461789712309837,
+      "scenario" : "stopOut",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.02846178226172924,
+      "minimumWindowRMSRatio" : 0.016437305516538058,
+      "outputRate" : 96000,
+      "samplePeak" : 0.02846178226172924,
+      "scenario" : "stopIn",
+      "tab" : "basic",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.032558038830757141,
+      "minimumWindowRMSRatio" : 0.98441113535132552,
+      "outputRate" : 96000,
+      "samplePeak" : 0.032558038830757141,
+      "scenario" : "coalesce",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.14501309394836426,
+      "minimumWindowRMSRatio" : 0.97404419716921409,
+      "outputRate" : 96000,
+      "samplePeak" : 0.14501309394836426,
+      "scenario" : "gesture",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.036505851894617081,
+      "minimumWindowRMSRatio" : 0.96999479197405114,
+      "outputRate" : 96000,
+      "samplePeak" : 0.036505851894617081,
+      "scenario" : "overlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.044081591069698334,
+      "minimumWindowRMSRatio" : 0.00034162616018415136,
+      "outputRate" : 96000,
+      "samplePeak" : 0.044081591069698334,
+      "scenario" : "offRestore",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.047967929393053055,
+      "minimumWindowRMSRatio" : 5.577415373759849e-05,
+      "outputRate" : 96000,
+      "samplePeak" : 0.047967929393053055,
+      "scenario" : "bypassOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.047967929393053055,
+      "minimumWindowRMSRatio" : 5.577415373759849e-05,
+      "outputRate" : 96000,
+      "samplePeak" : 0.047967929393053055,
+      "scenario" : "lateOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049943435937166214,
+      "minimumWindowRMSRatio" : 0.11294999965402758,
+      "outputRate" : 96000,
+      "samplePeak" : 0.049943435937166214,
+      "scenario" : "stopOut",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.04879872128367424,
+      "minimumWindowRMSRatio" : 0.01683935665346523,
+      "outputRate" : 96000,
+      "samplePeak" : 0.04879872128367424,
+      "scenario" : "stopIn",
+      "tab" : "pro",
+      "truePeakEnabled" : false
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.028266467154026031,
+      "minimumWindowRMSRatio" : 0.96631608805119329,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028240097686648369,
+      "scenario" : "coalesce",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.03004920668900013,
+      "minimumWindowRMSRatio" : 0.96631608805119329,
+      "outputRate" : 96000,
+      "samplePeak" : 0.030041743069887161,
+      "scenario" : "gesture",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.028388097882270813,
+      "minimumWindowRMSRatio" : 0.96000460487846362,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028362071141600609,
+      "scenario" : "overlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.028435042127966881,
+      "minimumWindowRMSRatio" : 0.00025903888088258032,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028382569551467896,
+      "scenario" : "offRestore",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.031141888350248337,
+      "minimumWindowRMSRatio" : 0.00015067997821354107,
+      "outputRate" : 96000,
+      "samplePeak" : 0.030921541154384613,
+      "scenario" : "bypassOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.031141888350248337,
+      "minimumWindowRMSRatio" : 0.00015067997821354107,
+      "outputRate" : 96000,
+      "samplePeak" : 0.030921541154384613,
+      "scenario" : "lateOverlap",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028511278331279755,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028461789712309837,
+      "scenario" : "stopOut",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.028511278331279755,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 96000,
+      "samplePeak" : 0.028461789712309837,
+      "scenario" : "stopIn",
+      "tab" : "basic",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.032828912138938904,
+      "minimumWindowRMSRatio" : 0.96894823323478796,
+      "outputRate" : 96000,
+      "samplePeak" : 0.032558038830757141,
+      "scenario" : "coalesce",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.16,
+      "measuredPeak" : 0.14172172546386719,
+      "minimumWindowRMSRatio" : 0.94172795875223902,
+      "outputRate" : 96000,
+      "samplePeak" : 0.14085270464420319,
+      "scenario" : "gesture",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.25000000000000006,
+      "measuredPeak" : 0.036708943545818329,
+      "minimumWindowRMSRatio" : 0.96894823323478796,
+      "outputRate" : 96000,
+      "samplePeak" : 0.036505851894617081,
+      "scenario" : "overlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.182,
+      "measuredPeak" : 0.04439564049243927,
+      "minimumWindowRMSRatio" : 0.00021813580378174773,
+      "outputRate" : 96000,
+      "samplePeak" : 0.044081591069698334,
+      "scenario" : "offRestore",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.048198819160461426,
+      "minimumWindowRMSRatio" : 0.000158891859602491,
+      "outputRate" : 96000,
+      "samplePeak" : 0.047967929393053055,
+      "scenario" : "bypassOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.308,
+      "measuredPeak" : 0.048198819160461426,
+      "minimumWindowRMSRatio" : 0.000158891859602491,
+      "outputRate" : 96000,
+      "samplePeak" : 0.047967929393053055,
+      "scenario" : "lateOverlap",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049597639590501785,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 96000,
+      "samplePeak" : 0.049163743853569031,
+      "scenario" : "stopOut",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    },
+    {
+      "firstWrite" : 0.17999999999999999,
+      "measuredPeak" : 0.049597766250371933,
+      "minimumWindowRMSRatio" : 0,
+      "outputRate" : 96000,
+      "samplePeak" : 0.049163863062858582,
+      "scenario" : "stopIn",
+      "tab" : "pro",
+      "truePeakEnabled" : true
+    }
+  ],
+  "count" : 96
+}
