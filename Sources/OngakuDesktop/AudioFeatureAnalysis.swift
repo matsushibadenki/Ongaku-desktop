@@ -7,14 +7,17 @@ enum MusicalMode: String, Codable, Sendable {
 }
 
 struct AudioFeatureAnalysis: Codable, Equatable, Sendable {
-    static let currentAlgorithmVersion = 4
+    static let currentAlgorithmVersion = 5
 
     let trackID: Track.ID
     let contentFingerprint: String
     let algorithmVersion: Int
     let analyzedAt: Date
+    // Legacy RMS feature for similarity search; never used for LUFS normalization.
     let averageLoudnessDBFS: Double
-    let peakDBFS: Double?
+    var integratedLoudnessLUFS: Double?
+    var loudnessBlockEnergies: [Double]?
+    var peakDBFS: Double?
     let spectralCentroidHz: Double
     let estimatedTempoBPM: Double?
     let tempoConfidence: Double
@@ -31,6 +34,8 @@ struct AudioFeatureAnalysis: Codable, Equatable, Sendable {
         analyzedAt: Date = .now,
         averageLoudnessDBFS: Double,
         peakDBFS: Double? = nil,
+        integratedLoudnessLUFS: Double? = nil,
+        loudnessBlockEnergies: [Double]? = nil,
         spectralCentroidHz: Double,
         estimatedTempoBPM: Double?,
         tempoConfidence: Double,
@@ -46,6 +51,8 @@ struct AudioFeatureAnalysis: Codable, Equatable, Sendable {
         self.analyzedAt = analyzedAt
         self.averageLoudnessDBFS = averageLoudnessDBFS
         self.peakDBFS = peakDBFS
+        self.integratedLoudnessLUFS = integratedLoudnessLUFS
+        self.loudnessBlockEnergies = loudnessBlockEnergies
         self.spectralCentroidHz = spectralCentroidHz
         self.estimatedTempoBPM = estimatedTempoBPM
         self.tempoConfidence = tempoConfidence
@@ -81,12 +88,15 @@ enum AudioFeatureAnalyzer {
         let analysisSampleRate = sampleRate / Double(samplingStride)
         var samples: [Float] = []
         samples.reserveCapacity(Int(min(frameLimit / AVAudioFramePosition(samplingStride), 750_000)))
-        var remaining = frameLimit
+        // Full-track loudness is streamed independently of the 60-second feature window.
+        var meter = IntegratedLoudnessMeter(sampleRate: sampleRate, channelCount: Int(file.processingFormat.channelCount))
+        var remaining = file.length
         var sourceFrameIndex = 0
         let channelCount = Int(file.processingFormat.channelCount)
         let chunkCapacity: AVAudioFrameCount = 16_384
 
         while remaining > 0 {
+            try Task.checkCancellation()
             let requested = AVAudioFrameCount(
                 min(remaining, AVAudioFramePosition(chunkCapacity))
             )
@@ -99,9 +109,12 @@ enum AudioFeatureAnalyzer {
             guard framesRead > 0, channelCount > 0,
                   let channels = buffer.floatChannelData else { break }
 
+            meter?.process(frameCount: framesRead) { channel, frame in
+                buffer.format.isInterleaved ? channels[0][frame * channelCount + channel] : channels[channel][frame]
+            }
             for frame in 0..<framesRead {
                 defer { sourceFrameIndex += 1 }
-                guard sourceFrameIndex.isMultiple(of: samplingStride) else { continue }
+                guard sourceFrameIndex < frameLimit, sourceFrameIndex.isMultiple(of: samplingStride) else { continue }
                 var mono: Float = 0
                 if buffer.format.isInterleaved {
                     for channel in 0..<channelCount {
@@ -116,12 +129,18 @@ enum AudioFeatureAnalyzer {
             }
             remaining -= AVAudioFramePosition(framesRead)
         }
-        return analyze(
+        var result = analyze(
             samples: samples,
             sampleRate: analysisSampleRate,
             trackID: track.id,
             contentFingerprint: track.sha256
         )
+        result.integratedLoudnessLUFS = remaining == 0 ? meter?.integratedLUFS : nil
+        result.loudnessBlockEnergies = result.integratedLoudnessLUFS == nil ? nil : meter?.blockEnergies
+        if let peak = meter?.samplePeak {
+            result.peakDBFS = peak > 0 ? 20 * log10(peak) : -120
+        }
+        return result
     }
 
     nonisolated static func analyze(

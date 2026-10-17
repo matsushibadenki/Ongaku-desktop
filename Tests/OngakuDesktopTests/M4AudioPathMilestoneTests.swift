@@ -51,15 +51,20 @@ struct M4AudioPathMilestoneTests {
             contentFingerprint: track.sha256,
             averageLoudnessDBFS: -20,
             peakDBFS: -3,
+            integratedLoudnessLUFS: -20,
+            loudnessBlockEnergies: [pow(10, (-20.0 + 0.691) / 10)],
             spectralCentroidHz: 1_000,
             estimatedTempoBPM: nil,
             tempoConfidence: 0
         )
         let player = PlaybackController()
+        let previousUpsampling = player.automaticUpsampling
+        defer { player.automaticUpsampling = previousUpsampling }
+        player.automaticUpsampling = false
         player.setEffectsBypassed(false)
         player.setEffectEnabled(true, for: .equalizer)
         player.loudnessNormalizationMode = .track
-        player.loudnessTargetDBFS = -14
+        player.loudnessTargetLUFS = -14
         player.preventsClipping = true
         player.updateAudioFeatures([track.id: analysis])
 
@@ -73,7 +78,7 @@ struct M4AudioPathMilestoneTests {
         let path = try #require(player.signalPathSnapshot)
         #expect(path.sourceSampleRate == 44_100)
         #expect(path.sourceChannelCount == 2)
-        #expect(path.processingSampleRate == path.sourceSampleRate)
+        #expect(path.processingSampleRate == 96_000)
         #expect(path.processingChannelCount == path.sourceChannelCount)
         #expect(path.outputSampleRate > 0)
         #expect(path.outputChannelCount > 0)

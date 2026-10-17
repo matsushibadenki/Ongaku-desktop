@@ -858,7 +858,7 @@
 "settings.playback.normalization.mode.track" = "按歌曲";
 "settings.playback.normalization.mode.album" = "按专辑";
 "settings.playback.normalization.target" = "目标响度";
-"settings.playback.normalization.targetValue" = "%.0f dBFS";
+"settings.playback.normalization.targetValue" = "%.0f LUFS";
 "settings.playback.normalization.pending" = "当前歌曲将在音频分析完成后进行调整。";
 "settings.playback.normalization.current" = "当前歌曲调整：%+.1f dB";
 "settings.playback.normalization.currentLimited" = "当前歌曲调整：%+.1f dB（受测得峰值限制）";

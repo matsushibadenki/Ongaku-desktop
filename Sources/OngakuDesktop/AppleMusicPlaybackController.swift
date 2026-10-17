@@ -242,7 +242,7 @@ final class AppleMusicPlaybackController: ObservableObject {
 
     func insert<PlayableItem: PlayableMusicItem>(
         _ playableItem: PlayableItem,
-        position: MusicPlayer.Queue.EntryInsertionPosition
+        position: MusicKit.MusicPlayer.Queue.EntryInsertionPosition
     ) async {
         guard currentItem != nil, let player, !isQueueEditing else { return }
         isQueueEditing = true
@@ -452,7 +452,7 @@ final class AppleMusicPlaybackController: ObservableObject {
         progressTask = nil
     }
 
-    private static func duration(for entry: MusicPlayer.Queue.Entry) -> TimeInterval {
+    private static func duration(for entry: MusicKit.MusicPlayer.Queue.Entry) -> TimeInterval {
         switch entry.item {
         case .song(let song):
             song.duration ?? 0

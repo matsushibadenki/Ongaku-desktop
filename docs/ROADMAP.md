@@ -4,6 +4,18 @@
 
 2026-09-05再設計: [全体設計レビュー](ARCHITECTURE_REVIEW_2026-09-05.md)と[ADR-0003](adr/0003-stabilization-and-component-boundaries.md)に基づき、機能拡張より保存・応答性・実機品質を優先する。
 
+## Audio fidelity policy — 2026-10-17
+
+- 🟢 [Done] Use the same 96 kHz effect-rack policy as iPhone, keeping file clocks and actual hardware output separate. The source mixer converts into the rack; 192 kHz files retain Space. Controller coverage and nine offline source/Space/output paths passed.
+- 🟢 [Done] Add full-track, original-rate mono/stereo K-weighted LUFS and per-channel sample peaks, separate from first-60-second mono musical features. Forward worker cancellation, invalidate version-4 caches, use an independent LUFS target preference (-16 default), and gate combined album block energies. Missing/old measurements do not normalize. UI units are updated in English/Japanese/Simplified Chinese.
+- 🟢 [Done] Share the meter/policy source with iPhone. 24 reference signals agree with FFmpeg ebur128 within 0.12 LU (maximum 0.053101 LU). Fifteen focused desktop tests passed, including asynchronous album aggregation and stale-result rejection. See [validation and scope](AUDIO_FIDELITY_POLICY_VALIDATION.md), including iPhone output classification and per-device settings.
+- 🟢 [Done] Integrate the iPhone-identical true-peak AU after Mac final SRC/channel mapping and user volume, independent of effect bypass. Keep the downstream mixer at unity, report latency, and reset lookahead only on abrupt transport changes. SwiftPM and both desktop Xcode products include the stage. See [qualification details](MAC_TRUE_PEAK_VALIDATION.md).
+- 🟢 [Done] Pass 168 Mac peak probes, 168 independent FFmpeg measurements, 72 controlled overlap pairs, shared DSP/AU sanitizers, and 10 focused tests in each of ordinary/qualification builds. Repeat iPhone 84-probe and 18-overlap checks with the same criteria.
+- ⭕️ [Pending] Enable the protector in ordinary builds only after physical Mac/iPhone playback, pause/seek/final tails, output switching, visualization timing and sustained CPU/thermal/energy qualification. It currently requires `ONGAKU_ENABLE_TRUE_PEAK`.
+- ⭕️ [Pending] Physical DAC/Bluetooth/output-rate changes, matched-loudness listening, long-file analysis and 96 kHz rack CPU/thermal/energy behavior. Ordinary output protection remains sample-based; do not claim -1 dBTP or bit-perfect output.
+- 🔴 [Later] Multichannel loudness layouts, exact concatenated-album boundary windows, measured spatial responses and alias/distortion measurements before optional nonlinear oversampling.
+
+
 ## 1. 目的
 
 Ongaku Desktopを、ローカル音源の安全性と高品質再生を保ちながら、macOSの「ミュージック」で日常的に利用できる機能を網羅する音楽管理・再生アプリへ発展させる。

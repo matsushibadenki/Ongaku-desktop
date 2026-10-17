@@ -122,6 +122,8 @@ struct AudioFeatureAnalysisTests {
             contentFingerprint: "loudness",
             averageLoudnessDBFS: -20,
             peakDBFS: -3,
+            integratedLoudnessLUFS: -20,
+            loudnessBlockEnergies: [pow(10, (-20.0 + 0.691) / 10)],
             spectralCentroidHz: 1_000,
             estimatedTempoBPM: nil,
             tempoConfidence: 0
@@ -129,15 +131,15 @@ struct AudioFeatureAnalysisTests {
         let unrestricted = LoudnessNormalizationPolicy.result(
             mode: .track,
             trackAnalysis: analysis,
-            albumAnalyses: [],
-            targetDBFS: -14,
+            albumMeasurement: nil,
+            targetLUFS: -14,
             preventsClipping: false
         )
         let protected = LoudnessNormalizationPolicy.result(
             mode: .track,
             trackAnalysis: analysis,
-            albumAnalyses: [],
-            targetDBFS: -14,
+            albumMeasurement: nil,
+            targetLUFS: -14,
             preventsClipping: true
         )
 
@@ -154,6 +156,8 @@ struct AudioFeatureAnalysisTests {
             contentFingerprint: "quiet",
             averageLoudnessDBFS: -20,
             peakDBFS: -8,
+            integratedLoudnessLUFS: -20,
+            loudnessBlockEnergies: [pow(10, (-20.0 + 0.691) / 10)],
             spectralCentroidHz: 1_000,
             estimatedTempoBPM: nil,
             tempoConfidence: 0
@@ -163,6 +167,8 @@ struct AudioFeatureAnalysisTests {
             contentFingerprint: "loud",
             averageLoudnessDBFS: -14,
             peakDBFS: -2,
+            integratedLoudnessLUFS: -14,
+            loudnessBlockEnergies: [pow(10, (-14.0 + 0.691) / 10)],
             spectralCentroidHz: 1_000,
             estimatedTempoBPM: nil,
             tempoConfidence: 0
@@ -171,15 +177,15 @@ struct AudioFeatureAnalysisTests {
         let quietResult = LoudnessNormalizationPolicy.result(
             mode: .album,
             trackAnalysis: quiet,
-            albumAnalyses: album,
-            targetDBFS: -14,
+            albumMeasurement: AlbumLoudnessMeasurement.measure(album),
+            targetLUFS: -14,
             preventsClipping: false
         )
         let loudResult = LoudnessNormalizationPolicy.result(
             mode: .album,
             trackAnalysis: loud,
-            albumAnalyses: album,
-            targetDBFS: -14,
+            albumMeasurement: AlbumLoudnessMeasurement.measure(album),
+            targetLUFS: -14,
             preventsClipping: false
         )
 

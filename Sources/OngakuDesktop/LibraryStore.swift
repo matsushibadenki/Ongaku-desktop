@@ -1441,9 +1441,14 @@ final class LibraryStore: ObservableObject {
             guard await waitUntilAudioFeatureAnalysisCanContinue(generation: generation) else {
                 break
             }
-            let analysis = await Task.detached(priority: .utility) {
+            let analysisTask = Task.detached(priority: .utility) {
                 try? AudioFeatureAnalyzer.analyze(track: track)
-            }.value
+            }
+            let analysis = await withTaskCancellationHandler {
+                await analysisTask.value
+            } onCancel: {
+                analysisTask.cancel()
+            }
             guard generation == audioFeatureAnalysisGeneration else { return }
             if let analysis {
                 updated[track.id] = analysis

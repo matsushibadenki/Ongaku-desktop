@@ -99,10 +99,11 @@ final class EffectOutputProtection {
         setEnabled(false)
     }
 
-    func connect(from upstream: AVAudioNode, engine: AVAudioEngine, format: AVAudioFormat) {
+    func connect(from upstream: AVAudioNode, engine: AVAudioEngine, format: AVAudioFormat,
+                 destination: AVAudioNode? = nil) {
         engine.connect(upstream, to: limiter, format: format)
         engine.connect(limiter, to: trim, format: format)
-        engine.connect(trim, to: engine.mainMixerNode, format: format)
+        engine.connect(trim, to: destination ?? engine.mainMixerNode, format: format)
     }
 
     func setEnabled(_ enabled: Bool) {

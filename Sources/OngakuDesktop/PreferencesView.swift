@@ -195,13 +195,13 @@ private struct PlaybackSettingsView: View {
                             Spacer(minLength: AppTheme.spaceLG)
                             Text(L10n.format(
                                 "settings.playback.normalization.targetValue",
-                                player.loudnessTargetDBFS
+                                player.loudnessTargetLUFS
                             ))
                             .font(.callout.monospacedDigit())
                             .foregroundStyle(AppTheme.secondaryInk)
                         }
                         Slider(
-                            value: $player.loudnessTargetDBFS,
+                            value: $player.loudnessTargetLUFS,
                             in: LoudnessNormalizationPolicy.targetRange,
                             step: 1
                         )

@@ -1,0 +1,344 @@
+{
+  "meter": "FFmpeg ebur128 peak=true",
+  "version": "ffmpeg version 7.1.5 Copyright (c) 2000-2026 the FFmpeg developers",
+  "calibrationPeakDBFS": 1.0,
+  "maximumPeakDBFS": -1.5,
+  "cases": [
+    {
+      "case": "case-0",
+      "truePeakDBFS": -2.6
+    },
+    {
+      "case": "case-1",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-2",
+      "truePeakDBFS": -2.7
+    },
+    {
+      "case": "case-3",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-4",
+      "truePeakDBFS": -2.8
+    },
+    {
+      "case": "case-5",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-6",
+      "truePeakDBFS": -6.8
+    },
+    {
+      "case": "case-7",
+      "truePeakDBFS": -7.4
+    },
+    {
+      "case": "case-8",
+      "truePeakDBFS": -6.6
+    },
+    {
+      "case": "case-9",
+      "truePeakDBFS": -7.4
+    },
+    {
+      "case": "case-10",
+      "truePeakDBFS": -7.9
+    },
+    {
+      "case": "case-11",
+      "truePeakDBFS": -7.4
+    },
+    {
+      "case": "case-12",
+      "truePeakDBFS": -9.4
+    },
+    {
+      "case": "case-13",
+      "truePeakDBFS": -11.2
+    },
+    {
+      "case": "case-14",
+      "truePeakDBFS": -8.9
+    },
+    {
+      "case": "case-15",
+      "truePeakDBFS": -10.6
+    },
+    {
+      "case": "case-16",
+      "truePeakDBFS": -9.1
+    },
+    {
+      "case": "case-17",
+      "truePeakDBFS": -11.3
+    },
+    {
+      "case": "case-18",
+      "truePeakDBFS": -10.7
+    },
+    {
+      "case": "case-19",
+      "truePeakDBFS": -8.5
+    },
+    {
+      "case": "case-20",
+      "truePeakDBFS": -16.1
+    },
+    {
+      "case": "case-21",
+      "truePeakDBFS": -7.8
+    },
+    {
+      "case": "case-22",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-23",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-24",
+      "truePeakDBFS": -5.2
+    },
+    {
+      "case": "case-25",
+      "truePeakDBFS": -2.3
+    },
+    {
+      "case": "case-26",
+      "truePeakDBFS": -2.9
+    },
+    {
+      "case": "case-27",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-28",
+      "truePeakDBFS": -2.6
+    },
+    {
+      "case": "case-29",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-30",
+      "truePeakDBFS": -2.8
+    },
+    {
+      "case": "case-31",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-32",
+      "truePeakDBFS": -2.8
+    },
+    {
+      "case": "case-33",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-34",
+      "truePeakDBFS": -6.2
+    },
+    {
+      "case": "case-35",
+      "truePeakDBFS": -7.4
+    },
+    {
+      "case": "case-36",
+      "truePeakDBFS": -6.9
+    },
+    {
+      "case": "case-37",
+      "truePeakDBFS": -7.5
+    },
+    {
+      "case": "case-38",
+      "truePeakDBFS": -9.0
+    },
+    {
+      "case": "case-39",
+      "truePeakDBFS": -7.4
+    },
+    {
+      "case": "case-40",
+      "truePeakDBFS": -10.3
+    },
+    {
+      "case": "case-41",
+      "truePeakDBFS": -12.9
+    },
+    {
+      "case": "case-42",
+      "truePeakDBFS": -10.2
+    },
+    {
+      "case": "case-43",
+      "truePeakDBFS": -12.0
+    },
+    {
+      "case": "case-44",
+      "truePeakDBFS": -8.7
+    },
+    {
+      "case": "case-45",
+      "truePeakDBFS": -13.0
+    },
+    {
+      "case": "case-46",
+      "truePeakDBFS": -10.2
+    },
+    {
+      "case": "case-47",
+      "truePeakDBFS": -8.0
+    },
+    {
+      "case": "case-48",
+      "truePeakDBFS": -15.3
+    },
+    {
+      "case": "case-49",
+      "truePeakDBFS": -7.0
+    },
+    {
+      "case": "case-50",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-51",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-52",
+      "truePeakDBFS": -5.2
+    },
+    {
+      "case": "case-53",
+      "truePeakDBFS": -2.4
+    },
+    {
+      "case": "case-54",
+      "truePeakDBFS": -2.9
+    },
+    {
+      "case": "case-55",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-56",
+      "truePeakDBFS": -2.8
+    },
+    {
+      "case": "case-57",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-58",
+      "truePeakDBFS": -2.5
+    },
+    {
+      "case": "case-59",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-60",
+      "truePeakDBFS": -2.7
+    },
+    {
+      "case": "case-61",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-62",
+      "truePeakDBFS": -2.5
+    },
+    {
+      "case": "case-63",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-64",
+      "truePeakDBFS": -4.9
+    },
+    {
+      "case": "case-65",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-66",
+      "truePeakDBFS": -9.0
+    },
+    {
+      "case": "case-67",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-68",
+      "truePeakDBFS": -5.2
+    },
+    {
+      "case": "case-69",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-70",
+      "truePeakDBFS": -4.8
+    },
+    {
+      "case": "case-71",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-72",
+      "truePeakDBFS": -8.9
+    },
+    {
+      "case": "case-73",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-74",
+      "truePeakDBFS": -3.9
+    },
+    {
+      "case": "case-75",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-76",
+      "truePeakDBFS": -4.8
+    },
+    {
+      "case": "case-77",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-78",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-79",
+      "truePeakDBFS": -1.5
+    },
+    {
+      "case": "case-80",
+      "truePeakDBFS": -5.0
+    },
+    {
+      "case": "case-81",
+      "truePeakDBFS": -1.6
+    },
+    {
+      "case": "case-82",
+      "truePeakDBFS": -2.9
+    },
+    {
+      "case": "case-83",
+      "truePeakDBFS": -1.5
+    }
+  ]
+}

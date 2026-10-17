@@ -158,6 +158,12 @@
 		E8DA8ED130825B1B00B38A1B /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* InfoPlist.strings */; };
 		E8DA8ED230825B1B00B38A1B /* Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000059 /* Resources/PrivacyInfo.xcprivacy */; };
 		U20000000000000000000001 /* OngakuDesktopUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = U10000000000000000000001 /* OngakuDesktopUITests.swift */; };
+		A202610170000000000000002 /* AudioProcessingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000001 /* AudioProcessingPolicy.swift */; };
+		A202610170000000000000004 /* IntegratedLoudnessMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000003 /* IntegratedLoudnessMeter.swift */; };
+		A202610170000000000000020 /* FinalOutputProtection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000011 /* FinalOutputProtection.swift */; };
+		A202610170000000000000021 /* FinalOutputProtection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000011 /* FinalOutputProtection.swift */; };
+		A202610170000000000000022 /* TruePeakAudioUnit.mm in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000012 /* TruePeakAudioUnit.mm */; };
+		A202610170000000000000023 /* TruePeakAudioUnit.mm in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000012 /* TruePeakAudioUnit.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -264,6 +270,10 @@
 		S10000000000000000000001 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		U10000000000000000000001 /* OngakuDesktopUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuDesktopUITests.swift; sourceTree = "<group>"; };
 		U10000000000000000000002 /* OngakuDesktopUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OngakuDesktopUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A202610170000000000000001 /* AudioProcessingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioProcessingPolicy.swift; sourceTree = "<group>"; };
+		A202610170000000000000003 /* IntegratedLoudnessMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegratedLoudnessMeter.swift; sourceTree = "<group>"; };
+		A202610170000000000000011 /* FinalOutputProtection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/FinalOutputProtection.swift; sourceTree = SOURCE_ROOT; };
+		A202610170000000000000012 /* TruePeakAudioUnit.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Sources/OngakuAudioDSP/TruePeakAudioUnit.mm; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -346,6 +356,10 @@
 				100000000000000000000043 /* PlayerMeterSettings.swift */,
 				100000000000000000000036 /* WindowPresentationController.swift */,
 				100000000000000000000007 /* PlaybackController.swift */,
+				A202610170000000000000003 /* IntegratedLoudnessMeter.swift */,
+				A202610170000000000000011 /* FinalOutputProtection.swift */,
+				A202610170000000000000012 /* TruePeakAudioUnit.mm */,
+				A202610170000000000000001 /* AudioProcessingPolicy.swift */,
 				10000000000000000000005B /* AudioSignalPath.swift */,
 				10000000000000000000005C /* SocialPrivacySettings.swift */,
 				10000000000000000000005D /* SocialPrivacySettingsView.swift */,
@@ -607,6 +621,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A202610170000000000000022 /* TruePeakAudioUnit.mm in Sources */,
+				A202610170000000000000020 /* FinalOutputProtection.swift in Sources */,
 				200000000000000000000001 /* OngakuDesktopApp.swift in Sources */,
 				200000000000000000000002 /* DesignTokens.swift in Sources */,
 				200000000000000000000003 /* Localization.swift in Sources */,
@@ -640,6 +656,8 @@
 				20000000000000000000002C /* PlayerMeterSettings.swift in Sources */,
 				200000000000000000000024 /* WindowPresentationController.swift in Sources */,
 				200000000000000000000007 /* PlaybackController.swift in Sources */,
+				A202610170000000000000004 /* IntegratedLoudnessMeter.swift in Sources */,
+				A202610170000000000000002 /* AudioProcessingPolicy.swift in Sources */,
 				200000000000000000000047 /* AudioSignalPath.swift in Sources */,
 				200000000000000000000048 /* SocialPrivacySettings.swift in Sources */,
 				200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */,
@@ -694,6 +712,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A202610170000000000000004 /* IntegratedLoudnessMeter.swift in Sources */,
+				A202610170000000000000002 /* AudioProcessingPolicy.swift in Sources */,
+				A202610170000000000000023 /* TruePeakAudioUnit.mm in Sources */,
+				A202610170000000000000021 /* FinalOutputProtection.swift in Sources */,
 				E8DA8E8E30825B1B00B38A1B /* OngakuDesktopApp.swift in Sources */,
 				E8DA8E8F30825B1B00B38A1B /* DesignTokens.swift in Sources */,
 				E8DA8E9030825B1B00B38A1B /* Localization.swift in Sources */,
@@ -921,6 +943,10 @@
 		B00000000000000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Sources/OngakuAudioDSP/include";
+				SWIFT_OBJC_BRIDGING_HEADER = Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h;
 				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -954,6 +980,10 @@
 		B00000000000000000000002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Sources/OngakuAudioDSP/include";
+				SWIFT_OBJC_BRIDGING_HEADER = Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h;
 				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -1033,6 +1063,10 @@
 		SB0000000000000000000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Sources/OngakuAudioDSP/include";
+				SWIFT_OBJC_BRIDGING_HEADER = Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h;
 				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -1068,6 +1102,10 @@
 		SB0000000000000000000002 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "c++20";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/Sources/OngakuAudioDSP/include";
+				SWIFT_OBJC_BRIDGING_HEADER = Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h;
 				APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_WEAK = YES;

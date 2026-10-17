@@ -1689,7 +1689,7 @@ final class AppleMusicStoreController: ObservableObject {
 
     func enqueueCatalogItem(
         _ item: AppleMusicCatalogItem,
-        position: MusicPlayer.Queue.EntryInsertionPosition,
+        position: MusicKit.MusicPlayer.Queue.EntryInsertionPosition,
         with playback: AppleMusicPlaybackController
     ) async {
         guard playback.currentItem != nil else { return }

@@ -858,7 +858,7 @@
 "settings.playback.normalization.mode.track" = "Song";
 "settings.playback.normalization.mode.album" = "Album";
 "settings.playback.normalization.target" = "Target loudness";
-"settings.playback.normalization.targetValue" = "%.0f dBFS";
+"settings.playback.normalization.targetValue" = "%.0f LUFS";
 "settings.playback.normalization.pending" = "The current song will be adjusted after audio analysis finishes.";
 "settings.playback.normalization.current" = "Current song adjustment: %+.1f dB";
 "settings.playback.normalization.currentLimited" = "Current song adjustment: %+.1f dB (limited by measured peak)";

@@ -561,8 +561,25 @@ struct LoudnessNormalizationResult: Equatable, Sendable {
     )
 }
 
+nonisolated struct AlbumLoudnessMeasurement: Sendable {
+    let integratedLUFS: Double
+    let samplePeakDBFS: Double?
+
+    // Called on the analysis worker, never on the playback/control thread.
+    static func measure(_ analyses: [AudioFeatureAnalysis]) -> Self? {
+        guard !Task.isCancelled, !analyses.isEmpty,
+              analyses.allSatisfy({ $0.algorithmVersion == AudioFeatureAnalysis.currentAlgorithmVersion
+                  && $0.integratedLoudnessLUFS != nil && $0.loudnessBlockEnergies != nil }),
+              let value = IntegratedLoudnessMeter.integratedLUFS(
+                  blockEnergies: analyses.flatMap { $0.loudnessBlockEnergies ?? [] }) else { return nil }
+        let peaks = analyses.compactMap(\.peakDBFS).filter(\.isFinite)
+        return Self(integratedLUFS: value,
+                    samplePeakDBFS: peaks.count == analyses.count ? peaks.max() : nil)
+    }
+}
+
 enum LoudnessNormalizationPolicy {
-    static let defaultTargetDBFS = -14.0
+    static let defaultTargetLUFS = -16.0
     static let targetRange = -24.0 ... -10.0
     static let peakCeilingDBFS = -1.0
     static let maximumBoostDB = 12.0
@@ -571,35 +588,33 @@ enum LoudnessNormalizationPolicy {
     nonisolated static func result(
         mode: LoudnessNormalizationMode,
         trackAnalysis: AudioFeatureAnalysis?,
-        albumAnalyses: [AudioFeatureAnalysis],
-        targetDBFS: Double,
+        albumMeasurement: AlbumLoudnessMeasurement? = nil,
+        targetLUFS: Double,
         preventsClipping: Bool
     ) -> LoudnessNormalizationResult {
-        guard mode != .off, let trackAnalysis else { return .unity }
+        guard mode != .off, let trackAnalysis,
+              trackAnalysis.algorithmVersion == AudioFeatureAnalysis.currentAlgorithmVersion,
+              let trackLUFS = trackAnalysis.integratedLoudnessLUFS,
+              trackLUFS.isFinite, trackLUFS > -70 else { return .unity }
         let referenceLoudness: Double
+        var peakDBFS = trackAnalysis.peakDBFS
         switch mode {
-        case .off:
-            return .unity
-        case .track:
-            referenceLoudness = trackAnalysis.averageLoudnessDBFS
+        case .off: return .unity
+        case .track: referenceLoudness = trackLUFS
         case .album:
-            let analyses = albumAnalyses.isEmpty ? [trackAnalysis] : albumAnalyses
-            let meanEnergy = analyses.reduce(0.0) {
-                $0 + pow(10, $1.averageLoudnessDBFS / 10)
-            } / Double(analyses.count)
-            referenceLoudness = meanEnergy > 0 ? 10 * log10(meanEnergy) : -120
+            guard let albumMeasurement else { return .unity }
+            referenceLoudness = albumMeasurement.integratedLUFS
+            peakDBFS = albumMeasurement.samplePeakDBFS
         }
 
-        let target = min(max(targetDBFS, targetRange.lowerBound), targetRange.upperBound)
+        let target = min(max(targetLUFS, targetRange.lowerBound), targetRange.upperBound)
         var gainDB = min(
             max(target - referenceLoudness, maximumAttenuationDB),
             maximumBoostDB
         )
         var isLimitedByPeak = false
         if preventsClipping {
-            let permittedBoost = trackAnalysis.peakDBFS.map {
-                peakCeilingDBFS - $0
-            } ?? 0
+            let permittedBoost = peakDBFS.flatMap { $0.isFinite ? peakCeilingDBFS - $0 : nil } ?? 0
             if gainDB > permittedBoost {
                 gainDB = permittedBoost
                 isLimitedByPeak = true
@@ -885,14 +900,14 @@ final class PlaybackController: ObservableObject {
     private static let crossfadeDurationKey = "audio.crossfadeDuration.v1"
     private static let disableCrossfadeWithinAlbumKey = "audio.disableCrossfadeWithinAlbum.v1"
     private static let loudnessNormalizationModeKey = "audio.loudnessNormalizationMode.v1"
-    private static let loudnessTargetKey = "audio.loudnessTargetDBFS.v1"
+    private static let loudnessTargetKey = "audio.loudnessTargetLUFS.v2"
     private static let preventsClippingKey = "audio.preventsClipping.v1"
 
     @Published private(set) var currentTrack: Track?
     @Published private(set) var isPlaying = false
     @Published private(set) var elapsed: TimeInterval = 0
     @Published var volume: Double = 0.8 {
-        didSet { engine.mainMixerNode.outputVolume = Float(volume) }
+        didSet { finalOutputProtection.setVolume(volume, engine: engine) }
     }
     @Published private(set) var errorMessage: String?
     @Published private(set) var sourceSampleRate: Double = 0
@@ -940,14 +955,14 @@ final class PlaybackController: ObservableObject {
             logSignalPath(reason: "normalization-mode-changed")
         }
     }
-    @Published var loudnessTargetDBFS: Double {
+    @Published var loudnessTargetLUFS: Double {
         didSet {
             let clamped = min(
-                max(loudnessTargetDBFS, LoudnessNormalizationPolicy.targetRange.lowerBound),
+                max(loudnessTargetLUFS, LoudnessNormalizationPolicy.targetRange.lowerBound),
                 LoudnessNormalizationPolicy.targetRange.upperBound
             )
-            if loudnessTargetDBFS != clamped {
-                loudnessTargetDBFS = clamped
+            if loudnessTargetLUFS != clamped {
+                loudnessTargetLUFS = clamped
                 return
             }
             UserDefaults.standard.set(clamped, forKey: Self.loudnessTargetKey)
@@ -978,6 +993,7 @@ final class PlaybackController: ObservableObject {
         activePlayerIndex == 0 ? secondaryPlayerNode : primaryPlayerNode
     }
     private let effectOutputProtection = EffectOutputProtection()
+    private let finalOutputProtection = FinalOutputProtection()
     private let effectPipeline: [AudioEffectNode]
     private let outputManager = AudioOutputManager()
     private let audioFileOpener: (URL) throws -> AVAudioFile
@@ -1001,7 +1017,23 @@ final class PlaybackController: ObservableObject {
     private var prerolledTrack: PrerolledTrack?
     private var silenceAnalyses: [URL: AudioSilenceAnalysis] = [:]
     private var silenceAnalysisTasks: [URL: Task<Void, Never>] = [:]
-    private var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:]
+    private var audioFeatures: [Track.ID: AudioFeatureAnalysis] = [:] {
+        didSet {
+            audioFeatureRevision &+= 1
+            albumMeasurementTasks.values.forEach { $0.cancel() }
+            albumMeasurementTasks.removeAll()
+            albumMeasurements.removeAll()
+            unavailableAlbumMeasurements.removeAll()
+        }
+    }
+    private struct AlbumMeasurementKey: Hashable, Sendable {
+        let trackIDs: [Track.ID]
+        let revision: UInt64
+    }
+    private var audioFeatureRevision: UInt64 = 0
+    private var albumMeasurements: [AlbumMeasurementKey: AlbumLoudnessMeasurement] = [:]
+    private var unavailableAlbumMeasurements: Set<AlbumMeasurementKey> = []
+    private var albumMeasurementTasks: [AlbumMeasurementKey: Task<Void, Never>] = [:]
     private var usesOngakuMixTransitions = false
     private var externalPlaybackStopHandler: (() -> Void)?
 
@@ -1041,8 +1073,8 @@ final class PlaybackController: ObservableObject {
             forKey: Self.loudnessNormalizationModeKey
         ).flatMap(LoudnessNormalizationMode.init(rawValue:)) ?? .off
         let storedTarget = UserDefaults.standard.object(forKey: Self.loudnessTargetKey) as? Double
-            ?? LoudnessNormalizationPolicy.defaultTargetDBFS
-        loudnessTargetDBFS = min(
+            ?? LoudnessNormalizationPolicy.defaultTargetLUFS
+        loudnessTargetLUFS = min(
             max(storedTarget, LoudnessNormalizationPolicy.targetRange.lowerBound),
             LoudnessNormalizationPolicy.targetRange.upperBound
         )
@@ -1054,11 +1086,12 @@ final class PlaybackController: ObservableObject {
         engine.attach(sourceMixerNode)
         effectPipeline.forEach { $0.attach(to: engine) }
         effectOutputProtection.attach(to: engine)
+        finalOutputProtection.attach(to: engine)
         effectSettings.forEach(applyEffectSetting)
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
         sourceMixerNode.outputVolume = 1
-        engine.mainMixerNode.outputVolume = Float(volume)
+        finalOutputProtection.setVolume(volume, engine: engine)
         observeSystemAudioEvents()
     }
 
@@ -1088,7 +1121,7 @@ final class PlaybackController: ObservableObject {
         return AudioSignalPathSnapshot(
             sourceSampleRate: sourceSampleRate,
             sourceChannelCount: sourceChannelCount,
-            processingSampleRate: sourceSampleRate,
+            processingSampleRate: AudioProcessingPolicy.processingSampleRate(for: sourceSampleRate),
             processingChannelCount: sourceChannelCount,
             outputSampleRate: outputSampleRate,
             outputChannelCount: outputChannelCount,
@@ -1097,7 +1130,9 @@ final class PlaybackController: ObservableObject {
             effectsBypassed: effectsBypassed,
             normalizationMode: loudnessNormalizationMode,
             normalizationGainDB: normalization.gainDB,
-            normalizationLimitedByPeak: normalization.isLimitedByPeak
+            normalizationLimitedByPeak: normalization.isLimitedByPeak,
+            finalTruePeakEnabled: finalOutputProtection.isEnabled,
+            finalProtectionLatency: finalOutputProtection.latency
         )
     }
 
@@ -1590,6 +1625,7 @@ final class PlaybackController: ObservableObject {
             effect.nodes.forEach { engine.disconnectNodeOutput($0) }
         }
         effectOutputProtection.nodes.forEach { engine.disconnectNodeOutput($0) }
+        finalOutputProtection.nodes.forEach { engine.disconnectNodeOutput($0) }
         engine.disconnectNodeOutput(engine.mainMixerNode)
 
         // Both player nodes share a source mixer so compatible tracks can overlap
@@ -1608,17 +1644,25 @@ final class PlaybackController: ObservableObject {
             toBus: 1,
             format: file.processingFormat
         )
+        // Source mixer performs the file -> common DSP-rate conversion.
+        // Transport clocks and seeks continue to use file.processingFormat.
+        let processingFormat = AVAudioFormat(standardFormatWithSampleRate:
+            AudioProcessingPolicy.processingSampleRate(for: file.processingFormat.sampleRate),
+            channels: file.processingFormat.channelCount)!
         var upstream: AVAudioNode = sourceMixerNode
         for effect in effectPipeline {
-            engine.connect(upstream, to: effect.inputNode, format: file.processingFormat)
-            effect.connectInternalNodes(engine: engine, format: file.processingFormat)
+            engine.connect(upstream, to: effect.inputNode, format: processingFormat)
+            effect.connectInternalNodes(engine: engine, format: processingFormat)
             upstream = effect.outputNode
         }
-        effectOutputProtection.connect(from: upstream, engine: engine, format: file.processingFormat)
+        effectOutputProtection.connect(from: upstream, engine: engine, format: processingFormat,
+                                       destination: finalOutputProtection.inputNode(in: engine))
         // Reapply sample-rate-dependent settings after the new format is connected.
         effectSettings.forEach(applyEffectSetting)
         let hardwareFormat = engine.outputNode.inputFormat(forBus: 0)
-        engine.connect(engine.mainMixerNode, to: engine.outputNode, format: hardwareFormat)
+        try finalOutputProtection.connect(engine: engine, outputFormat: hardwareFormat)
+        finalOutputProtection.setVolume(volume, engine: engine)
+        finalOutputProtection.resetWhileStopped(engine: engine)
         outputSampleRate = hardwareFormat.sampleRate
         outputChannelCount = hardwareFormat.channelCount
         installMeterTap()
@@ -2083,6 +2127,12 @@ final class PlaybackController: ObservableObject {
 
     private func stopPlayerNodes(resetActivePlayer: Bool = false) {
         stopCrossfadeTimer()
+        // Do not let queued lookahead PCM leak across pause, seek or stop. The
+        // compatible gapless/crossfade path deliberately does not call this helper.
+        if finalOutputProtection.isEnabled {
+            engine.stop()
+            finalOutputProtection.resetWhileStopped(engine: engine)
+        }
         primaryPlayerNode.stop()
         secondaryPlayerNode.stop()
         primaryPlayerNode.volume = 1
@@ -2143,17 +2193,37 @@ final class PlaybackController: ObservableObject {
     }
 
     private func normalizationResult(for track: Track) -> LoudnessNormalizationResult {
-        let albumAnalyses: [AudioFeatureAnalysis] = playbackQueue.compactMap { queuedTrack in
-            guard queuedTrack.albumID == track.albumID else { return nil }
-            return audioFeatures[queuedTrack.id]
-        }
+        let album = loudnessNormalizationMode == .album ? albumMeasurement(for: track) : nil
         return LoudnessNormalizationPolicy.result(
             mode: loudnessNormalizationMode,
             trackAnalysis: audioFeatures[track.id],
-            albumAnalyses: albumAnalyses,
-            targetDBFS: loudnessTargetDBFS,
+            albumMeasurement: album,
+            targetLUFS: loudnessTargetLUFS,
             preventsClipping: preventsClipping
         )
+    }
+
+    private func albumMeasurement(for track: Track) -> AlbumLoudnessMeasurement? {
+        let ids = Set(playbackQueue.filter { $0.albumID == track.albumID }.map(\.id))
+            .sorted { $0.uuidString < $1.uuidString }
+        let key = AlbumMeasurementKey(trackIDs: ids, revision: audioFeatureRevision)
+        if let cached = albumMeasurements[key] { return cached }
+        guard !ids.isEmpty, albumMeasurementTasks[key] == nil,
+              !unavailableAlbumMeasurements.contains(key) else { return nil }
+        let analyses = ids.compactMap { audioFeatures[$0] }
+        guard analyses.count == ids.count else { return nil }
+        albumMeasurementTasks[key] = Task { [weak self] in
+            let worker = Task.detached(priority: .utility) { AlbumLoudnessMeasurement.measure(analyses) }
+            let result = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: { worker.cancel() }
+            guard !Task.isCancelled, let self, self.audioFeatureRevision == key.revision else { return }
+            self.albumMeasurementTasks[key] = nil
+            if let result { self.albumMeasurements[key] = result }
+            else { self.unavailableAlbumMeasurements.insert(key) }
+            self.applyPlaybackGains()
+        }
+        return nil
     }
 
     private func applyPlaybackGains() {

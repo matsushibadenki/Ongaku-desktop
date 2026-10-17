@@ -12,9 +12,15 @@ let package = Package(
         .package(path: "Vendor/Sparkle")
     ],
     targets: [
+        .target(
+            name: "OngakuAudioDSP",
+            cxxSettings: [.unsafeFlags(["-fobjc-arc"])],
+            linkerSettings: [.linkedFramework("AVFoundation"), .linkedFramework("AudioToolbox")]
+        ),
         .executableTarget(
             name: "OngakuDesktop",
             dependencies: [
+                "OngakuAudioDSP",
                 .product(name: "Sparkle", package: "Sparkle")
             ],
             resources: [.process("Resources")],
@@ -25,5 +31,6 @@ let package = Package(
             dependencies: ["OngakuDesktop"],
             resources: [.copy("Fixtures")]
         )
-    ]
+    ],
+    cxxLanguageStandard: .cxx20
 )

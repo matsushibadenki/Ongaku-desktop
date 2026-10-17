@@ -13,6 +13,9 @@ struct AudioSignalPathSnapshot: Equatable, Sendable {
     let normalizationGainDB: Double
     let normalizationLimitedByPeak: Bool
 
+    var finalTruePeakEnabled: Bool = false
+    var finalProtectionLatency: TimeInterval = 0
+
     var sourceIsUnmodified: Bool { true }
 
     var diagnosticLine: String {
@@ -33,6 +36,8 @@ struct AudioSignalPathSnapshot: Equatable, Sendable {
             "dsp=\(effects)",
             "normalization=\(normalization)",
             "output=\(Self.format(outputSampleRate, outputChannelCount))",
+            "finalTruePeak=\(finalTruePeakEnabled ? "qualification" : "off")",
+            String(format: "finalProtectionLatency=%.3fms", finalProtectionLatency * 1_000),
             "sourceMutation=none",
         ].joined(separator: " ")
     }

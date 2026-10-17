@@ -858,7 +858,7 @@
 "settings.playback.normalization.mode.track" = "曲ごと";
 "settings.playback.normalization.mode.album" = "アルバムごと";
 "settings.playback.normalization.target" = "目標音量";
-"settings.playback.normalization.targetValue" = "%.0f dBFS";
+"settings.playback.normalization.targetValue" = "%.0f LUFS";
 "settings.playback.normalization.pending" = "再生中の曲は音響解析の完了後に調整されます。";
 "settings.playback.normalization.current" = "再生中の曲の調整量：%+.1f dB";
 "settings.playback.normalization.currentLimited" = "再生中の曲の調整量：%+.1f dB（測定ピークで制限）";
