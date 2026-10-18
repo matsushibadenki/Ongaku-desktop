@@ -343,7 +343,7 @@ private struct PlaybackSettingsView: View {
     }
 }
 
-private struct AppearanceSettingsView: View {
+struct AppearanceSettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject private var appearance: AppAppearanceSettings
     @EnvironmentObject private var meterSettings: PlayerMeterSettings
@@ -399,8 +399,9 @@ private struct AppearanceSettingsView: View {
                         }
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .frame(width: 180)
+                    .accessibilityLabel(L10n.text("settings.appearance.title"))
                 }
 
                 Divider()

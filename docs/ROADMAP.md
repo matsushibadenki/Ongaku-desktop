@@ -4,6 +4,14 @@
 
 2026-09-05再設計: [全体設計レビュー](ARCHITECTURE_REVIEW_2026-09-05.md)と[ADR-0003](adr/0003-stabilization-and-component-boundaries.md)に基づき、機能拡張より保存・応答性・実機品質を優先する。
 
+## Pastel appearance and shared dial detail — 2026-10-18
+
+- 🟢 [Done] Add iPhone-identical Pink `#fbeefa`, Purple `#eeecfe`, Green `#e1fff4` and Beige `#faf7e3`, with coordinated playback accents, persisted selection and EN/JA/zh-Hans labels. Update the seven-choice appearance picker to a menu and preserve the current view/track state during color changes.
+- 🟢 [Done] Add rounded ceramic-style desktop VU enclosures with cream bezels and small fasteners. Keep the entire frame in its chosen hue using three opaque light tones, including highlights and fasteners; remove white-to-color frame shading. Retain the compact player dimensions and L/R/status lamps.
+- 🟢 [Done] Match the pastel dial detail to iPhone Realistic Light: main/sub scales, red overload arc, professional-meter legend and VU/dB labels in rounded typography. Update the iPhone pastel face too; keep `PastelVUMeterScale.swift` byte-identical and derive each dial/needle from the common -18 dBFS = 0 VU reference.
+- 🟢 [Done] Pass 28 Mac focused/regression tests and both Mac product builds after the final frame-color refinement. Verify four colors at two meter widths, L/R minimum/0 VU/maximum, full player rendering, persisted RGB values and all main marks. Verify the actual Mac settings-to-main color change with a separate 12-track library. Recheck iPhone SE / 16 Pro Max and its ordinary Simulator build. See [validation and screenshots](PASTEL_DESKTOP_PARITY_VALIDATION.md).
+- ⭕️ [Pending] Live playback needle motion/settling, sustained rendering cost, physical iPhone and other Mac displays, small-text readability and True Tone/Night Shift color appearance. The completed Mac window check used a static fixture without playing audio.
+
 ## iPhone speaker continuity coordination — 2026-10-17
 
 - 🟢 [Done] Coordinate the reported iPhone built-in-speaker volume jumps/clicks: retain normalization and applied automatic EQ through same-track quality replacement, defer new automatic analysis until explicit tuning/new prepared playback, and add independent start/pause/seek protection with stale-callback and EOF guards.

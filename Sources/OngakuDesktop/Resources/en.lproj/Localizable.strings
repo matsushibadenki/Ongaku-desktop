@@ -906,7 +906,7 @@
 "settings.language.system" = "System Default";
 "settings.language.immediateNote" = "Language changes are applied immediately to Ongaku windows and menus.";
 "settings.appearance.title" = "Display mode";
-"settings.appearance.description" = "Choose a light or dark appearance, or follow the Mac setting.";
+"settings.appearance.description" = "Choose a pastel color, light or dark, or follow the Mac setting.";
 "settings.appearanceSection.title" = "Appearance";
 "settings.appearanceSection.subtitle" = "Choose how the window and main player are displayed.";
 "settings.tableColumns.title" = "Song list columns";
@@ -1243,3 +1243,9 @@
 
 "storage.migration.create.title" = "Create a new library?";
 "storage.migration.create.message" = "No Ongaku library files were found in the selected folder. Create a separate empty library in a new subfolder? Your previous library and existing files will be kept.";
+
+// Pastel appearances shared with iPhone.
+"settings.appearance.pink" = "Pink";
+"settings.appearance.purple" = "Purple";
+"settings.appearance.green" = "Green";
+"settings.appearance.beige" = "Beige";

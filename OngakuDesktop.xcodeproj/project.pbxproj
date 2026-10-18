@@ -168,6 +168,10 @@
 		A202610170000000000000051 /* EffectTransitionPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000040 /* EffectTransitionPolicy.swift */; };
 		A202610170000000000000052 /* EffectParameterTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000041 /* EffectParameterTransition.swift */; };
 		A202610170000000000000053 /* EffectParameterTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000041 /* EffectParameterTransition.swift */; };
+		FA5710000000000000000000 /* PastelVUMeterScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000000 /* PastelVUMeterScale.swift */; };
+		FA5720000000000000000000 /* PastelVUMeterScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000000 /* PastelVUMeterScale.swift */; };
+		FA5710000000000000000001 /* PastelChannelVUMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000001 /* PastelChannelVUMeter.swift */; };
+		FA5720000000000000000001 /* PastelChannelVUMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000001 /* PastelChannelVUMeter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -280,6 +284,8 @@
 		A202610170000000000000012 /* TruePeakAudioUnit.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Sources/OngakuAudioDSP/TruePeakAudioUnit.mm; sourceTree = SOURCE_ROOT; };
 		A202610170000000000000040 /* EffectTransitionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/EffectTransitionPolicy.swift; sourceTree = SOURCE_ROOT; };
 		A202610170000000000000041 /* EffectParameterTransition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/EffectParameterTransition.swift; sourceTree = SOURCE_ROOT; };
+		FA5700000000000000000000 /* PastelVUMeterScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastelVUMeterScale.swift; sourceTree = "<group>"; };
+		FA5700000000000000000001 /* PastelChannelVUMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastelChannelVUMeter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -396,6 +402,8 @@
 				100000000000000000000039 /* MetadataEditorView.swift */,
 				100000000000000000000044 /* AudioFileMetadataWriter.swift */,
 				10000000000000000000000B /* TrackInspector.swift */,
+				FA5700000000000000000000 /* PastelVUMeterScale.swift */,
+				FA5700000000000000000001 /* PastelChannelVUMeter.swift */,
 				10000000000000000000000C /* PlayerBar.swift */,
 				100000000000000000000037 /* MiniPlayerView.swift */,
 				100000000000000000000032 /* StorageSettingsView.swift */,
@@ -696,6 +704,8 @@
 				200000000000000000000028 /* MetadataEditorView.swift in Sources */,
 				20000000000000000000002D /* AudioFileMetadataWriter.swift in Sources */,
 				20000000000000000000000B /* TrackInspector.swift in Sources */,
+				FA5710000000000000000000 /* PastelVUMeterScale.swift in Sources */,
+				FA5710000000000000000001 /* PastelChannelVUMeter.swift in Sources */,
 				20000000000000000000000C /* PlayerBar.swift in Sources */,
 				200000000000000000000025 /* MiniPlayerView.swift in Sources */,
 				200000000000000000000020 /* StorageSettingsView.swift in Sources */,
@@ -789,6 +799,8 @@
 				E8DA8EC830825B1B00B38A1B /* MetadataEditorView.swift in Sources */,
 				E8DA8EC930825B1B00B38A1B /* AudioFileMetadataWriter.swift in Sources */,
 				E8DA8ECA30825B1B00B38A1B /* TrackInspector.swift in Sources */,
+				FA5720000000000000000000 /* PastelVUMeterScale.swift in Sources */,
+				FA5720000000000000000001 /* PastelChannelVUMeter.swift in Sources */,
 				E8DA8ECB30825B1B00B38A1B /* PlayerBar.swift in Sources */,
 				E8DA8ECC30825B1B00B38A1B /* MiniPlayerView.swift in Sources */,
 				E8DA8ECD30825B1B00B38A1B /* StorageSettingsView.swift in Sources */,

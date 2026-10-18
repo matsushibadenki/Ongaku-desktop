@@ -1,0 +1,36 @@
+✔ Test "A full-scale signal reaches the top of the meter" passed after 0.001 seconds.
+✔ Test "Repeat one returns the current track" passed after 0.001 seconds.
+✔ Test "VU ballistics preserve small changes and release more gently" passed after 0.001 seconds.
+✔ Test "A quieter signal produces a lower reading" passed after 0.001 seconds.
+✔ Test "Automatic navigation skips excluded tracks" passed after 0.001 seconds.
+✔ Test "Shuffle does not immediately replay the current track" passed after 0.001 seconds.
+✔ Test "Repeat album skips other albums and wraps" passed after 0.001 seconds.
+✔ Test "Repeat all wraps to the first track" passed after 0.001 seconds.
+✔ Test "Previous navigation follows playback mode boundaries" passed after 0.001 seconds.
+✔ Test "Sequential playback stops at the end" passed after 0.001 seconds.
+✔ Test "Spectrum presentation uses the full meter height for musical peaks" passed after 0.001 seconds.
+✔ Test "Playback statistics count completions and skips and keep the latest activity" passed after 0.001 seconds.
+✔ Test "Silence stays at the bottom of the meter" passed after 0.001 seconds.
+✔ Test "Spectrum smoothing attacks faster than it releases" passed after 0.001 seconds.
+✔ Test "VU readings are sampled densely enough for fine motion" passed after 0.001 seconds.
+✔ Test "Pause and resume reuse one playback session" passed after 0.001 seconds.
+✔ Test "VU needle settles slowly after playback stops" passed after 0.001 seconds.
+✔ Test "VU meter uses a shallow arc and keeps both needle extremes visible" passed after 0.001 seconds.
+✔ Test "VU calibration maps -18 dBFS RMS to the 0 VU mark" passed after 0.001 seconds.
+✔ Test "History keeps the latest state for each session in reverse chronological order" passed after 0.001 seconds.
+✔ Suite "Playback history" passed after 0.001 seconds.
+✔ Test "The audio tap runs without inheriting MainActor isolation" passed after 0.001 seconds.
+✔ Test "Left and right spectra resolve different frequency bands" passed after 0.001 seconds.
+✔ Test "Queue edits preserve order and can be undone" passed after 0.092 seconds.
+✔ Suite "Playback queue navigation" passed after 0.092 seconds.
+✔ Test "VU needle exposes its position to SwiftUI animation" passed after 0.092 seconds.
+✔ Test "VU meter renders at the player-slot size" passed after 0.143 seconds.
+✔ Suite "Stereo level meter" passed after 0.144 seconds.
+✔ Test "Four persisted palettes match iPhone and restore after reload" passed after 0.146 seconds.
+✔ Test "All dial marks and needle levels share the -18 dBFS reference" passed after 0.001 seconds.
+✔ Test "Production desktop meters and transport render in every color" passed after 0.469 seconds.
+✔ Suite "Pastel appearance" passed after 0.616 seconds.
+✔ Test run with 28 tests in 4 suites passed after 0.616 seconds.
+
+Common scale source byte identity: PASS.
+EN/JA/zh-Hans: four unique labels each, PASS.

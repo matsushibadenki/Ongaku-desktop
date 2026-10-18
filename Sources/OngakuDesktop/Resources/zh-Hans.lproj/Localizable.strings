@@ -906,7 +906,7 @@
 "settings.language.system" = "跟随系统";
 "settings.language.immediateNote" = "语言更改会立即应用到Ongaku窗口和菜单。";
 "settings.appearance.title" = "显示模式";
-"settings.appearance.description" = "选择浅色或深色外观，或跟随Mac设置。";
+"settings.appearance.description" = "选择柔和配色、浅色或深色外观，或跟随Mac设置。";
 "settings.appearanceSection.title" = "外观";
 "settings.appearanceSection.subtitle" = "设置窗口和主播放器的显示方式。";
 "settings.tableColumns.title" = "歌曲列表列";
@@ -1243,3 +1243,9 @@
 
 "storage.migration.create.title" = "要创建新资料库吗？";
 "storage.migration.create.message" = "在所选文件夹中未找到 Ongaku 资料库文件。是否在新的子文件夹中创建独立的空资料库？原资料库和现有文件将保留。";
+
+// Pastel appearances shared with iPhone.
+"settings.appearance.pink" = "粉色";
+"settings.appearance.purple" = "紫色";
+"settings.appearance.green" = "绿色";
+"settings.appearance.beige" = "米色";

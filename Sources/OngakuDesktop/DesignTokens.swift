@@ -12,20 +12,29 @@ private struct ThemeRGB: Sendable {
 }
 
 enum AppTheme {
+    @MainActor static var appearance: AppAppearance { DesktopAppearancePalette.shared.selection }
+    @MainActor static var canvas: Color { appearance.pastelColor ?? baseCanvas }
+    @MainActor static var sidebar: Color { appearance.pastelColor ?? baseSidebar }
+    @MainActor static var preferencesSidebar: Color { appearance.pastelColor ?? basePreferencesSidebar }
+    @MainActor static var surface: Color { appearance.pastelColor ?? baseSurface }
+    @MainActor static var windowBar: Color { appearance.pastelColor ?? baseWindowBar }
+    @MainActor static var raised: Color { appearance.pastelColor ?? baseRaised }
+    @MainActor static var transportGroove: Color { appearance.accentColor.map { $0.opacity(0.13) } ?? baseTransportGroove }
+    @MainActor static var playbackAccent: Color { appearance.accentColor ?? basePlaybackAccent }
     // Match the mobile hardware palette while preserving native macOS appearance switching.
-    static let canvas = adaptive(
+    private static let baseCanvas = adaptive(
         light: ThemeRGB(red: 0.957, green: 0.957, blue: 0.957),
         dark: ThemeRGB(red: 0.130, green: 0.130, blue: 0.130)
     )
-    static let sidebar = adaptive(
+    private static let baseSidebar = adaptive(
         light: ThemeRGB(red: 0.957, green: 0.957, blue: 0.957),
         dark: ThemeRGB(red: 0.130, green: 0.130, blue: 0.130)
     )
-    static let preferencesSidebar = adaptive(
+    private static let basePreferencesSidebar = adaptive(
         light: ThemeRGB(red: 0.925, green: 0.925, blue: 0.925),
         dark: ThemeRGB(red: 0.170, green: 0.170, blue: 0.170)
     )
-    static let surface = adaptive(
+    private static let baseSurface = adaptive(
         light: ThemeRGB(red: 0.984, green: 0.984, blue: 0.984),
         dark: ThemeRGB(red: 0.145, green: 0.145, blue: 0.145)
     )
@@ -33,15 +42,15 @@ enum AppTheme {
         light: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000),
         dark: ThemeRGB(red: 0.130, green: 0.130, blue: 0.130)
     )
-    static let windowBar = adaptive(
+    private static let baseWindowBar = adaptive(
         light: ThemeRGB(red: 1.000, green: 1.000, blue: 1.000),
         dark: ThemeRGB(red: 0.130, green: 0.130, blue: 0.130)
     )
-    static let raised = adaptive(
+    private static let baseRaised = adaptive(
         light: ThemeRGB(red: 0.925, green: 0.925, blue: 0.925),
         dark: ThemeRGB(red: 0.180, green: 0.180, blue: 0.180)
     )
-    static let transportGroove = adaptive(
+    private static let baseTransportGroove = adaptive(
         light: ThemeRGB(red: 0.820, green: 0.820, blue: 0.820),
         dark: ThemeRGB(red: 0.150, green: 0.150, blue: 0.150)
     )
@@ -59,11 +68,11 @@ enum AppTheme {
     )
     // General controls remain neutral; reserve the signal color for playback.
     static let accent = ink
-    static let playbackAccent = adaptive(
+    private static let basePlaybackAccent = adaptive(
         light: ThemeRGB(red: 1.000, green: 0.475, blue: 0.000),
         dark: ThemeRGB(red: 1.000, green: 0.541, blue: 0.110)
     )
-    static let prominentInk = canvas
+    @MainActor static var prominentInk: Color { canvas }
     static let orangeStatus = secondaryInk
     static let playerControl = ink
     static let surfaceHighlight = adaptive(
@@ -71,7 +80,7 @@ enum AppTheme {
         dark: ThemeRGB(red: 0.180, green: 0.180, blue: 0.180)
     )
     static let contactShadow = Color.black.opacity(0.16)
-    static var metal: LinearGradient {
+    @MainActor static var metal: LinearGradient {
         LinearGradient(colors: [surfaceHighlight, surface, canvas],
                        startPoint: .topLeading, endPoint: .bottomTrailing)
     }

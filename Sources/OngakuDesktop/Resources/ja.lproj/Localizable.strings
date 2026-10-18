@@ -906,7 +906,7 @@
 "settings.language.system" = "システム設定";
 "settings.language.immediateNote" = "言語の変更はOngakuのウインドウとメニューへすぐに反映されます。";
 "settings.appearance.title" = "表示形式";
-"settings.appearance.description" = "ライトまたはダークを選ぶか、Macの設定に合わせます。";
+"settings.appearance.description" = "パステルカラー、ライト、ダーク、またはMacの設定を選びます。";
 "settings.appearanceSection.title" = "アピアランス";
 "settings.appearanceSection.subtitle" = "ウインドウとプレーヤーの表示方法を設定します。";
 "settings.tableColumns.title" = "曲リストの表示列";
@@ -1243,3 +1243,9 @@
 
 "storage.migration.create.title" = "新しいライブラリを作成しますか？";
 "storage.migration.create.message" = "選択したフォルダにOngakuのライブラリファイルが見つかりませんでした。新しいサブフォルダに空のライブラリを作成しますか？以前のライブラリと既存のファイルは保持されます。";
+
+// Pastel appearances shared with iPhone.
+"settings.appearance.pink" = "ピンク";
+"settings.appearance.purple" = "パープル";
+"settings.appearance.green" = "グリーン";
+"settings.appearance.beige" = "ベージュ";

@@ -1,0 +1,7 @@
+PASS: pink exact background, saved selection, asset, EN/JA/zh-Hans labels; captured production screen and min/0VU/max dial
+PASS: purple exact background, saved selection, asset, EN/JA/zh-Hans labels; captured production screen and min/0VU/max dial
+PASS: green exact background, saved selection, asset, EN/JA/zh-Hans labels; captured production screen and min/0VU/max dial
+PASS: beige exact background, saved selection, asset, EN/JA/zh-Hans labels; captured production screen and min/0VU/max dial
+PASS: needle endpoints remain inside the dial; nonfinite and out-of-range telemetry clamps safely
+PASS: appearance picker scrolls to the four new choices and preview controls
+COMPLETE

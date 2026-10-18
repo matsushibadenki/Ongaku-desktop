@@ -1,19 +1,57 @@
 import Combine
+import Observation
 import SwiftUI
 
 enum AppAppearance: String, CaseIterable, Identifiable {
     case system
     case light
     case dark
+    case pink, purple, green, beige
 
     var id: String { rawValue }
 
     var colorScheme: ColorScheme? {
         switch self {
         case .system: nil
-        case .light: .light
+        case .light, .pink, .purple, .green, .beige: .light
         case .dark: .dark
         }
+    }
+
+    var pastelHex: UInt32? {
+        switch self {
+        case .pink: 0xfbeefa
+        case .purple: 0xeeecfe
+        case .green: 0xe1fff4
+        case .beige: 0xfaf7e3
+        default: nil
+        }
+    }
+    var accentHex: UInt32? {
+        switch self {
+        case .pink: 0xa83f79
+        case .purple: 0x7051b4
+        case .green: 0x24765b
+        case .beige: 0x856122
+        default: nil
+        }
+    }
+    /// Opaque, same-hue highlights keep the colored enclosure visibly colored.
+    var meterFrameColors: [Color] {
+        let values: [UInt32] = switch self {
+        case .pink: [0xfce3f2, 0xf5d0e6, 0xebbedb]
+        case .purple: [0xeee7fd, 0xded3f9, 0xcfc0f0]
+        case .green: [0xddf8ea, 0xc7eed9, 0xafe1c6]
+        case .beige: [0xfaf2d8, 0xf0e5be, 0xe5d5a6]
+        default: [0xf4f4f4, 0xe6e6e6, 0xd6d6d6]
+        }
+        return values.map(Self.color)
+    }
+    var pastelColor: Color? { pastelHex.map(Self.color) }
+    var accentColor: Color? { accentHex.map(Self.color) }
+    private static func color(_ hex: UInt32) -> Color {
+        Color(.sRGB, red: Double((hex >> 16) & 255) / 255,
+              green: Double((hex >> 8) & 255) / 255, blue: Double(hex & 255) / 255, opacity: 1)
     }
 
     var localizationKey: String {
@@ -21,6 +59,7 @@ enum AppAppearance: String, CaseIterable, Identifiable {
         case .system: "settings.appearance.system"
         case .light: "settings.appearance.light"
         case .dark: "settings.appearance.dark"
+        case .pink, .purple, .green, .beige: "settings.appearance.\(rawValue)"
         }
     }
 }
@@ -31,6 +70,7 @@ final class AppAppearanceSettings: ObservableObject {
 
     @Published var selectedAppearance: AppAppearance {
         didSet {
+            DesktopAppearancePalette.shared.selection = selectedAppearance
             if selectedAppearance == .system {
                 defaults.removeObject(forKey: Self.defaultsKey)
             } else {
@@ -49,6 +89,7 @@ final class AppAppearanceSettings: ObservableObject {
         } else {
             selectedAppearance = .system
         }
+        DesktopAppearancePalette.shared.selection = selectedAppearance
     }
 }
 
@@ -113,4 +154,12 @@ final class TrackTableSettings: ObservableObject {
             }
         )
     }
+}
+
+/// Observable bridge for the shared design tokens. Reading a token inside a
+/// SwiftUI body tracks palette changes without replacing navigation/view state.
+@MainActor @Observable
+final class DesktopAppearancePalette {
+    static let shared = DesktopAppearancePalette()
+    var selection: AppAppearance = .system
 }

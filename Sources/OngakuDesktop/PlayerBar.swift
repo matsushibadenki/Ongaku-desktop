@@ -283,6 +283,7 @@ struct PlaybackProgressSlider: NSViewRepresentable {
         slider.isEnabled = isEnabled
         slider.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
         slider.setAccessibilityLabel(L10n.text("miniPlayer.progress"))
+        _ = AppTheme.playbackAccent
         slider.needsDisplay = true
     }
 
@@ -321,6 +322,18 @@ struct ChannelVUMeterView: View {
     private let scaleMarks = VUMeterCalibration.scaleMarks
 
     var body: some View {
+        Group {
+            if AppTheme.appearance.pastelHex != nil {
+                PastelChannelVUMeter(channel: channel, level: level, backlight: backlight,
+                                     isActive: isActive, appearance: AppTheme.appearance)
+            } else { legacyMeter }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(channel) \(L10n.text("meter.vu"))")
+        .accessibilityValue("\(Int((clampedLevel * 100).rounded()))%")
+    }
+
+    private var legacyMeter: some View {
         GeometryReader { _ in
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -507,7 +520,7 @@ struct ChannelVUMeterView: View {
     }
 
     private var clampedLevel: Double {
-        min(max(level, 0), 1)
+        level.isFinite ? min(max(level, 0), 1) : 0
     }
 
     private var needlePosition: Double {
