@@ -52,6 +52,8 @@ swift test --filter 'EffectParameterTransitionTests|FinalOutputProtectionTests|M
 
 ## Open work
 
-🟠 [Next] Add orderly asynchronous shutdown before destructive track/resource teardown (`stop()`/load/memory recovery). That immediate teardown is distinct from the user pause button covered here. Qualify sample-accurate handoff, signal alignment and effect tails. Apply the same criteria to Mac transport and its late album-analysis gain updates; sharing the policy does not implement the iPhone transport path on Mac.
+🟢 [Done] Destructive stop/load/recovery now drains before releasing resources and sessions. See the superseding [2026-10-18 shutdown implementation and verification](DESTRUCTIVE_STOP_VALIDATION.md); the verification table above records the earlier pause/seek scope.
+
+🟠 [Next] Qualify sample-accurate handoff, signal alignment and effect tails. Apply the same criteria to Mac transport and its late album-analysis gain updates; sharing the policy does not implement the iPhone transport path on Mac.
 
 ⭕️ [Pending] Listen on the affected physical iPhone built-in speaker at several system volumes, with effects ON/OFF and native/Precision Sinc sources. Exercise start/pause/resume/seek, early and active quality overlap, rapid gestures, UI contention, route changes and memory recovery. Verify clicks, perceived level, render gaps, thermal/CPU/energy behavior and effect tails. Repeat applicable tests on Mac and external outputs. Offline/Simulator success is not proof of inaudibility or resolution of every reported event.

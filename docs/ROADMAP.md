@@ -4,6 +4,13 @@
 
 2026-09-05再設計: [全体設計レビュー](ARCHITECTURE_REVIEW_2026-09-05.md)と[ADR-0003](adr/0003-stabilization-and-component-boundaries.md)に基づき、機能拡張より保存・応答性・実機品質を優先する。
 
+## iPhone destructive shutdown coordination — 2026-10-18
+
+- 🟢 [Done] Record iPhone destructive stop/load/recovery protection: retain active files/PCM and both handoff schedules until the final-mixer fade and silent drain finish, then pause/reset and release the session. Coalesce stops, reject stale/cancelled loads and honor a newer pause during reload.
+- 🟢 [Done] Record 11 transport state groups, 6 PCM cases with negative controls, 6 final production-engine Simulator groups, gain-reference/session regressions, 48 effect and 72 gain cases, and the ordinary iPhone build. Shared `EffectTransitionPolicy` remains byte-identical. See [verification and limits](DESTRUCTIVE_STOP_VALIDATION.md). Mac runtime code is unchanged in this step.
+- 🟠 [Next] Apply independent transport protection and stable late album-analysis gain behavior to Mac. Qualify signal alignment and handoff/effect tails with latency-aligned reference/residual measurements.
+- ⭕️ [Pending] Physical iPhone speaker stop/start, track/quality changes, recovery, Music session transfers, UI load and route changes; corresponding Mac listening and sustained resource use.
+
 ## Pastel appearance and shared dial detail — 2026-10-18
 
 - 🟢 [Done] Add iPhone-identical Pink `#fbeefa`, Purple `#eeecfe`, Green `#e1fff4` and Beige `#faf7e3`, with coordinated playback accents, persisted selection and EN/JA/zh-Hans labels. Update the seven-choice appearance picker to a menu and preserve the current view/track state during color changes.
@@ -16,7 +23,8 @@
 
 - 🟢 [Done] Coordinate the reported iPhone built-in-speaker volume jumps/clicks: retain normalization and applied automatic EQ through same-track quality replacement, defer new automatic analysis until explicit tuning/new prepared playback, and add independent start/pause/seek protection with stale-callback and EOF guards.
 - 🟢 [Done] Keep `EffectTransitionPolicy` byte-identical across both apps. Pass Mac's 19 focused effect-transition/final-output/fidelity tests; record iPhone transport PCM/state/gain-reference regressions, 17 production-engine Simulator checks, the ordinary app build and the 48 effect / 72 gain cases. See [shared evidence and scope](PLAYBACK_CONTINUITY_VALIDATION.md).
-- 🟠 [Next] Apply these acceptance criteria to Mac transport and late album-analysis gain updates. Mac's existing effect ON/OFF protection is separate from user transport fading. Also extend iPhone's protection to destructive track/resource teardown and qualify sample-accurate handoff/tails.
+- 🟢 [Done] iPhone destructive stop/load/recovery now defers resource/session release until after the fade and drain; see [2026-10-18 validation](DESTRUCTIVE_STOP_VALIDATION.md).
+- 🟠 [Next] Apply these acceptance criteria to Mac transport and late album-analysis gain updates. Mac's existing effect ON/OFF protection is separate from user transport fading. Qualify signal alignment, sample-accurate handoff and tails.
 - ⭕️ [Pending] Confirm the reported symptom on a physical iPhone built-in speaker, then verify applicable Mac/output-route behavior. Validate audible start/stop, real overlap, UI load, session changes and sustained CPU/energy. Shared math and offline tests do not establish physical inaudibility.
 
 ## iPhone preparation diagnostics coordination — 2026-10-17
