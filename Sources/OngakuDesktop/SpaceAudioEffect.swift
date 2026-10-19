@@ -12,6 +12,15 @@ import AVFoundation
 final class SpaceAudioEffect: AudioEffectNode {
     let kind: RealtimeAudioEffectKind = .space
     private(set) var isEnabled: Bool = false
+    private let wetInputMixer = AVAudioMixerNode()
+    private weak var attachedEngine: AVAudioEngine?
+    private let tailSchedule: EffectTailGate.Schedule
+    private lazy var tailGate = EffectTailGate(input: wetInputMixer, outputs: [earlyMixer, lateMixer],
+                                               wetUnits: [earlyDelay, earlyReverb, lateDelay, lateReverb], schedule: tailSchedule)
+    init(tailSchedule: @escaping EffectTailGate.Schedule = EffectTailGate.scheduleOnMain) {
+        self.tailSchedule = tailSchedule
+    }
+
     
     // --- 3Dルーティング用ミキサーノード ---
     private let inputSplitter = AVAudioMixerNode()
@@ -32,7 +41,7 @@ final class SpaceAudioEffect: AudioEffectNode {
     private var lastSpaceReverbPreset: Int = -1
     
     var nodes: [AVAudioNode] {
-        [inputSplitter,
+        [wetInputMixer, inputSplitter,
          earlyDelay, earlyReverb, earlyMixer,
          lateDelay, lateEQ, lateReverb, lateMixer,
          outputMixer]
@@ -44,6 +53,8 @@ final class SpaceAudioEffect: AudioEffectNode {
     private(set) var estimatedGainBoostDB: Double = 0.0
 
     func attach(to engine: AVAudioEngine) {
+        attachedEngine = engine
+        wetInputMixer.outputVolume = 0
         for node in nodes {
             engine.attach(node)
         }
@@ -82,6 +93,7 @@ final class SpaceAudioEffect: AudioEffectNode {
     }
     
     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+        tailGate.reset()
         // --- 修正ポイント: AVAudioConnectionPoint によるマルチ・ルーティング (Fan-out) ---
         // EN: In AVAudioEngine, calling connect() multiple times from the same source bus
         //     replaces the previous connection. We must use AVAudioConnectionPoint for fan-out.
@@ -90,10 +102,11 @@ final class SpaceAudioEffect: AudioEffectNode {
         
         let connectionPoints = [
             AVAudioConnectionPoint(node: outputMixer, bus: 0),
-            AVAudioConnectionPoint(node: earlyDelay, bus: 0),
-            AVAudioConnectionPoint(node: lateDelay, bus: 0)
+            AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
         ]
         engine.connect(inputSplitter, to: connectionPoints, fromBus: 0, format: format)
+        engine.connect(wetInputMixer, to: [AVAudioConnectionPoint(node: earlyDelay, bus: 0),
+            AVAudioConnectionPoint(node: lateDelay, bus: 0)], fromBus: 0, format: format)
         
         // --- Path 2 (Early Reflections) ---
         engine.connect(earlyDelay, to: earlyReverb, format: format)
@@ -108,11 +121,15 @@ final class SpaceAudioEffect: AudioEffectNode {
     }
     
     func detach(from engine: AVAudioEngine) {
+        tailGate.reset()
+        attachedEngine = nil
         for node in nodes {
             engine.detach(node)
         }
     }
     
+    func resetTailState() { tailGate.resetPreservingEnabledState() }
+
     func apply(setting: RealtimeAudioEffectSetting) {
         let intensity = clamped(setting.parameters["intensity"], defaultValue: 0.8)
         let amount = clamped(setting.parameters["amount"], defaultValue: 0.22)
@@ -129,8 +146,7 @@ final class SpaceAudioEffect: AudioEffectNode {
         isEnabled = setting.isEnabled && intensity > 0.001 && amount > 0.001
         
         guard isEnabled else {
-            earlyMixer.outputVolume = 0
-            lateMixer.outputVolume = 0
+            tailGate.stop(rendering: attachedEngine?.isRunning == true)
             estimatedGainBoostDB = 0.0
             return
         }
@@ -140,12 +156,14 @@ final class SpaceAudioEffect: AudioEffectNode {
 
         guard isSampleRateSafe else {
             isEnabled = false
+            tailGate.reset()
             estimatedGainBoostDB = 0
             earlyMixer.outputVolume = 0
             lateMixer.outputVolume = 0
             return
         }
         
+        tailGate.activate()
         let spacePresetIndex: Int
         if size > 0.75 { spacePresetIndex = 3 }
         else if size > 0.50 { spacePresetIndex = 2 }
@@ -182,4 +200,3 @@ final class SpaceAudioEffect: AudioEffectNode {
         return min(max(value ?? defaultValue, 0.0), 1.0)
     }
 }
-

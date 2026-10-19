@@ -1,0 +1,102 @@
+Effect tails / latency checks — 2026-10-19
+Development Mac M4, macOS 27.0.1; offline Audio Units + isolated controller tests; no physical-iPhone qualification.
+Counts from overlapping test suites are not summed as unique tests.
+
+[iphone-state] /private/tmp/ongaku-tail-iphone-state-final.log
+PASS: shipping iPhone zero-intensity bypass commit at zero, 17 ms latency drain, restored output stale restore cancellation and pause-request deferral
+
+[iphone-tails] /private/tmp/ongaku-tail-wave.log
+PASS: 12 effect/rate cases, both channels; tail history, repeated OFF, exact dry settling, rapid ON and latency policy
+PASS: rejected abrupt-tail negative control
+
+[mac-tails] /private/tmp/ongaku-tail-mac-wave.log
+PASS: 12 effect/rate cases, both channels; tail history, repeated OFF, exact dry settling, rapid ON and latency policy
+PASS: rejected abrupt-tail negative control
+
+[handoff] /private/tmp/ongaku-tail-handoff-final.log
+PASS: 144 shared-rack effect handoffs, both channels; variable blocks, 4/20 ms controls, preserved tails
+PASS: rejected shared-rack reset negative control
+
+[iphone-dsp] /private/tmp/ongaku-tail-dsp-final.log
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 48 shipping effect/automatic-DSP transitions, latest-request coalescing, handoff deferral and stop cancellation
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: continuity guards reject output muting during parameter gestures
+
+[iphone-transport] /private/tmp/ongaku-tail-transport-final.log
+114 |         print("PASS: an already-stopped engine releases resources synchronously")
+PASS: startup waits for render before fading
+PASS: pause intent, silent drain, position and restart
+PASS: rapid resume cancels old gains and pause without rescheduling
+PASS: stop invalidates transport callbacks before new playback
+PASS: stop retains sources through fade/drain; repeated stop coalesces and only latest session cleanup runs
+PASS: a superseding load cancels old preparation/session release and survives the old stop callbacks
+PASS: an already-stopped engine releases resources synchronously
+PASS: seek cancellation and paused seek
+PASS: latest seek wins, including immediate seek/play callers
+PASS: missing render ends in paused state
+PASS: EOF cannot override pause/seek; resume replaces an already-ended schedule
+PASS: 6 stock-mixer PCM fade cases
+PASS: PCM guard rejects abrupt source start/stop
+PASS: state guard rejects resource teardown before fade/drain
+
+[gain-reference] /private/tmp/ongaku-tail-gain.log
+PASS: preserved unmeasured reference across quiet/hot upgrades; new track resets
+PASS: preserved measured reference across quiet/hot upgrades; new track resets
+PASS: reference guard rejects gain changes caused by late analysis
+
+[mac-transition] /private/tmp/ongaku-tail-mac-transition-final.log
+PASS: 96 desktop transition PCM cases
+PASS: rejected unprotected continuity defect
+PASS: rejected mute continuity defect
+PASS: rejected unsafe-bypass continuity defect
+
+[mac-ordinary] /private/tmp/ongaku-tail-mac-tests.log
+✔ Test run with 28 tests in 5 suites passed after 147.318 seconds.
+
+[mac-candidate] /private/tmp/ongaku-tail-mac-candidate-tests.log
+✔ Test run with 22 tests in 4 suites passed after 78.710 seconds.
+
+[mac-final-state] /private/tmp/ongaku-tail-mac-state-final.log
+✔ Test run with 10 tests in 1 suite passed after 0.018 seconds.
+
+[iphone-build] /private/tmp/ongaku-tail-iphone-build-final.log
+** BUILD SUCCEEDED **
+
+[mac-build] /private/tmp/ongaku-tail-mac-build-final.log
+** BUILD SUCCEEDED **
+
+[mac-store-build] /private/tmp/ongaku-tail-mac-store-build-final.log
+** BUILD SUCCEEDED **
+
+Final source SHA-256 (existing unrelated work is retained in these files):
+d5edea82067b5a6b97253950583f22e2e7829256db79c5197d7bc0207b48071a  Ongaku/audio/HiResPlaybackEngine.swift
+88ab5da8172eec5d723d40c1d1b394ee9336072628f6a2b10ce2fd2cf527de6b  Ongaku/audio/EffectTransitionPolicy.swift
+775e6f65808ec4d2c8d538a691e7039c31cc43851ada8f577927dc192a9d7e3d  Ongaku/audio/PlaybackHandoffClock.swift
+67e817e08188f3b8cd66a0029ea3976c3294058da39c837a3a3e99d0a748bb06  Ongaku/audio/effects/AudioEffectNode.swift
+287f67ea1e9ba890683784bd7b2aabde3e8b897b5e522c313cde7f9b573b66b6  Ongaku/audio/effects/SpaceAudioEffect.swift
+5c6e8ae8c4960ed38b8bf452f667a972d1f95886a0da831b5a553b872a229a67  Ongaku/audio/effects/GlossAudioEffect.swift
+573d52922a9275047cf0499cb87d38a6ba6328e10551aade2f04072948bbe4a6  Ongaku/audio/effects/BodyAudioEffect.swift
+5eaabf8a0cec932cca1aa128eeaa2c0bf99ad9db3466d05281afde54ceacfe80  Ongaku/audio/effects/WarmAudioEffect.swift
+82812060825d28fdd7093831e6af8f497589d20e4f105bb7666e9f48094c9b70  Ongaku/tests/TailLatencyRegression.swift
+a04618f1d2d3540057fdee4b4f3a40897416375f0d22fe448dd7ca47f7bee769  Ongaku/tests/EffectHandoffResidualRegression.swift
+3adeadbc20e615b70f2037f366260422b0e73e61fef09eba5a949f4a46220109  Ongaku/tests/EffectLatencyStateRegression.swift
+da7048ecf21fba7c65a7815b091b35594f8ff10fb3cf3321de97ae7dd4903ef9  Ongaku/tests/DesktopEffectTransitionRegression.swift
+7a208f4efc1f0e5465194b36045b31705c9fe65b74bd3de9c8fdcfece88b628c  Ongaku/tests/PlaybackHandoffWaveformRegression.swift
+47305ffa10efc7db07864e7ce1a2a97196a97c5ea3f2824db81cdc0547e36dba  Ongaku/tests/TransportContinuityRegression.swift
+2dff323354075a8c73684fbedf385d47e453976a1f894f1f33709269feb1b1b2  Ongaku/tests/extract_dsp_transition_fixture.py
+8c10c611b9d1758682607731ba3dac9f8d13f5705bc0816c629140444f331d06  Ongaku/tests/extract_desktop_effect_transition_fixture.py
+e5c5c3f12fc33a4d8061dd4aed9af07f08f123ec4f7bfbe9cefeef4f5ea8fcbf  Ongaku/tests/extract_transport_continuity_fixture.py
+3bfb90926e1aa402ca76b67b7f89eb879197863263acab116515796ab0599b26  Ongaku/tests/run_tail_latency_regression.sh
+78746bb0345b73f6525c41a88afc98ed5d8361018e16df5c0fd34077a935c2ba  Ongaku/tests/run_effect_handoff_residual_regression.sh
+ee3fcb445b14a8bdbfe2b6503fa6563390e46f8f7b6a9297cf13f6653956e40b  Ongaku/tests/run_effect_latency_state_regression.sh
+c0d5a6cc1d0a0842d42d560a1a5933abc72222f77f28026bf299eb3260e27164  Ongaku/tests/run_desktop_effect_transition_regression.sh
+32b1b1bafe2e1cb2348e40cf9b622adfd4738ff43f6f56be9b787d2efe410a9d  Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift
+287f67ea1e9ba890683784bd7b2aabde3e8b897b5e522c313cde7f9b573b66b6  Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift
+5c6e8ae8c4960ed38b8bf452f667a972d1f95886a0da831b5a553b872a229a67  Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift
+573d52922a9275047cf0499cb87d38a6ba6328e10551aade2f04072948bbe4a6  Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift
+935d68b518ddf3ea0ddee71afb59d6c767e5ff48b091d9e3fd7c8a97deff1314  Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift
+88ab5da8172eec5d723d40c1d1b394ee9336072628f6a2b10ce2fd2cf527de6b  Ongaku-desktop/Sources/OngakuDesktop/EffectTransitionPolicy.swift
+661b4473f3b8cfec026e44815abc3399f368c4e1f64ac20af4e9aa9458698cd5  Ongaku-desktop/Sources/OngakuDesktop/EffectParameterTransition.swift
+f10f8997ffb5796b212fec92427853e5a1a5df851362247ea29aef9fc1f445d0  Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift
+b60a897226c4a619c29cfc855cb173e43e9c0914ee52c514a0ee60f3c8e764c5  Ongaku-desktop/Tests/OngakuDesktopTests/EffectParameterTransitionTests.swift

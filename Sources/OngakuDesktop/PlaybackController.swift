@@ -947,11 +947,12 @@ final class PlaybackController: ObservableObject {
     }
     @Published var loudnessNormalizationMode: LoudnessNormalizationMode {
         didSet {
+            guard oldValue != loudnessNormalizationMode else { return }
             UserDefaults.standard.set(
                 loudnessNormalizationMode.rawValue,
                 forKey: Self.loudnessNormalizationModeKey
             )
-            applyPlaybackGains()
+            applyPlaybackGains(refreshReferences: true)
             logSignalPath(reason: "normalization-mode-changed")
         }
     }
@@ -965,15 +966,17 @@ final class PlaybackController: ObservableObject {
                 loudnessTargetLUFS = clamped
                 return
             }
+            guard oldValue != loudnessTargetLUFS else { return }
             UserDefaults.standard.set(clamped, forKey: Self.loudnessTargetKey)
-            applyPlaybackGains()
+            applyPlaybackGains(refreshReferences: true)
             logSignalPath(reason: "normalization-target-changed")
         }
     }
     @Published var preventsClipping: Bool {
         didSet {
+            guard oldValue != preventsClipping else { return }
             UserDefaults.standard.set(preventsClipping, forKey: Self.preventsClippingKey)
-            applyPlaybackGains()
+            applyPlaybackGains(refreshReferences: true)
             logSignalPath(reason: "normalization-protection-changed")
         }
     }
@@ -1006,12 +1009,26 @@ final class PlaybackController: ObservableObject {
                   let start = prepared.crossfadeStartHostTime else { return false }
             return mach_absolute_time() + AVAudioTime.hostTime(forSeconds: EffectTransitionPolicy.protectionWindow) >= start
         },
+        processingLatency: { [weak self] in
+            self?.effectPipeline.reduce(0.0) { $0 + $1.transitionLatency } ?? 0
+        },
         setEnvelope: { [weak self] gain in
             guard let self else { return }
             self.finalOutputProtection.setTransitionGain(gain, engine: self.engine)
         },
         commit: { [weak self] settings in self?.commitEffectSettings(settings) }
     )
+    private lazy var transportEnvelope = TransportOutputEnvelope { [weak self] gain in
+        guard let self else { return }
+        self.finalOutputProtection.setTransportGain(gain, engine: self.engine)
+    }
+    private var pendingLoad: (track: Track, position: TimeInterval)?
+    private struct NormalizationReference {
+        let track: AudioFeatureAnalysis?
+        let album: AlbumLoudnessMeasurement?
+    }
+    private var normalizationReferences: [Track.ID: NormalizationReference] = [:]
+
     private let outputManager = AudioOutputManager()
     private let audioFileOpener: (URL) throws -> AVAudioFile
     private var audioFile: AVAudioFile?
@@ -1064,6 +1081,7 @@ final class PlaybackController: ObservableObject {
         let crossfadeStartHostTime: UInt64?
         let scheduledStartFrame: AVAudioFramePosition
         let outgoingTransitionPosition: TimeInterval
+        var normalizationReference: NormalizationReference
     }
 
     init(
@@ -1170,18 +1188,24 @@ final class PlaybackController: ObservableObject {
 
     func pauseForExternalPlayback() {
         guard isPlaying else { return }
-        elapsed = currentElapsed()
-        stopPlayerNodes()
-        if let audioFile {
-            let frame = min(
-                AVAudioFramePosition(elapsed * audioFile.processingFormat.sampleRate),
-                audioFile.length
-            )
-            schedule(fromFrame: frame)
+        pauseTransport()
+    }
+
+    private func pauseTransport() {
+        if let pendingLoad {
+            load(pendingLoad.track, position: pendingLoad.position, autoplay: false)
+            return
         }
+        elapsed = transportEnvelope.isStopping ? elapsed : currentElapsed()
+        let position = elapsed
         isPlaying = false
-        clearAudioVisualization()
-        stopTimer()
+        performTransportChange { [weak self] in
+            guard let self, let file = self.audioFile else { return }
+            self.schedule(fromFrame: min(AVAudioFramePosition(position * file.processingFormat.sampleRate), file.length))
+            self.engine.pause()
+            self.clearAudioVisualization()
+            self.publishQueueState(force: true)
+        }
         publishQueueState(force: true)
     }
 
@@ -1268,6 +1292,10 @@ final class PlaybackController: ObservableObject {
 
     func updateAudioFeatures(_ audioFeatures: [Track.ID: AudioFeatureAnalysis]) {
         self.audioFeatures = audioFeatures
+        if loudnessNormalizationMode == .album {
+            if let currentTrack { _ = albumMeasurement(for: currentTrack) }
+            if let prepared = prerolledTrack { _ = albumMeasurement(for: prepared.track) }
+        }
         applyPlaybackGains()
     }
 
@@ -1443,6 +1471,17 @@ final class PlaybackController: ObservableObject {
     }
 
     private func load(_ track: Track, position: TimeInterval, autoplay: Bool) {
+        pendingLoad = (track, position)
+        isPlaying = autoplay
+        elapsed = position
+        performTransportChange { [weak self] in
+            guard let self else { return }
+            self.pendingLoad = nil
+            self.loadAfterDrain(track, position: position, autoplay: autoplay)
+        }
+    }
+
+    private func loadAfterDrain(_ track: Track, position: TimeInterval, autoplay: Bool) {
         do {
             if let readinessError = playbackReadinessMessage(for: track) {
                 throw NSError(
@@ -1452,7 +1491,7 @@ final class PlaybackController: ObservableObject {
                 )
             }
 
-            stopCurrentPlayback()
+            clearStoppedPlayback()
             let fileURL = track.fileURL.standardizedFileURL
             let file = try audioFileOpener(fileURL)
             suppressConfigurationRecovery()
@@ -1476,6 +1515,7 @@ final class PlaybackController: ObservableObject {
             if autoplay {
                 try engine.start()
                 playerNode.play()
+                startTransportOutput()
                 isPlaying = true
                 startTimer()
                 beginPlaybackSessionIfNeeded()
@@ -1484,7 +1524,7 @@ final class PlaybackController: ObservableObject {
             errorMessage = nil
             publishQueueState(force: true)
         } catch {
-            stopCurrentPlayback()
+            clearStoppedPlayback()
             currentTrack = track
             // Keep the persisted position even when a removable drive or network
             // library is temporarily unavailable during process restoration.
@@ -1515,48 +1555,20 @@ final class PlaybackController: ObservableObject {
     }
 
     func togglePlayback() {
-        guard let currentTrack else { return }
-        guard reportPlaybackReadiness(for: currentTrack) else { return }
-
-        if audioFile == nil {
-            load(currentTrack, position: elapsed, autoplay: true)
+        if let pendingLoad {
+            load(pendingLoad.track, position: pendingLoad.position, autoplay: !isPlaying)
             return
         }
-
-        if isPlaying {
-            elapsed = currentElapsed()
-            stopPlayerNodes()
-            if let audioFile {
-                let frame = min(
-                    AVAudioFramePosition(elapsed * audioFile.processingFormat.sampleRate),
-                    audioFile.length
-                )
-                schedule(fromFrame: frame)
-            }
-            isPlaying = false
-            clearAudioVisualization()
-            stopTimer()
-            publishQueueState(force: true)
-        } else {
-            do {
-                externalPlaybackStopHandler?()
-                if elapsed >= duration - 0.01 {
-                    stopPlayerNodes()
-                    schedule(fromFrame: 0)
-                    elapsed = 0
-                }
-                if !engine.isRunning { try engine.start() }
-                playerNode.play()
-                isPlaying = true
-                errorMessage = nil
-                startTimer()
-                beginPlaybackSessionIfNeeded()
-                prepareNextTrackIfNeeded()
-                publishQueueState(force: true)
-            } catch {
-                isPlaying = false
-                errorMessage = error.localizedDescription
-            }
+        guard let currentTrack, reportPlaybackReadiness(for: currentTrack) else { return }
+        if audioFile == nil { load(currentTrack, position: elapsed, autoplay: true); return }
+        if isPlaying { pauseTransport(); return }
+        externalPlaybackStopHandler?()
+        let position = elapsed >= duration - 0.01 ? 0 : elapsed
+        isPlaying = true
+        performTransportChange { [weak self] in
+            guard let self else { return }
+            self.seekAfterDrain(to: position, shouldResume: true)
+            self.beginPlaybackSessionIfNeeded()
         }
     }
 
@@ -1598,8 +1610,20 @@ final class PlaybackController: ObservableObject {
     }
 
     func seek(to value: TimeInterval) {
-        guard let audioFile else { return }
+        if let pendingLoad {
+            load(pendingLoad.track, position: value, autoplay: isPlaying)
+            return
+        }
+        guard audioFile != nil else { return }
         let shouldResume = isPlaying
+        elapsed = min(max(0, value), duration)
+        performTransportChange { [weak self] in
+            self?.seekAfterDrain(to: value, shouldResume: shouldResume)
+        }
+    }
+
+    private func seekAfterDrain(to value: TimeInterval, shouldResume: Bool) {
+        guard let audioFile else { return }
         let clamped = min(max(0, value), duration)
         let frame = min(
             AVAudioFramePosition(clamped * audioFile.processingFormat.sampleRate),
@@ -1622,6 +1646,8 @@ final class PlaybackController: ObservableObject {
             do {
                 if !engine.isRunning { try engine.start() }
                 playerNode.play()
+                isPlaying = true
+                startTransportOutput()
                 startTimer()
                 prepareNextTrackIfNeeded()
             } catch {
@@ -1721,7 +1747,10 @@ final class PlaybackController: ObservableObject {
         let position = isPlaying ? currentElapsed() : elapsed
         recoveryState.prepareForSleep(position: position, isPlaying: isPlaying)
         elapsed = position
-        stopPlayerNodes()
+        performTransportChange { [weak self] in
+            self?.stopPlayerNodes()
+            self?.engine.pause()
+        }
         isPlaying = false
         clearAudioVisualization()
         stopTimer()
@@ -1730,6 +1759,10 @@ final class PlaybackController: ObservableObject {
 
     private func recoverAfterSystemWake() {
         guard let request = recoveryState.requestAfterWake() else { return }
+        if let pendingLoad {
+            load(pendingLoad.track, position: pendingLoad.position, autoplay: request.shouldResume)
+            return
+        }
         recoverAudioEngine(
             position: request.position,
             shouldResume: request.shouldResume
@@ -1737,7 +1770,7 @@ final class PlaybackController: ObservableObject {
     }
 
     private func scheduleAudioEngineRecovery() {
-        guard !recoveryState.isSleeping,
+        guard !recoveryState.isSleeping, !transportEnvelope.isStopping,
               audioFile != nil,
               ProcessInfo.processInfo.systemUptime >= suppressConfigurationRecoveryUntil else {
             return
@@ -1758,6 +1791,12 @@ final class PlaybackController: ObservableObject {
     }
 
     private func recoverAudioEngine(position: TimeInterval, shouldResume: Bool) {
+        performTransportChange { [weak self] in
+            self?.recoverAudioEngineAfterDrain(position: position, shouldResume: shouldResume)
+        }
+    }
+
+    private func recoverAudioEngineAfterDrain(position: TimeInterval, shouldResume: Bool) {
         guard let audioFile else { return }
         do {
             suppressConfigurationRecovery()
@@ -1784,6 +1823,7 @@ final class PlaybackController: ObservableObject {
             if shouldResume {
                 try engine.start()
                 playerNode.play()
+                startTransportOutput()
                 isPlaying = true
                 startTimer()
                 beginPlaybackSessionIfNeeded()
@@ -1864,12 +1904,13 @@ final class PlaybackController: ObservableObject {
         stopPlayerNodes()
         playbackGeneration = UUID()
         let generation = playbackGeneration
+        let scheduledNode = playerNode
         scheduledStartFrame = frame
         activeTrackNodeStartSampleTime = 0
         prerolledTrack = nil
         let remaining = max(0, audioFile.length - frame)
         guard remaining > 0 else {
-            didFinishPlaying(generation: generation, finishedTrackID: currentTrack.id)
+            didFinishPlaying(generation: generation, finishedTrackID: currentTrack.id, finishedNode: scheduledNode)
             return
         }
         let frameCount = AVAudioFrameCount(min(remaining, AVAudioFramePosition(UInt32.max)))
@@ -1884,7 +1925,8 @@ final class PlaybackController: ObservableObject {
             Task { @MainActor in
                 self?.didFinishPlaying(
                     generation: generation,
-                    finishedTrackID: currentTrack.id
+                    finishedTrackID: currentTrack.id,
+                    finishedNode: scheduledNode
                 )
             }
         }
@@ -1902,8 +1944,9 @@ final class PlaybackController: ObservableObject {
         return min(Double(totalFrames) / audioFile.processingFormat.sampleRate, duration)
     }
 
-    private func didFinishPlaying(generation: UUID, finishedTrackID: Track.ID) {
-        guard generation == playbackGeneration,
+    private func didFinishPlaying(generation: UUID, finishedTrackID: Track.ID, finishedNode: AVAudioPlayerNode) {
+        guard !transportEnvelope.isStopping, generation == playbackGeneration,
+              finishedNode === playerNode,
               currentTrack?.id == finishedTrackID else { return }
         finishPlaybackSession(kind: .completed, position: duration)
 
@@ -1959,7 +2002,7 @@ final class PlaybackController: ObservableObject {
     }
 
     private func prepareNextTrackIfNeeded() {
-        guard isPlaying, let currentTrack, let audioFile else { return }
+        guard isPlaying, !transportEnvelope.isBusy, let currentTrack, let audioFile else { return }
         let remaining = duration - currentElapsed()
         let preparationLeadTime = max(
             GaplessPrerollPolicy.leadTime,
@@ -2067,6 +2110,7 @@ final class PlaybackController: ObservableObject {
             crossfadeStartHostTime = nil
         }
 
+        let incomingReference = captureNormalizationReference(for: nextTrack)
         prerolledTrack = PrerolledTrack(
             track: nextTrack,
             file: nextFile,
@@ -2076,7 +2120,8 @@ final class PlaybackController: ObservableObject {
             crossfadeDuration: transitionPlan.crossfadeDuration,
             crossfadeStartHostTime: crossfadeStartHostTime,
             scheduledStartFrame: nextStartFrame,
-            outgoingTransitionPosition: transitionPlan.outgoingEndPosition
+            outgoingTransitionPosition: transitionPlan.outgoingEndPosition,
+            normalizationReference: incomingReference
         )
         targetNode.scheduleSegment(
             nextFile,
@@ -2088,7 +2133,8 @@ final class PlaybackController: ObservableObject {
             Task { @MainActor in
                 self?.didFinishPlaying(
                     generation: generation,
-                    finishedTrackID: nextTrack.id
+                    finishedTrackID: nextTrack.id,
+                    finishedNode: targetNode
                 )
             }
         }
@@ -2111,6 +2157,7 @@ final class PlaybackController: ObservableObject {
         secondaryPlayerNode.volume = 1
         audioFile = prepared.file
         currentTrack = prepared.track
+        normalizationReferences = [prepared.track.id: prepared.normalizationReference]
         playerNode.volume = normalizationResult(for: prepared.track).linearGain
         primeTransitionAnalyses(startingWith: prepared.track)
         sourceSampleRate = prepared.file.processingFormat.sampleRate
@@ -2125,7 +2172,54 @@ final class PlaybackController: ObservableObject {
         prepareNextTrackIfNeeded()
     }
 
+    private func performTransportChange(_ completion: @escaping () -> Void) {
+        recoveryTask?.cancel(); recoveryTask = nil
+        playbackGeneration = UUID() // EOF cannot advance the queue during descent.
+        stopTimer()
+        stopCrossfadeTimer() // Retain both schedules and their last overlap gains.
+        effectParameterTransition.freezeForTransport()
+        let rate = max(8_000, engine.outputNode.inputFormat(forBus: 0).sampleRate)
+        let drain = max(0.012, 2 * Double(engine.outputNode.auAudioUnit.maximumFramesToRender) / rate)
+            + finalOutputProtection.latency
+        transportEnvelope.stop(running: engine.isRunning, drain: drain) { [weak self] in
+            guard let self else { return }
+            self.engine.pause()
+            completion()
+        }
+    }
+
+    private func startTransportOutput() {
+        var baseline: AVAudioFramePosition?
+        let rate = audioFile?.processingFormat.sampleRate ?? 48_000
+        let rackLatency = (effectPipeline.flatMap(\.nodes) + effectOutputProtection.nodes)
+            .reduce(0.0) { $0 + $1.auAudioUnit.latency }
+        let minimum = max(0.008, rackLatency + finalOutputProtection.latency)
+        transportEnvelope.start(ready: { [weak self] in
+            guard let self, self.engine.isRunning, self.playerNode.isPlaying,
+                  let stamp = self.playerNode.lastRenderTime,
+                  let time = self.playerNode.playerTime(forNodeTime: stamp) else { return false }
+            guard time.isSampleTimeValid else { return false }
+            if baseline == nil { baseline = time.sampleTime }
+            return Double(time.sampleTime - (baseline ?? time.sampleTime)) / rate >= minimum
+        }, failed: { [weak self] in
+            guard let self else { return }
+            self.stopPlayerNodes()
+            self.engine.pause()
+            self.isPlaying = false
+            self.stopTimer()
+            self.publishQueueState(force: true)
+        }, completion: { [weak self] in self?.prepareNextTrackIfNeeded() })
+    }
+
     private func stopCurrentPlayback() {
+        pendingLoad = nil
+        isPlaying = false
+        performTransportChange { [weak self] in self?.clearStoppedPlayback() }
+    }
+
+    private func clearStoppedPlayback() {
+        normalizationReferences.removeAll()
+
         recoveryTask?.cancel()
         recoveryTask = nil
         playbackGeneration = UUID()
@@ -2154,15 +2248,17 @@ final class PlaybackController: ObservableObject {
         }
         primaryPlayerNode.stop()
         secondaryPlayerNode.stop()
+        effectPipeline.forEach { $0.resetTailState() }
         applyEffectSettings(immediately: true)
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
         if resetActivePlayer { activePlayerIndex = 0 }
         prerolledTrack = nil
+        normalizationReferences = normalizationReferences.filter { $0.key == currentTrack?.id }
     }
 
     private func updateCrossfadeVolumes() {
-        guard let prepared = prerolledTrack,
+        guard !transportEnvelope.isStopping, let prepared = prerolledTrack,
               prepared.crossfadeDuration > 0,
               let startHostTime = prepared.crossfadeStartHostTime else { return }
         let now = mach_absolute_time()
@@ -2175,7 +2271,7 @@ final class PlaybackController: ObservableObject {
             outgoingNormalization: currentTrack.map {
                 normalizationResult(for: $0).linearGain
             } ?? 1,
-            incomingNormalization: normalizationResult(for: prepared.track).linearGain,
+            incomingNormalization: normalizationResult(reference: prepared.normalizationReference).linearGain,
             preventsClipping: preventsClipping
         )
         playerNode.volume = gains.outgoing
@@ -2213,11 +2309,25 @@ final class PlaybackController: ObservableObject {
     }
 
     private func normalizationResult(for track: Track) -> LoudnessNormalizationResult {
-        let album = loudnessNormalizationMode == .album ? albumMeasurement(for: track) : nil
-        return LoudnessNormalizationPolicy.result(
+        let reference: NormalizationReference
+        if let retained = normalizationReferences[track.id] { reference = retained }
+        else {
+            reference = captureNormalizationReference(for: track)
+            normalizationReferences[track.id] = reference // Includes intentionally absent measurements.
+        }
+        return normalizationResult(reference: reference)
+    }
+
+    private func captureNormalizationReference(for track: Track) -> NormalizationReference {
+        NormalizationReference(track: audioFeatures[track.id],
+            album: loudnessNormalizationMode == .album ? albumMeasurement(for: track) : nil)
+    }
+
+    private func normalizationResult(reference: NormalizationReference) -> LoudnessNormalizationResult {
+        LoudnessNormalizationPolicy.result(
             mode: loudnessNormalizationMode,
-            trackAnalysis: audioFeatures[track.id],
-            albumMeasurement: album,
+            trackAnalysis: reference.track,
+            albumMeasurement: reference.album,
             targetLUFS: loudnessTargetLUFS,
             preventsClipping: preventsClipping
         )
@@ -2246,8 +2356,14 @@ final class PlaybackController: ObservableObject {
         return nil
     }
 
-    private func applyPlaybackGains() {
-        guard let currentTrack else { return }
+    private func applyPlaybackGains(refreshReferences: Bool = false) {
+        if refreshReferences {
+            normalizationReferences.removeAll()
+            if let prepared = prerolledTrack {
+                prerolledTrack?.normalizationReference = captureNormalizationReference(for: prepared.track)
+            }
+        }
+        guard !transportEnvelope.isStopping, let currentTrack else { return }
         if prerolledTrack?.crossfadeDuration ?? 0 > 0 {
             updateCrossfadeVolumes()
         } else {
@@ -2290,6 +2406,7 @@ final class PlaybackController: ObservableObject {
     }
 
     private func applyEffectSettings(immediately: Bool = false, force: Bool = false) {
+        guard !transportEnvelope.isStopping else { return }
         let effective = effectSettings.map { setting in
             var result = setting
             if effectsBypassed { result.isEnabled = false }
@@ -2299,12 +2416,11 @@ final class PlaybackController: ObservableObject {
     }
 
     private func commitEffectSettings(_ settings: [RealtimeAudioEffectSetting]) {
-        let wasEnabled = effectPipeline.contains { $0.isEnabled }
         for setting in settings {
             effectPipeline.first(where: { $0.kind == setting.kind })?.apply(setting: setting)
         }
-        let isEnabled = effectPipeline.contains { $0.isEnabled }
-        if wasEnabled != isEnabled { effectOutputProtection.setEnabled(isEnabled) }
+        // Safety latency and trim stay fixed through user-DSP bypass and its
+        // retained tails, matching iPhone's always-present final sample limiter.
     }
 
     private func persistEffectSettings() {

@@ -11,13 +11,25 @@
 import AVFoundation
 import Foundation
 
-// The rack owns and mutates this effect exclusively from PlaybackController's
-// main-actor audio graph. Timer callbacks are also installed on the main run loop.
+// Mac graph mutations and the modulation timer are confined to the main run loop.
+// Preserve the desktop concurrency contract while sharing iPhone's DSP topology.
 final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
     let kind: RealtimeAudioEffectKind = .warm
     private(set) var isEnabled: Bool = false
+    private let wetInputMixer = AVAudioMixerNode()
+    private weak var attachedEngine: AVAudioEngine?
+    private let tailSchedule: EffectTailGate.Schedule
+    private lazy var tailGate = EffectTailGate(input: wetInputMixer, outputs: [highWetMixer],
+                                               wetUnits: [highDoubler, highReverb], schedule: tailSchedule)
+    init(tailSchedule: @escaping EffectTailGate.Schedule = EffectTailGate.scheduleOnMain) {
+        self.tailSchedule = tailSchedule
+    }
 
-    // 基本構成: PreEQ -> Varispeed -> (Parallel Branches) -> Mixer
+
+    // Direct unity bypass avoids varispeed latency while this module is off.
+    private let inputSplitter = AVAudioMixerNode()
+    private let bypassMixer = AVAudioMixerNode()
+    // Active path: PreEQ -> Varispeed -> dry + band-limited saturation.
     private let preEQ = AVAudioUnitEQ(numberOfBands: 3)
     private let varispeed = AVAudioUnitVarispeed()
     
@@ -45,6 +57,8 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
 
     var nodes: [AVAudioNode] { 
         [
+            wetInputMixer, inputSplitter,
+            bypassMixer,
             dryMixer,
             preEQ,
             varispeed,
@@ -60,12 +74,19 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
             mainMixer
         ]
     }
-    var inputNode: AVAudioNode { preEQ }
+    var inputNode: AVAudioNode { inputSplitter }
     var outputNode: AVAudioNode { mainMixer }
 
     private(set) var estimatedGainBoostDB: Double = 0.0
 
+    var estimatedLatencyFrames: AVAudioFramePosition {
+        guard isEnabled else { return 0 }
+        return AVAudioFramePosition((varispeed.auAudioUnit.latency * varispeed.outputFormat(forBus: 0).sampleRate).rounded())
+    }
+
     func attach(to engine: AVAudioEngine) {
+        attachedEngine = engine
+        wetInputMixer.outputVolume = 0
         for node in nodes {
             engine.attach(node)
         }
@@ -109,6 +130,8 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
 
         lowDownsampleMixer.outputVolume = 0
         highDownsampleMixer.outputVolume = 0
+        bypassMixer.outputVolume = 1
+        dryMixer.outputVolume = 0
         varispeed.rate = 1.0
         
         // Bypass all effect units by default
@@ -120,6 +143,12 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
     }
 
     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+        tailGate.reset()
+        engine.connect(inputSplitter, to: [
+            AVAudioConnectionPoint(node: bypassMixer, bus: 0),
+            AVAudioConnectionPoint(node: preEQ, bus: 0)
+        ], fromBus: 0, format: format)
+        engine.connect(bypassMixer, to: mainMixer, fromBus: 0, toBus: 4, format: format)
         // Linear part
         engine.connect(preEQ, to: varispeed, format: format)
         
@@ -148,19 +177,24 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
         engine.connect(highSat, to: highDownsampleMixer, format: format)
         engine.connect(highDownsampleMixer, to: [
             AVAudioConnectionPoint(node: mainMixer, bus: 2),
-            AVAudioConnectionPoint(node: highDoubler, bus: 0)
+            AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
         ], fromBus: 0, format: format)
+        engine.connect(wetInputMixer, to: highDoubler, format: format)
         engine.connect(highDoubler, to: highReverb, format: format)
         engine.connect(highReverb, to: highWetMixer, format: format)
         engine.connect(highWetMixer, to: mainMixer, fromBus: 0, toBus: 3, format: format)
     }
 
     func detach(from engine: AVAudioEngine) {
+        tailGate.reset()
+        attachedEngine = nil
         stopModulation()
         for node in nodes {
             engine.detach(node)
         }
     }
+
+    func resetTailState() { tailGate.resetPreservingEnabledState() }
 
     func apply(setting: RealtimeAudioEffectSetting) {
         let intensity = clamped(setting.parameters["intensity"], defaultValue: 0.78)
@@ -180,18 +214,22 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
         guard isEnabled else {
             stopModulation()
             for node in nodes {
-                if let effect = node as? AVAudioUnitEffect { effect.bypass = true }
+                if let effect = node as? AVAudioUnitEffect, node !== highDoubler, node !== highReverb { effect.bypass = true }
             }
             varispeed.rate = 1.0
+            bypassMixer.outputVolume = 1
+            dryMixer.outputVolume = 0
             mainMixer.outputVolume = 1
             lowDownsampleMixer.outputVolume = 0
             highDownsampleMixer.outputVolume = 0
-            highWetMixer.outputVolume = 0
+            tailGate.stop(rendering: attachedEngine?.isRunning == true)
             estimatedGainBoostDB = 0.0
             return
         }
 
         // Enable necessary units
+        bypassMixer.outputVolume = 0
+        dryMixer.outputVolume = 1
         preEQ.bypass = false
         lowLPF.bypass = false
         lowSat.bypass = false
@@ -228,6 +266,7 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
         highDoubler.wetDryMix = 100
         highReverb.wetDryMix = 100
         highWetMixer.outputVolume = min(0.14, Float((toneCurve * 0.14) * intensityCurve))
+        tailGate.activate()
         let hasWetSignal = highWetMixer.outputVolume > 0.0001
         highDoubler.bypass = !hasWetSignal
         highReverb.bypass = !hasWetSignal
@@ -283,8 +322,9 @@ final class WarmAudioEffect: AudioEffectNode, @unchecked Sendable {
         let rateOffset = yuragi * flutterDepth
         varispeed.rate = Float(1.0 + rateOffset)
         
-        let volumeOffset = yuragi * (flutterDepth * 0.3)
-        mainMixer.outputVolume = Float(1.0 + volumeOffset)
+        // Mixer volume is limited to unity; a modulation around 1 would be
+        // asymmetric. Flutter changes pitch, not the module's output gain.
+        mainMixer.outputVolume = 1
     }
 
     private func clamped(_ value: Double?, defaultValue: Double) -> Double {

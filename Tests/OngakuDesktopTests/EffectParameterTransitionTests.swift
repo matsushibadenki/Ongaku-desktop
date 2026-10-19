@@ -191,4 +191,53 @@ struct EffectParameterTransitionTests {
         #expect(ramp.applied[.equalizer] == setting(1, enabled: false))
     }
 
+    @Test("Changed latency drains at zero and rejects stale restore after transport")
+    func latencyDrain() {
+        let clock = EffectClock()
+        var latency = 0.007, gain: Float = 1
+        let ramp = EffectParameterTransition(isAudible: { true }, shouldDefer: { false },
+            processingLatency: { latency }, setEnvelope: { gain = $0 }, schedule: clock.schedule) { settings in
+                latency = settings.first?.isEnabled == true ? 0.007 : 0
+            }
+        ramp.apply([setting(0)], immediately: true)
+        ramp.apply([setting(0, enabled: false)])
+        clock.advance(0.0081)
+        #expect(gain == 0 && ramp.isProtectingOutput)
+        clock.advance(0.0249)
+        #expect(gain == 0) // 8 ms descent + 7 ms old latency + 10 ms render allowance.
+        clock.advance(0.05)
+        #expect(gain == 1 && !ramp.isProtectingOutput)
+        ramp.apply([setting(0)])
+        clock.advance(0.060)
+        #expect(gain == 0)
+        ramp.freezeForTransport()
+        ramp.apply([setting(0.8, enabled: false)], immediately: true)
+        clock.advance(0.2)
+        #expect(gain == 1 && ramp.applied[.equalizer] == setting(0.8, enabled: false))
+    }
+
+    @Test("Zero strength and Space amount are bypass boundaries despite an ON switch")
+    func zeroStrengthBypass() {
+        for kind in [RealtimeAudioEffectKind.warm, .space] {
+            let clock = EffectClock()
+            var gain: Float = 1, latency = 0.007
+            var commits: [(Float, Bool)] = []
+            let ramp = EffectParameterTransition(isAudible: { true }, shouldDefer: { false },
+                processingLatency: { latency }, setEnvelope: { gain = $0 }, schedule: clock.schedule) { values in
+                    let enabled = EffectTransitionPolicy.effectiveEnabled(values.first)
+                    latency = enabled ? 0.007 : 0
+                    commits.append((gain, enabled))
+                }
+            let on = RealtimeAudioEffectSetting(kind: kind, isEnabled: true)
+            var zero = on; zero.parameters[kind == .space ? "amount" : "intensity"] = 0
+            ramp.apply([on], immediately: true); commits.removeAll()
+            ramp.apply([zero])
+            clock.advance(0.0249)
+            #expect(gain == 0 && commits.count == 1 && !commits[0].1 && commits[0].0 == 0)
+            clock.advance(0.05)
+            ramp.apply([on]); clock.advance(0.1)
+            #expect(commits.count == 2 && commits[1].0 == 0 && commits[1].1 && gain == 1)
+        }
+    }
+
 }

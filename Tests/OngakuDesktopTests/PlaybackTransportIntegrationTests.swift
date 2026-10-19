@@ -1,0 +1,165 @@
+import AVFoundation
+import Foundation
+import Testing
+@testable import OngakuDesktop
+
+@Suite("Playback transport integration", .serialized)
+@MainActor struct PlaybackTransportIntegrationTests {
+    private func field<T>(_ player: PlaybackController, _ name: String, _: T.Type) throws -> T {
+        let value = try #require(Mirror(reflecting: player).children.first {
+            $0.label == name || $0.label == "$__lazy_storage_$_" + name
+        }?.value)
+        if let typed = value as? T { return typed }
+        return try #require(Mirror(reflecting: value).children.first?.value as? T)
+    }
+    private func settle(_ player: PlaybackController) async throws {
+        let envelope = try field(player, "transportEnvelope", TransportOutputEnvelope.self)
+        for _ in 0..<300 {
+            if !envelope.isBusy { return }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        Issue.record("transport did not settle")
+    }
+    private func fixture() throws -> (URL, [Track]) {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("TransportIntegration-\(UUID())")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let format = try #require(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2))
+        let pcm = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 480_000))
+        pcm.frameLength = pcm.frameCapacity
+        for ch in 0..<2 { for f in 0..<Int(pcm.frameLength) {
+            pcm.floatChannelData![ch][f] = Float(sin(Double(f) * 0.05)) * 0.02
+        } }
+        var tracks: [Track] = []
+        for index in 0..<2 {
+            let url = root.appendingPathComponent("track-\(index).caf")
+            do { let file = try AVAudioFile(forWriting: url, settings: format.settings); try file.write(from: pcm) }
+            tracks.append(Track(id: UUID(), title: "Track \(index)", artist: "Fixture", album: "Album \(index)", duration: 10,
+                fileSize: 0, managedPath: url.path, sha256: "fixture-\(index)", addedAt: .now, lastVerifiedAt: .now, health: .verified))
+        }
+        return (root, tracks)
+    }
+    private func analysis(_ track: Track, _ lufs: Double) -> AudioFeatureAnalysis {
+        .init(trackID: track.id, contentFingerprint: track.sha256, averageLoudnessDBFS: -30,
+            peakDBFS: -2, integratedLoudnessLUFS: lufs,
+            loudnessBlockEnergies: Array(repeating: pow(10, (lufs + 0.691) / 10), count: 20),
+            spectralCentroidHz: 0, estimatedTempoBPM: nil, tempoConfidence: 0)
+    }
+    private func configure(_ player: PlaybackController) {
+        player.automaticUpsampling = false; player.volume = 0
+        player.loudnessNormalizationMode = .track; player.loudnessTargetLUFS = -16
+        player.preventsClipping = false; player.playbackMode = .sequential
+    }
+
+    @Test("Real controller retains sources during drain and latest pause/seek/load wins")
+    func transportRaces() async throws {
+        let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let player = PlaybackController(); configure(player)
+        player.crossfadeDuration = 0
+        defer { player.clearCurrentTrack() }
+        player.play(tracks[0], queue: tracks)
+        try await settle(player)
+        let primary = try field(player, "primaryPlayerNode", AVAudioPlayerNode.self)
+        #expect(player.isPlaying && primary.isPlaying)
+        player.seek(to: 3); player.seek(to: 4); player.pauseForExternalPlayback()
+        #expect(!player.isPlaying && primary.isPlaying)
+        try await settle(player)
+        #expect(!primary.isPlaying && abs(player.elapsed - 4) < 0.05)
+        player.togglePlayback(); try await settle(player)
+        #expect(player.isPlaying)
+        player.seek(to: 2)
+        player.play(tracks[1], queue: tracks)
+        player.togglePlayback() // Pause the pending selected track, not the outgoing track.
+        try await settle(player)
+        #expect(player.currentTrack?.id == tracks[1].id && !player.isPlaying)
+        #expect(abs(player.elapsed) < 0.01)
+        player.togglePlayback(); try await settle(player)
+        player.clearCurrentTrack()
+        #expect(player.currentTrack == nil && !player.isPlaying)
+        try await settle(player)
+        let engine = try field(player, "engine", AVAudioEngine.self)
+        #expect(!engine.isRunning && !primary.isPlaying)
+    }
+
+    @Test("Late track analysis survives pause/resume and changes only at new load")
+    func lateTrackAnalysis() async throws {
+        let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let player = PlaybackController(); configure(player); player.crossfadeDuration = 0
+        defer { player.clearCurrentTrack() }
+        player.updateAudioFeatures([tracks[0].id: analysis(tracks[0], -24)])
+        player.play(tracks[0], queue: [tracks[0]]); try await settle(player)
+        let initial = try #require(player.signalPathSnapshot?.normalizationGainDB)
+        #expect(initial > 0)
+        player.updateAudioFeatures([tracks[0].id: analysis(tracks[0], -12)])
+        #expect(player.signalPathSnapshot?.normalizationGainDB == initial)
+        player.pauseForExternalPlayback(); try await settle(player)
+        player.togglePlayback(); try await settle(player)
+        #expect(player.signalPathSnapshot?.normalizationGainDB == initial)
+        player.play(tracks[0]); try await settle(player)
+        #expect(abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001)
+    }
+
+    @Test("Incoming analysis is frozen before overlap, including repeat-one")
+    func incomingReference() async throws {
+        for repeating in [false, true] {
+            let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+            let player = PlaybackController(); configure(player)
+            player.crossfadeDuration = 1; player.disableCrossfadeWithinAlbum = false
+            player.playbackMode = repeating ? .repeatOne : .sequential
+            defer { player.clearCurrentTrack() }
+            let incoming = repeating ? tracks[0] : tracks[1]
+            player.updateAudioFeatures([tracks[0].id: analysis(tracks[0], -12), tracks[1].id: analysis(tracks[1], -12)])
+            player.play(tracks[0], queue: repeating ? [tracks[0]] : tracks)
+            try await settle(player)
+            player.seek(to: 8.5); try await settle(player)
+            let secondary = try field(player, "secondaryPlayerNode", AVAudioPlayerNode.self)
+            for _ in 0..<100 {
+                if secondary.isPlaying { break }
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            #expect(secondary.isPlaying)
+            player.updateAudioFeatures([tracks[0].id: analysis(tracks[0], -24), tracks[1].id: analysis(tracks[1], -24)])
+            for _ in 0..<250 {
+                if try field(player, "activePlayerIndex", Int.self) == 1 { break }
+                try await Task.sleep(for: .milliseconds(10))
+            }
+            #expect(player.currentTrack?.id == incoming.id)
+            #expect(try field(player, "activePlayerIndex", Int.self) == 1)
+            try await Task.sleep(for: .milliseconds(200)) // Outgoing EOF must not complete a repeated incoming track.
+            #expect(try field(player, "activePlayerIndex", Int.self) == 1)
+            #expect(abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001)
+        }
+    }
+
+    @Test("Both crossfade schedules survive pause drain and incoming reference survives late analysis")
+    func crossfade() async throws {
+        let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let player = PlaybackController(); configure(player)
+        player.crossfadeDuration = 1; player.disableCrossfadeWithinAlbum = false
+        defer { player.clearCurrentTrack() }
+        player.updateAudioFeatures([tracks[0].id: analysis(tracks[0], -24), tracks[1].id: analysis(tracks[1], -12)])
+        player.play(tracks[0], queue: tracks); try await settle(player)
+        player.seek(to: 8.5); try await settle(player)
+        let primary = try field(player, "primaryPlayerNode", AVAudioPlayerNode.self)
+        let secondary = try field(player, "secondaryPlayerNode", AVAudioPlayerNode.self)
+        for _ in 0..<200 {
+            if secondary.volume > 0.01 && secondary.volume < 0.99 && secondary.isPlaying { break }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(primary.isPlaying && secondary.isPlaying && player.currentTrack?.id == tracks[0].id)
+        player.updateAudioFeatures([tracks[0].id: analysis(tracks[0], -12), tracks[1].id: analysis(tracks[1], -24)])
+        player.pauseForExternalPlayback()
+        #expect(primary.isPlaying && secondary.isPlaying)
+        try await settle(player)
+        #expect(!primary.isPlaying && !secondary.isPlaying && !player.isPlaying)
+        // Resume prepares a fresh incoming schedule; its reference is frozen again.
+        player.togglePlayback(); try await settle(player)
+        for _ in 0..<250 {
+            if player.currentTrack?.id == tracks[1].id { break }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(player.currentTrack?.id == tracks[1].id && player.isPlaying)
+        let settled = try #require(player.signalPathSnapshot?.normalizationGainDB)
+        player.updateAudioFeatures([tracks[1].id: analysis(tracks[1], -12)])
+        #expect(player.signalPathSnapshot?.normalizationGainDB == settled)
+    }
+}

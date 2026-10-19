@@ -1,0 +1,86 @@
+Foreground recovery verification — 2026-10-19
+User: Music-managed non-DRM track; other app audio already stopped on foreground.
+Simulator: production engine with local PCM and a Music logical identity; not a physical ownership transfer.
+
+=== regression ===
+PASS: foreground retains pre-refresh playback intent and requests recovery for stopped I/O
+PASS: stalled render cannot keep the playing button despite running engine/node flags
+PASS: missing interruption end permits a guarded foreground retry without asserting playback
+PASS: other audio preserves the interruption; a subsequent free foreground can retry
+PASS: user pause and changed track/pause generations reject foreground auto-resume
+PASS: healthy local playback and Music-owned playback retain their existing ownership
+PASS: production recovery confirms progress, clears pending intent and restores playing UI
+PASS: exhausted progress recovery stays paused despite running flags and preserves later retry intent
+PASS: recovery rejects old render position and confirms fresh advancing source frames
+PASS: cancelled and superseded progress checks cannot confirm a newer playback request
+PASS: negative control rejects refresh before intent capture
+=== simulator ===
+PASS: native Music-identity source confirms fresh progress after protected startup
+PASS: stopped render I/O cannot report recovery while Music identity and resource remain retained
+PASS: reactivation and protected rescheduling resume from retained position without replacing Music identity
+PASS: a newer pause cancels pending recovery confirmation and remains paused
+PASS: explicit resume still advances and destructive stop still drains after recovery
+COMPLETE
+=== transport-policy ===
+PASS: observed starts run once; automatic advancement, re-selection and cancellation/retry re-arm recovery
+PASS: native readiness unlocks controls before quality work and playback observation finish
+PASS: explicit play can reactivate without interruption end; new interruptions still block pending playback
+PASS: Music owns its Now Playing metadata; local progress avoids per-tick publication
+PASS: DRM never enters the PCM decoder even when an asset URL exists
+PASS: store identity tolerates library-ID changes without accepting another track
+PASS: alert delivery rejects cleared, superseded, inactive and cancelled recovery errors
+PASS: DRM startup waits for preparation, plays once, and terminates on success/error/timeout
+PASS: stale DRM notifications cannot overwrite a new selection; auto-advance remains valid
+PASS: loading ends only for the requested, actually playing system track
+PASS: stopped engines and interruptions cannot publish playing
+PASS: watchdog respects startup/recovery and only enforces explicit pause
+PASS: pause, song changes, interruption and cancellation invalidate stale play requests
+PASS: automatic fallback waits for other audio to finish
+=== session ===
+PASS: blocked activation leaves MainActor free and cancellation prevents continuation
+PASS: stop/start operations stay ordered and unchanged preferences are not reapplied
+PASS: session failures propagate without wedging subsequent requests
+PASS: handoff releases the app audio session before Music playback
+PASS: cancelled Music handoff cannot deactivate newer local playback
+PASS: provisional mixing leaves hardware preferences alone; commit restores exclusive playback without reactivation
+PASS: cancelled provisional session is released; stale cleanup leaves newer playback active
+=== render-health ===
+PASS: 887.5 ms tap-delivery delay leaves continuous render cycles healthy
+PASS: actual render stall is counted once and recovery retains its duration
+PASS: startup grace and recovery from a missing first render callback
+PASS: paused time and new schedules cannot produce stale gap events
+PASS: shipping Audio Unit observer counts pre-render cycles once and removes its token
+PASS: observer-enabled and observer-free stereo PCM are sample-for-sample identical
+=== continuity ===
+PASS: startup waits for render before fading
+PASS: pause intent, silent drain, position and restart
+PASS: rapid resume cancels old gains and pause without rescheduling
+PASS: stop invalidates transport callbacks before new playback
+PASS: stop retains sources through fade/drain; repeated stop coalesces and only latest session cleanup runs
+PASS: a superseding load cancels old preparation/session release and survives the old stop callbacks
+PASS: an already-stopped engine releases resources synchronously
+PASS: seek cancellation and paused seek
+PASS: latest seek wins, including immediate seek/play callers
+PASS: missing render ends in paused state
+PASS: EOF cannot override pause/seek; resume replaces an already-ended schedule
+TRANSPORT_PCM rate=44100.0 fadeIn=false maxStep=0.0003630072
+TRANSPORT_PCM rate=44100.0 fadeIn=true maxStep=0.0003629923
+TRANSPORT_PCM rate=48000.0 fadeIn=false maxStep=0.00033335388
+TRANSPORT_PCM rate=48000.0 fadeIn=true maxStep=0.00033335388
+TRANSPORT_PCM rate=96000.0 fadeIn=false maxStep=0.00016668439
+TRANSPORT_PCM rate=96000.0 fadeIn=true maxStep=0.00016669929
+PASS: 6 stock-mixer PCM fade cases
+PASS: PCM guard rejects abrupt source start/stop
+PASS: state guard rejects resource teardown before fade/drain
+=== build ===
+** BUILD SUCCEEDED **
+
+=== final source SHA256 ===
+5e31ebe80915b5655d6112d86b99981e0a26376cde43d0c7618de33b4644ac83  audio/AudioPlayerViewModel.swift
+564c9f734a6515c3471d305c4434594f4cfe7ef5fe9878fc276b6647ec427155  audio/HiResPlaybackEngine.swift
+f1222e97ad9facdb026203751b7119ae285ce7b504583c8c53be158ca2a5459e  tests/extract_foreground_recovery_fixture.py
+2af75b247321fdeb97c4a848cf2dd3bfd9bba3f87c325fdfed6307208f4d9ef5  tests/ForegroundRecoveryFixture.swift
+5460b880a6d13a0c0e96e436fd3af5444c7d087ece3b172d0b8c086517702d33  tests/ForegroundRecoveryRegression.swift
+dde690f60030c28ae06a83f6e8e0443f1497f57edff240e3697fbe8685c70543  tests/run_foreground_recovery_regression.sh
+167243546ecc969788a35d856813fe9ac962f757fb1bd4e4614f383b3999f86b  tests/ForegroundRecoveryAuditApp.swift
+04251a2249fd7d7c1e342dd8b85c5df69d1b362f1f25ae46feff3417dcc42e1f  tests/run_native_first_simulator_audit.sh

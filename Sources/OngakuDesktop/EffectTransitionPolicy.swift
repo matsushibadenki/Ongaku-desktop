@@ -4,7 +4,16 @@ import Foundation
 enum EffectTransitionPolicy {
     static let protectionFadeOut: TimeInterval = 0.008
     static let protectionFadeIn: TimeInterval = 0.016
-    static let protectionWindow = protectionFadeOut + protectionFadeIn
+    static let maximumSettle: TimeInterval = 0.060
+    static let protectionWindow = protectionFadeOut + maximumSettle + protectionFadeIn
+
+    /// Algorithmic latency only: intentional predelay/reverb is handled by the
+    /// wet-path gate, never by shifting the dry timeline or muting for its duration.
+    static func settleDuration(before: TimeInterval, after: TimeInterval) -> TimeInterval {
+        guard before.isFinite, after.isFinite, before >= 0, after >= 0 else { return maximumSettle }
+        guard abs(before - after) > 0.000001 else { return 0 }
+        return min(maximumSettle, max(before, after) + 0.010)
+    }
 
     static func envelopeSteps(duration: TimeInterval) -> Int { max(8, Int(duration / 0.005)) }
 
@@ -24,6 +33,15 @@ enum EffectTransitionPolicy {
         let progress = Float(step) / Float(transportSteps)
         let blend = (1 - cos(Float.pi * progress)) * 0.5
         return start + (target - start) * blend
+    }
+
+    /// Several modules internally bypass at zero strength even while their UI
+    /// switch remains ON. Treat that boundary like a topology/latency change.
+    static func effectiveEnabled(_ setting: RealtimeAudioEffectSetting?) -> Bool {
+        guard let setting, setting.isEnabled else { return false }
+        if setting.kind == .equalizer { return true }
+        guard (setting.parameters["intensity"] ?? 1) > 0.001 else { return false }
+        return setting.kind != .space || (setting.parameters["amount"] ?? 1) > 0.001
     }
 
     static let parameterSteps = 8

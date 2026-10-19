@@ -1,0 +1,2 @@
+{"all_policy_ms":[26.161417,26.625374999999998,27.817958999999998,26.490749999999998,32.057040999999998],"duration_seconds":3,"max_difference_from_unthrottled":0,"median_policy_ms":26.625374999999998,"phase":"linear","quality":"master","source_rate":44100,"target_rate":96000}
+{"all_policy_ms":[50.949458,54.324083999999999,60.514792,70.210832999999994,79.410291999999998],"duration_seconds":3,"max_difference_from_unthrottled":0,"median_policy_ms":60.514792,"phase":"minimumPhase","quality":"master","source_rate":44100,"target_rate":96000}

@@ -1,0 +1,917 @@
+tests/DesktopEffectTransitionRegression.swift:41:20: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 39 |             for node in [a,b,sourceMixer] as [AVAudioNode] { engine.attach(node) }
+ 40 |             protection.attach(to: engine); final.attach(to: engine)
+ 41 |             engine.connect(a, to: sourceMixer, fromBus: 0, toBus: 0, format: input)
+    |                    `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 42 |             engine.connect(b, to: sourceMixer, fromBus: 0, toBus: 1, format: input)
+ 43 |             var upstream: AVAudioNode = sourceMixer
+
+tests/DesktopEffectTransitionRegression.swift:42:20: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 40 |             protection.attach(to: engine); final.attach(to: engine)
+ 41 |             engine.connect(a, to: sourceMixer, fromBus: 0, toBus: 0, format: input)
+ 42 |             engine.connect(b, to: sourceMixer, fromBus: 0, toBus: 1, format: input)
+    |                    `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 43 |             var upstream: AVAudioNode = sourceMixer
+ 44 |             for effect in effects {
+
+tests/DesktopEffectTransitionRegression.swift:46:24: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 44 |             for effect in effects {
+ 45 |                 effect.attach(to: engine); effect.connectInternalNodes(engine: engine, format: input)
+ 46 |                 engine.connect(upstream, to: effect.inputNode, format: input); upstream = effect.outputNode
+    |                        `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 47 |             }
+ 48 |             protection.connect(from: upstream, engine: engine, format: input, destination: final.inputNode(in: engine))
+
+tests/DesktopEffectTransitionRegression.swift:67:35: warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 65 |             a.volume = 1; b.volume = 0
+ 66 |             a.scheduleBuffer(source); b.scheduleBuffer(source)
+ 67 |             try engine.start(); a.play(); b.play()
+    |                                   `- warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 68 |             let bypassScenario = !["coalesce", "gesture", "overlap"].contains(scenario)
+ 69 |             if ["overlap", "bypassOverlap"].contains(scenario) { clock.schedule(0.145) { host.prerolledTrack = .init() } }
+
+tests/DesktopEffectTransitionRegression.swift:67:45: warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 65 |             a.volume = 1; b.volume = 0
+ 66 |             a.scheduleBuffer(source); b.scheduleBuffer(source)
+ 67 |             try engine.start(); a.play(); b.play()
+    |                                             `- warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 68 |             let bypassScenario = !["coalesce", "gesture", "overlap"].contains(scenario)
+ 69 |             if ["overlap", "bypassOverlap"].contains(scenario) { clock.schedule(0.145) { host.prerolledTrack = .init() } }
+
+tests/DesktopEffectTransitionRegression.swift:93:44: warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 91 |                 clock.schedule(0.19) {
+ 92 |                     a.scheduleBuffer(source); b.scheduleBuffer(source)
+ 93 |                     try! engine.start(); a.play(); b.play(); a.volume = 1; b.volume = 0
+    |                                            `- warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 94 |                 }
+ 95 |             default:
+
+tests/DesktopEffectTransitionRegression.swift:93:54: warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 91 |                 clock.schedule(0.19) {
+ 92 |                     a.scheduleBuffer(source); b.scheduleBuffer(source)
+ 93 |                     try! engine.start(); a.play(); b.play(); a.volume = 1; b.volume = 0
+    |                                                      `- warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 94 |                 }
+ 95 |             default:
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/EffectParameterTransition.swift:28:79: warning: passing non-Sendable parameter 'action' to function expecting a '@Sendable' closure
+ 25 |          processingLatency: @escaping () -> TimeInterval = { 0 },
+ 26 |          setEnvelope: @escaping (Float) -> Void = { _ in },
+ 27 |          schedule: @escaping Schedule = { delay, action in
+    |                                                  `- note: parameter 'action' is implicitly non-Sendable
+ 28 |              DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)
+    |                                                                               `- warning: passing non-Sendable parameter 'action' to function expecting a '@Sendable' closure
+ 29 |          }, commit: @escaping (Settings) -> Void) {
+ 30 |         self.processingLatency = processingLatency
+../Ongaku-desktop/Sources/OngakuDesktop/FinalOutputProtection.swift:23:44: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+21 |     let protector: AVAudioUnitEffect?
+22 |     var isEnabled: Bool { protector != nil }
+23 |     var latency: TimeInterval { protector?.auAudioUnit.latency ?? 0 }
+   |                                            `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+24 |     var nodes: [AVAudioNode] {
+25 |         guard let protector else { return [] }
+
+../Ongaku-desktop/Sources/OngakuDesktop/FinalOutputProtection.swift:78:20: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+76 |                               code: Int(kAudioUnitErr_FormatNotSupported))
+77 |             }
+78 |             engine.connect(conversionMixer, to: protector, format: format)
+   |                    `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+79 |             engine.connect(protector, to: engine.mainMixerNode, format: format)
+80 |             engine.mainMixerNode.outputVolume = 1
+
+../Ongaku-desktop/Sources/OngakuDesktop/FinalOutputProtection.swift:79:20: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+77 |             }
+78 |             engine.connect(conversionMixer, to: protector, format: format)
+79 |             engine.connect(protector, to: engine.mainMixerNode, format: format)
+   |                    `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+80 |             engine.mainMixerNode.outputVolume = 1
+81 |         }
+
+../Ongaku-desktop/Sources/OngakuDesktop/FinalOutputProtection.swift:83:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+81 |         }
+82 |         // Pin the main mixer to the same actual rate and channel count: no later SRC.
+83 |         engine.connect(engine.mainMixerNode, to: engine.outputNode, format: outputFormat)
+   |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+84 |     }
+85 | 
+
+../Ongaku-desktop/Sources/OngakuDesktop/FinalOutputProtection.swift:91:19: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+89 |         guard let protector else { return }
+90 |         conversionMixer.reset()
+91 |         protector.auAudioUnit.reset()
+   |                   `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+92 |     }
+93 | }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:82:48: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+ 80 |     var estimatedLatencyFrames: AVAudioFramePosition {
+ 81 |         guard isEnabled else { return 0 }
+ 82 |         return AVAudioFramePosition((varispeed.auAudioUnit.latency * varispeed.outputFormat(forBus: 0).sampleRate).rounded())
+    |                                                `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+ 83 |     }
+ 84 | 
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:145:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+143 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+144 |         tailGate.reset()
+145 |         engine.connect(inputSplitter, to: [
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+146 |             AVAudioConnectionPoint(node: bypassMixer, bus: 0),
+147 |             AVAudioConnectionPoint(node: preEQ, bus: 0)
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:149:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+147 |             AVAudioConnectionPoint(node: preEQ, bus: 0)
+148 |         ], fromBus: 0, format: format)
+149 |         engine.connect(bypassMixer, to: mainMixer, fromBus: 0, toBus: 4, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+150 |         // Linear part
+151 |         engine.connect(preEQ, to: varispeed, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:151:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+149 |         engine.connect(bypassMixer, to: mainMixer, fromBus: 0, toBus: 4, format: format)
+150 |         // Linear part
+151 |         engine.connect(preEQ, to: varispeed, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+152 |         
+153 |         // --- 修正ポイント: AVAudioConnectionPoint によるマルチ・ルーティング (Fan-out) ---
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:161:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+159 |             AVAudioConnectionPoint(node: highHPF, bus: 0)
+160 |         ]
+161 |         engine.connect(varispeed, to: connectionPoints, fromBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+162 |         
+163 |         // Preserve full-band dry audio; filtered branches add saturation only.
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:164:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+162 |         
+163 |         // Preserve full-band dry audio; filtered branches add saturation only.
+164 |         engine.connect(dryMixer, to: mainMixer, fromBus: 0, toBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+165 | 
+166 |         // Low Path
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:169:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+167 |         // Keep the realtime graph on one processing format. AVAudioEngine can reject
+168 |         // an internal sample-rate island here with kAudioUnitErr_FormatNotSupported.
+169 |         engine.connect(lowLPF, to: lowSat, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+170 |         engine.connect(lowSat, to: lowDownsampleMixer, format: format)
+171 |         engine.connect(lowDownsampleMixer, to: mainMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:170:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+168 |         // an internal sample-rate island here with kAudioUnitErr_FormatNotSupported.
+169 |         engine.connect(lowLPF, to: lowSat, format: format)
+170 |         engine.connect(lowSat, to: lowDownsampleMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+171 |         engine.connect(lowDownsampleMixer, to: mainMixer, fromBus: 0, toBus: 1, format: format)
+172 |         
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:171:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+169 |         engine.connect(lowLPF, to: lowSat, format: format)
+170 |         engine.connect(lowSat, to: lowDownsampleMixer, format: format)
+171 |         engine.connect(lowDownsampleMixer, to: mainMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+172 |         
+173 |         // High Path (サチュレーション -> ダブリング -> リバーブ)
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:174:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+172 |         
+173 |         // High Path (サチュレーション -> ダブリング -> リバーブ)
+174 |         engine.connect(highHPF, to: highSat, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+175 |         engine.connect(highSat, to: highDownsampleMixer, format: format)
+176 |         engine.connect(highDownsampleMixer, to: [
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:175:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+173 |         // High Path (サチュレーション -> ダブリング -> リバーブ)
+174 |         engine.connect(highHPF, to: highSat, format: format)
+175 |         engine.connect(highSat, to: highDownsampleMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+176 |         engine.connect(highDownsampleMixer, to: [
+177 |             AVAudioConnectionPoint(node: mainMixer, bus: 2),
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:176:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+174 |         engine.connect(highHPF, to: highSat, format: format)
+175 |         engine.connect(highSat, to: highDownsampleMixer, format: format)
+176 |         engine.connect(highDownsampleMixer, to: [
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+177 |             AVAudioConnectionPoint(node: mainMixer, bus: 2),
+178 |             AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:180:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+178 |             AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
+179 |         ], fromBus: 0, format: format)
+180 |         engine.connect(wetInputMixer, to: highDoubler, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+181 |         engine.connect(highDoubler, to: highReverb, format: format)
+182 |         engine.connect(highReverb, to: highWetMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:181:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+179 |         ], fromBus: 0, format: format)
+180 |         engine.connect(wetInputMixer, to: highDoubler, format: format)
+181 |         engine.connect(highDoubler, to: highReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+182 |         engine.connect(highReverb, to: highWetMixer, format: format)
+183 |         engine.connect(highWetMixer, to: mainMixer, fromBus: 0, toBus: 3, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:182:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+180 |         engine.connect(wetInputMixer, to: highDoubler, format: format)
+181 |         engine.connect(highDoubler, to: highReverb, format: format)
+182 |         engine.connect(highReverb, to: highWetMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+183 |         engine.connect(highWetMixer, to: mainMixer, fromBus: 0, toBus: 3, format: format)
+184 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift:183:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+181 |         engine.connect(highDoubler, to: highReverb, format: format)
+182 |         engine.connect(highReverb, to: highWetMixer, format: format)
+183 |         engine.connect(highWetMixer, to: mainMixer, fromBus: 0, toBus: 3, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+184 |     }
+185 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:107:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+105 |             AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
+106 |         ]
+107 |         engine.connect(inputSplitter, to: connectionPoints, fromBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+108 |         engine.connect(wetInputMixer, to: [AVAudioConnectionPoint(node: earlyDelay, bus: 0),
+109 |             AVAudioConnectionPoint(node: lateDelay, bus: 0)], fromBus: 0, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:108:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+106 |         ]
+107 |         engine.connect(inputSplitter, to: connectionPoints, fromBus: 0, format: format)
+108 |         engine.connect(wetInputMixer, to: [AVAudioConnectionPoint(node: earlyDelay, bus: 0),
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+109 |             AVAudioConnectionPoint(node: lateDelay, bus: 0)], fromBus: 0, format: format)
+110 |         
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:112:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+110 |         
+111 |         // --- Path 2 (Early Reflections) ---
+112 |         engine.connect(earlyDelay, to: earlyReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+113 |         engine.connect(earlyReverb, to: earlyMixer, format: format)
+114 |         engine.connect(earlyMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:113:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+111 |         // --- Path 2 (Early Reflections) ---
+112 |         engine.connect(earlyDelay, to: earlyReverb, format: format)
+113 |         engine.connect(earlyReverb, to: earlyMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+114 |         engine.connect(earlyMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+115 |         
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:114:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+112 |         engine.connect(earlyDelay, to: earlyReverb, format: format)
+113 |         engine.connect(earlyReverb, to: earlyMixer, format: format)
+114 |         engine.connect(earlyMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+115 |         
+116 |         // --- Path 3 (Late Reverberation) ---
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:117:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+115 |         
+116 |         // --- Path 3 (Late Reverberation) ---
+117 |         engine.connect(lateDelay, to: lateEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+118 |         engine.connect(lateEQ, to: lateReverb, format: format)
+119 |         engine.connect(lateReverb, to: lateMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:118:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+116 |         // --- Path 3 (Late Reverberation) ---
+117 |         engine.connect(lateDelay, to: lateEQ, format: format)
+118 |         engine.connect(lateEQ, to: lateReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+119 |         engine.connect(lateReverb, to: lateMixer, format: format)
+120 |         engine.connect(lateMixer, to: outputMixer, fromBus: 0, toBus: 2, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:119:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+117 |         engine.connect(lateDelay, to: lateEQ, format: format)
+118 |         engine.connect(lateEQ, to: lateReverb, format: format)
+119 |         engine.connect(lateReverb, to: lateMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+120 |         engine.connect(lateMixer, to: outputMixer, fromBus: 0, toBus: 2, format: format)
+121 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift:120:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+118 |         engine.connect(lateEQ, to: lateReverb, format: format)
+119 |         engine.connect(lateReverb, to: lateMixer, format: format)
+120 |         engine.connect(lateMixer, to: outputMixer, fromBus: 0, toBus: 2, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+121 |     }
+122 |     
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift:72:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 70 | 
+ 71 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+ 72 |         engine.connect(contourEQ, to: waveguideDelay, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 73 |         engine.connect(waveguideDelay, to: cabinetEQ, format: format)
+ 74 |         // --- 修正: Cabinet出力の直後にDoublerを挟む ---
+
+../Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift:73:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 71 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+ 72 |         engine.connect(contourEQ, to: waveguideDelay, format: format)
+ 73 |         engine.connect(waveguideDelay, to: cabinetEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 74 |         // --- 修正: Cabinet出力の直後にDoublerを挟む ---
+ 75 |         engine.connect(cabinetEQ, to: [
+
+../Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift:75:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 73 |         engine.connect(waveguideDelay, to: cabinetEQ, format: format)
+ 74 |         // --- 修正: Cabinet出力の直後にDoublerを挟む ---
+ 75 |         engine.connect(cabinetEQ, to: [
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 76 |             AVAudioConnectionPoint(node: dryMixer, bus: 0),
+ 77 |             AVAudioConnectionPoint(node: glossDoubler, bus: 0)
+
+../Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift:79:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 77 |             AVAudioConnectionPoint(node: glossDoubler, bus: 0)
+ 78 |         ], fromBus: 0, format: format)
+ 79 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 80 |         engine.connect(glossDoubler, to: roomReverb, format: format)
+ 81 |         engine.connect(roomReverb, to: wetMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift:80:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 78 |         ], fromBus: 0, format: format)
+ 79 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 80 |         engine.connect(glossDoubler, to: roomReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 81 |         engine.connect(roomReverb, to: wetMixer, format: format)
+ 82 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift:81:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 79 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 80 |         engine.connect(glossDoubler, to: roomReverb, format: format)
+ 81 |         engine.connect(roomReverb, to: wetMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 82 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+ 83 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift:82:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 80 |         engine.connect(glossDoubler, to: roomReverb, format: format)
+ 81 |         engine.connect(roomReverb, to: wetMixer, format: format)
+ 82 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 83 |     }
+ 84 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift:69:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 67 | 
+ 68 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+ 69 |         engine.connect(inputToneEQ, to: fetCompressor, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 70 |         engine.connect(fetCompressor, to: optoCompressor, format: format)
+ 71 |         engine.connect(optoCompressor, to: outputToneEQ, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift:70:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 68 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+ 69 |         engine.connect(inputToneEQ, to: fetCompressor, format: format)
+ 70 |         engine.connect(fetCompressor, to: optoCompressor, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 71 |         engine.connect(optoCompressor, to: outputToneEQ, format: format)
+ 72 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift:71:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 69 |         engine.connect(inputToneEQ, to: fetCompressor, format: format)
+ 70 |         engine.connect(fetCompressor, to: optoCompressor, format: format)
+ 71 |         engine.connect(optoCompressor, to: outputToneEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 72 |     }
+ 73 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:73:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 71 | 
+ 72 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+ 73 |         engine.connect(inputSplitter, to: [
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 74 |             AVAudioConnectionPoint(node: dryMixer, bus: 0),
+ 75 |             AVAudioConnectionPoint(node: harmonicHighPass, bus: 0)
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:77:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 75 |             AVAudioConnectionPoint(node: harmonicHighPass, bus: 0)
+ 76 |         ], fromBus: 0, format: format)
+ 77 |         engine.connect(harmonicHighPass, to: harmonicExciter, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 78 |         engine.connect(harmonicExciter, to: harmonicAirEQ, format: format)
+ 79 |         engine.connect(harmonicAirEQ, to: harmonicMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:78:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 76 |         ], fromBus: 0, format: format)
+ 77 |         engine.connect(harmonicHighPass, to: harmonicExciter, format: format)
+ 78 |         engine.connect(harmonicExciter, to: harmonicAirEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 79 |         engine.connect(harmonicAirEQ, to: harmonicMixer, format: format)
+ 80 |         engine.connect(dryMixer, to: outputMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:79:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 77 |         engine.connect(harmonicHighPass, to: harmonicExciter, format: format)
+ 78 |         engine.connect(harmonicExciter, to: harmonicAirEQ, format: format)
+ 79 |         engine.connect(harmonicAirEQ, to: harmonicMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 80 |         engine.connect(dryMixer, to: outputMixer, format: format)
+ 81 |         engine.connect(harmonicMixer, to: [
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:80:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 78 |         engine.connect(harmonicExciter, to: harmonicAirEQ, format: format)
+ 79 |         engine.connect(harmonicAirEQ, to: harmonicMixer, format: format)
+ 80 |         engine.connect(dryMixer, to: outputMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 81 |         engine.connect(harmonicMixer, to: [
+ 82 |             AVAudioConnectionPoint(node: outputMixer, bus: 1)
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:81:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 79 |         engine.connect(harmonicAirEQ, to: harmonicMixer, format: format)
+ 80 |         engine.connect(dryMixer, to: outputMixer, format: format)
+ 81 |         engine.connect(harmonicMixer, to: [
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 82 |             AVAudioConnectionPoint(node: outputMixer, bus: 1)
+ 83 |         ], fromBus: 0, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:84:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 82 |             AVAudioConnectionPoint(node: outputMixer, bus: 1)
+ 83 |         ], fromBus: 0, format: format)
+ 84 |         engine.connect(outputMixer, to: contourEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 85 |         engine.connect(contourEQ, to: cabinetEQ, format: format)
+ 86 |         engine.connect(cabinetEQ, to: masterEQ, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:85:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 83 |         ], fromBus: 0, format: format)
+ 84 |         engine.connect(outputMixer, to: contourEQ, format: format)
+ 85 |         engine.connect(contourEQ, to: cabinetEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 86 |         engine.connect(cabinetEQ, to: masterEQ, format: format)
+ 87 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift:86:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 84 |         engine.connect(outputMixer, to: contourEQ, format: format)
+ 85 |         engine.connect(contourEQ, to: cabinetEQ, format: format)
+ 86 |         engine.connect(cabinetEQ, to: masterEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 87 |     }
+ 88 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift:80:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 78 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+ 79 |         tailGate.reset()
+ 80 |         engine.connect(inputSplitter, to: glossEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 81 |         engine.connect(glossEQ, to: [
+ 82 |             AVAudioConnectionPoint(node: dryMixer, bus: 0),
+
+../Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift:81:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 79 |         tailGate.reset()
+ 80 |         engine.connect(inputSplitter, to: glossEQ, format: format)
+ 81 |         engine.connect(glossEQ, to: [
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 82 |             AVAudioConnectionPoint(node: dryMixer, bus: 0),
+ 83 |             AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
+
+../Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift:85:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 83 |             AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
+ 84 |         ], fromBus: 0, format: format)
+ 85 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 86 |         engine.connect(wetInputMixer, to: sheenDoubler, format: format)
+ 87 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift:86:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 84 |         ], fromBus: 0, format: format)
+ 85 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 86 |         engine.connect(wetInputMixer, to: sheenDoubler, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 87 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+ 88 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift:87:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 85 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 86 |         engine.connect(wetInputMixer, to: sheenDoubler, format: format)
+ 87 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 88 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+ 89 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift:88:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 86 |         engine.connect(wetInputMixer, to: sheenDoubler, format: format)
+ 87 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+ 88 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 89 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+ 90 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift:89:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 87 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+ 88 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+ 89 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 90 |     }
+ 91 |     
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:88:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 86 |             AVAudioConnectionPoint(node: harmonicBandEQ, bus: 0)
+ 87 |         ]
+ 88 |         engine.connect(inputSplitter, to: splitPoints, fromBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 89 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 90 |         engine.connect(harmonicBandEQ, to: exciterEQ, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:89:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 87 |         ]
+ 88 |         engine.connect(inputSplitter, to: splitPoints, fromBus: 0, format: format)
+ 89 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 90 |         engine.connect(harmonicBandEQ, to: exciterEQ, format: format)
+ 91 |         engine.connect(exciterEQ, to: exciterDistortion, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:90:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 88 |         engine.connect(inputSplitter, to: splitPoints, fromBus: 0, format: format)
+ 89 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 90 |         engine.connect(harmonicBandEQ, to: exciterEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 91 |         engine.connect(exciterEQ, to: exciterDistortion, format: format)
+ 92 |         engine.connect(exciterDistortion, to: deEsserCompressor, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:91:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 89 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 90 |         engine.connect(harmonicBandEQ, to: exciterEQ, format: format)
+ 91 |         engine.connect(exciterEQ, to: exciterDistortion, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 92 |         engine.connect(exciterDistortion, to: deEsserCompressor, format: format)
+ 93 |         engine.connect(deEsserCompressor, to: deEsserEQ, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:92:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 90 |         engine.connect(harmonicBandEQ, to: exciterEQ, format: format)
+ 91 |         engine.connect(exciterEQ, to: exciterDistortion, format: format)
+ 92 |         engine.connect(exciterDistortion, to: deEsserCompressor, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 93 |         engine.connect(deEsserCompressor, to: deEsserEQ, format: format)
+ 94 |         engine.connect(deEsserEQ, to: airContourEQ, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:93:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 91 |         engine.connect(exciterEQ, to: exciterDistortion, format: format)
+ 92 |         engine.connect(exciterDistortion, to: deEsserCompressor, format: format)
+ 93 |         engine.connect(deEsserCompressor, to: deEsserEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 94 |         engine.connect(deEsserEQ, to: airContourEQ, format: format)
+ 95 |         engine.connect(airContourEQ, to: harmonicMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:94:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 92 |         engine.connect(exciterDistortion, to: deEsserCompressor, format: format)
+ 93 |         engine.connect(deEsserCompressor, to: deEsserEQ, format: format)
+ 94 |         engine.connect(deEsserEQ, to: airContourEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 95 |         engine.connect(airContourEQ, to: harmonicMixer, format: format)
+ 96 |         engine.connect(harmonicMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:95:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 93 |         engine.connect(deEsserCompressor, to: deEsserEQ, format: format)
+ 94 |         engine.connect(deEsserEQ, to: airContourEQ, format: format)
+ 95 |         engine.connect(airContourEQ, to: harmonicMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 96 |         engine.connect(harmonicMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+ 97 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift:96:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 94 |         engine.connect(deEsserEQ, to: airContourEQ, format: format)
+ 95 |         engine.connect(airContourEQ, to: harmonicMixer, format: format)
+ 96 |         engine.connect(harmonicMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 97 |     }
+ 98 |     
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift:73:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 71 |         // EN: Preserve the EQ path and blend ambience in parallel.
+ 72 |         // JA: EQ後の原音を維持し、艶成分だけを並列でミックスする。
+ 73 |         engine.connect(inputSplitter, to: mainEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 74 |         engine.connect(
+ 75 |             mainEQ,
+
+../Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift:74:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 72 |         // JA: EQ後の原音を維持し、艶成分だけを並列でミックスする。
+ 73 |         engine.connect(inputSplitter, to: mainEQ, format: format)
+ 74 |         engine.connect(
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 75 |             mainEQ,
+ 76 |             to: [
+
+../Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift:83:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 81 |             format: format
+ 82 |         )
+ 83 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 84 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+ 85 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift:84:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 82 |         )
+ 83 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 84 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 85 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+ 86 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift:85:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 83 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 84 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+ 85 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 86 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+ 87 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift:86:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 84 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+ 85 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+ 86 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 87 |     }
+ 88 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift:81:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 79 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+ 80 |         tailGate.reset()
+ 81 |         engine.connect(inputSplitter, to: bodyEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 82 |         engine.connect(bodyEQ, to: [
+ 83 |             AVAudioConnectionPoint(node: dryMixer, bus: 0),
+
+../Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift:82:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 80 |         tailGate.reset()
+ 81 |         engine.connect(inputSplitter, to: bodyEQ, format: format)
+ 82 |         engine.connect(bodyEQ, to: [
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 83 |             AVAudioConnectionPoint(node: dryMixer, bus: 0),
+ 84 |             AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift:86:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 84 |             AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
+ 85 |         ], fromBus: 0, format: format)
+ 86 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 87 |         engine.connect(wetInputMixer, to: glossDoubler, format: format)
+ 88 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift:87:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 85 |         ], fromBus: 0, format: format)
+ 86 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 87 |         engine.connect(wetInputMixer, to: glossDoubler, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 88 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+ 89 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift:88:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 86 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+ 87 |         engine.connect(wetInputMixer, to: glossDoubler, format: format)
+ 88 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 89 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+ 90 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift:89:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 87 |         engine.connect(wetInputMixer, to: glossDoubler, format: format)
+ 88 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+ 89 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 90 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+ 91 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift:90:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 88 |         engine.connect(glossDoubler, to: sheenReverb, format: format)
+ 89 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+ 90 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+ 91 |     }
+ 92 |     
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:121:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+119 |     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+120 |         // Keep the contour path dry and blend the optional sheen path separately.
+121 |         engine.connect(inputSplitter, to: eq, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+122 |         engine.connect(
+123 |             eq,
+
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:122:16: warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+120 |         // Keep the contour path dry and blend the optional sheen path separately.
+121 |         engine.connect(inputSplitter, to: eq, format: format)
+122 |         engine.connect(
+    |                `- warning: 'connect(_:to:fromBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+123 |             eq,
+124 |             to: [
+
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:131:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+129 |             format: format
+130 |         )
+131 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+132 |         engine.connect(airContourEQ, to: focusTamerEQ, format: format)
+133 |         engine.connect(focusTamerEQ, to: sheenDoubler, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:132:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+130 |         )
+131 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+132 |         engine.connect(airContourEQ, to: focusTamerEQ, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+133 |         engine.connect(focusTamerEQ, to: sheenDoubler, format: format)
+134 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:133:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+131 |         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+132 |         engine.connect(airContourEQ, to: focusTamerEQ, format: format)
+133 |         engine.connect(focusTamerEQ, to: sheenDoubler, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+134 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+135 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:134:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+132 |         engine.connect(airContourEQ, to: focusTamerEQ, format: format)
+133 |         engine.connect(focusTamerEQ, to: sheenDoubler, format: format)
+134 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+135 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+136 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:135:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+133 |         engine.connect(focusTamerEQ, to: sheenDoubler, format: format)
+134 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+135 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+136 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+137 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift:136:16: warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+134 |         engine.connect(sheenDoubler, to: sheenReverb, format: format)
+135 |         engine.connect(sheenReverb, to: wetMixer, format: format)
+136 |         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
+    |                `- warning: 'connect(_:to:fromBus:toBus:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+137 |     }
+138 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+../Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift:64:32: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+ 62 |         guard isEnabled else { return 0 }
+ 63 |         return nodes.compactMap { $0 as? AVAudioUnit }.reduce(0) { sum, unit in
+ 64 |             let latency = unit.auAudioUnit.latency
+    |                                `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+ 65 |             return sum + (latency.isFinite && latency > 0 ? latency : 0)
+ 66 |         }
+
+../Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift:77:31: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+ 75 |                       masterGainDB: Float) {
+ 76 |         guard unit.audioComponentDescription.componentSubType == kAudioUnitSubType_DynamicsProcessor,
+ 77 |               let tree = unit.auAudioUnit.parameterTree else { return }
+    |                               `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+ 78 |         let values: [(AudioUnitParameterID, Float)] = [
+ 79 |             (kDynamicsProcessorParam_Threshold, thresholdDB),
+
+../Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift:105:28: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+103 |     func attach(to engine: AVAudioEngine) {
+104 |         nodes.forEach { engine.attach($0) }
+105 |         let tree = limiter.auAudioUnit.parameterTree
+    |                            `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+106 |         tree?.parameter(withAddress: AUParameterAddress(kLimiterParam_AttackTime))?.value = 0.001
+107 |         tree?.parameter(withAddress: AUParameterAddress(kLimiterParam_DecayTime))?.value = 0.06
+
+../Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift:114:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+112 |     func connect(from upstream: AVAudioNode, engine: AVAudioEngine, format: AVAudioFormat,
+113 |                  destination: AVAudioNode? = nil) {
+114 |         engine.connect(upstream, to: limiter, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+115 |         engine.connect(limiter, to: trim, format: format)
+116 |         engine.connect(trim, to: destination ?? engine.mainMixerNode, format: format)
+
+../Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift:115:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+113 |                  destination: AVAudioNode? = nil) {
+114 |         engine.connect(upstream, to: limiter, format: format)
+115 |         engine.connect(limiter, to: trim, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+116 |         engine.connect(trim, to: destination ?? engine.mainMixerNode, format: format)
+117 |     }
+
+../Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift:116:16: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+114 |         engine.connect(upstream, to: limiter, format: format)
+115 |         engine.connect(limiter, to: trim, format: format)
+116 |         engine.connect(trim, to: destination ?? engine.mainMixerNode, format: format)
+    |                `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+117 |     }
+118 | 
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=coalesce peak=0.028024426 minWindowRatio=0.9856927068629558
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=gesture peak=0.02985115 minWindowRatio=0.9856927068629558
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=overlap peak=0.028024264 minWindowRatio=0.9797130427213163
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=offRestore peak=0.028292255 minWindowRatio=0.06128281186588868
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=bypassOverlap peak=0.028024256 minWindowRatio=0.1293496677122468
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=lateOverlap peak=0.028024256 minWindowRatio=0.1293496677122468
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=stopOut peak=0.028369853 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=basic scenario=stopIn peak=0.028369853 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=coalesce peak=0.03891089 minWindowRatio=0.9812874135118062
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=gesture peak=0.14100501 minWindowRatio=0.9654892210645122
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=overlap peak=0.035513356 minWindowRatio=0.9717550508929074
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=offRestore peak=0.03702529 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=bypassOverlap peak=0.041495778 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=lateOverlap peak=0.041495778 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=stopOut peak=0.048395637 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=stopIn peak=0.048114505 minWindowRatio=3.6266460569264564e-13
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=coalesce peak=0.028264225 minWindowRatio=0.9856068426087888
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=gesture peak=0.030079458 minWindowRatio=0.985966267740256
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=overlap peak=0.02836064 minWindowRatio=0.9727204192078951
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=offRestore peak=0.02840056 minWindowRatio=0.0793605289491422
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=bypassOverlap peak=0.028372712 minWindowRatio=0.16842326288658313
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=lateOverlap peak=0.028372712 minWindowRatio=0.16842326288658313
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=stopOut peak=0.028509006 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=basic scenario=stopIn peak=0.028509006 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=coalesce peak=0.040248975 minWindowRatio=0.9875862183135262
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=gesture peak=0.1430362 minWindowRatio=0.9816510158886362
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=overlap peak=0.035623137 minWindowRatio=0.9907671742043785
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=offRestore peak=0.037088793 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=bypassOverlap peak=0.042780217 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=lateOverlap peak=0.042780217 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=stopOut peak=0.04958425 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=stopIn peak=0.049584445 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=coalesce peak=0.028170086 minWindowRatio=0.9857246481314178
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=gesture peak=0.029823434 minWindowRatio=0.9857246481314178
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=overlap peak=0.02817838 minWindowRatio=0.9796204394881056
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=offRestore peak=0.028170086 minWindowRatio=0.031238894797900887
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=bypassOverlap peak=0.02817682 minWindowRatio=0.05863678644990534
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=lateOverlap peak=0.02817682 minWindowRatio=0.05863678644990534
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=stopOut peak=0.02846178 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=basic scenario=stopIn peak=0.028461771 minWindowRatio=0.022077327110645806
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=coalesce peak=0.03231471 minWindowRatio=0.9815986935572297
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=gesture peak=0.13843396 minWindowRatio=0.952991356503458
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=overlap peak=0.034350585 minWindowRatio=0.9718913906958472
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=offRestore peak=0.032058608 minWindowRatio=0.0003913126388466186
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=bypassOverlap peak=0.030982755 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=lateOverlap peak=0.030982755 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=stopOut peak=0.048039023 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=stopIn peak=0.048086993 minWindowRatio=0.10459373345775172
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=coalesce peak=0.028266504 minWindowRatio=0.9738743512100346
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=gesture peak=0.030030219 minWindowRatio=0.9742745308310637
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=overlap peak=0.02829611 minWindowRatio=0.974609706933582
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=offRestore peak=0.028436419 minWindowRatio=0.0711071737825144
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=bypassOverlap peak=0.028297137 minWindowRatio=0.08488172222235246
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=lateOverlap peak=0.028297137 minWindowRatio=0.08488172222235246
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=stopOut peak=0.028510097 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=basic scenario=stopIn peak=0.028510097 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=coalesce peak=0.032723617 minWindowRatio=0.9717914536824315
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=gesture peak=0.1398574 minWindowRatio=0.9467951179878545
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=overlap peak=0.03488166 minWindowRatio=0.9796027745442966
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=offRestore peak=0.03247667 minWindowRatio=5.296445405520988e-05
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=bypassOverlap peak=0.03146193 minWindowRatio=0.0007151963507622746
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=lateOverlap peak=0.03146193 minWindowRatio=0.0007151963507622746
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=stopOut peak=0.04958975 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=stopIn peak=0.04958988 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=coalesce peak=0.028240092 minWindowRatio=0.9871145015274141
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=gesture peak=0.03003328 minWindowRatio=0.9789841347750565
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=overlap peak=0.02833893 minWindowRatio=0.9799340608211166
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=offRestore peak=0.02838155 minWindowRatio=0.014505884755193163
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=bypassOverlap peak=0.028307643 minWindowRatio=0.14627148462673345
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=lateOverlap peak=0.028307643 minWindowRatio=0.14627148462673345
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=stopOut peak=0.028461788 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=basic scenario=stopIn peak=0.028461775 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=coalesce peak=0.03255804 minWindowRatio=0.9844111353513255
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=gesture peak=0.1450131 minWindowRatio=0.9740441971692141
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=overlap peak=0.036505852 minWindowRatio=0.9699947919740511
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=offRestore peak=0.03175886 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=bypassOverlap peak=0.031383332 minWindowRatio=0.00013858670239730206
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=lateOverlap peak=0.031383332 minWindowRatio=0.00013858670239730206
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=stopOut peak=0.04927752 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=stopIn peak=0.048083622 minWindowRatio=4.4046407703900527e-07
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=coalesce peak=0.02826646 minWindowRatio=0.9695205078521737
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=gesture peak=0.030040747 minWindowRatio=0.9695205078521737
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=overlap peak=0.028364887 minWindowRatio=0.9695205055730134
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=offRestore peak=0.028459135 minWindowRatio=0.004519446369065976
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=bypassOverlap peak=0.02833388 minWindowRatio=0.2115005454696096
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=lateOverlap peak=0.02833388 minWindowRatio=0.2115005454696096
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=stopOut peak=0.028511276 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=basic scenario=stopIn peak=0.028511276 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=coalesce peak=0.032828912 minWindowRatio=0.968948233234788
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=gesture peak=0.14172173 minWindowRatio=0.941727958752239
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=overlap peak=0.036708944 minWindowRatio=0.968948233234788
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=offRestore peak=0.03205544 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=bypassOverlap peak=0.03145025 minWindowRatio=0.0006748461820241346
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=lateOverlap peak=0.03145025 minWindowRatio=0.0006748461820241346
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=stopOut peak=0.04959764 minWindowRatio=0.0
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=stopIn peak=0.049597766 minWindowRatio=0.0
+PASS: 96 desktop transition PCM cases
+tests/run_desktop_effect_transition_regression.sh: line 30:  8872 Trace/BPT trap: 5       "$audit_dir/test" "--$defect-fixture" > "$audit_dir/$defect.log" 2>&1
+PASS: rejected unprotected continuity defect
+tests/run_desktop_effect_transition_regression.sh: line 30:  8880 Trace/BPT trap: 5       "$audit_dir/test" "--$defect-fixture" > "$audit_dir/$defect.log" 2>&1
+PASS: rejected mute continuity defect
+tests/run_desktop_effect_transition_regression.sh: line 30:  8894 Trace/BPT trap: 5       "$audit_dir/test" "--$defect-fixture" > "$audit_dir/$defect.log" 2>&1
+PASS: rejected unsafe-bypass continuity defect

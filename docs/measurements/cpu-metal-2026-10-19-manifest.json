@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-19",
+  "host": "MacBook Air Mac16,13 / Apple M4 / 10-core CPU / 10-core GPU / 32 GB unified memory",
+  "os": "macOS 27.0.1 (26A434)",
+  "compiler": "Apple Swift 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1), -O, arm64",
+  "note": "CPU and GPU are real development-host measurements. Initial sandbox MetalUnavailable was resolved by an authorized unsandboxed run. Serial/UUID intentionally omitted. No iPhone hardware claim.",
+  "sha256": {
+    "audio/HiResPlaybackEngine.swift": "564c9f734a6515c3471d305c4434594f4cfe7ef5fe9878fc276b6647ec427155",
+    "audio/AppLibraryModels.swift": "8f1678a952c72437c6d5b395cc6083655d576d5cee395b603fb677953b7cf830",
+    "tests/sinc-benchmark/Benchmark.swift": "50af0ab43ca659700866b9969445523badc2f14522d5dab54112158b11e120dd",
+    "tests/sinc-benchmark/PolicyProbe.swift": "b7f39e94314c02eb5e0f4a177d27c26a01b0979f39e0d559e607d681507d85ec",
+    "tests/sinc-benchmark/README.md": "87757b97ff7c1cb51cbb05091ea83ac70f44d7d4d3ccf4f4167732dcb958b233",
+    "tests/sinc-benchmark/Sinc.metal": "6b2bcaa14be80eaaebd5084f3313b68a50a285a21c6980cb5d89dddf17160259",
+    "tests/sinc-benchmark/extract_fixture.py": "a62f547e73e05d2b1f44b4e5292255324f43a6747b9de6a3457afdae640c20fa",
+    "tests/sinc-benchmark/run.sh": "448004a9d5e24a8f4e3e10a7e16dd8169528cb4bbfedc29696e09bf79f876deb",
+    "tests/sinc-benchmark/run_matrix.py": "b6cc8343a89d4093efc7eacf72116c34c155f8321f70fabcb16140d5f5fed708"
+  }
+}

@@ -1,5 +1,7 @@
 # iPhone playback continuity — 2026-10-17
 
+Update 2026-10-19: Mac transport and late-analysis protection is now implemented; see [Mac parity verification](MAC_TRANSPORT_PARITY_VALIDATION.md). Earlier verification and implementation scope below remain historical; remaining shared Next work is latency-aligned handoff/bypass residual and tail qualification.
+
 The user reports unexpected volume changes and plug-like clicks on the **iPhone built-in speaker**, especially start/stop and high-quality data replacement. The source review identifies abrupt player stop/rescheduling and late analysis changing shared gain/EQ as plausible contributors. These are code-path findings; the physical symptom has not yet been reproduced or confirmed resolved.
 
 ## Implemented

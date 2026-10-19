@@ -6,9 +6,10 @@ import Foundation
 final class EffectParameterTransition {
     typealias Settings = [RealtimeAudioEffectSetting]
     typealias Schedule = (TimeInterval, @escaping @MainActor () -> Void) -> Void
-    private enum Phase { case idle, waiting, fadingOut, fadingIn }
+    private enum Phase { case idle, waiting, fadingOut, settling, fadingIn }
     private let isAudible: () -> Bool
     private let shouldDefer: () -> Bool
+    private let processingLatency: () -> TimeInterval
     private let setEnvelope: (Float) -> Void
     private let commit: (Settings) -> Void
     private let schedule: Schedule
@@ -18,13 +19,15 @@ final class EffectParameterTransition {
     private var generation: UInt64 = 0
     private var phase = Phase.idle
     private var envelope: Float = 1
-    var isProtectingOutput: Bool { phase == .fadingOut || phase == .fadingIn }
+    var isProtectingOutput: Bool { phase == .fadingOut || phase == .settling || phase == .fadingIn }
 
     init(isAudible: @escaping () -> Bool, shouldDefer: @escaping () -> Bool,
+         processingLatency: @escaping () -> TimeInterval = { 0 },
          setEnvelope: @escaping (Float) -> Void = { _ in },
          schedule: @escaping Schedule = { delay, action in
              DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)
          }, commit: @escaping (Settings) -> Void) {
+        self.processingLatency = processingLatency
         self.isAudible = isAudible; self.shouldDefer = shouldDefer
         self.setEnvelope = setEnvelope; self.schedule = schedule; self.commit = commit
     }
@@ -48,8 +51,18 @@ final class EffectParameterTransition {
         else { scheduleNext() }
     }
 
+    /// Leave the current rack/envelope intact until transport reaches silence.
+    func freezeForTransport() {
+        generation &+= 1
+        pending = nil
+        phase = .idle
+    }
+
     private func bypassChanged(_ settings: Settings) -> Bool {
-        settings.contains { (applied[$0.kind]?.isEnabled ?? false) != $0.isEnabled }
+        settings.contains {
+            (applied[$0.kind]?.isEnabled ?? false) != $0.isEnabled
+                || EffectTransitionPolicy.effectiveEnabled(applied[$0.kind]) != EffectTransitionPolicy.effectiveEnabled($0)
+        }
     }
 
     private func scheduleNext() {
@@ -71,11 +84,18 @@ final class EffectParameterTransition {
 
     private func beginFadeOut() {
         phase = .fadingOut
+        let previousLatency = processingLatency()
         ramp(to: 0, duration: EffectTransitionPolicy.protectionFadeOut) { [weak self] in
             guard let self, let target = self.pending else { return }
             self.pending = nil
-            self.commitChanges(target) // Commit at zero, then restore immediately; no silent hold.
-            self.beginFadeIn()
+            self.commitChanges(target)
+            let settle = EffectTransitionPolicy.settleDuration(before: previousLatency, after: self.processingLatency())
+            self.phase = .settling
+            let token = self.generation
+            self.schedule(settle) { [weak self] in
+                guard let self, self.generation == token else { return }
+                self.beginFadeIn()
+            }
         }
     }
 

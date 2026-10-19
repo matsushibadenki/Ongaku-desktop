@@ -12,6 +12,15 @@ import AVFoundation
 final class GlossAudioEffect: AudioEffectNode {
     let kind: RealtimeAudioEffectKind = .gloss
     private(set) var isEnabled: Bool = false
+    private let wetInputMixer = AVAudioMixerNode()
+    private weak var attachedEngine: AVAudioEngine?
+    private let tailSchedule: EffectTailGate.Schedule
+    private lazy var tailGate = EffectTailGate(input: wetInputMixer, outputs: [wetMixer],
+                                               wetUnits: [sheenDoubler, sheenReverb], schedule: tailSchedule)
+    init(tailSchedule: @escaping EffectTailGate.Schedule = EffectTailGate.scheduleOnMain) {
+        self.tailSchedule = tailSchedule
+    }
+
     
     private let glossEQ = AVAudioUnitEQ(numberOfBands: 3)
     
@@ -26,13 +35,15 @@ final class GlossAudioEffect: AudioEffectNode {
     private let outputMixer = AVAudioMixerNode()
     
     // Nodes配列に sheenDoubler と sheenReverb を追加
-    var nodes: [AVAudioNode] { [inputSplitter, dryMixer, wetMixer, outputMixer, glossEQ, sheenDoubler, sheenReverb] }
+    var nodes: [AVAudioNode] { [wetInputMixer, inputSplitter, dryMixer, wetMixer, outputMixer, glossEQ, sheenDoubler, sheenReverb] }
     var inputNode: AVAudioNode { inputSplitter }
     var outputNode: AVAudioNode { outputMixer }
     
     private(set) var estimatedGainBoostDB: Double = 0.0
 
     func attach(to engine: AVAudioEngine) {
+        attachedEngine = engine
+        wetInputMixer.outputVolume = 0
         for node in nodes {
             engine.attach(node)
         }
@@ -65,23 +76,29 @@ final class GlossAudioEffect: AudioEffectNode {
     }
     
     func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {
+        tailGate.reset()
         engine.connect(inputSplitter, to: glossEQ, format: format)
         engine.connect(glossEQ, to: [
             AVAudioConnectionPoint(node: dryMixer, bus: 0),
-            AVAudioConnectionPoint(node: sheenDoubler, bus: 0)
+            AVAudioConnectionPoint(node: wetInputMixer, bus: 0)
         ], fromBus: 0, format: format)
         engine.connect(dryMixer, to: outputMixer, fromBus: 0, toBus: 0, format: format)
+        engine.connect(wetInputMixer, to: sheenDoubler, format: format)
         engine.connect(sheenDoubler, to: sheenReverb, format: format)
         engine.connect(sheenReverb, to: wetMixer, format: format)
         engine.connect(wetMixer, to: outputMixer, fromBus: 0, toBus: 1, format: format)
     }
     
     func detach(from engine: AVAudioEngine) {
+        tailGate.reset()
+        attachedEngine = nil
         for node in nodes {
             engine.detach(node)
         }
     }
     
+    func resetTailState() { tailGate.resetPreservingEnabledState() }
+
     func apply(setting: RealtimeAudioEffectSetting) {
         let intensity = clamped(setting.parameters["intensity"], defaultValue: 0.8)
         let clarity = clamped(setting.parameters["clarity"], defaultValue: 0.48)
@@ -94,10 +111,8 @@ final class GlossAudioEffect: AudioEffectNode {
         
         guard isEnabled else {
             glossEQ.bypass = true
-            sheenDoubler.bypass = true
-            sheenReverb.bypass = true
+            tailGate.stop(rendering: attachedEngine?.isRunning == true)
             dryMixer.outputVolume = 1
-            wetMixer.outputVolume = 0
             
             glossEQ.globalGain = 0
             glossEQ.bands[0].gain = 0
@@ -149,6 +164,7 @@ final class GlossAudioEffect: AudioEffectNode {
         }
 
         dryMixer.outputVolume = 1
+        if isSampleRateSafe { tailGate.activate() } else { tailGate.reset() }
         let hasWetSignal = isSampleRateSafe && wetMixer.outputVolume > 0.0001
         sheenDoubler.bypass = !hasWetSignal
         sheenReverb.bypass = !hasWetSignal
@@ -160,4 +176,3 @@ final class GlossAudioEffect: AudioEffectNode {
         return min(max(value ?? defaultValue, 0.0), 1.0)
     }
 }
-

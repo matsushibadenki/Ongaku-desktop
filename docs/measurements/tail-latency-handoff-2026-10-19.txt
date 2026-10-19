@@ -1,0 +1,434 @@
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999999604614545
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-71.00701775129225 levelDB=0.00013066226656187463
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999999622123149
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-71.20277829922594 levelDB=0.00013250529477902657
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999974853265093
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-52.9835100436769 levelDB=-0.00036903548259022324
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.999995144286436
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-50.07308316668778 levelDB=-0.0030731398870531175
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999999536939412
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-70.3186254953779 levelDB=0.00015349401789559842
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.999999952846216
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-70.23622921188976 levelDB=0.0001729483656974011
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999984681680109
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-55.13578775635934 levelDB=0.00029660251357112267
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999965633502126
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-51.606520189726396 levelDB=0.001586679081051495
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999417172805
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-69.32867008569225 levelDB=0.00010632359758591488
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999249286909
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-68.23480358108854 levelDB=1.9560555741674087e-05
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999499462698
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-69.98625753729945 levelDB=0.00012527707569830838
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999423988595
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-69.37870691371876 levelDB=0.00011518935125457084
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999434970456
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-69.4548633677705 levelDB=0.00016616560848556333
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999323955898
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-68.67324990559774 levelDB=0.00019765613244026372
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.999999947083009
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-69.73958003293508 levelDB=0.0001610692553106458
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999403741563
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-69.21050442049652 levelDB=0.00022669872785987491
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.999999931610094
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-68.63413285282826 levelDB=0.00011529023324233228
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999158126218
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-67.73693890098826 levelDB=2.849155928010278e-05
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999397320852
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-69.18022993687234 levelDB=0.0001338078799321541
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999330067023
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-68.72291156795401 levelDB=0.00012223514450518765
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999331595963
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-68.72615591189852 levelDB=0.00017433295175680593
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999218140505
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-68.04293832991132 levelDB=0.00020453358798839467
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.999999936705408
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-68.9628883604103 levelDB=0.000169608348017031
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999295890649
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-68.49112341499767 levelDB=0.00023260183556801664
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9791883066102252
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-13.816121948047632 levelDB=-0.020110810707380595
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9806296331660299
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-14.100575473649373 levelDB=0.03237746078888578
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.979154078019536
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-13.81055321810612 levelDB=-0.023676345500706644
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9806696238379584
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-14.107393539507175 levelDB=0.035957458237127815
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.97724766317388
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-13.427059473546512 levelDB=-0.015876755517651536
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9767068882478849
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-13.30357620311878 levelDB=0.026023944028430945
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9772466291157932
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-13.428281615172306 levelDB=-0.018990396968482707
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9766981119503764
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-13.298107798674003 levelDB=0.03271816918434771
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9776680722423686
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-13.509754263349933 levelDB=-0.01962548821822938
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9791979470661508
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-13.79170840632087 levelDB=0.03117098673981087
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9776783288160368
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-13.513231334372033 levelDB=-0.022955547130269153
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9792037627531974
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-13.78858097391116 levelDB=0.038451291753651994
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9757190434913957
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-13.144363061802128 levelDB=-0.01518878156021926
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9751051965697131
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-13.015556418996097 levelDB=0.024702347430187586
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9757555903629981
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-13.152576618268107 levelDB=-0.01882697131289714
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9750615501272865
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-13.004669012573789 levelDB=0.030522758496134512
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9768971389875848
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-13.362657445312415 levelDB=-0.020251992009014376
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9784614391049038
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-13.64123563649519 levelDB=0.03016379662910601
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9769107634420704
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-13.366694081796043 levelDB=-0.023563749941061737
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9784651431675745
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-13.637730896011824 levelDB=0.03736691463808859
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9749405306889336
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-13.007539248472098 levelDB=-0.015680606398836366
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9742846390472594
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-12.875398574873865 levelDB=0.023512941493679856
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9749802723447981
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-13.016096846130093 levelDB=-0.019302344365291754
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9742401067119737
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-12.864669386547103 levelDB=0.02926630030199436
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999606084325
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-71.02536750211249 levelDB=0.00011846124831322392
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999623271473
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-71.21820818730654 levelDB=0.00012086383137335099
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999974853936445
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-52.983527282331465 levelDB=-0.0003812406095881911
+EFFECT_ALIGNMENT effect=space source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999951458664771
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-50.07406831394513 levelDB=-0.003084682247960739
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999537924213
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-70.33047998375635 levelDB=0.00013900337630887833
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999529461367
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-70.24828029867403 levelDB=0.00015874474697183098
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999984680759152
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-55.13569110238749 levelDB=0.0002821472813260104
+EFFECT_ALIGNMENT effect=gloss source=44100 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999965640911849
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-51.60783164888975 levelDB=0.0015725384199629204
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999419103728
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-69.34432297908053 levelDB=9.366413028458415e-05
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999251347925
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-68.24687421358594 levelDB=7.5432294981716175e-06
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999501233393
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-70.00335490056928 levelDB=0.00011263861935725435
+EFFECT_ALIGNMENT effect=space source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999425750103
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-69.39329842368198 levelDB=0.00010326101221810932
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999436247191
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-69.46706463286233 levelDB=0.00015130497109644837
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.999999932547073
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-68.6853230913784 levelDB=0.00018307415660593604
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999472152498
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-69.75290186271377 levelDB=0.00014620826702481631
+EFFECT_ALIGNMENT effect=gloss source=44100 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999405186467
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-69.22406057515241 levelDB=0.00021215567685535375
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999318313493
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-68.64937381064874 levelDB=0.00010244410783026683
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999160436527
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-67.74906644102694 levelDB=1.624502441192435e-05
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999399384076
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-69.196666633429 levelDB=0.00012095678945259346
+EFFECT_ALIGNMENT effect=space source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999332072116
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-68.73712748238283 levelDB=0.00011012203386417511
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999333163258
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-68.73849126927502 levelDB=0.00015926829197570192
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999219944773
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-68.05508742223002 levelDB=0.00018975349461949857
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999368662396
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-68.97613328031977 levelDB=0.00015453896834935092
+EFFECT_ALIGNMENT effect=gloss source=44100 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999297629509
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-68.5045202034131 levelDB=0.00021787592494359456
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-273.0941686073518 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-273.76032696595445 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-273.0941686073518 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-273.76032696595445 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-269.2398245566954 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-270.49023772390206 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-269.2398245566954 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-270.49023772390206 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-273.4762105823707 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-274.15050764379635 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-273.4762105823707 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-274.15050764379635 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-269.6517448013186 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-270.9067515820302 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-269.6517448013186 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-270.9067515820302 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-276.4895970603198 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-277.1639596655352 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-276.4895970603198 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-277.1639596655352 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-272.6744101438564 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-273.9188429548257 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-272.6744101438564 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-273.9188429548257 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-273.0941686073518 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-273.76032696595445 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-273.0941686073518 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-273.76032696595445 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-269.2398245566954 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-270.49023772390206 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-269.2398245566954 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-270.49023772390206 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-273.4762105823707 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-274.15050764379635 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-273.4762105823707 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-274.15050764379635 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-269.6517448013186 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-270.9067515820302 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-269.6517448013186 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-270.9067515820302 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-276.4895970603198 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-277.1639596655352 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-276.4895970603198 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-277.1639596655352 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-272.6744101438564 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-273.9188429548257 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-272.6744101438564 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-273.9188429548257 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-273.0941686073518 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-273.76032696595445 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-273.0941686073518 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=space signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-273.76032696595445 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-269.2398245566954 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-270.49023772390206 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-269.2398245566954 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=44100 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-270.49023772390206 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-273.4762105823707 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-274.15050764379635 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-273.4762105823707 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-274.15050764379635 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-269.6517448013186 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-270.9067515820302 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-269.6517448013186 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=48000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-270.9067515820302 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-276.4895970603198 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-277.1639596655352 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-276.4895970603198 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-277.1639596655352 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-272.6744101438564 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-273.9188429548257 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-272.6744101438564 levelDB=0.0
+EFFECT_HANDOFF source=44100 output=96000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-273.9188429548257 levelDB=0.0
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999999996784926
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-91.87464122049107 levelDB=2.2020137290846795e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999999992413359
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-88.18666259733781 levelDB=8.205051332102613e-06
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999975771423057
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-53.14402485287453 levelDB=-0.0004707260929852594
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999951022255076
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-50.03109754363108 levelDB=-0.003212307180652992
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999999997241035
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-92.52964313600015 levelDB=2.2529956055804857e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.999999999268759
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-88.32549379067268 levelDB=2.4513461224268593e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.999998568948855
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-55.43246183679117 levelDB=0.00017276380146457094
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=linear lag96kFrames=0.0 correlation=0.9999965429147667
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-51.584952330065086 levelDB=0.001427524764149345
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999841838075
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-74.99814485393745 levelDB=-1.732286197284485e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999616054607
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-71.137001858868 levelDB=-0.00011591929035700779
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999917500789
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-77.82492294044759 levelDB=8.901561625623024e-06
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999799291978
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-73.962238363745 levelDB=-3.574946510559767e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999924889612
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-78.2312074260559 levelDB=1.9679901203906835e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999790625301
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-73.77858793972112 levelDB=3.672261141399702e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999956134226
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-80.56520687607227 levelDB=2.217520603833811e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=linear lag96kFrames=0.0 correlation=0.9999999877031792
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-76.08487252683234 levelDB=5.420947457957951e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.999999984381229
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-75.05282071112768 levelDB=-1.5116180048592784e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999620832621
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-71.1918011321307 levelDB=-0.00011279657515688902
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999918372758
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-77.87095494654763 levelDB=1.0607172449347518e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999801281336
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-74.00562406299835 levelDB=-3.4359149790673145e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999925612073
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=0 residualDB=-78.27298988695725 levelDB=2.086959767591937e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999793075118
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=linear controlMS=4.0 channel=1 residualDB=-73.82961356280853 levelDB=3.7383440141748356e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999956404522
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=0 residualDB=-80.59159420358031 levelDB=2.3657351385942093e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=linear lag96kFrames=0.0 correlation=0.9999999877876138
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=linear controlMS=20.0 channel=1 residualDB=-76.11479070395818 levelDB=5.405927306698044e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.985976389741931
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-15.529169023417975 levelDB=-0.017373540120499784
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9869049832784502
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-15.80248041023727 levelDB=0.02869840031907693
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.985940026168665
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-15.519249481940827 levelDB=-0.020511482674513085
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9869444677559797
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-15.81389601690155 levelDB=0.03137665228885467
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9845110442766988
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-15.095942651575871 levelDB=-0.013617084977060344
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9841700327997484
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-14.982518302475809 levelDB=0.022862623914738874
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9844982652720798
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-15.093535584763442 levelDB=-0.016258669647721533
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=minimumPhase lag96kFrames=0.0 correlation=0.9841696698541887
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-14.9788909003121 levelDB=0.028802666909972845
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9850304800376374
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-15.245528642228992 levelDB=-0.016914832708178396
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9860121599557881
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-15.51681935555324 levelDB=0.027611324711863953
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9850325466896086
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-15.247356609665704 levelDB=-0.019775260641282256
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9860176182512876
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-15.514536961251565 levelDB=0.03395715534972969
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9835648827778403
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-14.83816939504667 levelDB=-0.012985407149661333
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9831771494741164
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-14.719037627687825 levelDB=0.021719115466587433
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9835860889451522
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-14.845172577912573 levelDB=-0.016095042152309363
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=minimumPhase lag96kFrames=0.0 correlation=0.983143540600292
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-14.707450852806288 levelDB=0.026731316822305028
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9845492828711045
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-15.108345637763653 levelDB=-0.017390731850423412
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9855511131875101
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-15.376555099360212 levelDB=0.026751452411993806
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9845535762903969
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-15.110774227843208 levelDB=-0.020232687036462124
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.985555149110157
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-15.373881959407568 levelDB=0.033028644053307764
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9830810739784391
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=0 residualDB=-14.712344291581502 levelDB=-0.013350752115000954
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9826662758760127
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=4.0 channel=1 residualDB=-14.589713001811472 levelDB=0.02071195832608929
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9831043753631612
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=0 residualDB=-14.71971824773762 levelDB=-0.016442526798213154
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=minimumPhase lag96kFrames=0.0 correlation=0.9826320877120787
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=minimumPhase controlMS=20.0 channel=1 residualDB=-14.578299750325833 levelDB=0.025665281093618014
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999996710418
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-91.73507288674088 levelDB=3.099861264032984e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999992362937
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-88.15003057223987 levelDB=1.661901395813492e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999975769809649
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-53.143830604402346 levelDB=-0.0004617598228143145
+EFFECT_ALIGNMENT effect=space source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999951030214396
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-50.032106956360025 levelDB=-0.003203768533830349
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999997168153
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-92.36394782102244 levelDB=3.234965035649689e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999999992613798
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-88.25992852319362 levelDB=3.427833362159796e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999985687487464
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-55.431779839058805 levelDB=0.0001825540245848581
+EFFECT_ALIGNMENT effect=gloss source=48000 output=44100 phase=apodizing lag96kFrames=0.0 correlation=0.9999965430881541
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-51.584931467976375 levelDB=0.0014373287444128238
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.999999984170634
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-74.99495831572213 levelDB=-7.837593882609807e-06
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999616188268
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-71.13999903348555 levelDB=-0.00010696855838125128
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999917380432
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-77.81768956977456 levelDB=1.8356881329946484e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.999999979941476
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-73.96569685399858 levelDB=-2.6747919629380087e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999924750942
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-78.22122072874554 levelDB=3.006067871367353e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999790552914
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-73.77589691795664 levelDB=4.70193981760006e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999956016629
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-80.54989113349492 levelDB=3.250636319337752e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=48000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999877043071
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-76.08240009615253 levelDB=6.453459832139436e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999843692104
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-75.04984543355965 levelDB=-5.366438368120282e-06
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999620979352
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-71.19497261401928 levelDB=-0.00010365737201646414
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999918266348
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-77.86423339519867 levelDB=2.032102304920584e-05
+EFFECT_ALIGNMENT effect=space source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999801412653
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-74.00928443591351 levelDB=-2.512405456923359e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999925484073
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=0 residualDB=-78.26338178458863 levelDB=3.1458359471541315e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999793017491
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=4.0 channel=1 residualDB=-73.82714970769163 levelDB=4.792284249374001e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999956299743
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=0 residualDB=-80.57716022537406 levelDB=3.4203420945049506e-05
+EFFECT_ALIGNMENT effect=gloss source=48000 output=96000 phase=apodizing lag96kFrames=0.0 correlation=0.9999999877898692
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=multitone phase=apodizing controlMS=20.0 channel=1 residualDB=-76.1126294800575 levelDB=6.463915547249709e-05
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-273.09412306591565 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-273.76030001956815 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-273.09412306591565 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-273.76030001956815 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-269.23980672804674 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-270.4902695277669 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-269.23980672804674 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-270.4902695277669 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-273.47616737653317 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-274.1504843316543 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-273.47616737653317 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-274.1504843316543 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-269.651734302607 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-270.90679083273346 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-269.651734302607 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-270.90679083273346 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-276.489555105611 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-277.16393806313863 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-276.489555105611 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-277.16393806313863 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=0 residualDB=-272.67440356087155 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=linear controlMS=4.0 channel=1 residualDB=-273.9188860875249 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=0 residualDB=-272.67440356087155 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=linear controlMS=20.0 channel=1 residualDB=-273.9188860875249 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-273.09412306591565 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-273.76030001956815 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-273.09412306591565 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-273.76030001956815 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-269.23980672804674 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-270.4902695277669 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-269.23980672804674 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-270.4902695277669 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-273.47616737653317 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-274.1504843316543 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-273.47616737653317 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-274.1504843316543 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-269.651734302607 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-270.90679083273346 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-269.651734302607 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-270.90679083273346 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-276.489555105611 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-277.16393806313863 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-276.489555105611 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-277.16393806313863 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=0 residualDB=-272.67440356087155 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=4.0 channel=1 residualDB=-273.9188860875249 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=0 residualDB=-272.67440356087155 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=minimumPhase controlMS=20.0 channel=1 residualDB=-273.9188860875249 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-273.09412306591565 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-273.76030001956815 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-273.09412306591565 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=space signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-273.76030001956815 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-269.23980672804674 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-270.4902695277669 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-269.23980672804674 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=44100 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-270.4902695277669 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-273.47616737653317 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-274.1504843316543 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-273.47616737653317 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-274.1504843316543 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-269.651734302607 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-270.90679083273346 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-269.651734302607 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=48000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-270.90679083273346 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-276.489555105611 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-277.16393806313863 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-276.489555105611 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=space signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-277.16393806313863 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=0 residualDB=-272.67440356087155 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=apodizing controlMS=4.0 channel=1 residualDB=-273.9188860875249 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=0 residualDB=-272.67440356087155 levelDB=0.0
+EFFECT_HANDOFF source=48000 output=96000 effect=gloss signal=tail phase=apodizing controlMS=20.0 channel=1 residualDB=-273.9188860875249 levelDB=0.0
+PASS: 144 shared-rack effect handoffs, both channels; variable blocks, 4/20 ms controls, preserved tails
+PASS: rejected shared-rack reset negative control

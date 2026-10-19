@@ -130,7 +130,7 @@ struct AudioFidelityPolicyTests {
         }
     }
 
-    @Test("Album analysis runs asynchronously and discards stale feature revisions")
+    @Test("Late album analysis retains current gain; explicit changes adopt the newest revision")
     @MainActor func albumCacheRejectsStaleResults() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -169,11 +169,19 @@ struct AudioFidelityPolicyTests {
         #expect(player.signalPathSnapshot?.normalizationGainDB == 0)
         player.updateAudioFeatures([track.id: analysis(-12)])
         for _ in 0..<100 {
-            if let gain = player.signalPathSnapshot?.normalizationGainDB, abs(gain + 4) < 0.001 { break }
+            let tasks = try #require(Mirror(reflecting: player).children.first { $0.label == "albumMeasurementTasks" })
+            if Mirror(reflecting: tasks.value).children.isEmpty { break }
             try await Task.sleep(for: .milliseconds(10))
         }
+        #expect(player.signalPathSnapshot?.normalizationGainDB == 0)
+        player.loudnessNormalizationMode = .album // Repeated setting is not a new tuning request.
+        #expect(player.signalPathSnapshot?.normalizationGainDB == 0)
+        player.loudnessNormalizationMode = .off
+        player.loudnessNormalizationMode = .album
         let gain = try #require(player.signalPathSnapshot?.normalizationGainDB)
         #expect(abs(gain + 4) < 0.001)
+        player.updateAudioFeatures([track.id: analysis(-24)])
+        #expect(abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001)
     }
 
     private func makeTrack(url: URL, duration: Double) -> Track {

@@ -1,5 +1,7 @@
 # Destructive playback shutdown — 2026-10-18
 
+Update 2026-10-19: Mac transport and late-analysis protection is now implemented; see [Mac parity verification](MAC_TRANSPORT_PARITY_VALIDATION.md). Earlier verification and implementation scope below remain historical; remaining shared Next work is latency-aligned handoff/bypass residual and tail qualification.
+
 ## Implemented scope
 
 🟢 [Done] iPhone destructive stop, new track loading and quality/recovery reload now share the final-mixer transport envelope: nominal 24 ms / 48 cosine steps followed by a silent drain of at least 12 ms or two session I/O buffers. Stop reports stopped intent immediately, but retains the active file/PCM and both quality-handoff schedules until the graph is paused at zero output. Only then are schedules, DSP state and gain references reset.

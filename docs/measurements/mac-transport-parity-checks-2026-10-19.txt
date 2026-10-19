@@ -1,0 +1,186 @@
+Mac transport and late-analysis parity — 2026-10-19
+Final ordinary and candidate runs: 47 tests each (9 suites).
+Real-controller tests use volume zero; offline PCM is not physical listening.
+
+=== Mac ordinary ===
+✔ Test "A paused track remains paused after wake" passed after 0.001 seconds.
+✔ Test "A playing track resumes from its saved position after wake" passed after 0.001 seconds.
+✔ Test "Crossfade headroom prevents normalized sources from summing above unity" passed after 0.001 seconds.
+✔ Test "Ongaku Mix falls back safely when tempo or harmony is incompatible" passed after 0.001 seconds.
+✔ Test "Preroll begins only once inside the five-second window" passed after 0.001 seconds.
+✔ Test "Crossfade duration is clamped and disabled for album playback" passed after 0.001 seconds.
+✔ Test "Rate, channel, encoding, and interleave differences require safe rebuild" passed after 0.001 seconds.
+✔ Test "Ongaku Mix aligns compatible, nearby tempos on beat boundaries" passed after 0.001 seconds.
+✔ Test "Silence policy preserves a safety margin around audible content" passed after 0.001 seconds.
+✔ Test "Crossfade uses equal-power gains" passed after 0.001 seconds.
+✔ Test "Equivalent processing formats can share one player node" passed after 0.001 seconds.
+✔ Test "The diagnostic record explains format, DSP, normalization, output, and source safety" passed after 0.001 seconds.
+✔ Test "Build condition controls activation and diagnostics" passed after 0.011 seconds.
+✔ Test "Audio analyzer detects leading and trailing silence in a PCM file" passed after 0.013 seconds.
+✔ Suite "Gapless playback planning" passed after 0.013 seconds.
+✔ Test "A 1,000-track sequential queue completes in exact order" passed after 0.288 seconds.
+✔ Test "A 1,000-track shuffle run always selects a playable non-current song" passed after 0.506 seconds.
+✔ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" passed after 2.113 seconds.
+✔ Test "Invalid output format fails instead of bypassing protection" passed after 0.001 seconds.
+✔ Test "Playback file opening failures are injectable and remain user-visible" passed after 2.126 seconds.
+✔ Test "Transition envelope multiplies the latest user volume before final protection" passed after 0.010 seconds.
+✔ Suite "Final output true-peak" passed after 2.137 seconds.
+✔ Test "A missing current file does not erase the persisted queue position" passed after 2.189 seconds.
+✔ Test "Starting a stale library entry reports its missing file" passed after 2.248 seconds.
+✔ Test "Loading and processing a real file leaves every source byte unchanged" passed after 3.842 seconds.
+✔ Suite "M4 audio quality and output milestone" passed after 3.843 seconds.
+✔ Test "Continuous changes coalesce into eight steps and settle at the latest target" passed after 3.851 seconds.
+✔ Test "Render gating, fade and drain keep sources alive until zero" passed after 3.851 seconds.
+✔ Test "OFF, restart and graph rebuild reject older queued writes" passed after 0.001 seconds.
+✔ Test "Repeated stop and superseding seek/load commit only the newest action" passed after 0.002 seconds.
+✔ Test "Disabled-only edits never rewrite unchanged audible modules" passed after 0.002 seconds.
+✔ Test "Stop cancels startup and late callbacks; render timeout remains silent" passed after 0.001 seconds.
+✔ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" passed after 0.001 seconds.
+✔ Test "Transport, user volume and bypass gains remain independent in both output paths" passed after 0.009 seconds.
+✔ Test "Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits" passed after 0.009 seconds.
+MAC_TRANSPORT_PCM candidate=false rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+✔ Test "Full-track stereo loudness survives opposite polarity and includes audio after 60 seconds" passed after 4.179 seconds.
+✔ Test "Missing or old LUFS never reuses legacy RMS as loudness" passed after 0.001 seconds.
+MAC_TRANSPORT_PCM candidate=true rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+✔ Test "A 1,000-track queue and position survive process replacement" passed after 6.264 seconds.
+✔ Suite "M1 playback parity milestone" passed after 6.264 seconds.
+✔ Test "Audio engine configuration notifications safely reach the main actor" passed after 6.278 seconds.
+✔ Suite "Playback recovery state" passed after 6.278 seconds.
+✔ Test "192kHz files use the shared effect rate and keep Space enabled" passed after 3.375 seconds.
+✔ Test "Ordinary and true-peak PCM fade/drain satisfy iPhone step and silence criteria" passed after 3.693 seconds.
+✔ Suite "Transport output continuity" passed after 7.558 seconds.
+✔ Test "Active and unexpectedly late overlaps never freeze the output muted" passed after 3.694 seconds.
+✔ Test "Stop or rebuild in either envelope phase cancels callbacks before resume" passed after 0.001 seconds.
+✔ Test "Transport becoming inaudible without an explicit cancel restores the envelope" passed after 0.001 seconds.
+✔ Suite "Effect parameter continuity" passed after 7.559 seconds.
+✔ Test "File-rate source mixer feeds audible spatial processing at every final rate" passed after 0.368 seconds.
+✔ Test "Late album analysis retains current gain; explicit changes adopt the newest revision" passed after 2.282 seconds.
+✔ Suite "Audio fidelity policy" passed after 10.207 seconds.
+✔ Test "Real controller retains sources during drain and latest pause/seek/load wins" passed after 10.286 seconds.
+✔ Test "Late track analysis survives pause/resume and changes only at new load" passed after 2.813 seconds.
+✔ Test "Incoming analysis is frozen before overlap, including repeat-one" passed after 6.412 seconds.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 3.120 seconds.
+✔ Suite "Playback transport integration" passed after 22.633 seconds.
+✔ Test run with 47 tests in 9 suites passed after 22.633 seconds.
+=== Mac true-peak candidate ===
+✔ Test "Equivalent processing formats can share one player node" passed after 0.001 seconds.
+✔ Test "Crossfade duration is clamped and disabled for album playback" passed after 0.001 seconds.
+✔ Test "Rate, channel, encoding, and interleave differences require safe rebuild" passed after 0.001 seconds.
+✔ Test "Crossfade uses equal-power gains" passed after 0.001 seconds.
+✔ Test "Preroll begins only once inside the five-second window" passed after 0.001 seconds.
+✔ Test "Crossfade headroom prevents normalized sources from summing above unity" passed after 0.001 seconds.
+✔ Test "Ongaku Mix falls back safely when tempo or harmony is incompatible" passed after 0.001 seconds.
+✔ Test "A playing track resumes from its saved position after wake" passed after 0.001 seconds.
+✔ Test "Ongaku Mix aligns compatible, nearby tempos on beat boundaries" passed after 0.001 seconds.
+✔ Test "Silence policy preserves a safety margin around audible content" passed after 0.001 seconds.
+✔ Test "A paused track remains paused after wake" passed after 0.001 seconds.
+✔ Test "The diagnostic record explains format, DSP, normalization, output, and source safety" passed after 0.001 seconds.
+✔ Test "Build condition controls activation and diagnostics" passed after 0.011 seconds.
+✔ Test "Audio analyzer detects leading and trailing silence in a PCM file" passed after 0.014 seconds.
+✔ Suite "Gapless playback planning" passed after 0.014 seconds.
+✔ Test "A missing current file does not erase the persisted queue position" passed after 0.103 seconds.
+✔ Test "Playback file opening failures are injectable and remain user-visible" passed after 0.142 seconds.
+✔ Test "Starting a stale library entry reports its missing file" passed after 0.185 seconds.
+✔ Test "A 1,000-track sequential queue completes in exact order" passed after 0.273 seconds.
+✔ Test "A 1,000-track shuffle run always selects a playable non-current song" passed after 0.501 seconds.
+✔ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" passed after 2.607 seconds.
+✔ Test "Invalid output format fails instead of bypassing protection" passed after 0.001 seconds.
+✔ Test "Transition envelope multiplies the latest user volume before final protection" passed after 0.014 seconds.
+✔ Suite "Final output true-peak" passed after 2.635 seconds.
+✔ Test "Full-track stereo loudness survives opposite polarity and includes audio after 60 seconds" passed after 5.187 seconds.
+✔ Test "Missing or old LUFS never reuses legacy RMS as loudness" passed after 0.001 seconds.
+✔ Test "Loading and processing a real file leaves every source byte unchanged" passed after 7.269 seconds.
+✔ Suite "M4 audio quality and output milestone" passed after 7.270 seconds.
+✔ Test "192kHz files use the shared effect rate and keep Space enabled" passed after 4.405 seconds.
+✔ Test "Continuous changes coalesce into eight steps and settle at the latest target" passed after 9.597 seconds.
+✔ Test "Render gating, fade and drain keep sources alive until zero" passed after 9.597 seconds.
+✔ Test "File-rate source mixer feeds audible spatial processing at every final rate" passed after 0.718 seconds.
+✔ Test "A 1,000-track queue and position survive process replacement" passed after 11.636 seconds.
+✔ Suite "M1 playback parity milestone" passed after 11.636 seconds.
+✔ Test "Audio engine configuration notifications safely reach the main actor" passed after 11.658 seconds.
+✔ Suite "Playback recovery state" passed after 11.658 seconds.
+✔ Test "OFF, restart and graph rebuild reject older queued writes" passed after 4.124 seconds.
+✔ Test "Repeated stop and superseding seek/load commit only the newest action" passed after 4.125 seconds.
+✔ Test "Disabled-only edits never rewrite unchanged audible modules" passed after 0.001 seconds.
+✔ Test "Stop cancels startup and late callbacks; render timeout remains silent" passed after 0.002 seconds.
+✔ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" passed after 0.002 seconds.
+✔ Test "Late album analysis retains current gain; explicit changes adopt the newest revision" passed after 3.466 seconds.
+✔ Suite "Audio fidelity policy" passed after 13.778 seconds.
+✔ Test "Transport, user volume and bypass gains remain independent in both output paths" passed after 0.053 seconds.
+✔ Test "Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits" passed after 0.062 seconds.
+MAC_TRANSPORT_PCM candidate=false rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+✔ Test "Ordinary and true-peak PCM fade/drain satisfy iPhone step and silence criteria" passed after 2.489 seconds.
+✔ Suite "Transport output continuity" passed after 16.267 seconds.
+✔ Test "Active and unexpectedly late overlaps never freeze the output muted" passed after 2.480 seconds.
+✔ Test "Stop or rebuild in either envelope phase cancels callbacks before resume" passed after 0.001 seconds.
+✔ Test "Transport becoming inaudible without an explicit cancel restores the envelope" passed after 0.001 seconds.
+✔ Suite "Effect parameter continuity" passed after 16.269 seconds.
+✔ Test "Real controller retains sources during drain and latest pause/seek/load wins" passed after 19.541 seconds.
+✔ Test "Late track analysis survives pause/resume and changes only at new load" passed after 7.888 seconds.
+✔ Test "Incoming analysis is frozen before overlap, including repeat-one" passed after 13.174 seconds.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 10.981 seconds.
+✔ Suite "Playback transport integration" passed after 51.585 seconds.
+✔ Test run with 47 tests in 9 suites passed after 51.586 seconds.
+=== Mac fault injection ===
+PASS: transport source retention and latest-request ownership
+PASS: rejects early transport mutation
+PASS: rejects stale transport mutation
+=== iPhone transport ===
+PASS: startup waits for render before fading
+PASS: pause intent, silent drain, position and restart
+PASS: rapid resume cancels old gains and pause without rescheduling
+PASS: stop invalidates transport callbacks before new playback
+PASS: stop retains sources through fade/drain; repeated stop coalesces and only latest session cleanup runs
+PASS: a superseding load cancels old preparation/session release and survives the old stop callbacks
+PASS: an already-stopped engine releases resources synchronously
+PASS: seek cancellation and paused seek
+PASS: latest seek wins, including immediate seek/play callers
+PASS: missing render ends in paused state
+PASS: EOF cannot override pause/seek; resume replaces an already-ended schedule
+TRANSPORT_PCM rate=44100.0 fadeIn=false maxStep=0.0003630072
+TRANSPORT_PCM rate=44100.0 fadeIn=true maxStep=0.0003629923
+TRANSPORT_PCM rate=48000.0 fadeIn=false maxStep=0.00033335388
+TRANSPORT_PCM rate=48000.0 fadeIn=true maxStep=0.00033335388
+TRANSPORT_PCM rate=96000.0 fadeIn=false maxStep=0.00016668439
+TRANSPORT_PCM rate=96000.0 fadeIn=true maxStep=0.00016669929
+PASS: 6 stock-mixer PCM fade cases
+PASS: PCM guard rejects abrupt source start/stop
+PASS: state guard rejects resource teardown before fade/drain
+=== iPhone reference ===
+PASS: preserved unmeasured reference across quiet/hot upgrades; new track resets
+PASS: preserved measured reference across quiet/hot upgrades; new track resets
+PASS: reference guard rejects gain changes caused by late analysis
+=== Mac build ===
+** BUILD SUCCEEDED **
+=== Mac Store build ===
+** BUILD SUCCEEDED **
+=== iPhone build ===
+** BUILD SUCCEEDED **
+
+PASS: EffectTransitionPolicy.swift is byte-identical on iPhone and Mac
+
+=== Final Mac SHA256 ===
+c71d95b2440d9527629192ec438810e17e96898b1abd8e2be73be2a3f6bf6d1d  Sources/OngakuDesktop/PlaybackController.swift
+d62663f072680ba98b1cfae42384846272ad53205a3240f731280582e9ad85bc  Sources/OngakuDesktop/TransportOutputEnvelope.swift
+91a3b3ae7647cc0eeaa5ae468b4b91683018b5159168214da233e67a6ed12ee0  Sources/OngakuDesktop/FinalOutputProtection.swift
+11aa2c5a5233d38e70ebe39e031a50ef848e28907e2bb0fc988d70d841fc4c20  Sources/OngakuDesktop/EffectParameterTransition.swift
+4531000145621fbfd6d3717b6028d70b8f383596a505965d20f208e3a7bd639c  Sources/OngakuDesktop/EffectTransitionPolicy.swift
+0ea4ba56a9ed531ba6d55e11ac89041b88fb3df549c50427b52649794bd8ded0  Tests/OngakuDesktopTests/TransportOutputEnvelopeTests.swift
+9ea309000ff5f2e617436b6006e288a40cad81f7e518fc319f8d9d7f38027fd9  Tests/OngakuDesktopTests/PlaybackTransportIntegrationTests.swift
+73e2b758f6bb25423e91f307873b2722892ac2573da3308f237054b4cfbab369  Tests/OngakuDesktopTests/AudioFidelityPolicyTests.swift
+b2aa8ee7ecdeab8989b5c2d86c4d6d1e1a6d803a2ba363275924a1a4386b3eed  tools/run_transport_negative_controls.sh
+3f0b5e0b37052f0075157258f79b78d79181c9965de92e89aba272aeb1a3a3f0  OngakuDesktop.xcodeproj/project.pbxproj
+
+=== iPhone parity source SHA256 ===
+4531000145621fbfd6d3717b6028d70b8f383596a505965d20f208e3a7bd639c  audio/EffectTransitionPolicy.swift
+564c9f734a6515c3471d305c4434594f4cfe7ef5fe9878fc276b6647ec427155  audio/HiResPlaybackEngine.swift
+48bc5382073aba1f460970ac8bea68e0eab0fc7556280bc7b2efc1113165ca6b  tests/TransportContinuityRegression.swift

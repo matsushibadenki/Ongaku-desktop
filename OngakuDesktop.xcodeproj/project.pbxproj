@@ -172,6 +172,8 @@
 		FA5720000000000000000000 /* PastelVUMeterScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000000 /* PastelVUMeterScale.swift */; };
 		FA5710000000000000000001 /* PastelChannelVUMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000001 /* PastelChannelVUMeter.swift */; };
 		FA5720000000000000000001 /* PastelChannelVUMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000001 /* PastelChannelVUMeter.swift */; };
+		A202610190000000000000002 /* TransportOutputEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610190000000000000001 /* TransportOutputEnvelope.swift */; };
+		A202610190000000000000003 /* TransportOutputEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610190000000000000001 /* TransportOutputEnvelope.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -286,6 +288,7 @@
 		A202610170000000000000041 /* EffectParameterTransition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/EffectParameterTransition.swift; sourceTree = SOURCE_ROOT; };
 		FA5700000000000000000000 /* PastelVUMeterScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastelVUMeterScale.swift; sourceTree = "<group>"; };
 		FA5700000000000000000001 /* PastelChannelVUMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastelChannelVUMeter.swift; sourceTree = "<group>"; };
+		A202610190000000000000001 /* TransportOutputEnvelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/TransportOutputEnvelope.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -373,6 +376,7 @@
 				A202610170000000000000012 /* TruePeakAudioUnit.mm */,
 				A202610170000000000000040 /* EffectTransitionPolicy.swift */,
 				A202610170000000000000041 /* EffectParameterTransition.swift */,
+				A202610190000000000000001 /* TransportOutputEnvelope.swift */,
 				A202610170000000000000001 /* AudioProcessingPolicy.swift */,
 				10000000000000000000005B /* AudioSignalPath.swift */,
 				10000000000000000000005C /* SocialPrivacySettings.swift */,
@@ -638,6 +642,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A202610170000000000000052 /* EffectParameterTransition.swift in Sources */,
+				A202610190000000000000002 /* TransportOutputEnvelope.swift in Sources */,
 				A202610170000000000000050 /* EffectTransitionPolicy.swift in Sources */,
 				A202610170000000000000022 /* TruePeakAudioUnit.mm in Sources */,
 				A202610170000000000000020 /* FinalOutputProtection.swift in Sources */,
@@ -733,6 +738,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A202610170000000000000053 /* EffectParameterTransition.swift in Sources */,
+				A202610190000000000000003 /* TransportOutputEnvelope.swift in Sources */,
 				A202610170000000000000051 /* EffectTransitionPolicy.swift in Sources */,
 				A202610170000000000000004 /* IntegratedLoudnessMeter.swift in Sources */,
 				A202610170000000000000002 /* AudioProcessingPolicy.swift in Sources */,
