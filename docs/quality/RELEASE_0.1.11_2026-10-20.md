@@ -10,6 +10,7 @@
 - 🟢 [Done] 報告されたCIのFatal access conflictを特定。SwiftUIグラフ破棄中の状態通知を止め、再接続後の通常通知を維持する修正を追加。修正前に失敗する回帰を含む13入力テストに成功。[原因と証拠](CI_EFFECT_RACK_TEARDOWN_2026-10-20.md)。
 - 🟢 [Done] 修正版の署名付きUniversal Archive、App Store Release、アップロード18が成功。GitHub run 39378632312では全383テスト、M3予算、Mac両構成、Sandbox検査が成功。最後の同梱iOSターゲットで測定ファイルの登録漏れを検出し、2行のターゲット登録修正後にSimulatorビルド成功。
 - ローカルの高負荷並列実行ではPlaybackTransportIntegrationTestsの再生状態確認が1件失敗した。GitHubの全383テストは成功したが、実機・高負荷の再生確認の代替とはしない。
+- 後続のdocs/feedコミットのrun 39384131607でも同じ再生状態確認が失敗。全テストを維持して実時間の再生統合suiteを別プロセスに分離した。[切り分けと検証](CI_TRANSPORT_ISOLATION_2026-10-20.md)。配布済みビルド18の実装は変更しない。
 
 ## 配布
 

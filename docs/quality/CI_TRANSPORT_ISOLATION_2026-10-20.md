@@ -24,5 +24,6 @@ The first command builds and runs every other suite. The second runs the complet
 ## Validation
 
 - The previously failing transport test passes in isolation in 4.388 seconds using the unchanged production code and assertions.
-- 🟠 [Next] Complete both local partitions and the updated GitHub quality job; record exact counts/results here.
+- 🟢 [Done] Local real-engine partition: all 11 tests pass in 62.291 seconds. Other partition: all 372 tests pass in 133.019 seconds. Together these retain all 383 tests.
+- 🟢 [Done] GitHub Xcode 26.6 [run 39385620014](https://github.com/matsushibadenki/Ongaku-desktop/actions/runs/39385620014) completes successfully: 372 tests in 261.464 seconds, all 11 real-engine tests in 120.273 seconds, M3 100,000-track budget, both Mac build variants, updater exclusion, minimum Sandbox permissions and iOS companion compilation all pass.
 - ⭕️ [Pending] Physical output-device, interruption/EOF, listening and high-load app qualification remain in the existing audio roadmap. Isolating the test runner is not proof that production audio tolerates arbitrary MainActor stalls.
