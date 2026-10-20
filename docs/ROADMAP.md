@@ -4,8 +4,9 @@
 
 - 🟢 [Done] Bump desktop 0.1.10 (16) to 0.1.11; after the reported CI crash, reserve repaired build 18 and do not submit the already uploaded build 17. Prepare EN/JA/zh-Hans release notes.
 - 🟢 [Done] Identify the CI runtime exclusivity trap in SwiftUI graph destruction: detach synchronously published scroll state into the invalidating graph. Clear native ownership silently at teardown; retain change notifications for the live/reconnected graph. The new regression fails before repair and all 13 input tests pass after repair. See [CI evidence](quality/CI_EFFECT_RACK_TEARDOWN_2026-10-20.md).
-- 🟠 [Next] Verify repaired archives, full-suite/CI results, publish signed/notarized GitHub artifacts and submit the final App Store build. See [release record](quality/RELEASE_0.1.11_2026-10-20.md).
-- ⭕️ [Pending] Export-compliance response approval, Apple review/public availability and existing physical-device qualification.
+- 🟢 [Done] Verify repaired archives and all GitHub Xcode 26.6 CI gates (run 39382386097), including 383 tests, M3 budgets, both Mac builds, Sandbox checks and the repaired iOS companion target. Publish v0.1.11 signed/notarized Universal DMG and five deltas after comparing all seven asset sizes/SHA-256 digests; update the Sparkle feed after asset publication. See [release record](quality/RELEASE_0.1.11_2026-10-20.md).
+- 🟢 [Done] Upload repaired build 18, save EN/JA/zh-Hans release information and the explicitly approved export-compliance response, and submit to App Review. Confirm Waiting for Review with automatic release after approval.
+- ⭕️ [Pending] Apple review/public availability and existing physical-device qualification.
 
 ## EQ grouping and Synth-inspired knobs — 2026-10-20
 
@@ -42,7 +43,7 @@
 
 - 🟢 [Done] Fix the [quality job failure](https://github.com/matsushibadenki/Ongaku-desktop/actions/runs/39193024718/job/117869722607): Xcode 26.6 rejected non-Sendable `AVAudioPlayerNode` captures in normal and prerolled completion callbacks. Pass `ObjectIdentifier` values across callbacks and compare identity on MainActor; retain generation, track and stopping guards. Audio nodes remain owned by the controller. The runner-capacity notice is separate from the compiler failure.
 - 🟢 [Done] On local Xcode 27.1, pass the CI `build-for-testing` command and Mac App Store Release build with fresh derived-data directories; the reported node-capture/data-race diagnostics are absent. Pass all 363 Swift tests across 40 suites, including real-controller transport, crossfade/repeat-one and stale outgoing-EOF checks. This does not claim completion of every CI step or the Xcode 26.6 run.
-- ⭕️ [Pending] Confirm the updated commit on GitHub's Xcode 26.6 runner after publication; that toolchain is unavailable locally. Physical playback/listening qualification remains Pending in the audio sections below.
+- 🟢 [Done] GitHub Xcode 26.6 run 39382386097 confirms the completion-callback concurrency repair and all compile gates. Physical playback/listening qualification remains Pending in the audio sections below.
 
 ## Effect tails and latency-change protection — 2026-10-19
 
