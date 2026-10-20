@@ -127,7 +127,8 @@ final class EffectOutputProtection {
 /// AVAudioEngine control writes and the injected scheduler must use one thread.
 final class EffectTailGate: @unchecked Sendable {
     typealias Schedule = (TimeInterval, @escaping @Sendable () -> Void) -> Void
-    static func scheduleOnMain(_ delay: TimeInterval, _ action: @escaping @Sendable () -> Void) {
+    // Enqueueing is safe from any actor; the action still executes on the main queue.
+    nonisolated static func scheduleOnMain(_ delay: TimeInterval, _ action: @escaping @Sendable () -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)
     }
     static let inputFade = 0.024

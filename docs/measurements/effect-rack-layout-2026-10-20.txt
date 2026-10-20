@@ -1,0 +1,57 @@
+Effect rack layout validation — 2026-10-20
+
+Pre-correction observations (actual SwiftUI rack / injected NSWindow events):
+- Original LazyVGrid: document heights 3176 -> 3173 and 3174 -> 3175 at 420 pt;
+  1631 -> 1634 at 900 pt.
+- Eager grid alone did not fix the mode toolbar.
+- Japanese, 900 pt: mode Picker (40,16,230,81) -> (40,16,230,33);
+  document 1656 -> 1608; clicked knob (64,211,52,52) -> (64,163,52,52).
+- Japanese, 420 pt: mode Picker (40,16,230,81) -> (40,32,230,33);
+  document 3081 -> 3065; clicked knob y=224 -> 208.
+- Simplified Chinese also failed the original Picker geometry assertion.
+- Infinite NSHostingView width probe crashed at Int(infinity) before the finite-width guard.
+
+Final changes: explicit one-line mode title + hidden native Picker label;
+fixed natural toolbar height; explanation tooltip; eager parameter rows;
+finite layout width handling. Existing event routing preserved.
+
+Final command: swift test --filter EffectRackInputTests
+Configurations: 3 languages x 2 modes x 2 widths; 36 position cases;
+108 knob clicks + 72 switch clicks. No audio playback, no physical HID injection.
+
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Effect rack input ownership" started.
+◇ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" started.
+✔ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" passed after 0.089 seconds.
+◇ Test "Wheel scroll over a control reaches the scroll view, never the control" started.
+✔ Test "Wheel scroll over a control reaches the scroll view, never the control" passed after 0.004 seconds.
+◇ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" started.
+✔ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" passed after 0.037 seconds.
+◇ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" started.
+✔ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" passed after 0.279 seconds.
+◇ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" started.
+✔ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" passed after 0.018 seconds.
+◇ Test "Two-finger scroll can start on a partially clipped control to reveal it" started.
+✔ Test "Two-finger scroll can start on a partially clipped control to reveal it" passed after 0.008 seconds.
+◇ Test "Momentum produced during a control drag cannot move the rack after mouse-up" started.
+✔ Test "Momentum produced during a control drag cannot move the rack after mouse-up" passed after 0.037 seconds.
+◇ Test "Detaching the rack releases ownership and position protection" started.
+✔ Test "Detaching the rack releases ownership and position protection" passed after 0.007 seconds.
+◇ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" started.
+✔ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" passed after 1.200 seconds.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 51.566 seconds.
+◇ Test "SwiftUI region connects to the actual ancestor scroll view" started.
+✔ Test "SwiftUI region connects to the actual ancestor scroll view" passed after 0.189 seconds.
+✔ Suite "Effect rack input ownership" passed after 53.440 seconds.
+✔ Test run with 11 tests in 1 suite passed after 53.440 seconds.
+
+Xcode Debug app build:
+xcodebuild -project OngakuDesktop.xcodeproj -scheme OngakuDesktop \
+  -configuration Debug -destination platform=macOS \
+  -derivedDataPath /private/tmp/OngakuDesktopInputBuild CODE_SIGNING_ALLOWED=NO build
+** BUILD SUCCEEDED **
+
+Physical trackpad / affected-user Mac confirmation: Pending.

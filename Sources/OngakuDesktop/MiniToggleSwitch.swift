@@ -5,6 +5,7 @@
 import SwiftUI
 
 struct MiniToggleSwitch: View {
+    @EnvironmentObject private var input: EffectRackInputRouter
     @Binding var isOn: Bool
     let label: String
     let valueText: String
@@ -16,7 +17,7 @@ struct MiniToggleSwitch: View {
     var body: some View {
         VStack(spacing: 5) {
             Button {
-                isOn.toggle()
+                if !input.isScrolling { isOn.toggle() }
             } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
@@ -62,7 +63,10 @@ struct MiniToggleSwitch: View {
             }
             .buttonStyle(HardwareToggleButtonStyle())
             .focused($isFocused)
-            .onHover { isHovering = $0 }
+            .onHover { isHovering = $0 && !input.isScrolling }
+            .onChange(of: input.isScrolling) { _, scrolling in
+                if scrolling { isHovering = false }
+            }
 
             VStack(spacing: 2) {
                 Text(label)
@@ -81,17 +85,19 @@ struct MiniToggleSwitch: View {
             .frame(minHeight: 26, alignment: .top)
         }
         .frame(width: 84)
+        .effectRackControl()
         .opacity(isEnabled ? 1 : 0.48)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
         .accessibilityValue(valueText)
         .accessibilityHint(L10n.text("effects.toggleHint"))
         .accessibilityAddTraits(isOn ? .isSelected : [])
-        .accessibilityAction { if isEnabled { isOn.toggle() } }
+        .accessibilityAction { if isEnabled && !input.isScrolling { isOn.toggle() } }
     }
 }
 
 struct SquareLeverToggle: View {
+    @EnvironmentObject private var input: EffectRackInputRouter
     @Binding var isOn: Bool
     let accessibilityLabel: String
 
@@ -101,7 +107,7 @@ struct SquareLeverToggle: View {
 
     var body: some View {
         Button {
-            isOn.toggle()
+            if !input.isScrolling { isOn.toggle() }
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
@@ -128,8 +134,12 @@ struct SquareLeverToggle: View {
             .scaleEffect(isHovering ? 1.025 : 1)
         }
         .buttonStyle(HardwareToggleButtonStyle())
+        .effectRackControl()
         .focused($isFocused)
-        .onHover { isHovering = $0 }
+        .onHover { isHovering = $0 && !input.isScrolling }
+        .onChange(of: input.isScrolling) { _, scrolling in
+            if scrolling { isHovering = false }
+        }
         .opacity(isEnabled ? 1 : 0.48)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(L10n.text(isOn ? "effects.on" : "effects.off"))

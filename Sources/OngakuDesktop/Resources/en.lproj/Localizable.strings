@@ -1249,3 +1249,11 @@
 "settings.appearance.purple" = "Purple";
 "settings.appearance.green" = "Green";
 "settings.appearance.beige" = "Beige";
+
+// Equalizer parameter sections
+"effects.eqGroup.filter" = "Filter";
+"effects.eqGroup.low" = "Low · LF";
+"effects.eqGroup.lowMid" = "Low mid · LMF";
+"effects.eqGroup.highMid" = "High mid · HMF";
+"effects.eqGroup.high" = "High · HF";
+"effects.eqGroup.output" = "Output";

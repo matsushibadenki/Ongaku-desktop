@@ -75,16 +75,18 @@ enum AppTheme {
     @MainActor static var prominentInk: Color { canvas }
     static let orangeStatus = secondaryInk
     static let playerControl = ink
-    static let surfaceHighlight = adaptive(
+    @MainActor static var surfaceHighlight: Color { appearance.pastelHighlightColor ?? baseSurfaceHighlight }
+    private static let baseSurfaceHighlight = adaptive(
         light: ThemeRGB(red: 1, green: 1, blue: 1),
         dark: ThemeRGB(red: 0.180, green: 0.180, blue: 0.180)
     )
     static let contactShadow = Color.black.opacity(0.16)
     @MainActor static var metal: LinearGradient {
-        LinearGradient(colors: [surfaceHighlight, surface, canvas],
-                       startPoint: .topLeading, endPoint: .bottomTrailing)
+        let colors = appearance.pastelColor.map { [surfaceHighlight, $0] }
+            ?? [surfaceHighlight, surface, canvas]
+        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
     }
-    static var raisedEdge: LinearGradient {
+    @MainActor static var raisedEdge: LinearGradient {
         LinearGradient(colors: [surfaceHighlight, rule],
                        startPoint: .topLeading, endPoint: .bottomTrailing)
     }

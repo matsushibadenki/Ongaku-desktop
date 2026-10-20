@@ -1034,6 +1034,10 @@ final class PlaybackController: ObservableObject {
     private var audioFile: AVAudioFile?
     private var scheduledStartFrame: AVAudioFramePosition = 0
     private var playbackGeneration = UUID()
+    // A gapless chain shares a transport generation, node and sometimes track
+    // ID (repeat-one). Every scheduled segment still needs its own EOF owner.
+    private var activePlaybackScheduleID = UUID()
+    private var activePlaybackEnded = false
     private var playbackQueue: [Track] = []
     private var queueUndoStack: [[Track]] = []
     private var lastPublishedPositionBucket = -1
@@ -1075,6 +1079,8 @@ final class PlaybackController: ObservableObject {
         let track: Track
         let file: AVAudioFile
         let generation: UUID
+        let scheduleID: UUID
+        var hasReachedEnd = false
         let nodeStartSampleTime: AVAudioFramePosition
         let playbackNode: AVAudioPlayerNode
         let crossfadeDuration: TimeInterval
@@ -1201,7 +1207,8 @@ final class PlaybackController: ObservableObject {
         isPlaying = false
         performTransportChange { [weak self] in
             guard let self, let file = self.audioFile else { return }
-            self.schedule(fromFrame: min(AVAudioFramePosition(position * file.processingFormat.sampleRate), file.length))
+            self.schedule(fromFrame: min(AVAudioFramePosition(position * file.processingFormat.sampleRate), file.length),
+                          reportsEmptyEnd: false)
             self.engine.pause()
             self.clearAudioVisualization()
             self.publishQueueState(force: true)
@@ -1779,11 +1786,16 @@ final class PlaybackController: ObservableObject {
             position: isPlaying ? currentElapsed() : elapsed,
             shouldResume: isPlaying
         )
+        let generation = playbackGeneration
+        let scheduleID = activePlaybackScheduleID
         recoveryTask?.cancel()
         recoveryTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(300))
-            guard !Task.isCancelled else { return }
-            self?.recoverAudioEngine(
+            guard !Task.isCancelled, let self,
+                  self.playbackGeneration == generation,
+                  self.activePlaybackScheduleID == scheduleID,
+                  !self.activePlaybackEnded else { return }
+            self.recoverAudioEngine(
                 position: request.position,
                 shouldResume: request.shouldResume
             )
@@ -1899,18 +1911,27 @@ final class PlaybackController: ObservableObject {
         lastMeterUpdateTime = nil
     }
 
-    private func schedule(fromFrame frame: AVAudioFramePosition) {
+    private func schedule(fromFrame frame: AVAudioFramePosition, reportsEmptyEnd: Bool = true) {
         guard let audioFile, let currentTrack else { return }
         stopPlayerNodes()
         playbackGeneration = UUID()
         let generation = playbackGeneration
-        let scheduledNode = playerNode
+        activePlaybackScheduleID = UUID()
+        activePlaybackEnded = false
+        let scheduleID = activePlaybackScheduleID
+        // Capture identity only: AVAudioPlayerNode must stay on MainActor.
+        let scheduledNodeID = ObjectIdentifier(playerNode)
         scheduledStartFrame = frame
         activeTrackNodeStartSampleTime = 0
         prerolledTrack = nil
         let remaining = max(0, audioFile.length - frame)
         guard remaining > 0 else {
-            didFinishPlaying(generation: generation, finishedTrackID: currentTrack.id, finishedNode: scheduledNode)
+            // A pause can reach EOF during its silent drain. Preparing that
+            // paused position must not turn the user's pause into autoplay.
+            if reportsEmptyEnd {
+                didFinishPlaying(generation: generation, scheduleID: scheduleID,
+                                 finishedTrackID: currentTrack.id, finishedNodeID: scheduledNodeID)
+            }
             return
         }
         let frameCount = AVAudioFrameCount(min(remaining, AVAudioFramePosition(UInt32.max)))
@@ -1925,8 +1946,9 @@ final class PlaybackController: ObservableObject {
             Task { @MainActor in
                 self?.didFinishPlaying(
                     generation: generation,
+                    scheduleID: scheduleID,
                     finishedTrackID: currentTrack.id,
-                    finishedNode: scheduledNode
+                    finishedNodeID: scheduledNodeID
                 )
             }
         }
@@ -1944,10 +1966,23 @@ final class PlaybackController: ObservableObject {
         return min(Double(totalFrames) / audioFile.processingFormat.sampleRate, duration)
     }
 
-    private func didFinishPlaying(generation: UUID, finishedTrackID: Track.ID, finishedNode: AVAudioPlayerNode) {
-        guard !transportEnvelope.isStopping, generation == playbackGeneration,
-              finishedNode === playerNode,
+    // Internal callback boundary also permits deterministic delivery-order tests.
+    func didFinishPlaying(generation: UUID, scheduleID: UUID,
+                          finishedTrackID: Track.ID, finishedNodeID: ObjectIdentifier) {
+        guard !transportEnvelope.isStopping, generation == playbackGeneration else { return }
+        if let prepared = prerolledTrack,
+           prepared.scheduleID == scheduleID, prepared.track.id == finishedTrackID,
+           ObjectIdentifier(prepared.playbackNode) == finishedNodeID {
+            // MainActor delivery can lag behind rendering. Keep a short
+            // incoming segment's EOF until it becomes the current segment.
+            prerolledTrack?.hasReachedEnd = true
+            return
+        }
+        guard scheduleID == activePlaybackScheduleID, !activePlaybackEnded,
+              finishedNodeID == ObjectIdentifier(playerNode),
               currentTrack?.id == finishedTrackID else { return }
+        activePlaybackEnded = true
+        recoveryTask?.cancel(); recoveryTask = nil
         finishPlaybackSession(kind: .completed, position: duration)
 
         if let prepared = prerolledTrack,
@@ -2111,10 +2146,12 @@ final class PlaybackController: ObservableObject {
         }
 
         let incomingReference = captureNormalizationReference(for: nextTrack)
+        let scheduleID = UUID()
         prerolledTrack = PrerolledTrack(
             track: nextTrack,
             file: nextFile,
             generation: generation,
+            scheduleID: scheduleID,
             nodeStartSampleTime: transitionPlan.crossfadeDuration > 0 ? 0 : nodeStartSampleTime,
             playbackNode: targetNode,
             crossfadeDuration: transitionPlan.crossfadeDuration,
@@ -2123,6 +2160,7 @@ final class PlaybackController: ObservableObject {
             outgoingTransitionPosition: transitionPlan.outgoingEndPosition,
             normalizationReference: incomingReference
         )
+        let targetNodeID = ObjectIdentifier(targetNode)
         targetNode.scheduleSegment(
             nextFile,
             startingFrame: nextStartFrame,
@@ -2133,8 +2171,9 @@ final class PlaybackController: ObservableObject {
             Task { @MainActor in
                 self?.didFinishPlaying(
                     generation: generation,
+                    scheduleID: scheduleID,
                     finishedTrackID: nextTrack.id,
-                    finishedNode: targetNode
+                    finishedNodeID: targetNodeID
                 )
             }
         }
@@ -2145,6 +2184,9 @@ final class PlaybackController: ObservableObject {
     }
 
     private func advanceToPrerolledTrack(_ prepared: PrerolledTrack) {
+        recoveryTask?.cancel(); recoveryTask = nil
+        activePlaybackScheduleID = prepared.scheduleID
+        activePlaybackEnded = false
         stopCrossfadeTimer()
         let outgoingNode = playerNode
         let changesPlayerNode = prepared.playbackNode !== outgoingNode
@@ -2169,7 +2211,13 @@ final class PlaybackController: ObservableObject {
         beginPlaybackSessionIfNeeded()
         publishQueueState(force: true)
         logSignalPath(reason: "track-transition")
-        prepareNextTrackIfNeeded()
+        if prepared.hasReachedEnd {
+            didFinishPlaying(generation: prepared.generation, scheduleID: prepared.scheduleID,
+                             finishedTrackID: prepared.track.id,
+                             finishedNodeID: ObjectIdentifier(prepared.playbackNode))
+        } else {
+            prepareNextTrackIfNeeded()
+        }
     }
 
     private func performTransportChange(_ completion: @escaping () -> Void) {

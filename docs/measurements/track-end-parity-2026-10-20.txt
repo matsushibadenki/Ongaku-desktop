@@ -1,0 +1,96 @@
+Track-end ownership parity — 2026-10-20 JST
+Xcode 27.1, development Mac arm64. Muted generated local CAF fixtures.
+Baseline failures below are expected and preceded the behavior repair.
+
+Mac baseline before behavior fix
+✘ Test "An incoming EOF delivered before outgoing EOF is retained" recorded an issue at TrackEndContinuityTests.swift:87:9: Expectation failed: !player.isPlaying
+✘ Test "A delayed configuration recovery cannot rewind the next gapless song" recorded an issue at TrackEndContinuityTests.swift:125:9: Expectation failed: try field(player, "playbackGeneration", UUID.self) == promoted.generation
+✘ Test "A delayed configuration recovery cannot rewind the next gapless song" recorded an issue at TrackEndContinuityTests.swift:127:9: Expectation failed: player.elapsed < 1
+✘ Test run with 3 tests in 1 suite failed after 10.294 seconds with 3 issues.
+
+Mac additional baseline before behavior fix
+✘ Test "Repeated same-track schedules cannot consume an outgoing duplicate" recorded an issue at TrackEndContinuityTests.swift:101:9: Expectation failed: try field(player, "activeTrackNodeStartSampleTime", AVAudioFramePosition.self) == promotedStart
+✘ Test "Pause at a queued EOF cannot start the next song" recorded an issue at TrackEndContinuityTests.swift:120:9: Expectation failed: player.currentTrack?.id == tracks[0].id
+✘ Test run with 2 tests in 1 suite failed after 8.357 seconds with 2 issues.
+
+Mac full Swift test run after fix (corrected serialized fixture)
+✔ Test "M3U resolves relative paths and previews duplicates and missing files" passed after 0.170 seconds.
+✔ Test "Player transport starts a newly selected track instead of resuming the loaded track" passed after 0.170 seconds.
+✔ Test "Managed duplicate files are recoverable while external references remain untouched" passed after 0.171 seconds.
+✔ Test "Retry after a durable commit does not create a duplicate" passed after 0.171 seconds.
+✔ Test "Import copies data and rejects duplicate content" passed after 0.192 seconds.
+✔ Test "Cached duplicate keys preserve fresh analysis across all metadata changes" passed after 0.003 seconds.
+✔ Test "MusicKit transport failures can be injected without network playback" passed after 0.364 seconds.
+✔ Test "Local copy index follows library replacement and duplicate hashes" passed after 0.619 seconds.
+✔ Test "Resolving duplicates transfers catalog references without deleting files" passed after 80.183 seconds.
+✔ Test "Production desktop meters and transport render in every color" passed after 66.151 seconds.
+✔ Test "Playlist membership preserves order, ignores duplicates, removes, and persists" passed after 80.257 seconds.
+✔ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" passed after 2.423 seconds.
+✔ Test "Playlist create, edit, artwork, duplicate, delete, and restart are transactional" passed after 83.221 seconds.
+✔ Test "Active and unexpectedly late overlaps never freeze the output muted" passed after 3.326 seconds.
+✔ Test "Changed latency drains at zero and rejects stale restore after transport" passed after 0.025 seconds.
+✔ Test "Late track analysis survives pause/resume and changes only at new load" passed after 4.352 seconds.
+✔ Test "Incoming analysis is frozen before overlap, including repeat-one" passed after 7.949 seconds.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 3.864 seconds.
+✔ Test "An incoming EOF delivered before outgoing EOF is retained" with 2 test cases passed after 5.050 seconds.
+✔ Test "Repeated same-track schedules cannot consume an outgoing duplicate" passed after 2.508 seconds.
+✔ Test "Pause at a queued EOF cannot start the next song" passed after 2.790 seconds.
+✔ Test "A delayed configuration recovery cannot rewind the next gapless song" passed after 3.989 seconds.
+✔ Test "Deferred and obsolete EOF cannot override pause, resume or selection" passed after 4.763 seconds.
+✔ Test "Rejected preroll preserves the active EOF and falls back to a fresh load" passed after 4.347 seconds.
+✔ Test "Real 10 ms tails reach next, repeat-one, queue/album wrap and final stop" passed after 19.877 seconds.
+✔ Test run with 370 tests in 40 suites passed after 148.179 seconds.
+
+Mac Debug build-for-testing
+** TEST BUILD SUCCEEDED **
+
+Mac App Store Release build
+** BUILD SUCCEEDED **
+
+iPhone prepared EOF regression
+PASS: rejected handoff preserves audible prepared EOF exactly once, invalidTail=false
+PASS: rejected handoff preserves audible prepared EOF exactly once, invalidTail=true
+PASS: rejected candidate cannot end a reused generation; successful handoff accepts only incoming EOF
+PASS: negative control rejects the original global handoff callback token
+
+iPhone recovered queue regression
+PASS: recovered EOF mode=off last=false reaches correct queue/repeat action
+PASS: recovered EOF mode=off last=true reaches correct queue/repeat action
+PASS: recovered EOF mode=singleTrack last=false reaches correct queue/repeat action
+PASS: recovered EOF mode=singleTrack last=true reaches correct queue/repeat action
+PASS: recovered EOF mode=album last=false reaches correct queue/repeat action
+PASS: recovered EOF mode=album last=true reaches correct queue/repeat action
+PASS: retained EOF survives both recovery owners and stale UI; schedule identity rejects duplicates without swallowing short tracks
+PASS: 10 recovered EOF queue/intent cases; stale completions cannot select a song
+PASS: negative control rejects the original stranded-seek state
+
+iPhone recovery regression
+PASS: foreground retains pre-refresh playback intent and requests recovery for stopped I/O
+PASS: stalled render cannot keep the playing button despite running engine/node flags
+PASS: missing interruption end permits a guarded foreground retry without asserting playback
+PASS: other audio preserves the interruption; a subsequent free foreground can retry
+PASS: user pause and changed track/pause generations reject foreground auto-resume
+PASS: healthy local playback and Music-owned playback retain their existing ownership
+PASS: production recovery confirms progress, clears pending intent and restores playing UI
+PASS: natural EOF during recovery confirmation is delivered once after recovery releases ownership
+PASS: unexpected-stop recovery releases ownership before delivering short-tail EOF
+PASS: exhausted progress recovery stays paused despite running flags and preserves later retry intent
+PASS: recovery rejects old render position and confirms fresh advancing source frames
+PASS: accepted short-tail EOF confirms recovery, but a newer pause still cancels it
+PASS: cancelled and superseded progress checks cannot confirm a newer playback request
+PASS: negative control rejects refresh before intent capture
+PASS: negative control rejects discarded EOF during recovery
+
+Mac existing true-peak candidate: serialized real-controller integration suite
+✔ Test "Real controller retains sources during drain and latest pause/seek/load wins" passed after 11.396 seconds.
+✔ Test "Late track analysis survives pause/resume and changes only at new load" passed after 11.202 seconds.
+✔ Test "Incoming analysis is frozen before overlap, including repeat-one" passed after 16.815 seconds.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 11.120 seconds.
+✔ Test "An incoming EOF delivered before outgoing EOF is retained" with 2 test cases passed after 14.023 seconds.
+✔ Test "Repeated same-track schedules cannot consume an outgoing duplicate" passed after 7.168 seconds.
+✔ Test "Pause at a queued EOF cannot start the next song" passed after 8.133 seconds.
+✔ Test "A delayed configuration recovery cannot rewind the next gapless song" passed after 8.926 seconds.
+✔ Test "Deferred and obsolete EOF cannot override pause, resume or selection" passed after 14.438 seconds.
+✔ Test "Rejected preroll preserves the active EOF and falls back to a fresh load" passed after 9.542 seconds.
+✔ Test "Real 10 ms tails reach next, repeat-one, queue/album wrap and final stop" passed after 61.892 seconds.
+✔ Test run with 11 tests in 1 suite passed after 174.662 seconds.

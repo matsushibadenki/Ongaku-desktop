@@ -1249,3 +1249,11 @@
 "settings.appearance.purple" = "パープル";
 "settings.appearance.green" = "グリーン";
 "settings.appearance.beige" = "ベージュ";
+
+// Equalizer parameter sections
+"effects.eqGroup.filter" = "フィルター";
+"effects.eqGroup.low" = "低域 · LF";
+"effects.eqGroup.lowMid" = "低中域 · LMF";
+"effects.eqGroup.highMid" = "高中域 · HMF";
+"effects.eqGroup.high" = "高域 · HF";
+"effects.eqGroup.output" = "出力";

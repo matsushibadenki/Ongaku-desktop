@@ -1,0 +1,11 @@
+Pastel gradient: opaque sRGB midpoint (white + theme) / 2 -> original theme.
+Xcode Debug: BUILD SUCCEEDED.
+
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Effect rack input ownership" started.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 55.626 seconds.
+✔ Suite "Effect rack input ownership" passed after 55.626 seconds.
+✔ Test run with 1 test in 1 suite passed after 55.626 seconds.

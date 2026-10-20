@@ -1249,3 +1249,11 @@
 "settings.appearance.purple" = "紫色";
 "settings.appearance.green" = "绿色";
 "settings.appearance.beige" = "米色";
+
+// Equalizer parameter sections
+"effects.eqGroup.filter" = "滤波器";
+"effects.eqGroup.low" = "低频 · LF";
+"effects.eqGroup.lowMid" = "中低频 · LMF";
+"effects.eqGroup.highMid" = "中高频 · HMF";
+"effects.eqGroup.high" = "高频 · HF";
+"effects.eqGroup.output" = "输出";

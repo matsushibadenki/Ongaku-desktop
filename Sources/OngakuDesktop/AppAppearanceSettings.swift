@@ -47,6 +47,15 @@ enum AppAppearance: String, CaseIterable, Identifiable {
         }
         return values.map(Self.color)
     }
+    /// Opaque midpoint between white and the theme, retaining hue in highlights.
+    var pastelHighlightColor: Color? {
+        guard let hex = pastelHex else { return nil }
+        return Color(.sRGB,
+                     red: (1 + Double((hex >> 16) & 255) / 255) / 2,
+                     green: (1 + Double((hex >> 8) & 255) / 255) / 2,
+                     blue: (1 + Double(hex & 255) / 255) / 2, opacity: 1)
+    }
+
     var pastelColor: Color? { pastelHex.map(Self.color) }
     var accentColor: Color? { accentHex.map(Self.color) }
     private static func color(_ hex: UInt32) -> Color {

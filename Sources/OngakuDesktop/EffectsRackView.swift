@@ -8,6 +8,7 @@ import SwiftUI
 struct EffectsRackView: View {
     @EnvironmentObject private var player: PlaybackController
     @Binding var selectedTab: AudioEffectPageTab
+    @StateObject private var input = EffectRackInputRouter()
 
     private var visibleKinds: [RealtimeAudioEffectKind] {
         let allowed = AudioEffectModuleRegistry.activeKinds(for: selectedTab)
@@ -42,7 +43,9 @@ struct EffectsRackView: View {
                 .bottom,
                 selectedTab == .pro ? AppTheme.bottomPlayerClearance : AppTheme.spaceLG
             )
+            .effectRackViewport(input)
         }
+        .environmentObject(input)
         .onAppear {
             selectedTab = player.effectsBypassed ? .off : .basic
         }
@@ -53,18 +56,35 @@ struct EffectsRackView: View {
 
     private var rackToolbar: some View {
         HStack(spacing: AppTheme.spaceMD) {
-            Picker(L10n.text("effects.mode"), selection: $selectedTab) {
-                ForEach(AudioEffectPageTab.allCases) { tab in
-                    Text(tab.title).tag(tab)
+            // A segmented Picker's native label can change its wrapping height
+            // during updates. Lay out the title separately from the native control.
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text(L10n.text("effects.mode"))
+                        .font(.caption)
+                        .lineLimit(1)
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(AppTheme.secondaryInk)
+                        .help(explanation)
+                        .accessibilityLabel(explanation)
                 }
-            }
-            .pickerStyle(.segmented)
-            .frame(width: 230)
+                .fixedSize()
 
-            Text(explanation)
-                .font(.callout)
-                .foregroundStyle(AppTheme.secondaryInk)
-                .lineLimit(2)
+                Picker(L10n.text("effects.mode"), selection: Binding(
+                    get: { selectedTab },
+                    set: { if !input.isScrolling { selectedTab = $0 } }
+                )) {
+                    ForEach(AudioEffectPageTab.allCases) { tab in
+                        Text(tab.title).tag(tab)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 230)
+                .fixedSize(horizontal: false, vertical: true)
+                .effectRackControl()
+            }
+            .fixedSize()
 
             Spacer(minLength: AppTheme.spaceMD)
 
@@ -74,7 +94,10 @@ struct EffectsRackView: View {
             )
             .font(.caption.monospacedDigit())
             .foregroundStyle(countSummary.enabled > 0 ? AppTheme.good : AppTheme.secondaryInk)
+            .lineLimit(1)
+            .fixedSize()
         }
+        .fixedSize(horizontal: false, vertical: true)
         .padding(AppTheme.spaceMD)
         .ongakuPanel()
     }
@@ -116,7 +139,10 @@ private struct MasonryEffectLayout: Layout {
         subviews: Subviews,
         cache: inout ()
     ) -> CGSize {
-        let width = proposal.width ?? minimumColumnWidth
+        // AppKit probes the hosting view with an unbounded width when calculating
+        // window size limits. Do not convert that proposal to an integer column count.
+        let proposedWidth = proposal.width ?? minimumColumnWidth
+        let width = proposedWidth.isFinite ? max(0, proposedWidth) : minimumColumnWidth
         let result = arrangement(width: width, subviews: subviews)
         return CGSize(width: width, height: result.height)
     }
@@ -139,10 +165,10 @@ private struct MasonryEffectLayout: Layout {
     }
 
     private func arrangement(width: CGFloat, subviews: Subviews) -> Arrangement {
-        let columnCount = max(
-            1,
-            Int((width + spacing) / (minimumColumnWidth + spacing))
-        )
+        let columnCount = Int(min(
+            CGFloat(max(1, subviews.count)),
+            max(1, (width + spacing) / (minimumColumnWidth + spacing))
+        ))
         let availableColumnWidth = (
             width - (CGFloat(columnCount - 1) * spacing)
         ) / CGFloat(columnCount)
@@ -178,7 +204,63 @@ private struct MasonryEffectLayout: Layout {
     }
 }
 
+/// These small grids must report their complete height to the masonry layout.
+/// LazyVGrid estimates offscreen rows; re-estimation during a parameter edit can
+/// change the document height and move cards underneath the pointer.
+private struct EffectParameterLayout: Layout {
+    let horizontalSpacing: CGFloat
+    let verticalSpacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = arrangement(width: proposal.width, subviews: subviews)
+        return CGSize(width: result.width, height: result.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrangement(width: bounds.width, subviews: subviews)
+        for (index, subview) in subviews.enumerated() {
+            subview.place(
+                at: CGPoint(x: bounds.minX + result.origins[index].x, y: bounds.minY + result.origins[index].y),
+                anchor: .topLeading,
+                proposal: ProposedViewSize(width: result.cellWidth, height: nil)
+            )
+        }
+    }
+
+    private func arrangement(width proposedWidth: CGFloat?, subviews: Subviews) -> Arrangement {
+        let proposed = proposedWidth ?? 84
+        let width = proposed.isFinite ? max(0, proposed) : 84
+        let count = Int(min(
+            CGFloat(max(1, subviews.count)),
+            max(1, (width + horizontalSpacing) / (84 + horizontalSpacing))
+        ))
+        let cellWidth = min(92, max(0,
+            (width - CGFloat(count - 1) * horizontalSpacing) / CGFloat(count)
+        ))
+        var origins: [CGPoint] = []
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        for (index, subview) in subviews.enumerated() {
+            if index > 0 && index.isMultiple(of: count) {
+                y += rowHeight + verticalSpacing
+                rowHeight = 0
+            }
+            origins.append(CGPoint(x: CGFloat(index % count) * (cellWidth + horizontalSpacing), y: y))
+            rowHeight = max(rowHeight, subview.sizeThatFits(ProposedViewSize(width: cellWidth, height: nil)).height)
+        }
+        return Arrangement(width: width, cellWidth: cellWidth, origins: origins, height: y + rowHeight)
+    }
+
+    private struct Arrangement {
+        let width: CGFloat
+        let cellWidth: CGFloat
+        let origins: [CGPoint]
+        let height: CGFloat
+    }
+}
+
 private struct EffectModuleCard: View {
+    @EnvironmentObject private var input: EffectRackInputRouter
     @EnvironmentObject private var player: PlaybackController
     let kind: RealtimeAudioEffectKind
 
@@ -192,33 +274,24 @@ private struct EffectModuleCard: View {
 
             Divider().overlay(AppTheme.rule)
 
-            LazyVGrid(
-                columns: [GridItem(.adaptive(minimum: 84, maximum: 92), spacing: AppTheme.spaceSM)],
-                alignment: .leading,
-                spacing: AppTheme.spaceMD
-            ) {
-                ForEach(kind.parameterDefinitions, id: \.key) { definition in
-                    if isDiscrete(definition) {
-                        MiniToggleSwitch(
-                            isOn: binaryBinding(definition),
-                            label: definition.name,
-                            valueText: displayValue(for: definition)
-                        )
-                        .disabled(!setting.isEnabled)
-                    } else {
-                        RotaryKnob(
-                            value: parameterBinding(definition),
-                            range: definition.range,
-                            defaultValue: definition.defaultValue,
-                            label: definition.name,
-                            valueText: displayValue(for: definition)
-                        )
-                        .disabled(!setting.isEnabled)
+            if kind == .equalizer {
+                ForEach(EqualizerParameterSection.all) { section in
+                    VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                        HStack(spacing: AppTheme.spaceXS) {
+                            Text(section.title)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppTheme.secondaryInk)
+                                .fixedSize()
+                            Rectangle()
+                                .fill(AppTheme.rule)
+                                .frame(height: 1)
+                        }
+                        parameterControls(section.parameters)
                     }
                 }
+            } else {
+                parameterControls(kind.parameterDefinitions)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, AppTheme.spaceXS)
         }
         .padding(AppTheme.spaceMD)
         .ongakuPanel()
@@ -226,6 +299,35 @@ private struct EffectModuleCard: View {
             RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
                 .stroke(setting.isEnabled ? AppTheme.accent.opacity(0.42) : AppTheme.rule.opacity(0.55), lineWidth: 1)
         }
+    }
+
+    private func parameterControls(_ definitions: [EffectParameterDefinition]) -> some View {
+        EffectParameterLayout(
+            horizontalSpacing: kind == .equalizer ? AppTheme.spaceXS : AppTheme.spaceSM,
+            verticalSpacing: AppTheme.spaceMD
+        ) {
+            ForEach(definitions, id: \.key) { definition in
+                if isDiscrete(definition) {
+                    MiniToggleSwitch(
+                        isOn: binaryBinding(definition),
+                        label: definition.name,
+                        valueText: displayValue(for: definition)
+                    )
+                    .disabled(!setting.isEnabled)
+                } else {
+                    RotaryKnob(
+                        value: parameterBinding(definition),
+                        range: definition.range,
+                        defaultValue: definition.defaultValue,
+                        label: definition.name,
+                        valueText: displayValue(for: definition)
+                    )
+                    .disabled(!setting.isEnabled)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, AppTheme.spaceXS)
     }
 
     private var header: some View {
@@ -248,6 +350,7 @@ private struct EffectModuleCard: View {
             Spacer(minLength: AppTheme.spaceSM)
 
             Button {
+                guard !input.isScrolling else { return }
                 player.resetEffect(kind)
             } label: {
                 Image(systemName: "arrow.counterclockwise")
@@ -255,11 +358,12 @@ private struct EffectModuleCard: View {
             .buttonStyle(.plain)
             .foregroundStyle(AppTheme.secondaryInk)
             .help(L10n.text("effects.reset"))
+            .effectRackControl()
 
             SquareLeverToggle(
                 isOn: Binding(
                     get: { setting.isEnabled },
-                    set: { player.setEffectEnabled($0, for: kind) }
+                    set: { if !input.isScrolling { player.setEffectEnabled($0, for: kind) } }
                 ),
                 accessibilityLabel: kind.displayName
             )
@@ -270,14 +374,14 @@ private struct EffectModuleCard: View {
     private func parameterBinding(_ definition: EffectParameterDefinition) -> Binding<Double> {
         Binding(
             get: { setting.parameters[definition.key] ?? definition.defaultValue },
-            set: { player.setEffectParameter($0, key: definition.key, for: kind) }
+            set: { if !input.isScrolling { player.setEffectParameter($0, key: definition.key, for: kind) } }
         )
     }
 
     private func binaryBinding(_ definition: EffectParameterDefinition) -> Binding<Bool> {
         Binding(
             get: { (setting.parameters[definition.key] ?? definition.defaultValue) >= 0.5 },
-            set: { player.setEffectParameter($0 ? 1 : 0, key: definition.key, for: kind) }
+            set: { if !input.isScrolling { player.setEffectParameter($0 ? 1 : 0, key: definition.key, for: kind) } }
         )
     }
 
@@ -299,5 +403,22 @@ private struct EffectModuleCard: View {
             return String(format: "%+.0f%%", (value * 2 - 1) * 100)
         }
         return String(format: "%.0f%%", value * 100)
+    }
+}
+
+/// Presentation sections use the existing DSP parameter groups and key order.
+struct EqualizerParameterSection: Identifiable {
+    let id: String
+    let title: String
+    let parameters: [EffectParameterDefinition]
+
+    static var all: [Self] {
+        let definitions = RealtimeAudioEffectKind.equalizer.parameterDefinitions
+        let groups = [("FILTER", "filter"), ("LOW BAND", "low"), ("LMF", "lowMid"),
+                      ("HMF", "highMid"), ("HIGH BAND", "high"), ("OUTPUT", "output")]
+        return groups.map { group, key in
+            Self(id: group, title: L10n.text("effects.eqGroup.\(key)"),
+                 parameters: definitions.filter { $0.group == group })
+        }
     }
 }
