@@ -1,5 +1,11 @@
 # Ongaku Desktop ロードマップ
 
+## CI real-engine test isolation — 2026-10-20
+
+- 🟢 [Done] Diagnose run 39384131607: the resume assertion fails while a 10-second real audio fixture overlaps roughly 140-second cross-suite MainActor work; the unchanged failing test passes alone in 4.388 seconds. Separate all real-engine transport/track-end tests into a sequential CI process, retaining every test/assertion and all other quality gates. App binaries and shared iPhone audio behavior are unchanged. See [evidence](quality/CI_TRANSPORT_ISOLATION_2026-10-20.md).
+- 🟠 [Next] Confirm both local partitions and the complete updated GitHub quality job.
+- ⭕️ [Pending] Existing physical playback, competing-app interruption, EOF and high-load listening qualification.
+
 ## Release 0.1.11 / CI effect-rack teardown — 2026-10-20
 
 - 🟢 [Done] Bump desktop 0.1.10 (16) to 0.1.11; after the reported CI crash, reserve repaired build 18 and do not submit the already uploaded build 17. Prepare EN/JA/zh-Hans release notes.
