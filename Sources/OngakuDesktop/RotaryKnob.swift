@@ -5,6 +5,7 @@
  */
 import SwiftUI
 import AppKit
+import Combine
 
 struct RotaryKnob: View {
     @EnvironmentObject private var input: EffectRackInputRouter
@@ -185,8 +186,17 @@ struct RotaryKnob: View {
 /// One owner for each gesture in a rack. This also covers focus/autoscroll changes,
 /// which are not scrollWheel events and were missed by the old per-knob monitor.
 @MainActor
-final class EffectRackInputRouter: ObservableObject {
-    @Published private(set) var isScrolling = false
+final class EffectRackInputRouter: @MainActor ObservableObject {
+    let objectWillChange = ObservableObjectPublisher()
+    private var scrolling = false
+    private(set) var isScrolling: Bool {
+        get { scrolling }
+        set {
+            guard scrolling != newValue else { return }
+            objectWillChange.send()
+            scrolling = newValue
+        }
+    }
     private(set) var controlPressed = false
     private var rejectedClick = false
     private var scrollerPressed = false
@@ -250,7 +260,9 @@ final class EffectRackInputRouter: ObservableObject {
     func unregister(_ region: EffectRackInputRegionView) { regions.remove(region) }
 
     func detach() {
-        reset()
+        // SwiftUI calls this while GraphHost is invalidating. Clear native
+        // ownership synchronously without notifying that destroying graph.
+        reset(publish: false)
         if let monitor { NSEvent.removeMonitor(monitor) }
         if let boundsObserver { NotificationCenter.default.removeObserver(boundsObserver) }
         if let resignObserver { NotificationCenter.default.removeObserver(resignObserver) }
@@ -260,7 +272,7 @@ final class EffectRackInputRouter: ObservableObject {
         scrollView = nil
     }
 
-    private func reset() {
+    private func reset(publish: Bool = true) {
         expiry?.cancel()
         expiry = nil
         controlPressed = false
@@ -268,7 +280,8 @@ final class EffectRackInputRouter: ObservableObject {
         scrollerPressed = false
         touchAllowed = nil
         frozenOrigin = nil
-        isScrolling = false
+        if publish { isScrolling = false }
+        else { scrolling = false }
     }
 
     private func restorePosition() {

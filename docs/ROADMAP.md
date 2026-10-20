@@ -1,5 +1,12 @@
 # Ongaku Desktop ロードマップ
 
+## Release 0.1.11 / CI effect-rack teardown — 2026-10-20
+
+- 🟢 [Done] Bump desktop 0.1.10 (16) to 0.1.11; after the reported CI crash, reserve repaired build 18 and do not submit the already uploaded build 17. Prepare EN/JA/zh-Hans release notes.
+- 🟢 [Done] Identify the CI runtime exclusivity trap in SwiftUI graph destruction: detach synchronously published scroll state into the invalidating graph. Clear native ownership silently at teardown; retain change notifications for the live/reconnected graph. The new regression fails before repair and all 13 input tests pass after repair. See [CI evidence](quality/CI_EFFECT_RACK_TEARDOWN_2026-10-20.md).
+- 🟠 [Next] Verify repaired archives, full-suite/CI results, publish signed/notarized GitHub artifacts and submit the final App Store build. See [release record](quality/RELEASE_0.1.11_2026-10-20.md).
+- ⭕️ [Pending] Export-compliance response approval, Apple review/public availability and existing physical-device qualification.
+
 ## EQ grouping and Synth-inspired knobs — 2026-10-20
 
 - 🟢 [Done] Refine pastel panel gradients to start at the opaque 50% white/theme midpoint and end at the original theme color, with two evenly distributed stops. Apply the tinted highlight to shared surface edges too; keep neutral light/dark gradients and metal knob caps unchanged. Pass the existing production-rack rendering/interaction test and Xcode Debug build. Capture all four pastel themes and inspect green/pink. See [updated green](measurements/pastel-gradient-2026-10-20/green.png), [pink](measurements/pastel-gradient-2026-10-20/pink.png) and [validation](measurements/pastel-gradient-2026-10-20/validation.txt).

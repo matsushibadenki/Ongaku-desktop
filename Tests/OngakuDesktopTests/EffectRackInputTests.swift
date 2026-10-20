@@ -18,6 +18,31 @@ struct EffectRackInputTests {
         #expect(sections[3].parameters.map(\.key) == ["hmfGain", "hmfFreq", "hmfQ", "hmfFocus"])
     }
 
+    @Test("Detaching clears scroll ownership without publishing into a destroying SwiftUI graph")
+    func detachDoesNotPublish() throws {
+        let fixture = Fixture()
+        defer { fixture.close() }
+        _ = fixture.router.route(fixture.scroll(at: fixture.controlPoint, phase: .began))
+        #expect(fixture.router.isScrolling)
+        let count = PublicationCount()
+        let subscription = fixture.router.objectWillChange.sink {
+            MainActor.assumeIsolated { count.value += 1 }
+        }
+        fixture.router.detach()
+        #expect(!fixture.router.isScrolling)
+        #expect(!fixture.router.controlPressed)
+        #expect(count.value == 0, "Teardown must not notify a SwiftUI graph while it is invalidating")
+        fixture.router.detach()
+        #expect(count.value == 0, "Repeated teardown must also be silent")
+        fixture.router.attach(to: fixture.scrollView)
+        _ = fixture.router.route(fixture.scroll(at: fixture.controlPoint, phase: .began))
+        #expect(fixture.router.isScrolling)
+        #expect(count.value == 1, "A reattached live graph still receives scrolling updates")
+        fixture.router.detach()
+        #expect(count.value == 1)
+        subscription.cancel()
+    }
+
     @Test("Two-finger scroll starts over GUI or blank space while controls remain locked")
     func touchRouting() throws {
         let f = Fixture()
@@ -572,3 +597,5 @@ private struct LiveKnobRack: View {
     let player: PlaybackController
     var body: some View { EffectsRackView(selectedTab: $tabs.tab).environmentObject(player) }
 }
+
+@MainActor private final class PublicationCount { var value = 0 }
