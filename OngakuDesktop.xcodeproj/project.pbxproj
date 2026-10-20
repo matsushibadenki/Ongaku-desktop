@@ -85,6 +85,7 @@
 		D20000000000000000000006 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000011 /* InfoPlist.strings */; };
 		D20000000000000000000007 /* ../OngakuDesktop/LibraryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000012 /* ../OngakuDesktop/LibraryModels.swift */; };
 		D20000000000000000000008 /* ../OngakuDesktop/AudioFeatureAnalysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000013 /* ../OngakuDesktop/AudioFeatureAnalysis.swift */; };
+		D2000000000000000000000C /* IntegratedLoudnessMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000003 /* IntegratedLoudnessMeter.swift */; };
 		D20000000000000000000009 /* ../OngakuDesktop/SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* ../OngakuDesktop/SharedMusicModels.swift */; };
 		D2000000000000000000000A /* Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000015 /* Resources/PrivacyInfo.xcprivacy */; };
 		D2000000000000000000000B /* ../OngakuDesktop/DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* ../OngakuDesktop/DeviceChunkTransfer.swift */; };
@@ -729,6 +730,7 @@
 				D2000000000000000000000B /* ../OngakuDesktop/DeviceChunkTransfer.swift in Sources */,
 				D20000000000000000000007 /* ../OngakuDesktop/LibraryModels.swift in Sources */,
 				D20000000000000000000008 /* ../OngakuDesktop/AudioFeatureAnalysis.swift in Sources */,
+				D2000000000000000000000C /* IntegratedLoudnessMeter.swift in Sources */,
 				D20000000000000000000009 /* ../OngakuDesktop/SharedMusicModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
