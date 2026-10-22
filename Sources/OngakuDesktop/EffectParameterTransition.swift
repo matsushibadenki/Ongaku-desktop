@@ -12,6 +12,8 @@ final class EffectParameterTransition {
     private let processingLatency: () -> TimeInterval
     private let setEnvelope: (Float) -> Void
     private let commit: (Settings) -> Void
+    typealias Ramp = (Float, TimeInterval, @escaping () -> Bool, @escaping () -> Void) -> Void
+    private let audioRamp: Ramp?
     private let schedule: Schedule
     private(set) var applied: [RealtimeAudioEffectKind: RealtimeAudioEffectSetting] = [:]
     private var pending: Settings?
@@ -26,7 +28,8 @@ final class EffectParameterTransition {
          setEnvelope: @escaping (Float) -> Void = { _ in },
          schedule: @escaping Schedule = { delay, action in
              DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)
-         }, commit: @escaping (Settings) -> Void) {
+         }, audioRamp: Ramp? = nil, commit: @escaping (Settings) -> Void) {
+        self.audioRamp = audioRamp
         self.processingLatency = processingLatency
         self.isAudible = isAudible; self.shouldDefer = shouldDefer
         self.setEnvelope = setEnvelope; self.schedule = schedule; self.commit = commit
@@ -110,6 +113,24 @@ final class EffectParameterTransition {
     }
 
     private func ramp(to target: Float, duration: TimeInterval, completion: @escaping () -> Void) {
+        let owner = generation
+        if let audioRamp {
+            audioRamp(target, duration, { [weak self] in self?.generation == owner }, { [weak self] in
+                guard let self, self.generation == owner else { return }
+                if !self.isAudible() {
+                    self.apply(self.pending ?? Array(self.applied.values), immediately: true)
+                    return
+                }
+                if self.phase == .fadingOut && self.shouldDefer() {
+                    self.generation &+= 1
+                    self.beginFadeIn()
+                    return
+                }
+                self.envelope = target
+                completion()
+            })
+            return
+        }
         let token = generation, start = envelope
         let steps = EffectTransitionPolicy.envelopeSteps(duration: duration)
         // Absolute deadlines avoid accumulating a full step delay after each late callback.

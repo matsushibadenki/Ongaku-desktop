@@ -1,0 +1,14 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Playback transport integration" started.
+◇ Test "Real controller retains sources during drain and latest pause/seek/load wins" started.
+2026-10-22 14:38:47.892 swiftpm-testing-helper[78818:808360] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 14:38:47.895 swiftpm-testing-helper[78818:808360] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Real controller retains sources during drain and latest pause/seek/load wins" passed after 15.308 seconds.
+◇ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" started.
+2026-10-22 14:39:03.153 swiftpm-testing-helper[78818:808360] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 14:39:03.155 swiftpm-testing-helper[78818:808360] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 11.925 seconds.
+✔ Suite "Playback transport integration" passed after 27.234 seconds.
+✔ Test run with 2 tests in 1 suite passed after 27.234 seconds.

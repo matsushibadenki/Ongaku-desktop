@@ -5,6 +5,8 @@ import Foundation
 @MainActor
 final class TransportOutputEnvelope {
     typealias Schedule = (TimeInterval, @escaping @MainActor () -> Void) -> Void
+    typealias Ramp = (Float, TimeInterval, @escaping () -> Bool, @escaping () -> Void) -> Void
+    private let audioRamp: Ramp?
     private let schedule: Schedule
     private let setGain: (Float) -> Void
     private var generation: UInt64 = 0
@@ -16,7 +18,8 @@ final class TransportOutputEnvelope {
 
     init(schedule: @escaping Schedule = { delay, action in
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)
-    }, setGain: @escaping (Float) -> Void) {
+    }, audioRamp: Ramp? = nil, setGain: @escaping (Float) -> Void) {
+        self.audioRamp = audioRamp
         self.schedule = schedule; self.setGain = setGain
     }
 
@@ -70,6 +73,14 @@ final class TransportOutputEnvelope {
     }
 
     private func ramp(to target: Float, token: UInt64, completion: @escaping () -> Void) {
+        if let audioRamp {
+            audioRamp(target, 0.024, { [weak self] in self?.generation == token }, { [weak self] in
+                guard let self, self.generation == token else { return }
+                self.gain = target
+                completion()
+            })
+            return
+        }
         let from = gain
         for step in 1...EffectTransitionPolicy.transportSteps {
             schedule(0.024 * Double(step) / Double(EffectTransitionPolicy.transportSteps)) { [weak self] in

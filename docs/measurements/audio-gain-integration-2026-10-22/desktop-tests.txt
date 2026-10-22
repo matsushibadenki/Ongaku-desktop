@@ -1,0 +1,44 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Effect parameter continuity" started.
+◇ Suite "Transport output continuity" started.
+◇ Test "Continuous changes coalesce into eight steps and settle at the latest target" started.
+◇ Test "Render gating, fade and drain keep sources alive until zero" started.
+✔ Test "Continuous changes coalesce into eight steps and settle at the latest target" passed after 0.007 seconds.
+✔ Test "Render gating, fade and drain keep sources alive until zero" passed after 0.007 seconds.
+◇ Test "OFF, restart and graph rebuild reject older queued writes" started.
+◇ Test "Repeated stop and superseding seek/load commit only the newest action" started.
+✔ Test "OFF, restart and graph rebuild reject older queued writes" passed after 0.001 seconds.
+✔ Test "Repeated stop and superseding seek/load commit only the newest action" passed after 0.001 seconds.
+◇ Test "Disabled-only edits never rewrite unchanged audible modules" started.
+◇ Test "Stop cancels startup and late callbacks; render timeout remains silent" started.
+✔ Test "Disabled-only edits never rewrite unchanged audible modules" passed after 0.001 seconds.
+✔ Test "Stop cancels startup and late callbacks; render timeout remains silent" passed after 0.001 seconds.
+◇ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" started.
+◇ Test "Transport, user volume and bypass gains remain independent in both output paths" started.
+✔ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" passed after 0.001 seconds.
+◇ Test "Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits" started.
+✔ Test "Transport, user volume and bypass gains remain independent in both output paths" passed after 0.068 seconds.
+◇ Test "Ordinary and true-peak PCM fade/drain satisfy iPhone step and silence criteria" started.
+✔ Test "Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits" passed after 0.068 seconds.
+◇ Test "Active and unexpectedly late overlaps never freeze the output muted" started.
+MAC_TRANSPORT_PCM candidate=false rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+✔ Test "Ordinary and true-peak PCM fade/drain satisfy iPhone step and silence criteria" passed after 0.476 seconds.
+✔ Suite "Transport output continuity" passed after 0.556 seconds.
+✔ Test "Active and unexpectedly late overlaps never freeze the output muted" passed after 0.476 seconds.
+◇ Test "Stop or rebuild in either envelope phase cancels callbacks before resume" started.
+✔ Test "Stop or rebuild in either envelope phase cancels callbacks before resume" passed after 0.001 seconds.
+◇ Test "Transport becoming inaudible without an explicit cancel restores the envelope" started.
+✔ Test "Transport becoming inaudible without an explicit cancel restores the envelope" passed after 0.001 seconds.
+◇ Test "Changed latency drains at zero and rejects stale restore after transport" started.
+✔ Test "Changed latency drains at zero and rejects stale restore after transport" passed after 0.001 seconds.
+◇ Test "Zero strength and Space amount are bypass boundaries despite an ON switch" started.
+✔ Test "Zero strength and Space amount are bypass boundaries despite an ON switch" passed after 0.001 seconds.
+✔ Suite "Effect parameter continuity" passed after 0.557 seconds.
+✔ Test run with 15 tests in 2 suites passed after 0.557 seconds.

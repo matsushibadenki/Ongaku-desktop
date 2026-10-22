@@ -1,0 +1,12 @@
+[0/1] Planning build
+warning: '--build-system native' has been deprecated and will be removed in a future release; please report an issue at https://github.com/swiftlang/swift-package-manager/issues if you are unable to adopt the default build system.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Matched startup cost" started.
+◇ Test matchedStartup() started.
+2026-10-22 17:17:25.097 swiftpm-testing-helper[24631:1227023] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:17:27.581 swiftpm-testing-helper[24631:1227023] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test matchedStartup() passed after 5.083 seconds.
+✔ Suite "Matched startup cost" passed after 5.083 seconds.
+✔ Test run with 1 test in 1 suite passed after 5.084 seconds.

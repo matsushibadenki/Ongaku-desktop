@@ -20,7 +20,10 @@ final class FinalOutputProtection {
     private let conversionMixer = AVAudioMixerNode()
     let protector: AVAudioUnitEffect?
     var isEnabled: Bool { protector != nil }
-    var latency: TimeInterval { protector?.auAudioUnit.latency ?? 0 }
+    var latency: TimeInterval {
+        guard let protector else { return 0 }
+        return max(0, conversionMixer.auAudioUnit.latency) + max(0, protector.auAudioUnit.latency)
+    }
     var nodes: [AVAudioNode] {
         guard let protector else { return [] }
         return [conversionMixer, protector]

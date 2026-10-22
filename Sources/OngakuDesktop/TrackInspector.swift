@@ -4,6 +4,7 @@ import UniformTypeIdentifiers
 struct TrackInspector: View {
     @EnvironmentObject private var library: LibraryStore
     @EnvironmentObject private var player: PlaybackController
+    @State private var sourceFileInfo: AudioSourceFileInfo?
     @State private var lyricsEditorTrack: Track?
     @State private var relinkTrackID: Track.ID?
     @State private var isChoosingRelinkFile = false
@@ -47,6 +48,12 @@ struct TrackInspector: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppTheme.sidebar)
         .navigationTitle(L10n.text("inspector.title"))
+        .task(id: inspectedTrack?.fileURL.absoluteString) {
+            sourceFileInfo = nil
+            let info = await AudioSourceFileInfo.read(url: inspectedTrack?.fileURL)
+            guard !Task.isCancelled else { return }
+            sourceFileInfo = info
+        }
         .sheet(item: $lyricsEditorTrack) { track in
             LyricsEditorView(track: track)
                 .environmentObject(library)
@@ -293,8 +300,17 @@ struct TrackInspector: View {
         VStack(alignment: .leading, spacing: AppTheme.spaceSM) {
             Text(L10n.text("inspector.file"))
                 .font(.headline)
-            detailRow(L10n.text("inspector.size"), value: ByteCountFormatter.string(fromByteCount: track.fileSize, countStyle: .file))
             detailRow(L10n.text("inspector.duration"), value: DurationFormatter.string(track.duration))
+            if let info = sourceFileInfo {
+                ForEach(info.rows) { row in
+                    detailRow(L10n.text(row.id), value: row.value ?? L10n.text("sourceinfo.unknown"))
+                }
+                detailRow(L10n.text("sourceinfo.protected"), value: L10n.text(info.protectedAsset.map { $0 ? "sourceinfo.yes" : "sourceinfo.no" } ?? "sourceinfo.unknown"))
+                detailRow(L10n.text("sourceinfo.read"), value: L10n.text(info.readSucceeded ? "sourceinfo.success" : "sourceinfo.unavailable"))
+            } else { ProgressView() }
+            if player.currentTrack?.id == track.id, let path = player.signalPathSnapshot {
+                detailRow(L10n.text("sourceinfo.processing"), value: String(format: "%g kHz / %u ch", path.processingSampleRate / 1000, path.processingChannelCount))
+            }
             Text(track.managedPath)
                 .font(.caption2.monospaced())
                 .foregroundStyle(AppTheme.secondaryInk)
@@ -324,6 +340,7 @@ struct TrackInspector: View {
             Text(label).foregroundStyle(AppTheme.secondaryInk)
             Spacer()
             Text(value).font(.callout.monospacedDigit()).foregroundStyle(AppTheme.ink)
+                .multilineTextAlignment(.trailing).textSelection(.enabled)
         }
         .font(.callout)
     }

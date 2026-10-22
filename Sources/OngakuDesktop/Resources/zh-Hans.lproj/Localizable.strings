@@ -1257,3 +1257,29 @@
 "effects.eqGroup.highMid" = "中高频 · HMF";
 "effects.eqGroup.high" = "高频 · HF";
 "effects.eqGroup.output" = "输出";
+
+// Original source metadata
+"sourceinfo.title" = "音源文件";
+"sourceinfo.container" = "文件扩展名";
+"sourceinfo.codec" = "编解码格式";
+"sourceinfo.rate" = "采样率";
+"sourceinfo.depth" = "原始位深度";
+"sourceinfo.channels" = "声道数";
+"sourceinfo.bitrate" = "估计比特率";
+"sourceinfo.size" = "文件大小";
+"sourceinfo.error" = "读取错误";
+"sourceinfo.unknown" = "未知";
+"sourceinfo.url" = "音源URL可用";
+"sourceinfo.protected" = "受保护内容";
+"sourceinfo.read" = "信息读取";
+"sourceinfo.yes" = "是";
+"sourceinfo.no" = "否";
+"sourceinfo.success" = "已读取";
+"sourceinfo.unavailable" = "无法读取";
+"sourceinfo.processing" = "处理格式";
+
+// Restart after successful library recovery.
+"storage.migration.restarting" = "正在重新启动…";
+"storage.migration.restartFailed" = "无法重新启动应用";
+"storage.migration.restartFailed.message" = "修复已完成。请重试重新启动，或退出后重新打开应用。";
+"storage.migration.restart" = "重新启动";

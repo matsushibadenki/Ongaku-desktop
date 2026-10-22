@@ -1,0 +1,38 @@
+BYPASS_LATENCY effect=space output=44100 before=0.0 after=0.0 settle=0.0
+TAIL effect=space output=44100 channel=0 holdResidualDB=-285.3196046133311 tailEnergy=0.03403771999603398 offDryMaxError=0.0
+TAIL effect=space output=44100 channel=1 holdResidualDB=-280.87591678349315 tailEnergy=0.012234653619045806 offDryMaxError=0.0
+BYPASS_LATENCY effect=space output=48000 before=0.0 after=0.0 settle=0.0
+TAIL effect=space output=48000 channel=0 holdResidualDB=-285.68669724785036 tailEnergy=0.03703989311542369 offDryMaxError=0.0
+TAIL effect=space output=48000 channel=1 holdResidualDB=-281.24291486344293 tailEnergy=0.013313476816119166 offDryMaxError=0.0
+BYPASS_LATENCY effect=space output=96000 before=0.0 after=0.0 settle=0.0
+TAIL effect=space output=96000 channel=0 holdResidualDB=-288.69675483227684 tailEnergy=0.07407565208190058 offDryMaxError=0.0
+TAIL effect=space output=96000 channel=1 holdResidualDB=-284.26419980126445 tailEnergy=0.026694388708473453 offDryMaxError=0.0
+BYPASS_LATENCY effect=gloss output=44100 before=0.0 after=0.0 settle=0.0
+TAIL effect=gloss output=44100 channel=0 holdResidualDB=-277.989351200248 tailEnergy=0.006294121469054769 offDryMaxError=0.0
+TAIL effect=gloss output=44100 channel=1 holdResidualDB=-275.7014121165949 tailEnergy=0.0037165605411092397 offDryMaxError=0.0
+BYPASS_LATENCY effect=gloss output=48000 before=0.0 after=0.0 settle=0.0
+TAIL effect=gloss output=48000 channel=0 holdResidualDB=-278.3569541698938 tailEnergy=0.00685007642703439 offDryMaxError=0.0
+TAIL effect=gloss output=48000 channel=1 holdResidualDB=-276.0642301130428 tailEnergy=0.0040403874299509085 offDryMaxError=0.0
+BYPASS_LATENCY effect=gloss output=96000 before=0.0 after=0.0 settle=0.0
+TAIL effect=gloss output=96000 channel=0 holdResidualDB=-281.3575520606163 tailEnergy=0.013669581103376304 offDryMaxError=0.0
+TAIL effect=gloss output=96000 channel=1 holdResidualDB=-279.06348765071334 tailEnergy=0.008060254691869504 offDryMaxError=0.0
+BYPASS_LATENCY effect=body output=44100 before=0.0 after=0.0 settle=0.0
+TAIL effect=body output=44100 channel=0 holdResidualDB=-153.79292193322095 tailEnergy=0.0035247299913456127 offDryMaxError=0.0
+TAIL effect=body output=44100 channel=1 holdResidualDB=-150.7550914147145 tailEnergy=0.0017689480602053917 offDryMaxError=0.0
+BYPASS_LATENCY effect=body output=48000 before=0.0 after=0.0 settle=0.0
+TAIL effect=body output=48000 channel=0 holdResidualDB=-150.70335348365975 tailEnergy=0.003836016639885033 offDryMaxError=0.0
+TAIL effect=body output=48000 channel=1 holdResidualDB=-147.52250307757052 tailEnergy=0.0019253892439490977 offDryMaxError=0.0
+BYPASS_LATENCY effect=body output=96000 before=0.0 after=0.0 settle=0.0
+TAIL effect=body output=96000 channel=0 holdResidualDB=-149.7586684152557 tailEnergy=0.007665547803308422 offDryMaxError=0.0
+TAIL effect=body output=96000 channel=1 holdResidualDB=-146.7274753317456 tailEnergy=0.003847351062770612 offDryMaxError=0.0
+BYPASS_LATENCY effect=warm output=44100 before=0.0005 after=0.0 settle=0.0105
+TAIL effect=warm output=44100 channel=0 holdResidualDB=-143.58362568173595 tailEnergy=8.058713625537919e-07 offDryMaxError=0.0
+TAIL effect=warm output=44100 channel=1 holdResidualDB=-142.36197608547158 tailEnergy=7.385785924108248e-07 offDryMaxError=0.0
+BYPASS_LATENCY effect=warm output=48000 before=0.0005 after=0.0 settle=0.0105
+TAIL effect=warm output=48000 channel=0 holdResidualDB=-142.09596442507447 tailEnergy=8.770209030932919e-07 offDryMaxError=0.0
+TAIL effect=warm output=48000 channel=1 holdResidualDB=-141.42461802952744 tailEnergy=8.009655027622435e-07 offDryMaxError=0.0
+BYPASS_LATENCY effect=warm output=96000 before=0.0005 after=0.0 settle=0.0105
+TAIL effect=warm output=96000 channel=0 holdResidualDB=-139.10898160202916 tailEnergy=1.7514651163173754e-06 offDryMaxError=0.0
+TAIL effect=warm output=96000 channel=1 holdResidualDB=-138.11679412826373 tailEnergy=1.5980494816342407e-06 offDryMaxError=0.0
+PASS: 12 effect/rate cases, both channels; tail history, repeated OFF, exact dry settling, rapid ON and latency policy
+PASS: rejected abrupt-tail negative control

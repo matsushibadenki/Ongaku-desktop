@@ -1,0 +1,26 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Final output true-peak" started.
+◇ Suite "Connected audio-thread gain" started.
+◇ Test "Build condition controls activation and diagnostics" started.
+◇ Test "Effect topology commit waits for rendered zero and transport drain preserves resources" started.
+✔ Test "Build condition controls activation and diagnostics" passed after 0.010 seconds.
+◇ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" started.
+✔ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" passed after 0.240 seconds.
+◇ Test "Paused render resources reset queued true-peak audio before restart" started.
+✔ Test "Paused render resources reset queued true-peak audio before restart" passed after 0.025 seconds.
+◇ Test "Invalid output format fails instead of bypassing protection" started.
+✔ Test "Invalid output format fails instead of bypassing protection" passed after 0.001 seconds.
+◇ Test "Transition envelope multiplies the latest user volume before final protection" started.
+✔ Test "Transition envelope multiplies the latest user volume before final protection" passed after 0.004 seconds.
+✔ Suite "Final output true-peak" passed after 0.282 seconds.
+✔ Test "Effect topology commit waits for rendered zero and transport drain preserves resources" passed after 0.493 seconds.
+◇ Test "Space OFF commits at rendered zero and retains audible tail after restoration" started.
+✔ Test "Space OFF commits at rendered zero and retains audible tail after restoration" passed after 0.065 seconds.
+◇ Test "Retargeting cancels obsolete completion without an output jump" started.
+✔ Test "Retargeting cancels obsolete completion without an output jump" passed after 0.028 seconds.
+◇ Test "Missing render acknowledgement stops I/O before permitting a commit" started.
+✔ Test "Missing render acknowledgement stops I/O before permitting a commit" passed after 2.402 seconds.
+✔ Suite "Connected audio-thread gain" passed after 2.990 seconds.
+✔ Test run with 9 tests in 2 suites passed after 2.990 seconds.

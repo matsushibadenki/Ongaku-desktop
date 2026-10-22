@@ -64,6 +64,11 @@ import Testing
         #expect(!player.isPlaying && primary.isPlaying)
         try await settle(player)
         #expect(!primary.isPlaying && abs(player.elapsed - 4) < 0.05)
+#if ONGAKU_ENABLE_TRUE_PEAK
+        let protection = try field(player, "finalOutputProtection", FinalOutputProtection.self)
+        #expect(protection.protector?.auAudioUnit.renderResourcesAllocated == true,
+                "protected pause must retain the prepared true-peak render resources")
+#endif
         player.togglePlayback(); try await settle(player)
         #expect(player.isPlaying)
         player.seek(to: 2)
@@ -78,6 +83,71 @@ import Testing
         try await settle(player)
         let engine = try field(player, "engine", AVAudioEngine.self)
         #expect(!engine.isRunning && !primary.isPlaying)
+    }
+
+    @Test("Device-side output format wins over a previously negotiated engine input")
+    func deviceOutputScope() async throws {
+        let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let player = PlaybackController(); configure(player); player.crossfadeDuration = 0
+        let engine = try field(player, "engine", AVAudioEngine.self)
+        let device = engine.outputNode.outputFormat(forBus: 0)
+        let staleRate = device.sampleRate == 44_100 ? 48_000.0 : 44_100.0
+        let staleInput = try #require(AVAudioFormat(standardFormatWithSampleRate: staleRate, channels: device.channelCount))
+        engine.connect(engine.mainMixerNode, to: engine.outputNode, format: staleInput)
+        #expect(engine.outputNode.inputFormat(forBus: 0).sampleRate == staleRate)
+        #expect(engine.outputNode.outputFormat(forBus: 0).sampleRate == device.sampleRate)
+        player.play(tracks[0], queue: [tracks[0]])
+        #expect(player.isPlaying && player.errorMessage == nil)
+        #expect(player.signalPathSnapshot?.outputSampleRate == device.sampleRate)
+        #expect(engine.outputNode.inputFormat(forBus: 0).sampleRate == device.sampleRate)
+#if ONGAKU_ENABLE_TRUE_PEAK
+        let protection = try field(player, "finalOutputProtection", FinalOutputProtection.self)
+        #expect(protection.protector?.outputFormat(forBus: 0).sampleRate == device.sampleRate)
+#endif
+        engine.pause()
+        player.clearCurrentTrack(); try await settle(player)
+    }
+
+    @Test("Compatible file reload retains the graph but retires source, gain and tail ownership")
+    func compatibleGraphReuse() async throws {
+        let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let player = PlaybackController(); configure(player); player.crossfadeDuration = 0
+        player.setEffectsBypassed(false)
+        player.setEffectEnabled(true, for: .space)
+        player.setEffectEnabled(true, for: .gloss)
+        defer { player.clearCurrentTrack() }
+        player.updateAudioFeatures([tracks[0].id: analysis(tracks[0], -24), tracks[1].id: analysis(tracks[1], -12)])
+        player.play(tracks[0], queue: tracks); try await settle(player)
+        let generation = try field(player, "graphConfigurationGeneration", UInt64.self)
+        let pipeline = try field(player, "effectPipeline", [AudioEffectNode].self)
+        let identities = pipeline.flatMap(\.nodes).map(ObjectIdentifier.init)
+        #expect(generation == 1)
+        #expect((player.signalPathSnapshot?.normalizationGainDB ?? 0) > 0)
+        player.play(tracks[1], queue: tracks); try await settle(player)
+        #expect(player.currentTrack?.id == tracks[1].id && player.isPlaying)
+        #expect(try field(player, "graphConfigurationGeneration", UInt64.self) == generation)
+        #expect(pipeline.flatMap(\.nodes).map(ObjectIdentifier.init) == identities)
+        #expect(abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001)
+        player.pauseForExternalPlayback(); try await settle(player)
+        player.togglePlayback(); try await settle(player); #expect(player.isPlaying)
+
+        let mono = try #require(AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1))
+        let pcm = try #require(AVAudioPCMBuffer(pcmFormat: mono, frameCapacity: 441_000))
+        pcm.frameLength = pcm.frameCapacity
+        pcm.floatChannelData![0].initialize(repeating: 0, count: Int(pcm.frameLength))
+        let url = root.appendingPathComponent("incompatible.caf")
+        do { let file = try AVAudioFile(forWriting: url, settings: mono.settings); try file.write(from: pcm) }
+        let incompatible = Track(id: UUID(), title: "Mono", artist: "Fixture", album: "Other", duration: 10,
+            fileSize: 0, managedPath: url.path, sha256: "mono", addedAt: .now, lastVerifiedAt: .now, health: .verified)
+        player.play(incompatible); try await settle(player)
+        #expect(player.isPlaying && player.currentTrack?.id == incompatible.id)
+        #expect(try field(player, "graphConfigurationGeneration", UInt64.self) == generation + 1)
+        player.clearCurrentTrack(); try await settle(player)
+        let engine = try field(player, "engine", AVAudioEngine.self)
+        #expect(!engine.isRunning)
+        player.play(incompatible); try await settle(player)
+        #expect(player.isPlaying)
+        #expect(try field(player, "graphConfigurationGeneration", UInt64.self) == generation + 2)
     }
 
     @Test("Late track analysis survives pause/resume and changes only at new load")

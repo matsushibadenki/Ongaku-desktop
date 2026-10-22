@@ -20,10 +20,20 @@ jobs:
       - name: Swift unit, localization, layout, and privacy tests
         # Suite-level .serialized does not isolate a suite from other suites.
         # Keep heavy MainActor/DSP audits away from wall-clock audio playback.
-        run: swift test --skip PlaybackTransportIntegrationTests
+        run: swift test --skip 'PlaybackTransportIntegrationTests|AudioThreadGainIntegrationTests'
+
+      - name: Connected gain acknowledgement and tail integration tests
+        # Uses real MainActor polling; isolate from long synchronous DSP audits.
+        run: swift test --skip-build --filter AudioThreadGainIntegrationTests
 
       - name: Real-engine transport and track-end integration tests
         run: swift test --skip-build --filter PlaybackTransportIntegrationTests
+
+      - name: Shared audio-thread gain envelope waveforms and safety
+        run: env GAIN_SANITIZERS=1 bash tools/run_gain_envelope_regression.sh
+
+      - name: Retained graph state and reverb voice waveforms
+        run: bash tools/run_graph_reuse_state_regression.sh
 
       - name: M3 100,000-track cold-display and search budgets
         run: >-

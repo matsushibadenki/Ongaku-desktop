@@ -1,0 +1,45 @@
+PHASE: native / quality handoff / pause resume / gain reference
+PASS: requested Precision Sinc still reports actual streaming_open failure: stage=streaming_open reason=preparation_failed errorDomain="NSCocoaErrorDomain" errorCode=260
+PASS: next-track cache retains offline_open failure instead of manufacturing capacity_exceeded
+PASS: native ready before quality conversion (6266 ms on simulator)
+PASS: old source remains playing through graph startup and first render; session commit preserves the running node
+PASS: decoded fallback resumes with fade-in and a live enabled EQ, retaining the Music asset identity
+PASS: rapid pause/resume preserves the live schedule and rejects the stale physical pause
+PASS: pause drains at zero; paused seek and default resume restore output only after render startup
+PASS: pause cancels an in-flight seek without restarting or leaving output muted on resume
+PASS: failed Precision Sinc source preparation retains its stage and leaves native playback running
+PASS: preparation reaching fixture EOF safely defers the handoff
+PASS: quality handoff preserves input gain and automatic EQ, including a subsequent effect edit
+PASS: audible native stream upgrades without resetting the seek position; latest effects sampled at commit
+PASS: pause before incoming start and rapid resume during a live quality overlap preserve transport and gain
+PASS: current and following tracks stored in bounded disk cache while playback continues
+PASS: cached quality reused; completed upgrade cannot resume an explicitly paused track
+PASS: stopping invalidates an in-flight quality handoff
+PASS: a cancelled/stopped provisional render cannot report handoff readiness
+PHASE COMPLETE
+PHASE: destructive stop / retained overlap / load cancellation
+PASS: stop hides track immediately, retains file through drain, and invokes only the latest session release after teardown
+PASS: overlapping load/loadOpenedFile requests wait for one drain; newest source survives old stop and load callbacks
+PASS: a load cancelled before entry cannot stop the currently audible source
+PASS: cancellation while waiting for drain does not strand resources or install a cancelled source
+PASS: quality/recovery reload waits for teardown and respects a newer pause during its drain
+PASS: destructive stop retains both quality-handoff schedules until silence and then clears both nodes
+PHASE COMPLETE
+PHASE: I/O loss / near-EOF recovery
+PASS: native Music-identity source confirms fresh progress after protected startup
+PASS: stopped render I/O cannot report recovery while Music identity and resource remain retained
+PASS: reactivation and protected rescheduling resume from retained position without replacing Music identity
+PASS: a newer pause cancels pending recovery confirmation and remains paused
+PASS: explicit resume after lost seek node delivers one EOF, preparedPCM=false
+PASS: 10 ms tail confirms recovery through one retained EOF, preparedPCM=false
+PASS: explicit resume after lost seek node delivers one EOF, preparedPCM=true
+PASS: 10 ms tail confirms recovery through one retained EOF, preparedPCM=true
+PASS: explicit resume still advances and destructive stop still drains after recovery
+PHASE COMPLETE
+PHASE: actual ViewModel next / repeat / final stop
+PASS: real ViewModel/engine reaches next song with completion delivery removed
+PASS: real queue stops at final EOF with repeat off
+PASS: real repeat-one restarts through the timer without a completion delivery
+PASS: real album repeat wraps from last song to first
+PHASE COMPLETE
+COMPLETE

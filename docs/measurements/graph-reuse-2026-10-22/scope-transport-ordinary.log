@@ -1,0 +1,75 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Playback transport integration" started.
+◇ Test "CD rip formats retain local playback, real RMS/spectrum and effect response" started.
+CD availability PASS: alac, channels=1
+CD availability PASS: aiff, channels=1
+CD availability PASS: wav, channels=1
+CD availability PASS: aac, channels=1
+CD availability PASS: alac, channels=2
+CD availability PASS: aiff, channels=2
+CD availability PASS: wav, channels=2
+CD availability PASS: aac, channels=2
+✔ Test "CD rip formats retain local playback, real RMS/spectrum and effect response" passed after 21.750 seconds.
+◇ Test "Real controller retains sources during drain and latest pause/seek/load wins" started.
+2026-10-22 17:43:29.036 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:29.038 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Real controller retains sources during drain and latest pause/seek/load wins" passed after 3.101 seconds.
+◇ Test "Device-side output format wins over a previously negotiated engine input" started.
+2026-10-22 17:43:32.137 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:32.139 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Device-side output format wins over a previously negotiated engine input" passed after 2.339 seconds.
+◇ Test "Compatible file reload retains the graph but retires source, gain and tail ownership" started.
+2026-10-22 17:43:34.478 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:34.479 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Compatible file reload retains the graph but retires source, gain and tail ownership" passed after 7.619 seconds.
+◇ Test "Late track analysis survives pause/resume and changes only at new load" started.
+2026-10-22 17:43:42.095 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:42.096 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Late track analysis survives pause/resume and changes only at new load" passed after 2.846 seconds.
+◇ Test "Incoming analysis is frozen before overlap, including repeat-one" started.
+2026-10-22 17:43:44.941 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:44.942 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:49.393 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:49.395 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Incoming analysis is frozen before overlap, including repeat-one" passed after 8.409 seconds.
+◇ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" started.
+2026-10-22 17:43:53.352 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:53.354 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 3.866 seconds.
+◇ Test "An incoming EOF delivered before outgoing EOF is retained" started.
+◇ Test case passing 1 argument crossfade → false to "An incoming EOF delivered before outgoing EOF is retained" started.
+2026-10-22 17:43:57.221 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:43:57.224 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+◇ Test case passing 1 argument crossfade → true to "An incoming EOF delivered before outgoing EOF is retained" started.
+2026-10-22 17:44:00.459 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:44:00.460 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "An incoming EOF delivered before outgoing EOF is retained" with 2 test cases passed after 6.246 seconds.
+◇ Test "Repeated same-track schedules cannot consume an outgoing duplicate" started.
+2026-10-22 17:44:03.463 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:44:03.464 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Repeated same-track schedules cannot consume an outgoing duplicate" passed after 2.734 seconds.
+◇ Test "Pause at a queued EOF cannot start the next song" started.
+2026-10-22 17:44:06.197 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:44:06.198 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Pause at a queued EOF cannot start the next song" passed after 5.631 seconds.
+◇ Test "A delayed configuration recovery cannot rewind the next gapless song" started.
+2026-10-22 17:44:11.828 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:44:11.829 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "A delayed configuration recovery cannot rewind the next gapless song" passed after 4.437 seconds.
+◇ Test "Deferred and obsolete EOF cannot override pause, resume or selection" started.
+2026-10-22 17:44:16.267 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:44:16.269 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Deferred and obsolete EOF cannot override pause, resume or selection" passed after 2.645 seconds.
+◇ Test "Rejected preroll preserves the active EOF and falls back to a fresh load" started.
+2026-10-22 17:44:18.912 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:44:18.913 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Rejected preroll preserves the active EOF and falls back to a fresh load" passed after 2.750 seconds.
+◇ Test "Real 10 ms tails reach next, repeat-one, queue/album wrap and final stop" started.
+2026-10-22 17:44:21.662 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-22 17:44:21.664 swiftpm-testing-helper[30118:1290369] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Real 10 ms tails reach next, repeat-one, queue/album wrap and final stop" passed after 13.339 seconds.
+✔ Suite "Playback transport integration" passed after 87.717 seconds.
+✔ Test run with 14 tests in 1 suite passewarning: '--build-system native' has been deprecated and will be removed in a future release; please report an issue at https://github.com/swiftlang/swift-package-manager/issues if you are unable to adopt the default build system.
+d after 87.717 seconds.

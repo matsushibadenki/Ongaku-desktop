@@ -79,6 +79,37 @@ struct FinalOutputProtectionTests {
         }
     }
 
+    @Test("Paused render resources reset queued true-peak audio before restart")
+    func pausedReset() throws {
+        for rate in [44_100.0, 96_000.0] {
+            let engine = AVAudioEngine(), player = AVAudioPlayerNode()
+            let stage = FinalOutputProtection(enabled: true)
+            let format = try #require(AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2))
+            engine.attach(player); stage.attach(to: engine)
+            engine.connect(player, to: stage.inputNode(in: engine), format: format)
+            try stage.connect(engine: engine, outputFormat: format)
+            try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 512)
+            let source = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 4096))
+            source.frameLength = source.frameCapacity
+            for ch in 0..<2 { source.floatChannelData![ch].initialize(repeating: 0.8, count: 4096) }
+            let output = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 512))
+            player.scheduleBuffer(source); try engine.start(); player.play()
+            #expect(try engine.renderOffline(127, to: output) == .success)
+            engine.pause(); player.stop()
+            let protector = try #require(stage.protector)
+            #expect(!engine.isRunning && protector.auAudioUnit.renderResourcesAllocated)
+            stage.resetWhileStopped(engine: engine)
+            #expect(protector.auAudioUnit.renderResourcesAllocated)
+            for ch in 0..<2 { source.floatChannelData![ch].initialize(repeating: 0, count: 4096) }
+            player.scheduleBuffer(source); try engine.start(); player.play()
+            for _ in 0..<8 {
+                #expect(try engine.renderOffline(512, to: output) == .success)
+                for ch in 0..<2 { for f in 0..<512 { #expect(output.floatChannelData![ch][f] == 0) } }
+            }
+            engine.stop(); player.stop(); engine.disableManualRenderingMode()
+        }
+    }
+
     @Test("Invalid output format fails instead of bypassing protection")
     func unsupportedFormat() throws {
         let stage = FinalOutputProtection(enabled: true), engine = AVAudioEngine()

@@ -1,0 +1,227 @@
+{
+  "configuration" : "ordinary",
+  "os" : "Version 26.2 (Build 23C54)",
+  "platform" : "iOS Simulator",
+  "samples" : [
+    {
+      "output_channels" : 2,
+      "output_rate" : 88200,
+      "processing_rate" : 96000,
+      "rows" : [
+        {
+          "cpu_ms" : 353.26800000000003,
+          "process_peak_rss_bytes" : 240893952,
+          "stage" : "controller.init",
+          "wall_ms" : 352.79275000000001
+        },
+        {
+          "cpu_ms" : 156.15100000000007,
+          "process_peak_rss_bytes" : 241745920,
+          "stage" : "graph.connect",
+          "wall_ms" : 137.45316700000001
+        },
+        {
+          "cpu_ms" : 2077.2759999999998,
+          "process_peak_rss_bytes" : 368836608,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 1966.9581250000001
+        },
+        {
+          "cpu_ms" : 0.010000000000218279,
+          "process_peak_rss_bytes" : 368836608,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 0.0033340000000000002
+        },
+        {
+          "cpu_ms" : 2294.3850000000002,
+          "process_peak_rss_bytes" : 368836608,
+          "stage" : "cold-load.call",
+          "wall_ms" : 2160.0831659999999
+        },
+        {
+          "cpu_ms" : 2326.2060000000001,
+          "process_peak_rss_bytes" : 384270336,
+          "stage" : "cold-load.ready",
+          "wall_ms" : 2239.9941250000002
+        },
+        {
+          "cpu_ms" : 6.6159999999999854,
+          "process_peak_rss_bytes" : 385236992,
+          "stage" : "cold-load.pause",
+          "wall_ms" : 42.96275
+        },
+        {
+          "cpu_ms" : 0.67399999999997817,
+          "process_peak_rss_bytes" : 385236992,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 0.670875
+        },
+        {
+          "cpu_ms" : 6.5620000000003529,
+          "process_peak_rss_bytes" : 385269760,
+          "stage" : "cold-load.resume",
+          "wall_ms" : 90.882750000000001
+        },
+        {
+          "cpu_ms" : 6.681999999999789,
+          "process_peak_rss_bytes" : 385597440,
+          "stage" : "graph.resetState",
+          "wall_ms" : 6.6555
+        },
+        {
+          "cpu_ms" : 1.3049999999998363,
+          "process_peak_rss_bytes" : 400556032,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 1.2637080000000001
+        },
+        {
+          "cpu_ms" : 0.0010000000002037268,
+          "process_peak_rss_bytes" : 400687104,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 0.0013749999999999999
+        },
+        {
+          "cpu_ms" : 23.177000000000135,
+          "process_peak_rss_bytes" : 400818176,
+          "stage" : "same-instance-reload.call",
+          "wall_ms" : 63.817208999999998
+        },
+        {
+          "cpu_ms" : 30.967000000000098,
+          "process_peak_rss_bytes" : 400818176,
+          "stage" : "same-instance-reload.ready",
+          "wall_ms" : 144.99445800000001
+        },
+        {
+          "cpu_ms" : 9.5509999999999309,
+          "process_peak_rss_bytes" : 400818176,
+          "stage" : "same-instance-reload.pause",
+          "wall_ms" : 41.419916999999998
+        },
+        {
+          "cpu_ms" : 1.7759999999998399,
+          "process_peak_rss_bytes" : 400818176,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 1.7347079999999999
+        },
+        {
+          "cpu_ms" : 11.550999999999931,
+          "process_peak_rss_bytes" : 401031168,
+          "stage" : "same-instance-reload.resume",
+          "wall_ms" : 92.019625000000005
+        }
+      ],
+      "source_rate" : 44100
+    },
+    {
+      "output_channels" : 2,
+      "output_rate" : 88200,
+      "processing_rate" : 96000,
+      "rows" : [
+        {
+          "cpu_ms" : 346.33799999999974,
+          "process_peak_rss_bytes" : 403570688,
+          "stage" : "controller.init",
+          "wall_ms" : 326.33445799999998
+        },
+        {
+          "cpu_ms" : 157.15000000000009,
+          "process_peak_rss_bytes" : 403832832,
+          "stage" : "graph.connect",
+          "wall_ms" : 144.14558400000001
+        },
+        {
+          "cpu_ms" : 1922.6229999999996,
+          "process_peak_rss_bytes" : 479379456,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 1901.0454999999999
+        },
+        {
+          "cpu_ms" : 0,
+          "process_peak_rss_bytes" : 479379456,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 0.00095799999999999998
+        },
+        {
+          "cpu_ms" : 2094.1370000000006,
+          "process_peak_rss_bytes" : 480313344,
+          "stage" : "cold-load.call",
+          "wall_ms" : 2063.6666660000001
+        },
+        {
+          "cpu_ms" : 2101.4990000000003,
+          "process_peak_rss_bytes" : 480362496,
+          "stage" : "cold-load.ready",
+          "wall_ms" : 2142.4645
+        },
+        {
+          "cpu_ms" : 6.319999999999709,
+          "process_peak_rss_bytes" : 480362496,
+          "stage" : "cold-load.pause",
+          "wall_ms" : 48.804124999999999
+        },
+        {
+          "cpu_ms" : 0.88299999999981083,
+          "process_peak_rss_bytes" : 480362496,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 0.86008300000000004
+        },
+        {
+          "cpu_ms" : 7.8760000000002037,
+          "process_peak_rss_bytes" : 480362496,
+          "stage" : "cold-load.resume",
+          "wall_ms" : 90.673749999999998
+        },
+        {
+          "cpu_ms" : 6.1510000000007494,
+          "process_peak_rss_bytes" : 480362496,
+          "stage" : "graph.resetState",
+          "wall_ms" : 6.0845419999999999
+        },
+        {
+          "cpu_ms" : 2.9690000000000509,
+          "process_peak_rss_bytes" : 482656256,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 2.895292
+        },
+        {
+          "cpu_ms" : 0.038999999999759893,
+          "process_peak_rss_bytes" : 482656256,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 0.006417
+        },
+        {
+          "cpu_ms" : 25.23700000000008,
+          "process_peak_rss_bytes" : 482721792,
+          "stage" : "same-instance-reload.call",
+          "wall_ms" : 65.574166000000005
+        },
+        {
+          "cpu_ms" : 32.907000000000153,
+          "process_peak_rss_bytes" : 482721792,
+          "stage" : "same-instance-reload.ready",
+          "wall_ms" : 153.27966699999999
+        },
+        {
+          "cpu_ms" : 10.612999999999374,
+          "process_peak_rss_bytes" : 482721792,
+          "stage" : "same-instance-reload.pause",
+          "wall_ms" : 46.059375000000003
+        },
+        {
+          "cpu_ms" : 2.6980000000003201,
+          "process_peak_rss_bytes" : 482721792,
+          "stage" : "engine.ensureRunning",
+          "wall_ms" : 2.6397499999999998
+        },
+        {
+          "cpu_ms" : 10.704000000000633,
+          "process_peak_rss_bytes" : 482787328,
+          "stage" : "same-instance-reload.resume",
+          "wall_ms" : 91.290625000000006
+        }
+      ],
+      "source_rate" : 96000
+    }
+  ]
+}

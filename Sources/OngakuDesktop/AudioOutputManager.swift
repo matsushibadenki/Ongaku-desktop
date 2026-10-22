@@ -66,6 +66,9 @@ enum UpsamplingPolicy {
 }
 
 struct AudioOutputManager {
+    /// An unknown output never qualifies for graph reuse.
+    var defaultOutputIdentity: String? { defaultOutputDevice().map { String($0) } }
+
     func configureDefaultOutput(sourceRate: Double) -> AudioOutputConfiguration? {
         guard let deviceID = defaultOutputDevice(),
               let currentRate = nominalSampleRate(deviceID),

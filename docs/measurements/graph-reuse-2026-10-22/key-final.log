@@ -1,0 +1,10 @@
+audio/AudioProcessingPolicy.swift:56:33: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+54 |         let reverbs = engine.attachedNodes.compactMap { node -> (AVAudioUnitReverb, AVAudioUnitReverbPreset?, Float, Bool)? in
+55 |             guard let reverb = node as? AVAudioUnitReverb else { return nil }
+56 |             let preset = reverb.auAudioUnit.currentPreset.flatMap { AVAudioUnitReverbPreset(rawValue: $0.number) }
+   |                                 `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+57 |             return (reverb, preset, reverb.wetDryMix, reverb.bypass)
+58 |         }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+PASS: complete source/processing/output formats, encoding, interleave, channel layout and known route govern reuse; unknown route fails closed

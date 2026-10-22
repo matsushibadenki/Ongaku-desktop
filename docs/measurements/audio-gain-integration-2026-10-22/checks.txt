@@ -1,0 +1,67 @@
+legacy-effects:
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 48 shipping effect/automatic-DSP transitions, latest-request coalescing, handoff deferral and stop cancellation
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: continuity guards reject output muting during parameter gestures
+
+legacy-transport:
+PASS: startup waits for render before fading
+PASS: pause intent, silent drain, position and restart
+PASS: rapid resume cancels old gains and pause without rescheduling
+PASS: stop invalidates transport callbacks before new playback
+PASS: stop retains sources through fade/drain; repeated stop coalesces and only latest session cleanup runs
+PASS: a superseding load cancels old preparation/session release and survives the old stop callbacks
+PASS: an already-stopped engine releases resources synchronously
+PASS: seek cancellation and paused seek
+PASS: latest seek wins, including immediate seek/play callers
+PASS: explicit play after node loss retires the old seek and delivers EOF
+PASS: missing render ends in paused state
+PASS: EOF cannot override pause/seek; resume replaces an already-ended schedule
+PASS: 6 stock-mixer PCM fade cases
+PASS: PCM guard rejects abrupt source start/stop
+PASS: state guard rejects resource teardown before fade/drain
+
+legacy-eof:
+PASS: recovered EOF mode=off last=false reaches correct queue/repeat action
+PASS: recovered EOF mode=off last=true reaches correct queue/repeat action
+PASS: recovered EOF mode=singleTrack last=false reaches correct queue/repeat action
+PASS: recovered EOF mode=singleTrack last=true reaches correct queue/repeat action
+PASS: recovered EOF mode=album last=false reaches correct queue/repeat action
+PASS: recovered EOF mode=album last=true reaches correct queue/repeat action
+PASS: retained EOF survives both recovery owners and stale UI; schedule identity rejects duplicates without swallowing short tracks
+PASS: 10 recovered EOF queue/intent cases; stale completions cannot select a song
+PASS: negative control rejects the original stranded-seek state
+
+prepared-eof:
+PASS: rejected handoff preserves audible prepared EOF exactly once, invalidTail=false
+PASS: rejected handoff preserves audible prepared EOF exactly once, invalidTail=true
+PASS: rejected candidate cannot end a reused generation; successful handoff accepts only incoming EOF
+PASS: negative control rejects the original global handoff callback token
+
+legacy-recovery:
+PASS: foreground retains pre-refresh playback intent and requests recovery for stopped I/O
+PASS: stalled render cannot keep the playing button despite running engine/node flags
+PASS: missing interruption end permits a guarded foreground retry without asserting playback
+PASS: other audio preserves the interruption; a subsequent free foreground can retry
+PASS: user pause and changed track/pause generations reject foreground auto-resume
+PASS: healthy local playback and Music-owned playback retain their existing ownership
+PASS: production recovery confirms progress, clears pending intent and restores playing UI
+PASS: natural EOF during recovery confirmation is delivered once after recovery releases ownership
+PASS: unexpected-stop recovery releases ownership before delivering short-tail EOF
+PASS: EOF during recovery delay/session activation advances without seeking or replaying the tail
+PASS: exhausted progress recovery stays paused despite running flags and preserves later retry intent
+PASS: recovery rejects old render position and confirms fresh advancing source frames
+PASS: accepted short-tail EOF confirms recovery, but a newer pause still cancels it
+PASS: cancelled and superseded progress checks cannot confirm a newer playback request
+PASS: negative control rejects refresh before intent capture
+PASS: negative control rejects discarded EOF during recovery
+PASS: negative control rejects recovery seeking over an accepted EOF
+
+mobile-normal:
+** BUILD SUCCEEDED **
+
+desktop-normal:
+** BUILD SUCCEEDED **
+
+store-build:
+** BUILD SUCCEEDED **

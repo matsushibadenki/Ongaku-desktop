@@ -1,0 +1,26 @@
+REUSE_STATE rate=44100 spaceSize=0.1 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=44100 spaceSize=0.4 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=44100 spaceSize=0.6 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=44100 spaceSize=0.9 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=48000 spaceSize=0.1 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=48000 spaceSize=0.4 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=48000 spaceSize=0.6 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=48000 spaceSize=0.9 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=96000 spaceSize=0.1 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=96000 spaceSize=0.4 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=96000 spaceSize=0.6 residual=0.0 FS lastNonzeroFrame=-1
+REUSE_STATE rate=96000 spaceSize=0.9 residual=0.0 FS lastNonzeroFrame=-1
+PASS: retained full rack + SRC + gain + true-peak reuse at 44100 Hz, spaceSize=0.1, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 44100 Hz, spaceSize=0.4, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 44100 Hz, spaceSize=0.6, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 44100 Hz, spaceSize=0.9, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 48000 Hz, spaceSize=0.1, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 48000 Hz, spaceSize=0.4, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 48000 Hz, spaceSize=0.6, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 48000 Hz, spaceSize=0.9, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 96000 Hz, spaceSize=0.1, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 96000 Hz, spaceSize=0.4, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 96000 Hz, spaceSize=0.6, residual=0.0 FS
+PASS: retained full rack + SRC + gain + true-peak reuse at 96000 Hz, spaceSize=0.9, residual=0.0 FS
+tests/run_graph_reuse_state_regression.sh: line 24: 28235 Trace/BPT trap: 5       "$audit_dir/reuse" --skip-reset > "$audit_dir/negative.log" 2>&1
+PASS: rejected missing full-state reset negative control

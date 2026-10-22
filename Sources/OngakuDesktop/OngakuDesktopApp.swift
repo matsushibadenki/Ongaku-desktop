@@ -190,11 +190,64 @@ final class SoftwareUpdateController: ObservableObject {
 }
 #endif
 
+/// Launch the replacement before exiting, so a Launch Services failure never
+/// leaves the user with a closed app. Only successful recovery calls this owner.
+@MainActor
+final class LibraryRecoveryRelauncher: ObservableObject {
+    @Published private(set) var isRelaunching = false
+    @Published var errorMessage: String?
+    private let launch: () async throws -> Void
+    private let terminate: () -> Void
+
+    init(launch: (() async throws -> Void)? = nil, terminate: (() -> Void)? = nil) {
+        self.launch = launch ?? {
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.createsNewApplicationInstance = true
+            configuration.activates = true
+            // Keep isolated qualification launches isolated; never repeat the
+            // fixture preparation or forward arbitrary startup arguments.
+            if let qualification = LibraryQualificationConfiguration.current {
+                configuration.arguments = [LibraryQualificationConfiguration.rootArgument,
+                                           qualification.rootURL.path]
+                if qualification.exercisesRecovery {
+                    configuration.arguments.append("--ongaku-qualification-recovery")
+                }
+            }
+            let replacement = try await NSWorkspace.shared.openApplication(
+                at: Bundle.main.bundleURL, configuration: configuration
+            )
+            guard replacement.processIdentifier != ProcessInfo.processInfo.processIdentifier,
+                  !replacement.isTerminated else {
+                throw NSError(domain: "OngakuRelaunch", code: 1, userInfo: [
+                    NSLocalizedDescriptionKey: L10n.text("storage.migration.restartFailed.message"),
+                ])
+            }
+        }
+        self.terminate = terminate ?? { NSApplication.shared.terminate(nil) }
+    }
+
+    func restart() async {
+        guard !isRelaunching else { return }
+        isRelaunching = true
+        errorMessage = nil
+        do {
+            try await launch()
+            terminate()
+            // Keep the gate closed until termination; repeated requests must
+            // not create multiple replacement processes.
+        } catch {
+            isRelaunching = false
+            errorMessage = error.localizedDescription
+        }
+    }
+}
+
 @main
 struct OngakuDesktopApp: App {
     private let qualificationConfiguration: LibraryQualificationConfiguration?
     @State private var isRecoveringMigration = false
     @State private var migrationRecoveryError: String?
+    @StateObject private var migrationRelauncher = LibraryRecoveryRelauncher()
     @StateObject private var storage: LibraryStorageSettings
     @StateObject private var libraryProfiles: LibraryProfileSettings
     @StateObject private var library: LibraryStore
@@ -280,7 +333,6 @@ struct OngakuDesktopApp: App {
         panel.directoryURL = libraryProfiles.activeProfile.mediaURL
         panel.message = L10n.text("storage.migration.sameFolder")
         guard panel.runModal() == .OK, let selected = panel.url else { return }
-        let wasMigrationBlocked = libraryProfiles.migrationError != nil
         isRecoveringMigration = true
         migrationRecoveryError = nil
         Task { @MainActor in
@@ -310,17 +362,14 @@ struct OngakuDesktopApp: App {
                     guard confirmation.runModal() == .alertSecondButtonReturn else { return }
                     try libraryProfiles.createLibraryAfterRecoveryConfirmation(in: selected)
                     storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
+                    await migrationRelauncher.restart()
                     return
                 }
                 try storage.authorizeMigrationAccess(selecting: selected, mediaURL: destination) {
                     try libraryProfiles.repairMigration(at: destination)
                 }
                 storage.activateProfileMediaDirectory(destination)
-                if !wasMigrationBlocked {
-                    let profile = libraryProfiles.activeProfile
-                    await library.switchLibrary(catalogURL: profile.catalogURL, mediaURL: profile.mediaURL)
-                    await library.refreshFileAvailability(force: true)
-                }
+                await migrationRelauncher.restart()
             } catch {
                 migrationRecoveryError = error.localizedDescription
             }
@@ -330,7 +379,12 @@ struct OngakuDesktopApp: App {
     var body: some Scene {
         Window("Ongaku", id: "main") {
             Group {
-                if (qualificationConfiguration == nil || qualificationConfiguration?.exercisesRecovery == true),
+                if migrationRelauncher.isRelaunching {
+                    ProgressView(L10n.text("storage.migration.restarting"))
+                        .padding(.horizontal, 24)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(AppTheme.canvas.ignoresSafeArea())
+                } else if (qualificationConfiguration == nil || qualificationConfiguration?.exercisesRecovery == true),
                    let error = libraryProfiles.migrationError {
                     VStack(spacing: 16) {
                         Text(L10n.text("storage.migration.failed")).font(.headline)
@@ -373,6 +427,18 @@ struct OngakuDesktopApp: App {
                 } message: {
                     Text(migrationRecoveryError ?? "")
                 }
+                .alert(L10n.text("storage.migration.restartFailed"), isPresented: Binding(
+                    get: { migrationRelauncher.errorMessage != nil },
+                    set: { if !$0 { migrationRelauncher.errorMessage = nil } }
+                )) {
+                    Button(L10n.text("storage.migration.restart")) {
+                        Task { await migrationRelauncher.restart() }
+                    }
+                    Button(L10n.text("common.cancel"), role: .cancel) { migrationRelauncher.errorMessage = nil }
+                } message: {
+                    Text(L10n.text("storage.migration.restartFailed.message") + "\n\n"
+                         + (migrationRelauncher.errorMessage ?? ""))
+                }
                 .background(WindowMiniaturizeBridge(controller: windowPresentation))
                 .environmentObject(library)
                 .environmentObject(player)
@@ -391,6 +457,7 @@ struct OngakuDesktopApp: App {
                 .preferredColorScheme(appearance.selectedAppearance.colorScheme)
                 .id(language.selectedLanguage.rawValue)
                 .task(id: libraryProfiles.migrationError == nil) {
+                    guard !isRecoveringMigration, !migrationRelauncher.isRelaunching else { return }
                     if let qualificationConfiguration, !qualificationConfiguration.exercisesRecovery {
                         try? await LibraryQualificationFixture.prepare(qualificationConfiguration)
                         await library.load()
@@ -437,6 +504,7 @@ struct OngakuDesktopApp: App {
                     player.updateAudioFeatures(library.audioFeatures)
                 }
                 .onChange(of: libraryProfiles.activeLibraryID) {
+                    guard !isRecoveringMigration, !migrationRelauncher.isRelaunching else { return }
                     guard qualificationConfiguration == nil || qualificationConfiguration?.exercisesRecovery == true else { return }
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
@@ -453,6 +521,7 @@ struct OngakuDesktopApp: App {
                     }
                 }
                 .onChange(of: libraryProfiles.activeLocationRevision) {
+                    guard !isRecoveringMigration, !migrationRelauncher.isRelaunching else { return }
                     guard qualificationConfiguration == nil else { return }
                     let profile = libraryProfiles.activeProfile
                     guard !library.isUsingCatalog(at: profile.catalogURL) else { return }
@@ -473,7 +542,7 @@ struct OngakuDesktopApp: App {
                     library.schedulePlaybackQueueSave(player.queueState)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .requestLibraryRecovery)) { _ in
-                    guard !isRecoveringMigration else { return }
+                    guard !isRecoveringMigration, !migrationRelauncher.isRelaunching else { return }
                     recoverLibraryMigration()
                 }
                 .onReceive(player.playbackEventPublisher) { event in

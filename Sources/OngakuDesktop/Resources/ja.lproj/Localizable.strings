@@ -1257,3 +1257,29 @@
 "effects.eqGroup.highMid" = "高中域 · HMF";
 "effects.eqGroup.high" = "高域 · HF";
 "effects.eqGroup.output" = "出力";
+
+// Original source metadata
+"sourceinfo.title" = "音源ファイル";
+"sourceinfo.container" = "ファイル拡張子";
+"sourceinfo.codec" = "コーデック";
+"sourceinfo.rate" = "サンプルレート";
+"sourceinfo.depth" = "元音源のビット深度";
+"sourceinfo.channels" = "チャンネル数";
+"sourceinfo.bitrate" = "推定ビットレート";
+"sourceinfo.size" = "ファイル容量";
+"sourceinfo.error" = "読込エラー";
+"sourceinfo.unknown" = "不明";
+"sourceinfo.url" = "音源URLあり";
+"sourceinfo.protected" = "保護付き音源";
+"sourceinfo.read" = "情報の取得";
+"sourceinfo.yes" = "はい";
+"sourceinfo.no" = "いいえ";
+"sourceinfo.success" = "取得済み";
+"sourceinfo.unavailable" = "取得不可";
+"sourceinfo.processing" = "処理中の形式";
+
+// Restart after successful library recovery.
+"storage.migration.restarting" = "再起動しています…";
+"storage.migration.restartFailed" = "アプリを再起動できませんでした";
+"storage.migration.restartFailed.message" = "修復は完了しています。再起動を再試行するか、アプリを終了して開き直してください。";
+"storage.migration.restart" = "再起動";

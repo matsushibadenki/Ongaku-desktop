@@ -1,0 +1,8 @@
+Mac16,13 / Apple M4 / 10 physical cores
+macOS 27.0.1 (26A434)
+Xcode 27.1 (27A9275)
+iPhone SE (3rd generation) Simulator: iOS 26.2 (23C54)
+Mac output 44100 Hz stereo; Simulator output 88200 Hz stereo; DSP 96000 Hz stereo.
+Three rotated launches per variant; no builds during measured runs.
+
+Follow-up: current device endpoint 88200 Hz stereo; rack 96000 Hz stereo. Final Simulator aggregate reports 35 PASS observations across four completed phases.

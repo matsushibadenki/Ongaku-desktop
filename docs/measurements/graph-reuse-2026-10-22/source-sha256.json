@@ -1,0 +1,21 @@
+{
+  "mobile": {
+    "audio/AudioProcessingPolicy.swift": "b3cffc0c1eaa93cb0ddebcec503aea4597e67fc92452eca3aa9011d9822bbf77",
+    "audio/HiResPlaybackEngine.swift": "18977c9669dd6b9265f7ab8d3eb984e85169851bfb71a4e0adee1b30df9e8e5e",
+    "tests/AudioGraphConfigurationRegression.swift": "2ae56563d27a802d9e07b9b1c4c30d898b527f7569051069ca10ca5be32e92e8",
+    "tests/GraphReuseStateRegression.swift": "8857e28879f7e36ff071d9c1fe933bb0f8653a4375b724ffa5e7d672f687bd4f",
+    "tests/GraphInitializationAudit.swift": "9a9f93bdf435b95605e25db9862cd33baa1e947e79e742eac86ec9f90c2eb0ff",
+    "tests/run_audio_graph_configuration_regression.sh": "4a8108f5eb0256b72fd46a9e27da088e909de180c0089093eab2b13a5340ad60",
+    "tests/run_graph_reuse_state_regression.sh": "fb1a514977d541ed0e775ec004312b6e110cf9173b7b9abd02449c2b768f0268",
+    "tests/run_graph_initialization_audit.sh": "e554a79a04edaa3f4cd786459950138c738eea166e7370029586af730ef790ce"
+  },
+  "desktop": {
+    "Sources/OngakuDesktop/AudioProcessingPolicy.swift": "b3cffc0c1eaa93cb0ddebcec503aea4597e67fc92452eca3aa9011d9822bbf77",
+    "Sources/OngakuDesktop/PlaybackController.swift": "e44a49acc83b5a158e71299f5c7d282a97c3303bee0313fa8594d6138e055aba",
+    "Sources/OngakuDesktop/AudioOutputManager.swift": "f2e20280e78539e6bb69884b5876ae9df8352746d94917f9dd4502925a0f86d1",
+    "Tests/OngakuDesktopTests/PlaybackTransportIntegrationTests.swift": "6afc16cd89e537c9759e19bcfde0644db56282bf6b4db8b1ab3ca6691ea8682a",
+    "Tests/OngakuDesktopTests/StartupCostAuditTests.swift": "5daa7951308a51b29a38417470d1aec346d143c85ce7d277fad384b2021e9fe4",
+    "Tests/AudioDSP/GraphReuseStateRegression.swift": "8857e28879f7e36ff071d9c1fe933bb0f8653a4375b724ffa5e7d672f687bd4f",
+    "tools/run_graph_reuse_state_regression.sh": "7d6a9dd570bba3e102538bff3526c2758b9ebcfc22eaee4b2022923e123e3a58"
+  }
+}

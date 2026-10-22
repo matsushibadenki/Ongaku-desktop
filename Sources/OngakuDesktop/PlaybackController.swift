@@ -985,6 +985,8 @@ final class PlaybackController: ObservableObject {
     let missingTrackPublisher = PassthroughSubject<Track.ID, Never>()
 
     private let engine = AVAudioEngine()
+    private var configuredGraph: AudioGraphConfiguration?
+    private var graphConfigurationGeneration: UInt64 = 0
     private let primaryPlayerNode = AVAudioPlayerNode()
     private let secondaryPlayerNode = AVAudioPlayerNode()
     private let sourceMixerNode = AVAudioMixerNode()
@@ -997,6 +999,35 @@ final class PlaybackController: ObservableObject {
     }
     private let effectOutputProtection = EffectOutputProtection()
     private let finalOutputProtection = FinalOutputProtection()
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+    private let effectAudioGain = AudioThreadGainStage(gain: 1)
+    private let transportAudioGain = AudioThreadGainStage(gain: 0)
+#endif
+    private var effectAudioRamp: EffectParameterTransition.Ramp? {
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        return { [weak self] target, duration, current, completion in
+            guard let self else { return }
+            self.effectAudioGain.ramp(to: target, duration: duration,
+                isRunning: { [weak self] in self?.engine.isRunning == true }, isCurrent: current,
+                stalled: { [weak self] in self?.engine.pause(); self?.isPlaying = false }, completion: completion)
+        }
+#else
+        return nil
+#endif
+    }
+    private var transportAudioRamp: TransportOutputEnvelope.Ramp? {
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        return { [weak self] target, duration, current, completion in
+            guard let self else { return }
+            self.transportAudioGain.ramp(to: target, duration: duration,
+                isRunning: { [weak self] in self?.engine.isRunning == true }, isCurrent: current,
+                stalled: { [weak self] in self?.engine.pause(); self?.isPlaying = false }, completion: completion)
+        }
+#else
+        return nil
+#endif
+    }
+
     private let effectPipeline: [AudioEffectNode]
     private lazy var effectParameterTransition = EffectParameterTransition(
         isAudible: { [weak self] in
@@ -1014,13 +1045,22 @@ final class PlaybackController: ObservableObject {
         },
         setEnvelope: { [weak self] gain in
             guard let self else { return }
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+            self.effectAudioGain.setImmediate(gain)
+#else
             self.finalOutputProtection.setTransitionGain(gain, engine: self.engine)
+#endif
         },
+        audioRamp: effectAudioRamp,
         commit: { [weak self] settings in self?.commitEffectSettings(settings) }
     )
-    private lazy var transportEnvelope = TransportOutputEnvelope { [weak self] gain in
+    private lazy var transportEnvelope = TransportOutputEnvelope(audioRamp: transportAudioRamp) { [weak self] gain in
         guard let self else { return }
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        self.transportAudioGain.setImmediate(gain)
+#else
         self.finalOutputProtection.setTransportGain(gain, engine: self.engine)
+#endif
     }
     private var pendingLoad: (track: Track, position: TimeInterval)?
     private struct NormalizationReference {
@@ -1127,12 +1167,16 @@ final class PlaybackController: ObservableObject {
         engine.attach(sourceMixerNode)
         effectPipeline.forEach { $0.attach(to: engine) }
         effectOutputProtection.attach(to: engine)
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        engine.attach(effectAudioGain.node)
+        engine.attach(transportAudioGain.node)
+#endif
         finalOutputProtection.attach(to: engine)
-        applyEffectSettings(immediately: true, force: true)
+        // Apply once after the first graph has its negotiated processing format.
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
         sourceMixerNode.outputVolume = 1
-        finalOutputProtection.setVolume(volume, engine: engine)
+        // configureEngine applies the current user volume before any render starts.
         observeSystemAudioEvents()
     }
 
@@ -1163,7 +1207,7 @@ final class PlaybackController: ObservableObject {
             sourceSampleRate: sourceSampleRate,
             sourceChannelCount: sourceChannelCount,
             processingSampleRate: AudioProcessingPolicy.processingSampleRate(for: sourceSampleRate),
-            processingChannelCount: sourceChannelCount,
+            processingChannelCount: max(2, sourceChannelCount),
             outputSampleRate: outputSampleRate,
             outputChannelCount: outputChannelCount,
             enabledEffects: effectsBypassed
@@ -1498,7 +1542,7 @@ final class PlaybackController: ObservableObject {
                 )
             }
 
-            clearStoppedPlayback()
+            clearStoppedPlayback(preservingGraph: true)
             let fileURL = track.fileURL.standardizedFileURL
             let file = try audioFileOpener(fileURL)
             suppressConfigurationRecovery()
@@ -1520,7 +1564,12 @@ final class PlaybackController: ObservableObject {
             let frame = AVAudioFramePosition(elapsed * file.processingFormat.sampleRate)
             schedule(fromFrame: min(frame, file.length))
             if autoplay {
+
+#if ONGAKU_STARTUP_AUDIT
+                try StartupCostAudit.measure("engine.start") { try engine.start() }
+#else
                 try engine.start()
+#endif
                 playerNode.play()
                 startTransportOutput()
                 isPlaying = true
@@ -1651,7 +1700,13 @@ final class PlaybackController: ObservableObject {
         elapsed = clamped
         if shouldResume {
             do {
-                if !engine.isRunning { try engine.start() }
+                if !engine.isRunning {
+#if ONGAKU_STARTUP_AUDIT
+                try StartupCostAudit.measure("engine.start") { try engine.start() }
+#else
+                try engine.start()
+#endif
+                }
                 playerNode.play()
                 isPlaying = true
                 startTransportOutput()
@@ -1665,7 +1720,33 @@ final class PlaybackController: ObservableObject {
         publishQueueState(force: true)
     }
 
-    private func configureEngine(for file: AVAudioFile) throws {
+    private func configureEngine(for file: AVAudioFile, forceRebuild: Bool = false) throws {
+#if ONGAKU_STARTUP_AUDIT
+        let audit = StartupCostAudit.begin(); defer { StartupCostAudit.end("graph.configure", audit) }
+#endif
+        let processingFormat = AVAudioFormat(standardFormatWithSampleRate:
+            AudioProcessingPolicy.processingSampleRate(for: file.processingFormat.sampleRate),
+            channels: max(2, file.processingFormat.channelCount))!
+        let hardwareFormat = engine.outputNode.outputFormat(forBus: 0)
+        let configuration = AudioGraphConfiguration(source: file.processingFormat,
+            processing: processingFormat, output: hardwareFormat,
+            routeIdentifier: outputManager.defaultOutputIdentity)
+        if !forceRebuild, !engine.isRunning, let configuration, configuredGraph == configuration {
+            // loadAfterDrain has already muted and retired the previous source.
+            // Reuse only the graph; new file/schedule/gain references still apply.
+            applyEffectSettings(immediately: true, force: true)
+            finalOutputProtection.setVolume(volume, engine: engine)
+            finalOutputProtection.resetWhileStopped(engine: engine)
+            outputSampleRate = hardwareFormat.sampleRate
+            outputChannelCount = hardwareFormat.channelCount
+            if !isMeterTapInstalled { installMeterTap() }
+#if ONGAKU_STARTUP_AUDIT
+            StartupCostAudit.end("graph.reuse", audit)
+#endif
+            logSignalPath(reason: "engine-reused")
+            return
+        }
+        configuredGraph = nil
         engine.stop()
         removeMeterTapIfNeeded()
         engine.disconnectNodeOutput(primaryPlayerNode)
@@ -1676,6 +1757,10 @@ final class PlaybackController: ObservableObject {
         }
         effectOutputProtection.nodes.forEach { engine.disconnectNodeOutput($0) }
         finalOutputProtection.nodes.forEach { engine.disconnectNodeOutput($0) }
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        engine.disconnectNodeOutput(effectAudioGain.node)
+        engine.disconnectNodeOutput(transportAudioGain.node)
+#endif
         engine.disconnectNodeOutput(engine.mainMixerNode)
 
         // Both player nodes share a source mixer so compatible tracks can overlap
@@ -1696,27 +1781,41 @@ final class PlaybackController: ObservableObject {
         )
         // Source mixer performs the file -> common DSP-rate conversion.
         // Transport clocks and seeks continue to use file.processingFormat.
-        let processingFormat = AVAudioFormat(standardFormatWithSampleRate:
-            AudioProcessingPolicy.processingSampleRate(for: file.processingFormat.sampleRate),
-            channels: file.processingFormat.channelCount)!
+        // Like iPhone, expand mono before the rack: stereo-only Audio Units
+        // reject a one-channel bus even while their effect is bypassed.
         var upstream: AVAudioNode = sourceMixerNode
         for effect in effectPipeline {
             engine.connect(upstream, to: effect.inputNode, format: processingFormat)
             effect.connectInternalNodes(engine: engine, format: processingFormat)
             upstream = effect.outputNode
         }
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        guard processingFormat.channelCount <= 2 else {
+            throw NSError(domain: NSOSStatusErrorDomain, code: Int(kAudioUnitErr_FormatNotSupported))
+        }
+        effectOutputProtection.connect(from: upstream, engine: engine, format: processingFormat,
+                                       destination: effectAudioGain.node)
+        engine.connect(effectAudioGain.node, to: transportAudioGain.node, format: processingFormat)
+        engine.connect(transportAudioGain.node, to: finalOutputProtection.inputNode(in: engine), format: processingFormat)
+#else
         effectOutputProtection.connect(from: upstream, engine: engine, format: processingFormat,
                                        destination: finalOutputProtection.inputNode(in: engine))
+#endif
         // Reapply sample-rate-dependent settings after the new format is connected.
         applyEffectSettings(immediately: true, force: true)
-        let hardwareFormat = engine.outputNode.inputFormat(forBus: 0)
         try finalOutputProtection.connect(engine: engine, outputFormat: hardwareFormat)
         finalOutputProtection.setVolume(volume, engine: engine)
         finalOutputProtection.resetWhileStopped(engine: engine)
         outputSampleRate = hardwareFormat.sampleRate
         outputChannelCount = hardwareFormat.channelCount
         installMeterTap()
+#if ONGAKU_STARTUP_AUDIT
+        StartupCostAudit.measure("engine.prepare") { engine.prepare() }
+#else
         engine.prepare()
+#endif
+        configuredGraph = configuration
+        graphConfigurationGeneration &+= 1
         logSignalPath(reason: "engine-configured")
     }
 
@@ -1749,6 +1848,7 @@ final class PlaybackController: ObservableObject {
     }
 
     private func prepareForSystemSleep() {
+        configuredGraph = nil
         recoveryTask?.cancel()
         recoveryTask = nil
         let position = isPlaying ? currentElapsed() : elapsed
@@ -1826,14 +1926,19 @@ final class PlaybackController: ObservableObject {
             sourceChannelCount = audioFile.processingFormat.channelCount
             outputSampleRate = configuration?.actualRate ?? sourceRate
 
-            try configureEngine(for: audioFile)
+            try configureEngine(for: audioFile, forceRebuild: true)
             let fileDuration = Double(audioFile.length) / sourceRate
             elapsed = min(max(position, 0), max(fileDuration - 0.01, 0))
             let frame = AVAudioFramePosition(elapsed * sourceRate)
             schedule(fromFrame: min(frame, audioFile.length))
 
             if shouldResume {
+
+#if ONGAKU_STARTUP_AUDIT
+                try StartupCostAudit.measure("engine.start") { try engine.start() }
+#else
                 try engine.start()
+#endif
                 playerNode.play()
                 startTransportOutput()
                 isPlaying = true
@@ -2227,8 +2332,13 @@ final class PlaybackController: ObservableObject {
         stopCrossfadeTimer() // Retain both schedules and their last overlap gains.
         effectParameterTransition.freezeForTransport()
         let rate = max(8_000, engine.outputNode.inputFormat(forBus: 0).sampleRate)
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        let mixerDrain = max(0, engine.mainMixerNode.auAudioUnit.latency)
+#else
+        let mixerDrain: TimeInterval = 0
+#endif
         let drain = max(0.012, 2 * Double(engine.outputNode.auAudioUnit.maximumFramesToRender) / rate)
-            + finalOutputProtection.latency
+            + finalOutputProtection.latency + mixerDrain
         transportEnvelope.stop(running: engine.isRunning, drain: drain) { [weak self] in
             guard let self else { return }
             self.engine.pause()
@@ -2237,6 +2347,10 @@ final class PlaybackController: ObservableObject {
     }
 
     private func startTransportOutput() {
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        effectAudioGain.synchronizeAfterStart()
+        transportAudioGain.setImmediate(0)
+#endif
         var baseline: AVAudioFramePosition?
         let rate = audioFile?.processingFormat.sampleRate ?? 48_000
         let rackLatency = (effectPipeline.flatMap(\.nodes) + effectOutputProtection.nodes)
@@ -2265,7 +2379,7 @@ final class PlaybackController: ObservableObject {
         performTransportChange { [weak self] in self?.clearStoppedPlayback() }
     }
 
-    private func clearStoppedPlayback() {
+    private func clearStoppedPlayback(preservingGraph: Bool = false) {
         normalizationReferences.removeAll()
 
         recoveryTask?.cancel()
@@ -2273,8 +2387,14 @@ final class PlaybackController: ObservableObject {
         playbackGeneration = UUID()
         prerolledTrack = nil
         activeTrackNodeStartSampleTime = 0
+        if preservingGraph { engine.pause() }
         stopPlayerNodes(resetActivePlayer: true)
-        engine.stop()
+        if preservingGraph {
+            if audioFile != nil, !AudioGraphLifecycle.resetWhilePaused(engine) { configuredGraph = nil }
+        } else {
+            engine.stop()
+            configuredGraph = nil
+        }
         stopTimer()
         audioFile = nil
         isPlaying = false
@@ -2291,7 +2411,9 @@ final class PlaybackController: ObservableObject {
         // Do not let queued lookahead PCM leak across pause, seek or stop. The
         // compatible gapless/crossfade path deliberately does not call this helper.
         if finalOutputProtection.isEnabled {
-            engine.stop()
+            // The transport owner has drained to silence. Pause I/O while
+            // resetting lookahead, retaining the prepared rack for rescheduling.
+            engine.pause()
             finalOutputProtection.resetWhileStopped(engine: engine)
         }
         primaryPlayerNode.stop()

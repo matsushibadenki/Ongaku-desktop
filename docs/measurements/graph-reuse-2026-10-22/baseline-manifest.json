@@ -1,0 +1,5 @@
+{
+  "mac_baseline_controller_sha256": "92105e9162a4abf69e3dd3001e0383dd4022358f28f43cfec62d259ad1884dce",
+  "mobile_baseline_engine_sha256": "b965e3f237d0f8c2a729eb7c701452c4bb882efd5723af78dd0848f290c354de",
+  "baseline_endpoint_note": "Mac historical output_rate captures the negotiated engine/input scope; current captures/pins device output. Use matched-control for same-format cache comparison."
+}

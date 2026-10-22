@@ -1257,3 +1257,29 @@
 "effects.eqGroup.highMid" = "High mid · HMF";
 "effects.eqGroup.high" = "High · HF";
 "effects.eqGroup.output" = "Output";
+
+// Original source metadata
+"sourceinfo.title" = "Source file";
+"sourceinfo.container" = "File extension";
+"sourceinfo.codec" = "Codec";
+"sourceinfo.rate" = "Sample rate";
+"sourceinfo.depth" = "Source bit depth";
+"sourceinfo.channels" = "Channels";
+"sourceinfo.bitrate" = "Estimated bitrate";
+"sourceinfo.size" = "File size";
+"sourceinfo.error" = "Read error";
+"sourceinfo.unknown" = "Unknown";
+"sourceinfo.url" = "Source URL available";
+"sourceinfo.protected" = "Protected content";
+"sourceinfo.read" = "Metadata access";
+"sourceinfo.yes" = "Yes";
+"sourceinfo.no" = "No";
+"sourceinfo.success" = "Read successfully";
+"sourceinfo.unavailable" = "Unavailable";
+"sourceinfo.processing" = "Processing format";
+
+// Restart after successful library recovery.
+"storage.migration.restarting" = "Restarting…";
+"storage.migration.restartFailed" = "Could not restart the app";
+"storage.migration.restartFailed.message" = "The repair is complete. Try restarting again, or quit and reopen the app.";
+"storage.migration.restart" = "Restart";

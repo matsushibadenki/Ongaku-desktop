@@ -1,0 +1,14 @@
+Monitoring boot status for Ongaku Lyrics SE (8220EDC1-4303-49BF-B480-0484AC2BBB47).
+Device already booted, nothing to do.
+
+local.ongaku.foreground-audit: 78876
+PASS: native Music-identity source confirms fresh progress after protected startup
+PASS: stopped render I/O cannot report recovery while Music identity and resource remain retained
+PASS: reactivation and protected rescheduling resume from retained position without replacing Music identity
+PASS: a newer pause cancels pending recovery confirmation and remains paused
+PASS: explicit resume after lost seek node delivers one EOF, preparedPCM=false
+PASS: 10 ms tail confirms recovery through one retained EOF, preparedPCM=false
+PASS: explicit resume after lost seek node delivers one EOF, preparedPCM=true
+PASS: 10 ms tail confirms recovery through one retained EOF, preparedPCM=true
+PASS: explicit resume still advances and destructive stop still drains after recovery
+COMPLETE
