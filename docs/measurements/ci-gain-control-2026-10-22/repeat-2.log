@@ -1,0 +1,14 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Connected audio-thread gain" started.
+◇ Test "Effect topology commit waits for rendered zero and transport drain preserves resources" started.
+✔ Test "Effect topology commit waits for rendered zero and transport drain preserves resources" passed after 0.486 seconds.
+◇ Test "Space OFF commits at rendered zero and retains audible tail after restoration" started.
+✔ Test "Space OFF commits at rendered zero and retains audible tail after restoration" passed after 0.078 seconds.
+◇ Test "Retargeting cancels obsolete completion without an output jump" started.
+✔ Test "Retargeting cancels obsolete completion without an output jump" passed after 0.009 seconds.
+◇ Test "Missing render acknowledgement stops I/O before permitting a commit" started.
+✔ Test "Missing render acknowledgement stops I/O before permitting a commit" passed after 2.354 seconds.
+✔ Suite "Connected audio-thread gain" passed after 2.929 seconds.
+✔ Test run with 4 tests in 1 suite passed after 2.929 seconds.

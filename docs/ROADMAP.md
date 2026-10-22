@@ -1,5 +1,12 @@
 # Ongaku Desktop ロードマップ
 
+## Connected gain CI state waits — 2026-10-22
+
+- 🟢 [Done] Fix the reported GitHub run's fixed-sleep assumptions in the Desktop manual-render gain tests. Wait for actual ramp issuance/completion and transport/fallback state with bounded deadlines; deliberately delay effect control callbacks by 50 ms. Preserve exact PCM/frame/zero/retained-tail/cancellation safety assertions. No app/runtime/DSP or iPhone algorithm changes. See [cause and verification](quality/CI_GAIN_CONTROL_WAIT_2026-10-22.md).
+- 🟢 [Done] Pass all four connected-gain tests after compilation, then pass three consecutive runs of the exact CI skip-build command; whitespace checks pass. Preserve local evidence and distinguish developer versus runner toolchains.
+- ⭕️ [Pending] GitHub rerun after publication; existing physical iPhone/Mac/DAC qualification remains unchanged.
+
+
 ## Initial graph setup and compatible reload reuse — 2026-10-22
 
 - 🟢 [Done] Remove premature Mac constructor parameter writes and iPhone's nil-format constructor connection; connect/apply once with the actual format. Share complete format/route identity and paused-state reset verbatim. Mac compatible explicit reloads retain the prepared graph, but replace source schedules, normalization and EOF ownership; format/route/recovery/destructive changes rebuild. Final output uses the device-side format rather than the previously negotiated engine input. See [implementation, matched timings and evidence](GRAPH_REUSE_AND_COLD_START_2026-10-22.md).

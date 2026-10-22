@@ -60,6 +60,23 @@ import os
 
 @Suite("Connected audio-thread gain", .serialized)
 @MainActor struct AudioThreadGainIntegrationTests {
+    // CI dispatch latency is not an audio endpoint. Wait for the observed
+    // control state, retaining a finite failure deadline and exact PCM checks.
+    private func waitUntil(_ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now.advanced(by: .seconds(30))
+        while !condition() {
+            guard ContinuousClock.now < deadline else {
+                throw NSError(domain: "GainIntegration.ControlStateTimeout", code: 1)
+            }
+            try await Task.sleep(for: .milliseconds(5))
+        }
+    }
+
+    private func delayedControl(_ delay: TimeInterval, _ action: @escaping @MainActor () -> Void) {
+        // Exercise a late control callback on every run, including a fast Mac.
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay + 0.05, execute: action)
+    }
+
     @Test("Effect topology commit waits for rendered zero and transport drain preserves resources")
     func renderedEndpointOwnership() async throws {
         for rate in [44100.0, 48000, 96000] {
@@ -68,6 +85,7 @@ import os
             var commits = 0, mutedCommit = false
             let transition = EffectParameterTransition(isAudible: { true }, shouldDefer: { false },
                 setEnvelope: { graph.effect.setImmediate($0) },
+                schedule: delayedControl,
                 audioRamp: { target, seconds, current, done in
                     graph.effect.ramp(to: target, duration: seconds, isRunning: { graph.engine.isRunning },
                         isCurrent: current, stalled: { graph.engine.pause() }, completion: done)
@@ -87,10 +105,10 @@ import os
             try await Task.sleep(for: .milliseconds(12))
             #expect(commits == 1)
             try graph.render(1)
-            try await Task.sleep(for: .milliseconds(20))
+            try await waitUntil { commits == 2 && graph.effect.gain == 1 }
             #expect(commits == 2 && mutedCommit)
             try graph.render(Int((rate * 0.016).rounded()) + 32)
-            try await Task.sleep(for: .milliseconds(12))
+            try await waitUntil { !transition.isProtectingOutput }
             #expect(!transition.isProtectingOutput)
             #expect(abs(graph.lastSample - 0.05) < 0.000001)
 
@@ -106,7 +124,7 @@ import os
             #expect(!stopped && graph.engine.isRunning)
             try graph.render(1)
             #expect(graph.lastSample == 0)
-            try await Task.sleep(for: .milliseconds(40))
+            try await waitUntil { stopped }
             #expect(stopped && !graph.engine.isRunning)
         }
     }
@@ -121,6 +139,7 @@ import os
         let transition = EffectParameterTransition(isAudible: { true }, shouldDefer: { false },
             processingLatency: { space.transitionLatency },
             setEnvelope: { graph.effect.setImmediate($0) },
+            schedule: delayedControl,
             audioRamp: { target, seconds, current, done in
                 graph.effect.ramp(to: target, duration: seconds, isRunning: { graph.engine.isRunning },
                     isCurrent: current, stalled: { graph.engine.pause() }, completion: done)
@@ -136,10 +155,10 @@ import os
         try graph.render(256)
         transition.apply([RealtimeAudioEffectSetting(kind: .space, isEnabled: false)])
         try graph.render(384)
-        try await Task.sleep(for: .milliseconds(30))
+        try await waitUntil { commits == 2 && graph.effect.gain == 1 }
         #expect(commits == 2 && commitAtZero)
         try graph.render(768 + 256)
-        try await Task.sleep(for: .milliseconds(12))
+        try await waitUntil { !transition.isProtectingOutput }
         #expect(!transition.isProtectingOutput)
         #expect(graph.lastSample.isFinite && abs(graph.lastSample) > 0.000001)
         // Neither bypass nor the gain-node boundary resets Space's wet units.
@@ -162,7 +181,7 @@ import os
         try graph.render(1)
         #expect(abs(graph.lastSample - before) < 0.00001)
         try graph.render(1151)
-        try await Task.sleep(for: .milliseconds(20))
+        try await waitUntil { newCompleted }
         #expect(cancelled && !oldCompleted && newCompleted)
         #expect(graph.lastSample == 0.05)
     }
@@ -175,10 +194,7 @@ import os
         graph.effect.ramp(to: 0, duration: 0.008, isRunning: { graph.engine.isRunning },
             isCurrent: { true }, stalled: { stopped = true; graph.engine.pause() },
             completion: { committed = !graph.engine.isRunning })
-        for _ in 0..<350 {
-            if committed { break }
-            try await Task.sleep(for: .milliseconds(10))
-        }
+        try await waitUntil { committed }
         #expect(stopped && committed && !graph.engine.isRunning)
     }
 }
