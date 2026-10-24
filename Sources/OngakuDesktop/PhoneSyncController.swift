@@ -85,8 +85,8 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private var transferProgresses: [UUID: Progress] = [:]
     private var transferObservations: [UUID: NSKeyValueObservation] = [:]
     private var terminalTransferActions: [UUID: DeviceTransferControlAction] = [:]
-    private var outgoingChunkTransfers: [UUID: (DeviceChunkTransferDescriptor, URL)] = [:]
-    private var incomingChunkTransfers: [UUID: (DeviceChunkTransferDescriptor, DeviceTransferCheckpoint)] = [:]
+    private var outgoingChunkTransfers: [UUID: (ValidatedDeviceChunkTransferDescriptor, URL)] = [:]
+    private var incomingChunkTransfers: [UUID: (ValidatedDeviceChunkTransferDescriptor, DeviceTransferCheckpoint)] = [:]
     private let chunkPauseCoordinator = DeviceChunkTransferPauseCoordinator()
     private var chunkTransferCompletions: [UUID: @Sendable (Error?) -> Void] = [:]
     private var bulkUploadQueue: [UUID] = []
@@ -739,14 +739,15 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         chunkTransferQueue.async { [weak self] in
             guard let self else { return }
             do {
-                let descriptor = try DeviceChunkTransfer.descriptor(
+                let validated = try DeviceChunkTransfer.validatedDescriptor(
                     for: item,
                     at: url,
                     transferID: transferID,
                     direction: direction
                 )
+                let descriptor = validated.descriptor
                 lock.withLock {
-                    outgoingChunkTransfers[transferID] = (descriptor, url)
+                    outgoingChunkTransfers[transferID] = (validated, url)
                     if let completion { chunkTransferCompletions[transferID] = completion }
                 }
                 updateTransfer(id: transferID, phase: .transferring)
@@ -819,7 +820,8 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         chunkTransferQueue.async { [weak self] in
             guard let self else { return }
             do {
-                let checkpoint = try checkpointStore.prepare(for: descriptor)
+                let validated = try ValidatedDeviceChunkTransferDescriptor(descriptor)
+                let checkpoint = try checkpointStore.prepare(validatedDescriptor: validated)
                 let remainingBytes = max(0, descriptor.item.fileSize - checkpoint.completedBytes)
                 guard Self.canReceive(byteCount: remainingBytes) else {
                     updateTransfer(DeviceTransferState(
@@ -835,7 +837,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
                     return
                 }
                 lock.withLock {
-                    incomingChunkTransfers[descriptor.transferID] = (descriptor, checkpoint)
+                    incomingChunkTransfers[descriptor.transferID] = (validated, checkpoint)
                 }
                 publishCheckpoint(descriptor: descriptor, checkpoint: checkpoint)
                 updateTransfer(DeviceTransferState(
@@ -879,13 +881,14 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         chunkTransferQueue.async { [weak self] in
             guard let self else { return }
             let value = lock.withLock { outgoingChunkTransfers[request.transferID] }
-            guard let (descriptor, fileURL) = value,
-                  let index = request.missingIndexes.first,
+            guard let (validated, fileURL) = value else { return }
+            let descriptor = validated.descriptor
+            guard let index = request.missingIndexes.first,
                   descriptor.chunkHashes.indices.contains(index) else { return }
             if chunkPauseCoordinator.deferIfPaused(request) { return }
             do {
                 let payload = try DeviceChunkTransfer.payload(
-                    descriptor: descriptor,
+                    validatedDescriptor: validated,
                     index: index,
                     fileURL: fileURL
                 )
@@ -917,22 +920,22 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
                 }
                 try checkpointStore.accept(
                     payload,
-                    descriptor: value.0,
+                    validatedDescriptor: value.0,
                     checkpoint: &value.1
                 )
-                publishCheckpoint(descriptor: value.0, checkpoint: value.1)
+                publishCheckpoint(descriptor: value.0.descriptor, checkpoint: value.1)
                 lock.withLock { incomingChunkTransfers[payload.transferID] = value }
                 updateTransferProgress(
                     id: payload.transferID,
-                    fraction: value.0.item.fileSize == 0
+                    fraction: value.0.descriptor.item.fileSize == 0
                         ? 1
-                        : Double(value.1.completedBytes) / Double(value.0.item.fileSize),
+                        : Double(value.1.completedBytes) / Double(value.0.descriptor.item.fileSize),
                     completedBytes: value.1.completedBytes
                 )
                 if value.1.isComplete {
-                    finishIncomingChunkTransfer(descriptor: value.0, checkpoint: value.1)
+                    finishIncomingChunkTransfer(descriptor: value.0.descriptor, checkpoint: value.1)
                 } else {
-                    requestMissingChunks(descriptor: value.0, checkpoint: value.1)
+                    requestMissingChunks(descriptor: value.0.descriptor, checkpoint: value.1)
                 }
             } catch {
                 failChunkTransfer(payload.transferID, error: error)
@@ -1000,7 +1003,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             chunkPauseCoordinator.remove(completion.transferID)
             return (outgoing, callback)
         }
-        guard let descriptor = value.0?.0,
+        guard let descriptor = value.0?.0.descriptor,
               completion.sha256 == descriptor.item.sha256 else {
             updateTransfer(
                 id: completion.transferID,
@@ -1152,7 +1155,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             updateTransfer(id: control.transferID, phase: .transferring)
             if let pending { sendRequestedChunk(pending) }
         case .cancel:
-            let chunkValue = lock.withLock { () -> ((DeviceChunkTransferDescriptor, DeviceTransferCheckpoint)?, (@Sendable (Error?) -> Void)?) in
+            let chunkValue = lock.withLock { () -> ((ValidatedDeviceChunkTransferDescriptor, DeviceTransferCheckpoint)?, (@Sendable (Error?) -> Void)?) in
                 terminalTransferActions[control.transferID] = .cancel
                 chunkPauseCoordinator.remove(control.transferID)
                 outgoingChunkTransfers.removeValue(forKey: control.transferID)
@@ -1163,7 +1166,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             progress?.cancel()
             updateTransfer(id: control.transferID, phase: .cancelled)
             removeProgress(for: control.transferID)
-            if let descriptor = chunkValue.0?.0 {
+            if let descriptor = chunkValue.0?.0.descriptor {
                 try? checkpointStore.remove(forSHA256: descriptor.item.sha256)
                 refreshResumableTransfers()
             }

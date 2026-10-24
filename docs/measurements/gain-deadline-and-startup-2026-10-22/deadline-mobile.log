@@ -1,0 +1,6 @@
+PASS: one poll delayed 3 s stops I/O before committing
+PASS: no early commit and exact monotonic deadline is enforced
+PASS: actual rendered zero wins over a delayed callback deadline
+PASS: superseded callback cancels without stopping the current request
+PASS: physically paused I/O completes without false stall
+PASS: rejected missing-deadline negative control

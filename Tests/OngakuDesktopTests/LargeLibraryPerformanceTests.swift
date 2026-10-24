@@ -252,6 +252,38 @@ struct LargeLibraryPerformanceTests {
             + "asciiOptimized=\(optimizedSeconds)s")
     }
 
+    @Test("Opt-in 100,000-track fallback cache retirement benchmark")
+    func fallbackCacheRetirementBenchmark() async throws {
+        guard ProcessInfo.processInfo.environment["ONGAKU_RUN_CACHE_RETIREMENT_BENCHMARK"] == "1"
+        else { return }
+        let tracks = LargeLibraryFixture.makeDocument().tracks
+        let libraryID = UUID()
+        let worker = CatalogFallbackSearchWorker()
+        for round in 0..<3 {
+            let start = ContinuousClock.now
+            let ids = try await worker.search(tracks: tracks, libraryID: libraryID,
+                revision: round, query: "track")
+            let cold = seconds(start.duration(to: ContinuousClock.now))
+            let retainedBytes = await worker.cachedTextBytes
+            #expect(retainedBytes > 0 && ids.count > 0)
+            #expect(await worker.cachedTrackCount == tracks.count)
+            let release = ContinuousClock.now
+            await worker.releaseCache(libraryID: libraryID, throughRevision: round)
+            let releaseSeconds = seconds(release.duration(to: ContinuousClock.now))
+            #expect(await worker.cachedTextBytes == 0)
+            #expect(await worker.cachedTrackCount == 0)
+            // Rebuilding is required if SQLite later fails; no result may be lost.
+            for query in ["Track 000000", "楽曲 000001", "曲目 000002"] {
+                let actual = try await worker.search(tracks: tracks, libraryID: libraryID,
+                    revision: round, query: query)
+                #expect(actual == Set(tracks.filter { CatalogSearch.matches($0, query: query) }.map(\.id)))
+            }
+            print("ONGAKU_CACHE_RETIREMENT round=\(round) tracks=\(tracks.count) retainedTextBytes=\(retainedBytes) "
+                + "afterReleaseTextBytes=0 afterReleaseTrackReferences=0 coldSeconds=\(cold) releaseSeconds=\(releaseSeconds)")
+            await worker.releaseCache(libraryID: libraryID, throughRevision: round)
+        }
+    }
+
     @Test("Opt-in 100,000-track asynchronous presentation benchmark")
     func presentationBenchmark() async throws {
         guard ProcessInfo.processInfo.environment["ONGAKU_RUN_PRESENTATION_BENCHMARK"] == "1"

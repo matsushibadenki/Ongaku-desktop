@@ -1,0 +1,7 @@
+{
+  "Sources/OngakuDesktop/LibraryPresentation.swift": "cec9d8accb82b86a98892bff5618de2f4a76cf95a02f1affe75a8257479d70cb",
+  "Sources/OngakuDesktop/LibraryStore.swift": "b3e89ed838206a4c585035b622b18c3e6c72c821cc60ac0908cfa21bf790b2a5",
+  "Tests/OngakuDesktopTests/LibraryPresentationTests.swift": "8105bc1483650a204196e3d806ebac0afacfda38ca13aaefb4976dada2506c91",
+  "Tests/OngakuDesktopTests/LibrarySearchRoutingTests.swift": "be520ceffb0026de9994710b3de7edd5aac5afa04fbe34b056e0e9742dc0b9b2",
+  "Tests/OngakuDesktopTests/LargeLibraryPerformanceTests.swift": "ca3d7758cd410ab3e130245a27e27709054a4ef478fcd4fbc42a70e6c3c81204"
+}

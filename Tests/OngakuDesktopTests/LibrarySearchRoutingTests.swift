@@ -143,6 +143,45 @@ struct LibrarySearchRoutingTests {
         }
     }
 
+    @Test("Recovering SQLite releases fallback memory and preserves multilingual results")
+    @MainActor
+    func releasesFallbackAfterIndexRecovery() async throws {
+        let root = temporaryRoot(named: "Cache-Release")
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let blocked = root.appendingPathComponent("index")
+        try Data("blocked".utf8).write(to: blocked)
+        let track = makeTrack(title: "夜の歌 简体中文", artist: "Artist", album: "Album")
+        let repository = LibraryRepository(rootURL: root.appendingPathComponent("Library"))
+        try await repository.save(tracks: [track])
+        let worker = CatalogFallbackSearchWorker()
+        let store = LibraryStore(repository: repository,
+            searchIndex: SQLiteCatalogPrototype(rootURL: blocked), fallbackSearchWorker: worker)
+        await store.load()
+        try await waitUntil { store.searchBackendStatus == .jsonFallback }
+        store.searchText = "夜"
+        try await waitUntil { !store.isPresentationUpdating && store.indexedSearchQuery == "夜" }
+        #expect(await worker.cachedTextBytes > 0)
+        #expect(store.filteredTracks.map(\.id) == [track.id])
+        try FileManager.default.removeItem(at: blocked)
+        try await store.updateTrackMetadata(id: track.id, title: track.title,
+            artist: "Recovered Artist", album: track.album)
+        try await waitUntil { store.searchBackendStatus == .sqlite && !store.isPresentationUpdating }
+        // Backend promotion and actor cache retirement are separate async steps.
+        let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+        while await worker.cachedTextBytes != 0, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(5))
+        }
+        #expect(await worker.cachedTextBytes == 0)
+        for query in ["Recovered", "夜", "简体中文"] {
+            store.searchText = query
+            try await waitUntil { !store.isPresentationUpdating
+                && store.indexedSearchQuery == CatalogSearch.normalize(query) }
+            #expect(store.filteredTracks.map(\.id) == [track.id])
+            #expect(await worker.cachedTextBytes == 0)
+        }
+    }
+
     private func temporaryRoot(named name: String) -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("Ongaku-Search-\(name)-\(UUID().uuidString)", isDirectory: true)

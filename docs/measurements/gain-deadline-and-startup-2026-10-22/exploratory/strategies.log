@@ -1,0 +1,3 @@
+PREPARE mode=baseline total=2.218619917 seconds final=2.155338333 seconds
+PREPARE mode=incremental total=4.303048625 seconds final=9.708e-06 seconds
+PREPARE mode=preallocate total=2.542286291 seconds final=2.478054458 seconds

@@ -1,0 +1,14 @@
+{
+  "mobile": {
+    "audio/AudioThreadGainStage.swift": "b83469cdc645208dfb8243c5d1598023aeff9b1d1a634ee91c6c0dc972d9649a",
+    "tests/AudioThreadGainDeadlineRegression.swift": "24e69cac6f80223e0c7e0e9373cda77d20c51868bbaec6d6b58834d7aaf17661",
+    "tests/run_audio_thread_gain_deadline_regression.sh": "1423c6e4aebd3618a07de21de51325a9f62b4b638a3dc565e8124f2355bc29d6",
+    "tests/GraphInitializationAudit.swift": "5ce964d1860d12e127f09b15cf00b8666350ba9b31506abb6ceac9ed60040198"
+  },
+  "desktop": {
+    "Sources/OngakuDesktop/AudioThreadGainStage.swift": "b83469cdc645208dfb8243c5d1598023aeff9b1d1a634ee91c6c0dc972d9649a",
+    "Tests/AudioDSP/AudioThreadGainDeadlineRegression.swift": "24e69cac6f80223e0c7e0e9373cda77d20c51868bbaec6d6b58834d7aaf17661",
+    "tools/run_audio_thread_gain_deadline_regression.sh": "61888660e95c9316b35a16ec7828d190ddea5e058426e1ebe2eca003230f9f05",
+    ".github/workflows/m0-quality-gate.yml": "284a940a2da88f7956e5cb61a5a87cbb107a1908a9cb7276c98237e924a77de8"
+  }
+}

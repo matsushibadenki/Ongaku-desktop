@@ -142,6 +142,36 @@ struct LibraryPresentationTests {
         ).isEmpty)
     }
 
+    @Test("SQLite promotion releases only the superseded fallback snapshot")
+    func fallbackCachePromotion() async throws {
+        let worker = CatalogFallbackSearchWorker()
+        let library = UUID()
+        let tracks = LargeLibraryFixture.makeDocument(trackCount: 40).tracks
+        func prepare(_ revision: Int, _ id: UUID) async throws {
+            _ = try await worker.search(tracks: tracks, libraryID: id, revision: revision, query: "track")
+            #expect(await worker.cachedTextBytes > 0)
+        }
+        try await prepare(2, library)
+        await worker.releaseCache(libraryID: UUID(), throughRevision: 2)
+        #expect(await worker.cachedTextBytes > 0)
+        await worker.releaseCache(libraryID: library, throughRevision: 1)
+        #expect(await worker.cachedTextBytes > 0)
+        let cancelled = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            await worker.releaseCache(libraryID: library, throughRevision: 2)
+        }
+        await cancelled.value
+        #expect(await worker.cachedTextBytes > 0)
+        await worker.releaseCache(libraryID: library, throughRevision: 2)
+        #expect(await worker.cachedTextBytes == 0)
+        // An index failure can still reconstruct the fallback after promotion.
+        try await prepare(3, library)
+        #expect(try await worker.search(tracks: tracks, libraryID: library, revision: 3, query: "楽")
+            == Set(tracks.filter { CatalogSearch.matches($0, query: "楽") }.map(\.id)))
+        await worker.releaseCache(libraryID: library, throughRevision: 4)
+        #expect(await worker.cachedTextBytes == 0)
+    }
+
     @Test("Duplicate analysis remains complete when the retained key budget is exceeded")
     func boundedDuplicateKeys() async throws {
         var tracks = LargeLibraryFixture.makeDocument(trackCount: 6).tracks

@@ -1,5 +1,32 @@
 # Ongaku Desktop ロードマップ
 
+## Validated chunk transfer snapshots — 2026-10-24
+
+- 🟢 [Done] A4 preparation: admit one immutable validated descriptor per Desktop/iOS companion chunk session and reuse it for payload reads/checkpoint accepts. Preserve per-chunk SHA-256, size/index checks, final whole-file verification and unchanged wire DTOs. Add session/checkpoint-shape rejection and keep legacy receive error classification. The separate main iPhone app uses another whole-resource path and has no runtime changes. See [scope, integrity tests and measurements](quality/VALIDATED_CHUNK_SNAPSHOTS_2026-10-24.md).
+- 🟢 [Done] Debug and Release each pass 32 transfer/protocol tests, including mutable-copy isolation, malformed/corrupt inputs, source changes, persisted resume/new session ID, empty files and final-file corruption. Normal Mac Debug, Universal Mac App Store Release and same-project iOS Simulator companion builds pass with signing disabled; whitespace checks pass.
+- 🟢 [Done] Matched Release sender-preparation comparison at default 256 KiB / 4096 chunks / 64 requests: median wall 244.900 → 13.255 ms (94.6% shorter), CPU 240.775 → 13.219 ms (94.5% lower), three alternating paired samples. This excludes network/encoding/receiver persistence and is not an end-to-end transfer speedup or device-energy result.
+- 🟠 [Next] Complete A4 actor ownership of file I/O/checkpoints/session state and cancel/disconnect generations. Missing-index/progress scans and checkpoint persistence still need profiling. First full audio-rack startup and A3 memory/UI targets remain separate unfinished work.
+- ⭕️ [Pending] Installed Mac/physical iPhone companion transfer of actual large music files, pairing/network loss/pause/cancel/resume, storage permissions, end-to-end throughput and sustained energy. Main-iPhone cross-device behavior and existing audio/DAC qualification are not established by the shared-model tests. No remote CI result is claimed for unpublished changes.
+
+
+## Monotonic gain acknowledgement and PCM startup qualification — 2026-10-22
+
+- 🟢 [Done] Both candidate gain hosts now use a two-second monotonic uptime deadline instead of 500 nominal 4 ms callbacks. At the next available control callback, reject stale ownership, prefer an actually rendered endpoint, and stop I/O before committing if acknowledgement is still missing after expiry. This does not provide a hard real-time stop while MainActor is blocked; ordinary activation remains gated. Shared Swift source stays byte-identical. See [implementation, rejected startup alternatives and evidence](GAIN_DEADLINE_AND_STARTUP_2026-10-22.md).
+- 🟢 [Done] Both source copies pass five actual-AU delayed-control/zero/ownership/pause cases and a deadline-removal negative control; add/run the portable Desktop CI gate locally. Default connected/output suites pass nine tests. The combined Mac Release candidate passes four gain, five output and fourteen actual transport/CD/EOF tests in isolated processes. The optimized iPhone Simulator candidate completes all four phases with 35 PASS observations.
+- 🟢 [Done] Extend initial-rack audit through actual engine/player start and PCM, including two-channel EQ attenuation. Both host racks pass all ten prefixes. Reject slower incremental/preallocation trials and disconnected-island apparent speedups; no experimental routing was adopted and no cold-start speedup is claimed.
+- 🟠 [Next] Reduce the remaining first full-rack initialization with a valid source/route design and complete gain/tail/EOF gates. Other callback-count recovery loops and ordinary activation still require their own qualification.
+- ⭕️ [Pending] Physical iPhone/Mac/DAC listening, output/rate/session/sleep/background/UI contention and sustained thermal qualification. Published CI and installed-app results are not established by local tests.
+
+
+## Retire fallback search memory after verified SQLite recovery — 2026-10-22
+
+- 🟢 [Done] A3: retire obsolete fallback text and Track snapshot storage after SQLite passes parity and routing returns to the index. Check cancellation, library identity and covered tracks revision so old completion cannot evict a newer/different snapshot. Index failure can reconstruct fallback normally. No audio, catalog schema, localization or separate iPhone-runtime change. See [implementation and evidence](quality/FALLBACK_CACHE_RETIREMENT_2026-10-22.md).
+- 🟢 [Done] Pass 26 presentation/search-routing/SQLite tests, including actual index failure/recovery and stale/cancelled retirement. In three Debug 100,000-track cycles, retire 7,366,666 retained UTF-8 bytes and 100,000 worker-owned Track references in 3.4–7.8 ms; verify EN/JA/zh-Hans reconstruction. These are logical cache counts, not RSS savings or the 512 MiB product gate.
+- 🟢 [Done] Normal Mac Debug and Universal Mac App Store Release builds pass with signing disabled; whitespace checks pass.
+- 🟠 [Next] Continue A3 initial/steady-state memory and actual display/search profiling under playback/index updates. Keep first full audio-rack initialization and A4 transfer actor ownership as separate unfinished work.
+- ⭕️ [Pending] Installed-app large-library RSS/physical-footprint and UI qualification, real user libraries and existing physical-audio checks. Remote CI is not claimed for unpushed local changes.
+
+
 ## Connected gain CI state waits — 2026-10-22
 
 - 🟢 [Done] Fix the reported GitHub run's fixed-sleep assumptions in the Desktop manual-render gain tests. Wait for actual ramp issuance/completion and transport/fallback state with bounded deadlines; deliberately delay effect control callbacks by 50 ms. Preserve exact PCM/frame/zero/retained-tail/cancellation safety assertions. No app/runtime/DSP or iPhone algorithm changes. See [cause and verification](quality/CI_GAIN_CONTROL_WAIT_2026-10-22.md).

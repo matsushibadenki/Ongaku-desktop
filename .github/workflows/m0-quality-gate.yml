@@ -32,6 +32,9 @@ jobs:
       - name: Shared audio-thread gain envelope waveforms and safety
         run: env GAIN_SANITIZERS=1 bash tools/run_gain_envelope_regression.sh
 
+      - name: Monotonic gain acknowledgement deadlines
+        run: bash tools/run_audio_thread_gain_deadline_regression.sh
+
       - name: Retained graph state and reverb voice waveforms
         run: bash tools/run_graph_reuse_state_regression.sh
 

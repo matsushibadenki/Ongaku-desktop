@@ -25,6 +25,17 @@ struct DeviceChunkTransferDescriptor: Codable, Equatable, Sendable {
     }
 }
 
+/// An immutable, locally validated snapshot. Wire descriptors remain Codable
+/// values; trust is acquired once on admission, never from a caller's flag.
+struct ValidatedDeviceChunkTransferDescriptor: Sendable {
+    let descriptor: DeviceChunkTransferDescriptor
+
+    init(_ descriptor: DeviceChunkTransferDescriptor) throws {
+        guard descriptor.isValid else { throw DeviceChunkTransferError.invalidDescriptor }
+        self.descriptor = descriptor
+    }
+}
+
 struct DeviceChunkRequest: Codable, Equatable, Sendable {
     var transferID: UUID
     var missingIndexes: [Int]
@@ -101,6 +112,18 @@ enum DeviceChunkTransfer {
         direction: DeviceSyncDirection,
         chunkSize: Int = defaultChunkSize
     ) throws -> DeviceChunkTransferDescriptor {
+        try validatedDescriptor(for: item, at: fileURL, transferID: transferID,
+                                direction: direction, chunkSize: chunkSize).descriptor
+    }
+
+    static func validatedDescriptor(
+        for item: DeviceSyncItem,
+        at fileURL: URL,
+        transferID: UUID = UUID(),
+        direction: DeviceSyncDirection,
+        chunkSize: Int = defaultChunkSize,
+        checkCancellation: () throws -> Void = { try Task.checkCancellation() }
+    ) throws -> ValidatedDeviceChunkTransferDescriptor {
         guard chunkSize >= 64 * 1_024, chunkSize <= 1_024 * 1_024 else {
             throw DeviceChunkTransferError.invalidDescriptor
         }
@@ -111,9 +134,12 @@ enum DeviceChunkTransfer {
         let handle = try FileHandle(forReadingFrom: fileURL)
         defer { try? handle.close() }
         var hashes: [String] = []
+        try checkCancellation()
         while let data = try handle.read(upToCount: chunkSize), !data.isEmpty {
+            try checkCancellation()
             hashes.append(sha256(data))
         }
+        try checkCancellation()
         let descriptor = DeviceChunkTransferDescriptor(
             transferID: transferID,
             direction: direction,
@@ -121,8 +147,7 @@ enum DeviceChunkTransfer {
             chunkSize: chunkSize,
             chunkHashes: hashes
         )
-        guard descriptor.isValid else { throw DeviceChunkTransferError.invalidDescriptor }
-        return descriptor
+        return try ValidatedDeviceChunkTransferDescriptor(descriptor)
     }
 
     static func payload(
@@ -130,7 +155,16 @@ enum DeviceChunkTransfer {
         index: Int,
         fileURL: URL
     ) throws -> DeviceChunkPayload {
-        guard descriptor.isValid else { throw DeviceChunkTransferError.invalidDescriptor }
+        try payload(validatedDescriptor: ValidatedDeviceChunkTransferDescriptor(descriptor),
+                    index: index, fileURL: fileURL)
+    }
+
+    static func payload(
+        validatedDescriptor: ValidatedDeviceChunkTransferDescriptor,
+        index: Int,
+        fileURL: URL
+    ) throws -> DeviceChunkPayload {
+        let descriptor = validatedDescriptor.descriptor
         guard descriptor.chunkHashes.indices.contains(index) else {
             throw DeviceChunkTransferError.invalidChunkIndex
         }
@@ -156,7 +190,11 @@ struct DeviceTransferCheckpointStore: Sendable {
     let directory: URL
 
     func prepare(for descriptor: DeviceChunkTransferDescriptor) throws -> DeviceTransferCheckpoint {
-        guard descriptor.isValid else { throw DeviceChunkTransferError.invalidDescriptor }
+        try prepare(validatedDescriptor: ValidatedDeviceChunkTransferDescriptor(descriptor))
+    }
+
+    func prepare(validatedDescriptor: ValidatedDeviceChunkTransferDescriptor) throws -> DeviceTransferCheckpoint {
+        let descriptor = validatedDescriptor.descriptor
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         if let existing = try load(forSHA256: descriptor.item.sha256) {
             let partial = partialURL(forSHA256: descriptor.item.sha256)
@@ -170,7 +208,11 @@ struct DeviceTransferCheckpointStore: Sendable {
                existing.chunkHashes == descriptor.chunkHashes,
                existing.receivedIndexes.allSatisfy(descriptor.chunkHashes.indices.contains),
                partialSize >= requiredSize {
-                return existing
+                // Share the already compared immutable hash array for this
+                // session; resumed checkpoints otherwise own decoded copies.
+                var resumed = existing
+                resumed.chunkHashes = descriptor.chunkHashes
+                return resumed
             } else {
                 try remove(forSHA256: descriptor.item.sha256)
             }
@@ -196,8 +238,22 @@ struct DeviceTransferCheckpointStore: Sendable {
         descriptor: DeviceChunkTransferDescriptor,
         checkpoint: inout DeviceTransferCheckpoint
     ) throws {
-        guard descriptor.isValid,
+        guard let validated = try? ValidatedDeviceChunkTransferDescriptor(descriptor) else {
+            throw DeviceChunkTransferError.checkpointMismatch
+        }
+        try accept(payload, validatedDescriptor: validated, checkpoint: &checkpoint)
+    }
+
+    func accept(
+        _ payload: DeviceChunkPayload,
+        validatedDescriptor: ValidatedDeviceChunkTransferDescriptor,
+        checkpoint: inout DeviceTransferCheckpoint
+    ) throws {
+        let descriptor = validatedDescriptor.descriptor
+        guard payload.transferID == descriptor.transferID,
               checkpoint.itemSHA256 == descriptor.item.sha256,
+              checkpoint.fileSize == descriptor.item.fileSize,
+              checkpoint.chunkSize == descriptor.chunkSize,
               checkpoint.chunkHashes == descriptor.chunkHashes else {
             throw DeviceChunkTransferError.checkpointMismatch
         }

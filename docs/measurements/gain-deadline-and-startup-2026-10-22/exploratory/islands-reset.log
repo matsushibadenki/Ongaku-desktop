@@ -1,0 +1,16 @@
+*** Terminating app due to uncaught exception 'com.apple.coreaudio.avfaudio', reason: 'player started when in a disconnected state'
+*** First throw call stack:
+(
+	0   CoreFoundation                      0x000000018b8fe8c0 __exceptionPreprocess + 176
+	1   libobjc.A.dylib                     0x000000018b35c60c objc_exception_throw + 88
+	2   CoreFoundation                      0x000000018b8fe7b0 +[NSException exceptionWithName:reason:userInfo:] + 0
+	3   AVFAudio                            0x00000002269db9f0 _ZN21AVAudioPlayerNodeImpl9StartImplEP11AVAudioTimePP7NSError + 668
+	4   AVFAudio                            0x0000000226908990 _ZN19AVAudioNodeImplBase5StartEP11AVAudioTimePP7NSError + 56
+	5   AVFAudio                            0x00000002269dab98 -[AVAudioPlayerNode playAndReturnError:] + 56
+	6   probe                               0x00000001029bf3e0 $s5probe5ProbeV4mainyyKFZTf4d_n + 3496
+	7   probe                               0x00000001029be614 main + 24
+	8   dyld                                0x000000018b3f7e80 start + 6688
+)
+libc++abi: terminating due to uncaught exception of type NSException
+RENDER mode=baseline start=0.000269417 seconds render=0.006132083 seconds status=0 last=0.006294627
+PREPARE mode=baseline total=2.355173292 seconds final=2.292922458 seconds

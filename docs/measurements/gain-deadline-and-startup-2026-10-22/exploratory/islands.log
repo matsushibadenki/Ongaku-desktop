@@ -1,0 +1,3 @@
+PREPARE mode=baseline total=6.601381667000001 seconds final=6.533536042 seconds
+PREPARE mode=islands total=0.123449583 seconds final=7.208e-06 seconds
+PREPARE mode=islands-start total=0.084929833 seconds final=1.2708e-05 seconds

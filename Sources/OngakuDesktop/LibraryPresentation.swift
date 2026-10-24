@@ -6,6 +6,7 @@ import Foundation
 actor CatalogFallbackSearchWorker {
     private let maximumTextBytes: Int
     private(set) var cachedTextBytes = 0
+    var cachedTrackCount: Int { cachedTracks.count }
     private var libraryID: UUID?
     private var revision = -1
     private var cachedTracks: [Track] = []
@@ -17,6 +18,15 @@ actor CatalogFallbackSearchWorker {
 
     func discardOtherLibrary(_ libraryID: UUID) {
         guard !Task.isCancelled, self.libraryID != libraryID else { return }
+        clear()
+    }
+
+    /// SQLite has passed parity for this snapshot. Release derived text and
+    /// retained Track storage only for the library/revision that it supersedes.
+    /// A late or cancelled synchronization must not evict a newer fallback.
+    func releaseCache(libraryID: UUID, throughRevision: Int) {
+        guard !Task.isCancelled, self.libraryID == libraryID,
+              revision <= throughRevision else { return }
         clear()
     }
 

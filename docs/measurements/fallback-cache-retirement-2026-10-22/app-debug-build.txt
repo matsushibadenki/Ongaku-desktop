@@ -1,0 +1,4 @@
+xcodebuild Debug CODE_SIGNING_ALLOWED=NO
+Xcode 27.1 (27A9275)
+** BUILD SUCCEEDED **
+Full local log: /private/tmp/ongaku-cache-retirement-app-debug.log

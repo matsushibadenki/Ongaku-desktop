@@ -1,0 +1,55 @@
+import AVFoundation
+import Foundation
+@main struct Probe {
+ static func main() throws {
+  for mode in ["baseline", "islands-reset", "islands-stop"] {
+   let engine = AVAudioEngine(), player = AVAudioPlayerNode()
+   let rack = AudioEffectModuleRegistry.makePipeline()
+   let format = AVAudioFormat(standardFormatWithSampleRate:96000,channels:2)!
+   engine.attach(player)
+   try engine.enableManualRenderingMode(.offline,format:format,maximumFrameCount:512)
+   let start=ContinuousClock.now
+   var upstream: AVAudioNode = player
+   for effect in rack {
+    effect.attach(to:engine);effect.connectInternalNodes(engine:engine,format:format)
+    if mode == "incremental" { engine.disconnectNodeOutput(upstream) }
+    engine.connect(upstream,to:effect.inputNode,format:format);upstream=effect.outputNode
+    var setting=RealtimeAudioEffectSetting(kind:effect.kind,isEnabled:effect.kind == .equalizer);setting.parameters["trim"]=0;effect.apply(setting:setting)
+    if mode == "incremental" {engine.connect(upstream,to:engine.mainMixerNode,format:format);engine.prepare()}
+   }
+   engine.connect(upstream,to:engine.mainMixerNode,format:format)
+   if mode == "preallocate" {
+    for unit in engine.attachedNodes.compactMap({$0 as? AVAudioUnit}) {try unit.auAudioUnit.allocateRenderResources()}
+   }
+   if mode.hasPrefix("islands") {
+    // Keep the source attached to the first island.
+    for effect in rack { engine.disconnectNodeOutput(effect.outputNode) }
+    for (index,effect) in rack.enumerated() {
+     engine.connect(effect.outputNode,to:engine.mainMixerNode,fromBus:0,toBus:AVAudioNodeBus(index),format:format)
+    }
+    engine.prepare()
+    if mode == "islands-live" { try engine.start() }
+    for effect in rack { engine.disconnectNodeOutput(effect.outputNode) }
+    var previous: AVAudioNode=player
+    for (index,effect) in rack.enumerated() { if index > 0 {engine.connect(previous,to:effect.inputNode,format:format)};previous=effect.outputNode }
+    engine.connect(previous,to:engine.mainMixerNode,format:format)
+   }
+   if mode == "islands-live" { engine.pause() }
+   if mode == "islands-reset" { engine.reset() }
+   if mode == "islands-stop" { engine.stop() }
+   let before=ContinuousClock.now; engine.prepare()
+   let prepared=ContinuousClock.now
+   let pcm=AVAudioPCMBuffer(pcmFormat:format,frameCapacity:4096)!
+   pcm.frameLength=4096
+   for c in 0..<2 {pcm.floatChannelData![c].initialize(repeating:0.05,count:4096)}
+   player.scheduleBuffer(pcm)
+   try engine.start();player.play()
+   let started=ContinuousClock.now
+   let output=AVAudioPCMBuffer(pcmFormat:format,frameCapacity:512)!
+   let status=try engine.renderOffline(512,to:output)
+   print("RENDER mode=\(mode) start=\(prepared.duration(to:started)) render=\(started.duration(to:ContinuousClock.now)) status=\(status.rawValue) last=\(output.floatChannelData![0][511])")
+   print("PREPARE mode=\(mode) total=\(start.duration(to:ContinuousClock.now)) final=\(before.duration(to:ContinuousClock.now))")
+   engine.stop()
+  }
+ }
+}

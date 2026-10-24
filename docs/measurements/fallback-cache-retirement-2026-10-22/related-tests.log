@@ -1,0 +1,62 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "SQLite catalog prototype" started.
+◇ Suite "Asynchronous library presentation" started.
+◇ Suite "Library search routing" started.
+◇ Test "Search switches to SQLite after parity verification and resynchronizes after edits" started.
+◇ Test "Fast filename extraction preserves file URL semantics and search text" started.
+◇ Test "Batched parity preserves multilingual metadata matches and reports every stale query" started.
+✔ Test "Fast filename extraction preserves file URL semantics and search text" passed after 0.011 seconds.
+◇ Test "Search text keeps the original field separators and optional-number order" started.
+✔ Test "Search text keeps the original field separators and optional-number order" passed after 0.001 seconds.
+◇ Test "Search normalization preserves POSIX folding for ASCII and multilingual text" started.
+✔ Test "Search normalization preserves POSIX folding for ASCII and multilingual text" passed after 0.001 seconds.
+◇ Test "Oversized fallback text remains searchable without retaining the text cache" started.
+✔ Test "Oversized fallback text remains searchable without retaining the text cache" passed after 0.008 seconds.
+◇ Test "Fallback text remains correct across edits, reordering, removal, and library switches" started.
+✔ Test "Fallback text remains correct across edits, reordering, removal, and library switches" passed after 0.024 seconds.
+◇ Test "SQLite promotion releases only the superseded fallback snapshot" started.
+✔ Test "SQLite promotion releases only the superseded fallback snapshot" passed after 0.004 seconds.
+◇ Test "Duplicate analysis remains complete when the retained key budget is exceeded" started.
+✔ Test "Duplicate analysis remains complete when the retained key budget is exceeded" passed after 0.007 seconds.
+◇ Test "Cached duplicate keys preserve fresh analysis across all metadata changes" started.
+✔ Test "Cached duplicate keys preserve fresh analysis across all metadata changes" passed after 0.005 seconds.
+◇ Test "Cached history matches direct statistics across track edits and history replacement" started.
+✔ Test "Cached history matches direct statistics across track edits and history replacement" passed after 0.001 seconds.
+◇ Test "Returning to albums reuses current groups and edits invalidate them" started.
+✔ Test "Returning to albums reuses current groups and edits invalidate them" passed after 0.009 seconds.
+◇ Test "Album and artist snapshots retain grouping, ordering, and durations" started.
+✔ Test "Album and artist snapshots retain grouping, ordering, and durations" passed after 0.004 seconds.
+◇ Test "Same-size edits and removed history invalidate cached aggregates" started.
+✔ Test "Same-size edits and removed history invalidate cached aggregates" passed after 0.001 seconds.
+◇ Test "Cancelled work does not poison the next worker request" started.
+✔ Test "Cancelled work does not poison the next worker request" passed after 0.004 seconds.
+◇ Test "Rapid section and filter changes publish only the last request and preserve selection" started.
+✔ Test "Rapid section and filter changes publish only the last request and preserve selection" passed after 0.193 seconds.
+◇ Test "Switching libraries rejects an old pending presentation" started.
+✔ Test "Search switches to SQLite after parity verification and resynchronizes after edits" passed after 0.294 seconds.
+◇ Test "SQLite setup failure retains JSON search" started.
+✔ Test "Switching libraries rejects an old pending presentation" passed after 0.095 seconds.
+✔ Suite "Asynchronous library presentation" passed after 0.377 seconds.
+✔ Test "SQLite setup failure retains JSON search" passed after 0.095 seconds.
+◇ Test "Changing a query never performs the JSON fallback inline on MainActor" started.
+✔ Test "Batched parity preserves multilingual metadata matches and reports every stale query" passed after 0.405 seconds.
+◇ Test "Cancellation interrupts SQLite before its first result and removes the handler" started.
+✔ Test "Cancellation interrupts SQLite before its first result and removes the handler" passed after 0.001 seconds.
+◇ Test "Cancelled searches throw cancellation and subsequent multilingual searches work" started.
+✔ Test "Cancelled searches throw cancellation and subsequent multilingual searches work" passed after 0.190 seconds.
+◇ Test "JSON migrates transactionally, supports indexed search, and rolls back" started.
+✔ Test "JSON migrates transactionally, supports indexed search, and rolls back" passed after 0.102 seconds.
+◇ Test "A dangling playlist reference aborts without installing SQLite" started.
+✔ Test "A dangling playlist reference aborts without installing SQLite" passed after 0.010 seconds.
+◇ Test "Search metadata updates only changed SQLite rows" started.
+✔ Test "Search metadata updates only changed SQLite rows" passed after 0.019 seconds.
+✔ Suite "SQLite catalog prototype" passed after 0.732 seconds.
+✔ Test "Changing a query never performs the JSON fallback inline on MainActor" passed after 2.950 seconds.
+◇ Test "A failed edit restores searchable results without waiting for a new query" started.
+✔ Test "A failed edit restores searchable results without waiting for a new query" passed after 0.050 seconds.
+◇ Test "Recovering SQLite releases fallback memory and preserves multilingual results" started.
+✔ Test "Recovering SQLite releases fallback memory and preserves multilingual results" passed after 0.098 seconds.
+✔ Suite "Library search routing" passed after 3.494 seconds.
+✔ Test run with 26 tests in 3 suites passed after 3.494 seconds.

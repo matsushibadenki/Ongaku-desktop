@@ -1,4 +1,5 @@
 import AVFoundation
+import Foundation
 #if canImport(OngakuAudioDSP)
 import OngakuAudioDSP
 #endif
@@ -12,7 +13,18 @@ final class AudioThreadGainStage {
     private(set) var gain: Float
     private var generation: UInt64 = 0
 
-    init(gain: Float) { self.gain = gain }
+    typealias Schedule = (TimeInterval, @escaping @MainActor () -> Void) -> Void
+    private let now: () -> TimeInterval
+    private let schedule: Schedule
+
+    init(gain: Float, now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
+         schedule: @escaping Schedule = { delay, action in
+             DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)
+         }) {
+        self.gain = gain
+        self.now = now
+        self.schedule = schedule
+    }
 
     func setImmediate(_ value: Float) {
         generation &+= 1
@@ -40,11 +52,11 @@ final class AudioThreadGainStage {
         }
         let frames = UInt64((max(0, min(1, duration.isFinite ? duration : 0)) * rate).rounded())
         let token = unit.ramp(toGain: gain, durationFrames: frames)
-        poll(request: request, token: token, remaining: 500, isRunning: isRunning,
+        poll(request: request, token: token, deadline: now() + 2, isRunning: isRunning,
              isCurrent: isCurrent, stalled: stalled, cancelled: cancelled, completion: completion)
     }
 
-    private func poll(request: UInt64, token: UInt64, remaining: Int,
+    private func poll(request: UInt64, token: UInt64, deadline: TimeInterval,
                       isRunning: @escaping () -> Bool, isCurrent: @escaping () -> Bool,
                       stalled: @escaping () -> Void, cancelled: @escaping () -> Void,
                       completion: @escaping () -> Void) {
@@ -56,16 +68,19 @@ final class AudioThreadGainStage {
             completion()
             return
         }
-        guard token != 0, remaining > 0 else {
+        // Callback count is not elapsed time: a busy control queue can turn
+        // 500 nominal 4 ms polls into many seconds. Check monotonic time at
+        // the first available callback; actual rendered acknowledgement wins.
+        guard token != 0, now() < deadline else {
             // No rendered-zero acknowledgement: stop I/O before committing.
             stalled()
             setImmediate(gain)
             completion()
             return
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.004) { [weak self] in
+        schedule(0.004) { [weak self] in
             guard let self else { cancelled(); return }
-            self.poll(request: request, token: token, remaining: remaining - 1,
+            self.poll(request: request, token: token, deadline: deadline,
                       isRunning: isRunning, isCurrent: isCurrent, stalled: stalled,
                       cancelled: cancelled, completion: completion)
         }

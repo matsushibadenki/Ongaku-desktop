@@ -1,4 +1,5 @@
 import Foundation
+import Darwin
 import Testing
 @testable import OngakuDesktop
 
@@ -373,6 +374,189 @@ struct M8TransferResilienceMilestoneTests {
         ) == [firstCommit.item])
         let names = try FileManager.default.contentsOfDirectory(atPath: library.path)
         #expect(names.contains { $0.hasPrefix("ongaku-mobile-manifest.json.corrupt-") })
+    }
+
+    @Test("Validated chunk snapshots preserve wire values and byte-exact payloads")
+    func validatedSnapshotRoundTrip() throws {
+        let fixture = try makeChunkFixture(byteCount: 150_123); defer { fixture.cleanUp() }
+        let validated = try DeviceChunkTransfer.validatedDescriptor(for: fixture.item, at: fixture.sourceURL,
+            direction: .macToPhone, chunkSize: 65_536)
+        let raw = validated.descriptor
+        let message = DeviceSyncMessage.chunkOffer(raw)
+        let decoded = try JSONDecoder().decode(DeviceSyncMessage.self, from: JSONEncoder().encode(message))
+        guard case .chunkOffer(let decodedDescriptor) = decoded else {
+            Issue.record("Expected the unchanged chunk offer wire message"); return
+        }
+        #expect(decodedDescriptor == raw)
+        let originalHash = raw.chunkHashes[0]
+        let originalSize = raw.item.fileSize
+        var edited = validated.descriptor
+        edited.chunkHashes[0] = String(repeating: "f", count: 64)
+        edited.item.fileSize = 0
+        #expect(edited.chunkHashes[0] != originalHash)
+        #expect(edited.item.fileSize == 0)
+        #expect(validated.descriptor.chunkHashes[0] == originalHash)
+        #expect(validated.descriptor.item.fileSize == originalSize)
+        #expect(validated.descriptor == raw)
+        let store = DeviceTransferCheckpointStore(directory: fixture.checkpointDirectory)
+        var checkpoint = try store.prepare(validatedDescriptor: validated)
+        for index in raw.chunkHashes.indices {
+            let payload = try DeviceChunkTransfer.payload(validatedDescriptor: validated, index: index, fileURL: fixture.sourceURL)
+            #expect(payload == (try DeviceChunkTransfer.payload(descriptor: raw, index: index, fileURL: fixture.sourceURL)))
+            try store.accept(payload, validatedDescriptor: validated, checkpoint: &checkpoint)
+        }
+        #expect(checkpoint.isComplete)
+        #expect(try Data(contentsOf: store.finalizedFile(descriptor: raw, checkpoint: checkpoint))
+            == Data(contentsOf: fixture.sourceURL))
+    }
+
+    @Test("Untrusted or edited descriptors cannot acquire validated status")
+    func validatedAdmissionRejectsMalformedMetadata() throws {
+        let fixture = try makeChunkFixture(byteCount: 100_000); defer { fixture.cleanUp() }
+        let raw = try DeviceChunkTransfer.descriptor(for: fixture.item, at: fixture.sourceURL,
+            direction: .macToPhone, chunkSize: 65_536)
+        let store = DeviceTransferCheckpointStore(directory: fixture.checkpointDirectory)
+        var checkpoint = try store.prepare(for: raw)
+        let payload = try DeviceChunkTransfer.payload(descriptor: raw, index: 0, fileURL: fixture.sourceURL)
+        for field in 0..<5 {
+            var invalid = raw
+            switch field {
+            case 0: invalid.chunkSize = 1
+            case 1: invalid.chunkHashes.removeLast()
+            case 2: invalid.chunkHashes[0] = "not-a-hash"
+            case 3: invalid.item.fileSize = -1
+            default: invalid.item.sha256 = "invalid"
+            }
+            #expect(throws: DeviceChunkTransferError.invalidDescriptor) {
+                try ValidatedDeviceChunkTransferDescriptor(invalid)
+            }
+            #expect(throws: DeviceChunkTransferError.checkpointMismatch) {
+                try store.accept(payload, descriptor: invalid, checkpoint: &checkpoint)
+            }
+        }
+    }
+
+    @Test("Validated receive still rejects corruption, wrong sessions and checkpoint shape")
+    func validatedReceiveKeepsIntegrityGuards() throws {
+        let fixture = try makeChunkFixture(byteCount: 100_000); defer { fixture.cleanUp() }
+        let validated = try DeviceChunkTransfer.validatedDescriptor(for: fixture.item, at: fixture.sourceURL,
+            direction: .macToPhone, chunkSize: 65_536)
+        let store = DeviceTransferCheckpointStore(directory: fixture.checkpointDirectory)
+        var checkpoint = try store.prepare(validatedDescriptor: validated)
+        let payload = try DeviceChunkTransfer.payload(validatedDescriptor: validated, index: 0, fileURL: fixture.sourceURL)
+        var wrongSession = payload; wrongSession.transferID = UUID()
+        #expect(throws: DeviceChunkTransferError.checkpointMismatch) {
+            try store.accept(wrongSession, validatedDescriptor: validated, checkpoint: &checkpoint)
+        }
+        var corrupt = payload; corrupt.data[0] ^= 1
+        #expect(throws: DeviceChunkTransferError.chunkHashMismatch) {
+            try store.accept(corrupt, validatedDescriptor: validated, checkpoint: &checkpoint)
+        }
+        var short = payload; short.data.removeLast()
+        #expect(throws: DeviceChunkTransferError.invalidChunkSize) {
+            try store.accept(short, validatedDescriptor: validated, checkpoint: &checkpoint)
+        }
+        for field in 0..<3 {
+            var invalid = checkpoint
+            if field == 0 { invalid.fileSize += 1 }
+            else if field == 1 { invalid.chunkSize += 1 }
+            else { invalid.chunkHashes[0] = String(repeating: "f", count: 64) }
+            #expect(throws: DeviceChunkTransferError.checkpointMismatch) {
+                try store.accept(payload, validatedDescriptor: validated, checkpoint: &invalid)
+            }
+        }
+        #expect(checkpoint.receivedIndexes.isEmpty)
+        #expect(throws: DeviceChunkTransferError.invalidChunkIndex) {
+            try DeviceChunkTransfer.payload(validatedDescriptor: validated, index: -1, fileURL: fixture.sourceURL)
+        }
+        // The file can change after admission; every read still hashes its bytes.
+        let handle = try FileHandle(forWritingTo: fixture.sourceURL)
+        try handle.write(contentsOf: Data([255])); try handle.close()
+        #expect(throws: DeviceChunkTransferError.chunkHashMismatch) {
+            try DeviceChunkTransfer.payload(validatedDescriptor: validated, index: 0, fileURL: fixture.sourceURL)
+        }
+    }
+
+    @Test("Validated resumed sessions retain chunks but reject an old transfer ID")
+    func validatedResumeAndEmptyFiles() throws {
+        for count in [0, 150_123] {
+            let fixture = try makeChunkFixture(byteCount: count); defer { fixture.cleanUp() }
+            let first = try DeviceChunkTransfer.validatedDescriptor(for: fixture.item, at: fixture.sourceURL,
+                direction: .macToPhone, chunkSize: 65_536)
+            let store = DeviceTransferCheckpointStore(directory: fixture.checkpointDirectory)
+            var checkpoint = try store.prepare(validatedDescriptor: first)
+            if count > 0 {
+                let payload = try DeviceChunkTransfer.payload(validatedDescriptor: first, index: 0, fileURL: fixture.sourceURL)
+                try store.accept(payload, validatedDescriptor: first, checkpoint: &checkpoint)
+            }
+            var resumedRaw = first.descriptor; resumedRaw.transferID = UUID()
+            let resumed = try ValidatedDeviceChunkTransferDescriptor(resumedRaw)
+            checkpoint = try store.prepare(validatedDescriptor: resumed)
+            if count > 0 {
+                #expect(checkpoint.receivedIndexes == [0])
+                let old = try DeviceChunkTransfer.payload(validatedDescriptor: first, index: 0, fileURL: fixture.sourceURL)
+                #expect(throws: DeviceChunkTransferError.checkpointMismatch) {
+                    try store.accept(old, validatedDescriptor: resumed, checkpoint: &checkpoint)
+                }
+            }
+            for index in checkpoint.missingIndexes {
+                let payload = try DeviceChunkTransfer.payload(validatedDescriptor: resumed, index: index, fileURL: fixture.sourceURL)
+                try store.accept(payload, validatedDescriptor: resumed, checkpoint: &checkpoint)
+            }
+            #expect(checkpoint.isComplete)
+            let partial = try store.finalizedFile(descriptor: resumedRaw, checkpoint: checkpoint)
+            #expect(try DeviceSyncFileIntegrity.verified(partial, matches: fixture.item))
+            if count > 0 {
+                // Per-chunk success never substitutes for final whole-file verification.
+                let handle = try FileHandle(forWritingTo: partial)
+                try handle.write(contentsOf: Data([255])); try handle.close()
+                #expect(throws: DeviceChunkTransferError.finalHashMismatch) {
+                    try store.finalizedFile(descriptor: resumedRaw, checkpoint: checkpoint)
+                }
+            }
+        }
+    }
+
+    @Test("Opt-in repeated chunk preparation comparison")
+    func validatedChunkPreparationBenchmark() throws {
+        guard ProcessInfo.processInfo.environment["ONGAKU_RUN_CHUNK_PREPARATION_BENCHMARK"] == "1" else { return }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("OngakuChunkPerf-\(UUID())")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let url = root.appendingPathComponent("sparse.caf")
+        FileManager.default.createFile(atPath: url.path, contents: nil)
+        let chunkSize = DeviceChunkTransfer.defaultChunkSize, chunkCount = 4096, requests = 64
+        let handle = try FileHandle(forWritingTo: url)
+        try handle.truncate(atOffset: UInt64(chunkSize * chunkCount)); try handle.close()
+        var item = makeItem(fileSize: Int64(chunkSize * chunkCount))
+        item.sha256 = try DeviceSyncFileIntegrity.sha256(of: url)
+        let raw = DeviceChunkTransferDescriptor(transferID: UUID(), direction: .macToPhone,
+            item: item, chunkSize: chunkSize,
+            chunkHashes: Array(repeating: DeviceChunkTransfer.sha256(Data(repeating: 0, count: chunkSize)), count: chunkCount))
+        func cpu() -> Double {
+            var usage = rusage(); getrusage(RUSAGE_SELF, &usage)
+            return Double(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000
+                + Double(usage.ru_utime.tv_usec + usage.ru_stime.tv_usec) / 1000
+        }
+        for round in 0..<3 {
+            for fast in (round == 1 ? [true, false] : [false, true]) {
+                let start = ContinuousClock.now, cpuStart = cpu()
+                // Include the reusable path's one admission validation in timing.
+                let validated = fast ? try ValidatedDeviceChunkTransferDescriptor(raw) : nil
+                var bytes = 0
+                for request in 0..<requests {
+                    let index = (request * 61) % chunkCount
+                    let payload = try validated.map {
+                        try DeviceChunkTransfer.payload(validatedDescriptor: $0, index: index, fileURL: url)
+                    } ?? DeviceChunkTransfer.payload(descriptor: raw, index: index, fileURL: url)
+                    bytes += payload.data.count
+                }
+                let elapsed = start.duration(to: ContinuousClock.now).components
+                let wall = Double(elapsed.seconds) * 1000 + Double(elapsed.attoseconds) / 1e15
+                #expect(bytes == requests * chunkSize)
+                print("ONGAKU_CHUNK_PREPARATION round=\(round) validated=\(fast) chunk_size=\(chunkSize) chunks=\(chunkCount) requests=\(requests) wall_ms=\(wall) cpu_ms=\(cpu()-cpuStart) bytes=\(bytes)")
+            }
+        }
     }
 
     private func makeItem(fileSize: Int64) -> DeviceSyncItem {

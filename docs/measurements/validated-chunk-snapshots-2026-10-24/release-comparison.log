@@ -1,0 +1,14 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "M8 transfer resilience milestone" started.
+◇ Test "Opt-in repeated chunk preparation comparison" started.
+ONGAKU_CHUNK_PREPARATION round=0 validated=false chunk_size=262144 chunks=4096 requests=64 wall_ms=236.901125 cpu_ms=235.84599999999995 bytes=16777216
+ONGAKU_CHUNK_PREPARATION round=0 validated=true chunk_size=262144 chunks=4096 requests=64 wall_ms=13.254708 cpu_ms=13.218999999999937 bytes=16777216
+ONGAKU_CHUNK_PREPARATION round=1 validated=true chunk_size=262144 chunks=4096 requests=64 wall_ms=13.114875 cpu_ms=13.088999999999942 bytes=16777216
+ONGAKU_CHUNK_PREPARATION round=1 validated=false chunk_size=262144 chunks=4096 requests=64 wall_ms=244.900208 cpu_ms=240.77499999999998 bytes=16777216
+ONGAKU_CHUNK_PREPARATION round=2 validated=false chunk_size=262144 chunks=4096 requests=64 wall_ms=246.566084 cpu_ms=242.087 bytes=16777216
+ONGAKU_CHUNK_PREPARATION round=2 validated=true chunk_size=262144 chunks=4096 requests=64 wall_ms=13.627958 cpu_ms=13.423000000000002 bytes=16777216
+✔ Test "Opt-in repeated chunk preparation comparison" passed after 1.269 seconds.
+✔ Suite "M8 transfer resilience milestone" passed after 1.269 seconds.
+✔ Test run with 1 test in 1 suite passed after 1.269 seconds.

@@ -1,0 +1,4 @@
+Xcode 27.1 (27A9275), CODE_SIGNING_ALLOWED=NO
+mac-debug
+** BUILD SUCCEEDED **
+Full local log: /private/tmp/ongaku-validated-chunks-mac-debug.log

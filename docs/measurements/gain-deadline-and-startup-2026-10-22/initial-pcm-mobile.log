@@ -1,0 +1,10 @@
+pid=1369 count=1 nodes=8 prepare_ms=3.930416 start_ms=0.044959 first_render_ms=0.37125 setup_to_pcm_ms=102.645542 eq_check=true expected=0.05 actual=0.05 PASS
+pid=1369 count=2 nodes=15 prepare_ms=0.808 start_ms=0.026416 first_render_ms=0.281875 setup_to_pcm_ms=15.906833 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=3 nodes=23 prepare_ms=0.972917 start_ms=0.038333 first_render_ms=0.61575 setup_to_pcm_ms=18.100083 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=4 nodes=33 prepare_ms=2.645417 start_ms=0.02475 first_render_ms=0.413833 setup_to_pcm_ms=25.491417 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=5 nodes=37 prepare_ms=2.119542 start_ms=0.0315 first_render_ms=0.407833 setup_to_pcm_ms=26.397416 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=6 nodes=53 prepare_ms=12.26525 start_ms=0.035292 first_render_ms=0.93675 setup_to_pcm_ms=45.6055 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=7 nodes=61 prepare_ms=24.484333 start_ms=0.039875 first_render_ms=1.891084 setup_to_pcm_ms=75.208542 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=8 nodes=71 prepare_ms=283.626417 start_ms=0.045833 first_render_ms=2.723459 setup_to_pcm_ms=343.526834 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=9 nodes=80 prepare_ms=559.5375 start_ms=0.204459 first_render_ms=2.715666 setup_to_pcm_ms=627.124083 eq_check=true expected=0.006294627 actual=0.006294627 PASS
+pid=1369 count=10 nodes=90 prepare_ms=3071.232708 start_ms=0.050125 first_render_ms=4.076834 setup_to_pcm_ms=3159.81675 eq_check=true expected=0.006294627 actual=0.006294627 PASS

@@ -1,0 +1,73 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "M8 transfer resilience milestone" started.
+◇ Suite "Device sync protocol" started.
+◇ Test "Bonjour discovery starts and stops at most once per lifecycle transition" started.
+◇ Test "Pause and deferred request state changes atomically" started.
+◇ Test "Individual transfer requests preserve the stable item ID" started.
+◇ Test "Manifest messages preserve Ongaku track overlays" started.
+◇ Test "Playlist sync preserves order and can be safely undone" started.
+◇ Test "Retry after a durable commit does not create a duplicate" started.
+◇ Test "Pause, resume, cancel, and capacity controls survive protocol encoding" started.
+◇ Test "Manifests from an older app remain compatible" started.
+◇ Test "Manifest messages preserve independent playlist overlays" started.
+◇ Test "Manifest messages preserve transfer metadata" started.
+◇ Test "Chunk offer, request, payload, and completion survive protocol encoding" started.
+◇ Test "SHA-256 verification accepts the original and rejects changed metadata" started.
+◇ Test "A manifest failure rolls back the received copy and remains retryable" started.
+◇ Test "Received files become visible only after their manifest is durable" started.
+◇ Test "Untrusted or edited descriptors cannot acquire validated status" started.
+◇ Test "Selected overlays merge counters without replacing playback history" started.
+◇ Test "Overlay audit history persists and records conflict reasons" started.
+◇ Test "A persisted checkpoint requests only missing chunks after restart" started.
+◇ Test "Overlay application changes only selected fields" started.
+◇ Test "Checkpoint summaries report retained bytes and stale data is removable" started.
+◇ Test "Overlay receipt survives message encoding" started.
+◇ Test "A corrupt chunk is rejected without advancing the checkpoint" started.
+◇ Test "Validated resumed sessions retain chunks but reject an old transfer ID" started.
+◇ Test "Reported transfer progress is bounded by the file size" started.
+◇ Test "Overlay identity matching tolerates display differences but rejects distant durations" started.
+◇ Test "Validated chunk snapshots preserve wire values and byte-exact payloads" started.
+◇ Test "Capacity preflight keeps a safety reserve" started.
+◇ Test "Validated receive still rejects corruption, wrong sessions and checkpoint shape" started.
+◇ Test "Only resumable in-session phases remain active" started.
+◇ Test "Local copy index follows library replacement and duplicate hashes" started.
+◇ Test "Opt-in repeated chunk preparation comparison" started.
+◇ Test "A corrupt primary manifest is preserved and restored from its backup" started.
+✔ Test "Bonjour discovery starts and stops at most once per lifecycle transition" passed after 0.007 seconds.
+✔ Test "Pause and deferred request state changes atomically" passed after 0.007 seconds.
+✔ Test "Individual transfer requests preserve the stable item ID" passed after 0.007 seconds.
+✔ Test "Manifest messages preserve Ongaku track overlays" passed after 0.007 seconds.
+✔ Test "Manifest messages preserve transfer metadata" passed after 0.007 seconds.
+✔ Test "Manifest messages preserve independent playlist overlays" passed after 0.007 seconds.
+✔ Test "Pause, resume, cancel, and capacity controls survive protocol encoding" passed after 0.007 seconds.
+✔ Test "Overlay receipt survives message encoding" passed after 0.007 seconds.
+✔ Test "Manifests from an older app remain compatible" passed after 0.007 seconds.
+✔ Test "SHA-256 verification accepts the original and rejects changed metadata" passed after 0.008 seconds.
+✔ Test "Reported transfer progress is bounded by the file size" passed after 0.008 seconds.
+✔ Test "Overlay identity matching tolerates display differences but rejects distant durations" passed after 0.008 seconds.
+✔ Test "Chunk offer, request, payload, and completion survive protocol encoding" passed after 0.008 seconds.
+✔ Test "Only resumabwarning: '--build-system native' has been deprecated and will be removed in a future release; please report an issue at https://github.com/swiftlang/swift-package-manager/issues if you are unable to adopt the default build system.
+le in-session phases remain active" passed after 0.008 seconds.
+✔ Test "Capacity preflight keeps a safety reserve" passed after 0.008 seconds.
+✔ Test "Opt-in repeated chunk preparation comparison" passed after 0.008 seconds.
+✔ Test "Untrusted or edited descriptors cannot acquire validated status" passed after 0.008 seconds.
+✔ Test "A corrupt chunk is rejected without advancing the checkpoint" passed after 0.008 seconds.
+✔ Test "Retry after a durable commit does not create a duplicate" passed after 0.008 seconds.
+✔ Test "Received files become visible only after their manifest is durable" passed after 0.008 seconds.
+✔ Test "A manifest failure rolls back the received copy and remains retryable" passed after 0.008 seconds.
+✔ Test "Validated receive still rejects corruption, wrong sessions and checkpoint shape" passed after 0.011 seconds.
+✔ Test "Checkpoint summaries report retained bytes and stale data is removable" passed after 0.011 seconds.
+✔ Test "Validated resumed sessions retain chunks but reject an old transfer ID" passed after 0.014 seconds.
+✔ Test "Validated chunk snapshots preserve wire values and byte-exact payloads" passed after 0.015 seconds.
+✔ Test "A persisted checkpoint requests only missing chunks after restart" passed after 0.015 seconds.
+✔ Test "A corrupt primary manifest is preserved and restored from its backup" passed after 0.016 seconds.
+✔ Suite "M8 transfer resilience milestone" passed after 0.016 seconds.
+✔ Test "Overlay audit history persists and records conflict reasons" passed after 0.121 seconds.
+✔ Test "Local copy index follows library replacement and duplicate hashes" passed after 0.177 seconds.
+✔ Test "Selected overlays merge counters without replacing playback history" passed after 0.211 seconds.
+✔ Test "Overlay application changes only selected fields" passed after 0.213 seconds.
+✔ Test "Playlist sync preserves order and can be safely undone" passed after 0.215 seconds.
+✔ Suite "Device sync protocol" passed after 0.216 seconds.
+✔ Test run with 32 tests in 2 suites passed after 0.216 seconds.

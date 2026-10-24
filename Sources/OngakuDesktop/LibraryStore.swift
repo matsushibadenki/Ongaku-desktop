@@ -170,7 +170,7 @@ final class LibraryStore: ObservableObject {
     @Published private(set) var presentationRevision = 0
     @Published private(set) var isPresentationUpdating = false
     private let presentationWorker = LibraryPresentationWorker()
-    private let fallbackSearchWorker = CatalogFallbackSearchWorker()
+    private let fallbackSearchWorker: CatalogFallbackSearchWorker
     private var presentationTask: Task<Void, Never>?
     private var presentationGeneration = 0
     private var isPresentationScheduled = false
@@ -196,9 +196,11 @@ final class LibraryStore: ObservableObject {
 
     init(
         repository: LibraryRepository = LibraryRepository(),
-        searchIndex: SQLiteCatalogPrototype? = nil
+        searchIndex: SQLiteCatalogPrototype? = nil,
+        fallbackSearchWorker: CatalogFallbackSearchWorker = CatalogFallbackSearchWorker()
     ) {
         self.repository = repository
+        self.fallbackSearchWorker = fallbackSearchWorker
         deviceSyncTagsURL = repository.rootURL.appendingPathComponent("device-sync-tags-v1.json")
         audioFeatureCache = AudioFeatureCache(rootURL: repository.rootURL)
         self.searchIndex = searchIndex ?? SQLiteCatalogPrototype(rootURL: repository.rootURL)
@@ -2959,6 +2961,9 @@ final class LibraryStore: ObservableObject {
                 }
                 self.searchBackendStatus = .sqlite
                 self.scheduleIndexedSearch()
+                await fallbackSearchWorker.releaseCache(
+                    libraryID: document.libraryID, throughRevision: expectedTracksRevision
+                )
             } catch {
                 guard !Task.isCancelled, let self,
                       self.tracksRevision == expectedTracksRevision,

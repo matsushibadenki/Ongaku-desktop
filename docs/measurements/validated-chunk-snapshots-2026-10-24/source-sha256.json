@@ -1,0 +1,6 @@
+{
+  "Sources/OngakuDesktop/DeviceChunkTransfer.swift": "d757ef392268f471b0a4e40573c9ac43efab778cdd7fb55f2a4e73c51a7e08a7",
+  "Sources/OngakuDesktop/PhoneSyncController.swift": "52dc8779c2f114c47d3cb099afe15b5ec09982097f62368d50ccbbafc755a2d9",
+  "Sources/OngakuMobile/MobileSyncController.swift": "3e7cd7d7264c61caa56f38db07723fa3ec634a04cff051337e20763a7d88fad2",
+  "Tests/OngakuDesktopTests/M8TransferResilienceMilestoneTests.swift": "1632efbbda12008549cf1f5ca476fae4ac418b152d7b1b89d1b52ee9fd69aba8"
+}

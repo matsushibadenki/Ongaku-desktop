@@ -1,0 +1,16 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Final output true-peak" started.
+◇ Test "Build condition controls activation and diagnostics" started.
+✔ Test "Build condition controls activation and diagnostics" passed after 0.019 seconds.
+◇ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" started.
+✔ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" passed after 0.437 seconds.
+◇ Test "Paused render resources reset queued true-peak audio before restart" started.
+✔ Test "Paused render resources reset queued true-peak audio before restart" passed after 0.047 seconds.
+◇ Test "Invalid output format fails instead of bypassing protection" started.
+✔ Test "Invalid output format fails instead of bypassing protection" passed after 0.001 seconds.
+◇ Test "Transition envelope multiplies the latest user volume before final protection" started.
+✔ Test "Transition envelope multiplies the latest user volume before final protection" passed after 0.008 seconds.
+✔ Suite "Final output true-peak" passed after 0.514 seconds.
+✔ Test run with 5 tests in 1 suite passed after 0.514 seconds.

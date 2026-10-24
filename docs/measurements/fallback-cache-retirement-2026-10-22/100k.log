@@ -1,0 +1,11 @@
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Large library performance fixture" started.
+◇ Test "Opt-in 100,000-track fallback cache retirement benchmark" started.
+ONGAKU_CACHE_RETIREMENT round=0 tracks=100000 retainedTextBytes=7366666 afterReleaseTextBytes=0 afterReleaseTrackReferences=0 coldSeconds=3.62915175 releaseSeconds=0.003412875
+ONGAKU_CACHE_RETIREMENT round=1 tracks=100000 retainedTextBytes=7366666 afterReleaseTextBytes=0 afterReleaseTrackReferences=0 coldSeconds=3.7662705 releaseSeconds=0.003882042
+ONGAKU_CACHE_RETIREMENT round=2 tracks=100000 retainedTextBytes=7366666 afterReleaseTextBytes=0 afterReleaseTrackReferences=0 coldSeconds=7.0027475 releaseSeconds=0.007756459
+✔ Test "Opt-in 100,000-track fallback cache retirement benchmark" passed after 63.805 seconds.
+✔ Suite "Large library performance fixture" passed after 63.805 seconds.
+✔ Test run with 1 test in 1 suite passed after 63.805 seconds.
