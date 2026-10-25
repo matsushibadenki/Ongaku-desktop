@@ -13,7 +13,6 @@ root=Path(sys.argv[1]); source=Path('Sources/OngakuDesktop/TransportOutputEnvelo
 PY
 cat > "$audit_dir/main.swift" <<'SWIFT'
 import Foundation
-struct RealtimeAudioEffectSetting { var isEnabled = false; var parameters: [String: Double] = [:] }
 @MainActor final class Clock {
     var now = 0.0
     var events: [(Double, @MainActor () -> Void)] = []
@@ -44,12 +43,13 @@ struct RealtimeAudioEffectSetting { var isEnabled = false; var parameters: [Stri
 SWIFT
 for variant in original early stale; do
  swiftc -parse-as-library -module-cache-path "$audit_dir/cache" \
+  Tests/AudioDSP/EffectAuditSupport.swift Sources/OngakuDesktop/AudioEffectPreset.swift \
   Sources/OngakuDesktop/EffectTransitionPolicy.swift "$audit_dir/$variant.swift" "$audit_dir/main.swift" -o "$audit_dir/$variant"
  if [[ "$variant" == original ]]; then "$audit_dir/$variant"
  else
   if "$audit_dir/$variant" > "$audit_dir/$variant.log" 2>&1; then echo "FAIL: $variant mutation accepted"; exit 1; fi
-  if [[ "$variant" == early ]]; then rg -q 'teardown before fade/drain' "$audit_dir/$variant.log"
-  else rg -q 'stale completion replaced newest intent' "$audit_dir/$variant.log"; fi
+  if [[ "$variant" == early ]]; then grep -Fq 'teardown before fade/drain' "$audit_dir/$variant.log"
+  else grep -Fq 'stale completion replaced newest intent' "$audit_dir/$variant.log"; fi
   echo "PASS: rejects $variant transport mutation"
  fi
 done
