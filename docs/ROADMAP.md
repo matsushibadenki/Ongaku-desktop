@@ -1,11 +1,19 @@
 # Ongaku Desktop ロードマップ
 
+## Chunk transfer actor ownership — 2026-10-24
+
+- 🟢 [Done] Mac／iOS companion共通の専用actorへ、チャンク転送状態・ファイルI/O・チェックポイントを移行。制御actorと直列I/O actorを分け、接続世代と転送世代で遅れた結果の反映を防止。保存確定後のキャンセルは保存済みデータを巻き戻さず、切断後は旧接続へ完了通知を送らない。[実装・検証記録](quality/CHUNK_TRANSFER_ACTOR_2026-10-24.md)。独立したiPhone本体アプリの従来の一括リソース転送経路は変更なし。
+- 🟢 [Done] 関連52テスト、Thread Sanitizer付きactor専用20テストが成功。一時停止・再開・キャンセル・切断復旧、保存失敗後の再試行、古い結果／パケットの排除、空ファイルと通常ファイルの両保存先へのJSON往復を検証。Mac Debug・App Store Release・iOS Simulator companionの署名なしビルド成功。
+- 🟠 [Next] 大きな転送で不足チャンク走査・進捗集計・チェックポイント永続化を計測。従来のリソース転送経路やA4全体の所有権整理は継続。
+- ⭕️ [Pending] 実機Mac／iPhoneのペアリング、通信断・再接続、バックグラウンド、一時停止・再開・キャンセル、実ファイルとアクセス権、低速ストレージ、転送速度・消費電力。実機確認完了とは扱わない。
+
+
 ## Validated chunk transfer snapshots — 2026-10-24
 
 - 🟢 [Done] A4 preparation: admit one immutable validated descriptor per Desktop/iOS companion chunk session and reuse it for payload reads/checkpoint accepts. Preserve per-chunk SHA-256, size/index checks, final whole-file verification and unchanged wire DTOs. Add session/checkpoint-shape rejection and keep legacy receive error classification. The separate main iPhone app uses another whole-resource path and has no runtime changes. See [scope, integrity tests and measurements](quality/VALIDATED_CHUNK_SNAPSHOTS_2026-10-24.md).
 - 🟢 [Done] Debug and Release each pass 32 transfer/protocol tests, including mutable-copy isolation, malformed/corrupt inputs, source changes, persisted resume/new session ID, empty files and final-file corruption. Normal Mac Debug, Universal Mac App Store Release and same-project iOS Simulator companion builds pass with signing disabled; whitespace checks pass.
 - 🟢 [Done] Matched Release sender-preparation comparison at default 256 KiB / 4096 chunks / 64 requests: median wall 244.900 → 13.255 ms (94.6% shorter), CPU 240.775 → 13.219 ms (94.5% lower), three alternating paired samples. This excludes network/encoding/receiver persistence and is not an end-to-end transfer speedup or device-energy result.
-- 🟠 [Next] Complete A4 actor ownership of file I/O/checkpoints/session state and cancel/disconnect generations. Missing-index/progress scans and checkpoint persistence still need profiling. First full audio-rack startup and A3 memory/UI targets remain separate unfinished work.
+- 🟢 [Done] Chunk file I/O/checkpoint/session actor ownership and cancel/disconnect generations completed in the follow-up above. Missing-index/progress scans and persistence profiling remain [Next]; first full audio-rack startup and A3 targets remain separate unfinished work.
 - ⭕️ [Pending] Installed Mac/physical iPhone companion transfer of actual large music files, pairing/network loss/pause/cancel/resume, storage permissions, end-to-end throughput and sustained energy. Main-iPhone cross-device behavior and existing audio/DAC qualification are not established by the shared-model tests. No remote CI result is claimed for unpublished changes.
 
 
@@ -23,7 +31,7 @@
 - 🟢 [Done] A3: retire obsolete fallback text and Track snapshot storage after SQLite passes parity and routing returns to the index. Check cancellation, library identity and covered tracks revision so old completion cannot evict a newer/different snapshot. Index failure can reconstruct fallback normally. No audio, catalog schema, localization or separate iPhone-runtime change. See [implementation and evidence](quality/FALLBACK_CACHE_RETIREMENT_2026-10-22.md).
 - 🟢 [Done] Pass 26 presentation/search-routing/SQLite tests, including actual index failure/recovery and stale/cancelled retirement. In three Debug 100,000-track cycles, retire 7,366,666 retained UTF-8 bytes and 100,000 worker-owned Track references in 3.4–7.8 ms; verify EN/JA/zh-Hans reconstruction. These are logical cache counts, not RSS savings or the 512 MiB product gate.
 - 🟢 [Done] Normal Mac Debug and Universal Mac App Store Release builds pass with signing disabled; whitespace checks pass.
-- 🟠 [Next] Continue A3 initial/steady-state memory and actual display/search profiling under playback/index updates. Keep first full audio-rack initialization and A4 transfer actor ownership as separate unfinished work.
+- 🟠 [Next] Continue A3 initial/steady-state memory and actual display/search profiling under playback/index updates. Keep first full audio-rack initialization and remaining A4 ownership as separate unfinished work.
 - ⭕️ [Pending] Installed-app large-library RSS/physical-footprint and UI qualification, real user libraries and existing physical-audio checks. Remote CI is not claimed for unpushed local changes.
 
 
@@ -363,7 +371,7 @@ Appleの画面を複製すること、非公開APIの利用、DRMの回避、App
 - 🟢 [Done] A4のcheckpoint読書きでは初期化時に固定したSendable storeを転送キューへ値として渡す。破棄・期限切れ整理・一覧取得後の`resumableTransfers`更新はMainActorへ明示的に戻す
 - 🟢 [Done] A4の転送状態分離として、Mac／Mobileで重複していた一時停止IDと保留チャンク要求を共通の`DeviceChunkTransferPauseCoordinator`へ移した。停止判定と要求保存を同じロック内で原子的に実行し、同時再開で要求が取り残される競合を除去した
 - 🟢 [Done] アルバムのイニシャル分類で、日本語文字を含むタイトルに`albumSortName`がある場合は読み仮名の先頭を優先する。読みがない既存データと英字タイトルは従来の分類を維持する
-- 🟠 [Next] A4の次段階として、チャンク転送のファイルI/O・checkpoint・転送中辞書を専用actorへ移し、現在Xcode 27が警告するDispatchQueueクロージャーからMainActor状態への参照を解消する
+- 🟢 [Done] A4のチャンク転送I/O・checkpoint・転送中辞書を共通actorへ移行し、両コントローラーのチャンク用DispatchQueueとMainActor状態参照を除去。2026-10-24の追補で制御・切断復旧を検証（A4全体の完了ではない）。
 - 🟢 [Done] 上記A4境界変更をXcode 27.0で全296テスト、通常macOS Debug、Mac App Store Release、iOS Simulator Debugの順に検証した。並列Xcodeビルドは同一DerivedDataのDBロックを起こすため構成ビルドを直列化し、3構成すべて成功した
 - ⭕️ [Pending] `TEST_RUNNER_ONGAKU_RUN_UI_PERFORMANCE=1 xcodebuild test -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Release -destination 'platform=macOS' -only-testing:OngakuDesktopUITests/OngakuDesktopUITests/testReleaseLargeLibraryQualification` を署名済みローカル環境で実行し、初回表示2秒・検索p95 300ms・RSS 512MiBの実測値を記録する。その後、実音声fixtureを加えて再生中、索引差分更新中、両者同時の3条件を同じゲートへ統合する
 - ⭕️ [Pending] 2026-09-15の実行ではReleaseアプリ／UIテストのビルドは成功したが、XcodeのUIテストランナーがAutomation Modeの有効化でタイムアウトし、計測本体の開始前に終了した。macOSのUIオートメーション権限を復旧後に上記コマンドを再実行し、数値が得られるまではA3の製品目標を合格扱いにしない

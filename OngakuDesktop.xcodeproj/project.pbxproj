@@ -75,6 +75,7 @@
 		200000000000000000000048 /* SocialPrivacySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005C /* SocialPrivacySettings.swift */; };
 		200000000000000000000049 /* SocialPrivacySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005D /* SocialPrivacySettingsView.swift */; };
 		20000000000000000000004A /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005E /* DeviceChunkTransfer.swift */; };
+		F0BBE47751984B8A92A979EF /* DeviceChunkTransferWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2649885B6D7941D0A84C03E5 /* DeviceChunkTransferWorker.swift */; };
 		20000000000000000000004B /* ArtistImageCandidatePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005F /* ArtistImageCandidatePicker.swift */; };
 		A10000000000000000000001 /* LibraryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* LibraryPresentation.swift */; };
 		A202610170000000000000002 /* AudioProcessingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000001 /* AudioProcessingPolicy.swift */; };
@@ -105,6 +106,7 @@
 		D20000000000000000000009 /* ../OngakuDesktop/SharedMusicModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000014 /* ../OngakuDesktop/SharedMusicModels.swift */; };
 		D2000000000000000000000A /* Resources/PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000015 /* Resources/PrivacyInfo.xcprivacy */; };
 		D2000000000000000000000B /* ../OngakuDesktop/DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000016 /* ../OngakuDesktop/DeviceChunkTransfer.swift */; };
+		14E2969C2E81448990C7DCE5 /* ../OngakuDesktop/DeviceChunkTransferWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93934F0D0E29427691A0C660 /* ../OngakuDesktop/DeviceChunkTransferWorker.swift */; };
 		E8DA8E8E30825B1B00B38A1B /* OngakuDesktopApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000001 /* OngakuDesktopApp.swift */; };
 		E8DA8E8F30825B1B00B38A1B /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000002 /* DesignTokens.swift */; };
 		E8DA8E9030825B1B00B38A1B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000003 /* Localization.swift */; };
@@ -128,6 +130,7 @@
 		E8DA8EA230825B1B00B38A1B /* MediaOrganizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000055 /* MediaOrganizationView.swift */; };
 		E8DA8EA330825B1B00B38A1B /* DeviceSyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000056 /* DeviceSyncModels.swift */; };
 		E8DA8EA430825B1B00B38A1B /* DeviceChunkTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000005E /* DeviceChunkTransfer.swift */; };
+		A02C12CF8D9E4C3BA08FCD61 /* DeviceChunkTransferWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2649885B6D7941D0A84C03E5 /* DeviceChunkTransferWorker.swift */; };
 		E8DA8EA530825B1B00B38A1B /* PhoneSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000057 /* PhoneSyncController.swift */; };
 		E8DA8EA630825B1B00B38A1B /* DeviceSyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000058 /* DeviceSyncView.swift */; };
 		E8DA8EA730825B1B00B38A1B /* AppleMusicStoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004A /* AppleMusicStoreView.swift */; };
@@ -268,6 +271,7 @@
 		10000000000000000000005C /* SocialPrivacySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettings.swift; sourceTree = "<group>"; };
 		10000000000000000000005D /* SocialPrivacySettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialPrivacySettingsView.swift; sourceTree = "<group>"; };
 		10000000000000000000005E /* DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceChunkTransfer.swift; sourceTree = "<group>"; };
+		2649885B6D7941D0A84C03E5 /* DeviceChunkTransferWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceChunkTransferWorker.swift; sourceTree = "<group>"; };
 		10000000000000000000005F /* ArtistImageCandidatePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArtistImageCandidatePicker.swift; sourceTree = "<group>"; };
 		A10000000000000000000002 /* LibraryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPresentation.swift; sourceTree = "<group>"; };
 		A202610170000000000000001 /* AudioProcessingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioProcessingPolicy.swift; sourceTree = "<group>"; };
@@ -296,6 +300,7 @@
 		D10000000000000000000014 /* ../OngakuDesktop/SharedMusicModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/SharedMusicModels.swift; sourceTree = "<group>"; };
 		D10000000000000000000015 /* Resources/PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Resources/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		D10000000000000000000016 /* ../OngakuDesktop/DeviceChunkTransfer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceChunkTransfer.swift; sourceTree = "<group>"; };
+		93934F0D0E29427691A0C660 /* ../OngakuDesktop/DeviceChunkTransferWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ../OngakuDesktop/DeviceChunkTransferWorker.swift; sourceTree = "<group>"; };
 		FA5700000000000000000000 /* PastelVUMeterScale.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastelVUMeterScale.swift; sourceTree = "<group>"; };
 		FA5700000000000000000001 /* PastelChannelVUMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastelChannelVUMeter.swift; sourceTree = "<group>"; };
 		S10000000000000000000001 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -373,6 +378,7 @@
 				100000000000000000000055 /* MediaOrganizationView.swift */,
 				100000000000000000000056 /* DeviceSyncModels.swift */,
 				10000000000000000000005E /* DeviceChunkTransfer.swift */,
+				2649885B6D7941D0A84C03E5 /* DeviceChunkTransferWorker.swift */,
 				100000000000000000000057 /* PhoneSyncController.swift */,
 				100000000000000000000058 /* DeviceSyncView.swift */,
 				10000000000000000000004A /* AppleMusicStoreView.swift */,
@@ -454,6 +460,7 @@
 				D10000000000000000000003 /* MobileSyncController.swift */,
 				D1000000000000000000000B /* ../OngakuDesktop/DeviceSyncModels.swift */,
 				D10000000000000000000016 /* ../OngakuDesktop/DeviceChunkTransfer.swift */,
+				93934F0D0E29427691A0C660 /* ../OngakuDesktop/DeviceChunkTransferWorker.swift */,
 				D10000000000000000000012 /* ../OngakuDesktop/LibraryModels.swift */,
 				D10000000000000000000013 /* ../OngakuDesktop/AudioFeatureAnalysis.swift */,
 				D10000000000000000000014 /* ../OngakuDesktop/SharedMusicModels.swift */,
@@ -685,6 +692,7 @@
 				200000000000000000000041 /* MediaOrganizationView.swift in Sources */,
 				200000000000000000000042 /* DeviceSyncModels.swift in Sources */,
 				20000000000000000000004A /* DeviceChunkTransfer.swift in Sources */,
+				F0BBE47751984B8A92A979EF /* DeviceChunkTransferWorker.swift in Sources */,
 				200000000000000000000043 /* PhoneSyncController.swift in Sources */,
 				200000000000000000000044 /* DeviceSyncView.swift in Sources */,
 				200000000000000000000033 /* AppleMusicStoreView.swift in Sources */,
@@ -745,6 +753,7 @@
 				D20000000000000000000003 /* MobileSyncController.swift in Sources */,
 				D20000000000000000000004 /* ../OngakuDesktop/DeviceSyncModels.swift in Sources */,
 				D2000000000000000000000B /* ../OngakuDesktop/DeviceChunkTransfer.swift in Sources */,
+				14E2969C2E81448990C7DCE5 /* ../OngakuDesktop/DeviceChunkTransferWorker.swift in Sources */,
 				D20000000000000000000007 /* ../OngakuDesktop/LibraryModels.swift in Sources */,
 				D20000000000000000000008 /* ../OngakuDesktop/AudioFeatureAnalysis.swift in Sources */,
 				D2000000000000000000000C /* IntegratedLoudnessMeter.swift in Sources */,
@@ -789,6 +798,7 @@
 				E8DA8EA230825B1B00B38A1B /* MediaOrganizationView.swift in Sources */,
 				E8DA8EA330825B1B00B38A1B /* DeviceSyncModels.swift in Sources */,
 				E8DA8EA430825B1B00B38A1B /* DeviceChunkTransfer.swift in Sources */,
+				A02C12CF8D9E4C3BA08FCD61 /* DeviceChunkTransferWorker.swift in Sources */,
 				E8DA8EA530825B1B00B38A1B /* PhoneSyncController.swift in Sources */,
 				E8DA8EA630825B1B00B38A1B /* DeviceSyncView.swift in Sources */,
 				E8DA8EA730825B1B00B38A1B /* AppleMusicStoreView.swift in Sources */,

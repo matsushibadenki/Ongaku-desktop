@@ -1,0 +1,21 @@
+✔ Test "Pause preparation, resume once, then cancel without reviving the source" passed after 0.075 seconds.
+✔ Test "Cancel during descriptor I/O never offers and calls completion exactly once" passed after 0.057 seconds.
+✔ Test "A paused read is deferred and rechecked against source bytes on resume" passed after 0.073 seconds.
+✔ Test "Cancel during checkpoint I/O deletes only the cancelled session's partial" passed after 0.066 seconds.
+✔ Test "Pause can persist one requested in-flight chunk but sends no next request" passed after 0.088 seconds.
+✔ Test "Pause at verification retains staged data until resume" passed after 0.032 seconds.
+✔ Test "Cancellation before the commit claim never installs a received file" passed after 0.024 seconds.
+✔ Test "A claimed durable commit wins over late cancel and publishes only once" passed after 0.025 seconds.
+✔ Test "Disconnect retains checkpoint; restart resumes under a new ID and ignores old packets" passed after 0.106 seconds.
+✔ Test "Disconnect while final commit runs keeps the local commit and suppresses old-link acknowledgement" passed after 0.025 seconds.
+✔ Test "Finalization failure retains a complete checkpoint for retry" passed after 0.055 seconds.
+✔ Test "Cancel and immediate reopen do not let stale I/O delete or revive the new session" passed after 0.096 seconds.
+✔ Test "Duplicate offers cannot take an active SHA checkpoint from its owner" passed after 0.084 seconds.
+✔ Test "Disconnect during preparation invalidates old callbacks even when an ID is reused" passed after 0.066 seconds.
+✔ Test "Capacity rejection does not request payload or discard retryable checkpoint data" passed after 0.058 seconds.
+✔ Test "Send failures finish an outgoing callback once and cannot revive on completion replay" passed after 0.056 seconds.
+✔ Test "A failed old-connection commit cannot cancel a new link" passed after 0.032 seconds.
+✔ Test "Shutdown drains blocked work and finishes callbacks without reviving offers" passed after 0.065 seconds.
+✔ Test "Encoded loopback completes Mac-directory and mobile durable-library destinations" passed after 0.179 seconds.
+✔ Suite "Actor-owned chunk transfer" passed after 1.850 seconds.
+✔ Test run with 20 tests in 1 suite passed after 1.850 seconds.

@@ -288,9 +288,18 @@ struct DeviceTransferCheckpointStore: Sendable {
         descriptor: DeviceChunkTransferDescriptor,
         checkpoint: DeviceTransferCheckpoint
     ) throws -> URL {
+        try finalizedFile(descriptor: descriptor, checkpoint: checkpoint, checkCancellation: {})
+    }
+
+    func finalizedFile(
+        descriptor: DeviceChunkTransferDescriptor,
+        checkpoint: DeviceTransferCheckpoint,
+        checkCancellation: () throws -> Void
+    ) throws -> URL {
+        try checkCancellation()
         guard checkpoint.isComplete else { throw DeviceChunkTransferError.incompleteTransfer }
         let partial = partialURL(forSHA256: descriptor.item.sha256)
-        guard try DeviceSyncFileIntegrity.verified(partial, matches: descriptor.item) else {
+        guard try DeviceSyncFileIntegrity.verified(partial, matches: descriptor.item, checkCancellation: checkCancellation) else {
             throw DeviceChunkTransferError.finalHashMismatch
         }
         return partial

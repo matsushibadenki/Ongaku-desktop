@@ -61,7 +61,7 @@ actor DeviceChunkTransferWorker {
         case directory(URL)
         case library(DeviceReceivedLibraryRepository)
     }
-    enum Point: Sendable { case descriptor, accept, stage, commit }
+    enum Point: Equatable, Sendable { case descriptor, read, accept, stage, commit, descriptorResult, acceptResult, stageResult }
     enum Command: Sendable {
         case outgoing(UUID, DeviceSyncItem, URL, DeviceSyncDirection, (@Sendable (Error?) -> Void)?)
         case offer(DeviceChunkTransferDescriptor)
@@ -72,6 +72,7 @@ actor DeviceChunkTransferWorker {
         case refresh(removingStale: Bool)
         case discardCheckpoints
         case barrier(@Sendable () -> Void)
+        case flush(@Sendable () -> Void)
     }
     enum Event: Sendable {
         case state(UUID, DeviceTransferState)
@@ -79,6 +80,7 @@ actor DeviceChunkTransferWorker {
         case committed(DeviceChunkTransferDescriptor, URL, DeviceReceivedLibrarySnapshot?)
         case storageFailure(String)
         case stopped
+        case barrier(@Sendable () -> Void)
     }
     fileprivate struct Ticket: Hashable, Sendable {
         let context: UUID
@@ -114,6 +116,7 @@ actor DeviceChunkTransferWorker {
         var descriptor: DeviceChunkTransferDescriptor?
         var checkpoint: DeviceTransferCheckpoint?
         var pendingRequest: DeviceChunkRequest?
+        var awaitingIndex: Int?
         var staged: URL?
         var busy = true
         var paused = false
@@ -129,9 +132,12 @@ actor DeviceChunkTransferWorker {
     private let send: @Sendable (DeviceSyncMessage) throws -> Void
     private var context: UUID
     private var entries: [UUID: Entry] = [:]
+    private var closedIDs: Set<UUID> = []
     private var summaries: [String: DeviceTransferCheckpointSummary] = [:]
     private var removing: Set<String> = []
     private var closing = false
+    private var pendingDisk = 0
+    private var flushWaiters: [@Sendable () -> Void] = []
 
     init(checkpointDirectory: URL, destination: Destination,
          canReceive: @escaping @Sendable (Int64) -> Bool = DeviceChunkTransferWorker.capacityAvailable,
@@ -164,13 +170,26 @@ actor DeviceChunkTransferWorker {
                 guard !closing, previous == context else { continue }
                 context = next
                 interrupt()
-            case .reply(let reply): finish(reply)
+            case .reply(let reply):
+                pendingDisk = max(0, pendingDisk - 1)
+                finish(reply)
+                if pendingDisk == 0 {
+                    let waiters = flushWaiters; flushWaiters.removeAll()
+                    waiters.forEach { output.yield(.barrier($0)) }
+                }
             case .shutdown:
-                closing = true; interrupt(); disk.submit(.shutdown)
+                closing = true; interrupt(); submitDisk(.shutdown)
             }
         }
     }
-    private func state(_ entry: Entry) { output.yield(.state(context, entry.state)) }
+    private func submitDisk(_ job: DeviceChunkTransferDisk.Job) {
+        if disk.submit(job) { pendingDisk += 1 }
+    }
+    private func state(_ entry: Entry) {
+        // Confirmed terminal history remains publishable across a physical
+        // disconnect; old active progress is fenced by its connection context.
+        output.yield(.state(entry.state.isActive ? context : client.connection, entry.state))
+    }
     private func checkpoints() {
         output.yield(.checkpoints(summaries.values.filter { !removing.contains($0.itemSHA256) }.sorted { $0.updatedAt > $1.updatedAt }))
     }
@@ -182,18 +201,19 @@ actor DeviceChunkTransferWorker {
         checkpoints()
     }
     private func wire(_ message: DeviceSyncMessage, id: UUID) {
+        guard !closing, client.isCurrent(context) else { return }
         do { try send(message) } catch { fail(id, error: error) }
     }
     private func handle(_ command: Command) {
         switch command {
         case let .outgoing(id, item, url, direction, completion):
-            guard entries[id] == nil else { return }
+            guard entries[id] == nil, !closedIDs.contains(id) else { return }
             let entry = Entry(ticket: .init(context: context, id: id, token: UUID()), cancellation: ChunkCancellation(),
                 state: .init(id: id, item: item, direction: direction, phase: .preparing), receiving: false, completion: completion)
             entries[id] = entry; state(entry)
-            disk.submit(.outgoing(entry.ticket, entry.cancellation, item, url, direction))
+            submitDisk(.outgoing(entry.ticket, entry.cancellation, item, url, direction))
         case .offer(let descriptor):
-            guard entries[descriptor.transferID] == nil else { return }
+            guard entries[descriptor.transferID] == nil, !closedIDs.contains(descriptor.transferID) else { return }
             let conflict = entries.values.contains {
                 $0.receiving && ($0.state.isActive || $0.committing) && $0.state.item.sha256 == descriptor.item.sha256
             }
@@ -202,18 +222,20 @@ actor DeviceChunkTransferWorker {
                 receiving: true, descriptor: descriptor)
             entries[descriptor.transferID] = entry; state(entry)
             if conflict { fail(descriptor.transferID, error: DeviceChunkTransferError.checkpointMismatch); return }
-            disk.submit(.prepare(entry.ticket, entry.cancellation, descriptor))
+            submitDisk(.prepare(entry.ticket, entry.cancellation, descriptor))
         case .request(let request):
             guard var entry = entries[request.transferID], entry.state.isActive, !entry.receiving else { return }
             entry.pendingRequest = request; entries[request.transferID] = entry
             advance(request.transferID)
         case .payload(let payload):
             guard var entry = entries[payload.transferID], entry.state.isActive, entry.receiving,
-                  !entry.busy, !entry.committing, entry.checkpoint != nil else { return }
+                  !entry.busy, !entry.committing, entry.checkpoint != nil,
+                  entry.awaitingIndex == payload.index else { return }
             // At most one chunk is requested at a time. Extra/duplicate in-flight
             // packets are safely re-requested from the authoritative checkpoint.
+            entry.awaitingIndex = nil
             entry.busy = true; entries[payload.transferID] = entry
-            disk.submit(.accept(entry.ticket, entry.cancellation, payload))
+            submitDisk(.accept(entry.ticket, entry.cancellation, payload))
         case .completion(let completion):
             guard let entry = entries[completion.transferID], entry.state.isActive, !entry.receiving else { return }
             guard entry.descriptor?.item.sha256 == completion.sha256 else {
@@ -233,16 +255,19 @@ actor DeviceChunkTransferWorker {
             case .insufficientStorage:
                 terminal(control.transferID, phase: .insufficientStorage, error: CocoaError(.fileWriteOutOfSpace), discard: false)
             }
-            if notify { try? send(.transferControl(control)) }
-        case .refresh(let stale): disk.submit(.refresh(stale))
+            if notify && client.isCurrent(context) { try? send(.transferControl(control)) }
+        case .refresh(let stale): submitDisk(.refresh(stale))
         case .discardCheckpoints:
             guard !entries.values.contains(where: { $0.state.isActive || $0.committing }) else { return }
-            disk.submit(.discard)
-        case .barrier(let done): done()
+            submitDisk(.discard)
+        case .barrier(let done): output.yield(.barrier(done))
+        case .flush(let done):
+            if pendingDisk == 0 { output.yield(.barrier(done)) } else { flushWaiters.append(done) }
         }
     }
     private func advance(_ id: UUID) {
-        guard var entry = entries[id], entry.state.isActive, !entry.paused, !entry.busy, !entry.committing else { return }
+        guard client.isCurrent(context), var entry = entries[id], entry.state.isActive,
+              !entry.paused, !entry.busy, !entry.committing else { return }
         if !entry.receiving {
             guard let descriptor = entry.descriptor else { return }
             if !entry.offered {
@@ -253,7 +278,7 @@ actor DeviceChunkTransferWorker {
             if let request = entry.pendingRequest {
                 guard let index = request.missingIndexes.first, descriptor.chunkHashes.indices.contains(index) else { return }
                 entry.pendingRequest = nil; entry.busy = true; entries[id] = entry
-                disk.submit(.read(entry.ticket, entry.cancellation, request))
+                submitDisk(.read(entry.ticket, entry.cancellation, request))
             }
         } else if let checkpoint = entry.checkpoint {
             if checkpoint.isComplete {
@@ -262,13 +287,15 @@ actor DeviceChunkTransferWorker {
                     // Durable commit wins after this claim. Later cancel/pause
                     // cannot roll back a verified library transaction.
                     entry.committing = true; entries[id] = entry; state(entry)
-                    disk.submit(.commit(entry.ticket))
+                    submitDisk(.commit(entry.ticket))
                 } else {
                     entries[id] = entry; state(entry)
-                    disk.submit(.stage(entry.ticket, entry.cancellation))
+                    submitDisk(.stage(entry.ticket, entry.cancellation))
                 }
             } else {
-                wire(.chunkRequest(.init(transferID: id, missingIndexes: checkpoint.missingIndexes)), id: id)
+                let missing = checkpoint.missingIndexes
+                entry.awaitingIndex = missing.first; entries[id] = entry
+                wire(.chunkRequest(.init(transferID: id, missingIndexes: missing)), id: id)
             }
         }
     }
@@ -279,22 +306,29 @@ actor DeviceChunkTransferWorker {
         if phase == .completed { entry.state.updateProgress(fraction: 1, completedBytes: entry.state.item.fileSize) }
         let completion = entry.completion; entry.completion = nil
         if discard && entry.receiving { removing.insert(entry.state.item.sha256); summaries.removeValue(forKey: entry.state.item.sha256); checkpoints() }
-        disk.submit(.release(entry.ticket, entry.receiving ? entry.state.item.sha256 : nil, discard))
+        submitDisk(.release(entry.ticket, entry.receiving ? entry.state.item.sha256 : nil, discard))
         entry.descriptor = nil; entry.checkpoint = nil; entry.pendingRequest = nil; entry.staged = nil; entry.busy = false
-        entries[id] = entry; state(entry); completion?(error)
+        entries.removeValue(forKey: id); closedIDs.insert(id)
+        state(entry); completion?(error)
     }
     private func fail(_ id: UUID, error: Error) {
-        guard entries[id]?.state.isActive == true else { return }
+        guard let entry = entries[id], entry.state.isActive else { return }
+        let connection = entry.ticket.context
+        let receiving = entry.receiving
         let phase: DeviceTransferState.Phase = (error as? CocoaError)?.code == .fileWriteOutOfSpace
             ? .insufficientStorage : .failed(error.localizedDescription)
         terminal(id, phase: phase, error: error, discard: false)
-        try? send(.transferControl(.init(transferID: id, action: phase == .insufficientStorage ? .insufficientStorage : .cancel)))
+        if receiving { submitDisk(.refresh(false)) }
+        if !closing && connection == context && client.isCurrent(connection) {
+            try? send(.transferControl(.init(transferID: id, action: phase == .insufficientStorage ? .insufficientStorage : .cancel)))
+        }
     }
     private func interrupt() {
         for id in Array(entries.keys) where entries[id]?.state.isActive == true && entries[id]?.committing != true {
             terminal(id, phase: .interrupted, error: URLError(.networkConnectionLost), discard: false)
         }
-        disk.submit(.refresh(false))
+        closedIDs.removeAll()
+        submitDisk(.refresh(false))
     }
     private func finish(_ reply: Reply) {
         switch reply {
@@ -303,10 +337,15 @@ actor DeviceChunkTransferWorker {
             if case .failure(let error) = result { output.yield(.storageFailure(error.localizedDescription)) }
         case .refreshed(let result):
             switch result {
-            case .success(let values): summaries = Dictionary(uniqueKeysWithValues: values.map { ($0.itemSHA256, $0) }); checkpoints()
+            case .success(let values):
+                summaries = Dictionary(values.map { ($0.itemSHA256, $0) }, uniquingKeysWith: {
+                    $0.updatedAt >= $1.updatedAt ? $0 : $1
+                }); checkpoints()
             case .failure(let error): output.yield(.storageFailure(error.localizedDescription))
             }
         case .stopped:
+            pendingDisk = 0
+            flushWaiters.forEach { output.yield(.barrier($0)) }; flushWaiters.removeAll()
             output.yield(.stopped); output.finish(); input.finish()
         default: finishTransfer(reply)
         }
@@ -327,14 +366,14 @@ actor DeviceChunkTransferWorker {
                 if let descriptor = entry.descriptor {
                     summaries.removeValue(forKey: descriptor.item.sha256); checkpoints()
                     output.yield(.committed(descriptor, commit.url, commit.snapshot))
-                    if !closing && t.context == context { try? send(.chunkCompletion(.init(transferID: t.id, sha256: descriptor.item.sha256))) }
+                    if !closing && t.context == context && client.isCurrent(t.context) { try? send(.chunkCompletion(.init(transferID: t.id, sha256: descriptor.item.sha256))) }
                 }
                 terminal(t.id, phase: .completed, error: nil, discard: false)
             case .failure(let error): fail(t.id, error: error)
             }
             return
         }
-        guard !closing, ticket.context == context, entry.state.isActive else { return }
+        guard !closing, ticket.context == context, client.isCurrent(ticket.context), entry.state.isActive else { return }
         entry.busy = false
         do {
             switch reply {
@@ -365,7 +404,8 @@ actor DeviceChunkTransferWorker {
             case .staged(_, let result): entry.staged = try result.get()
             default: return
             }
-            entry.state.phase = entry.paused ? .paused : .transferring
+            entry.state.phase = entry.paused ? .paused
+                : (entry.receiving && entry.checkpoint?.isComplete == true ? .verifying : .transferring)
             entries[ticket.id] = entry; state(entry); advance(ticket.id)
         } catch { entries[ticket.id] = entry; fail(ticket.id, error: error) }
     }
@@ -411,11 +451,27 @@ private actor DeviceChunkTransferDisk {
         self.destination = destination; self.canReceive = canReceive; self.beforeIO = beforeIO; self.output = output
         Task { await self.run(commands.stream) }
     }
-    nonisolated func submit(_ job: Job) { input.yield(job) }
-    private func run(_ stream: AsyncStream<Job>) async {
-        for await job in stream { perform(job) }
+    nonisolated func submit(_ job: Job) -> Bool {
+        if case .enqueued = input.yield(job) { return true }
+        return false
     }
-    private func emit(_ reply: DeviceChunkTransferWorker.Reply) { output.yield(.reply(reply)) }
+    private func run(_ stream: AsyncStream<Job>) async {
+        for await job in stream {
+            perform(job)
+            if case .shutdown = job { break }
+        }
+    }
+    private func emit(_ reply: DeviceChunkTransferWorker.Reply) {
+        // Test barriers can hold a successful result after disk mutation but
+        // before lifecycle publication, exercising truly stale success replies.
+        switch reply {
+        case .outgoing: beforeIO(.descriptorResult)
+        case .accepted: beforeIO(.acceptResult)
+        case .staged: beforeIO(.stageResult)
+        default: break
+        }
+        output.yield(.reply(reply))
+    }
     private func perform(_ job: Job) {
         switch job {
         case let .outgoing(ticket, cancellation, item, url, direction):
@@ -439,7 +495,7 @@ private actor DeviceChunkTransferDisk {
             }))
         case let .read(ticket, cancellation, request):
             emit(.read(ticket, request, Result {
-                try cancellation.check()
+                beforeIO(.read); try cancellation.check()
                 guard let value = outgoing[ticket], let index = request.missingIndexes.first else { throw DeviceChunkTransferError.checkpointMismatch }
                 let payload = try DeviceChunkTransfer.payload(validatedDescriptor: value.0, index: index, fileURL: value.1)
                 try cancellation.check(); return payload
@@ -455,7 +511,7 @@ private actor DeviceChunkTransferDisk {
             emit(.staged(ticket, Result {
                 beforeIO(.stage); try cancellation.check()
                 guard let value = incoming[ticket] else { throw DeviceChunkTransferError.checkpointMismatch }
-                let partial = try store.finalizedFile(descriptor: value.descriptor.descriptor, checkpoint: value.checkpoint)
+                let partial = try store.finalizedFile(descriptor: value.descriptor.descriptor, checkpoint: value.checkpoint, checkCancellation: cancellation.check)
                 try cancellation.check()
                 let directory = FileManager.default.temporaryDirectory.appendingPathComponent("OngakuChunkStage", isDirectory: true)
                 try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -506,7 +562,7 @@ private actor DeviceChunkTransferDisk {
             emit(.released(sha, discard && (try? result.get()) != nil, result))
         case .refresh(let stale):
             emit(.refreshed(Result {
-                if stale { _ = try store.removeStale(before: Date().addingTimeInterval(-30*24*60*60)) }
+                if stale && incoming.isEmpty && outgoing.isEmpty { _ = try store.removeStale(before: Date().addingTimeInterval(-30*24*60*60)) }
                 return try store.summaries()
             }))
         case .discard:

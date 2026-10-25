@@ -411,25 +411,38 @@ enum DeviceSyncMessage: Codable, Sendable {
 
 enum DeviceSyncFileIntegrity {
     static func sha256(of url: URL) throws -> String {
+        try sha256(of: url, checkCancellation: {})
+    }
+
+    static func sha256(of url: URL, checkCancellation: () throws -> Void) throws -> String {
+        try checkCancellation()
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
 
         var hasher = SHA256()
         while true {
+            try checkCancellation()
             guard let data = try handle.read(upToCount: 1_048_576), !data.isEmpty else {
                 break
             }
             hasher.update(data: data)
         }
+        try checkCancellation()
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     static func verified(_ url: URL, matches item: DeviceSyncItem) throws -> Bool {
+        try verified(url, matches: item, checkCancellation: {})
+    }
+
+    static func verified(_ url: URL, matches item: DeviceSyncItem,
+                         checkCancellation: () throws -> Void) throws -> Bool {
+        try checkCancellation()
         let values = try url.resourceValues(forKeys: [.fileSizeKey, .isRegularFileKey])
         guard values.isRegularFile == true,
               Int64(values.fileSize ?? 0) == item.fileSize else {
             return false
         }
-        return try sha256(of: url) == item.sha256
+        return try sha256(of: url, checkCancellation: checkCancellation) == item.sha256
     }
 }
