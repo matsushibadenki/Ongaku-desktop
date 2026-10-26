@@ -25,5 +25,5 @@ compile "$audit_dir/without-deadline.swift" "$audit_dir/negative"
 if "$audit_dir/negative" > "$audit_dir/negative.log" 2>&1; then
  echo 'FAIL: missing deadline escaped detection'; exit 1
 fi
-rg -q 'elapsed deadline did not stop I/O before commit' "$audit_dir/negative.log"
+grep -Fq 'elapsed deadline did not stop I/O before commit' "$audit_dir/negative.log"
 echo 'PASS: rejected missing-deadline negative control'

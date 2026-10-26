@@ -148,11 +148,23 @@ struct AudioEffectSignalTests {
             let engine = AVAudioEngine()
             effect.attach(to: engine)
             defer { effect.detach(from: engine) }
+            // Inspect band parameters only after preparing a complete offline graph.
+            let player = AVAudioPlayerNode()
+            engine.attach(player)
+            let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)!
+            engine.connect(player, to: effect.inputNode, format: format)
+            effect.connectInternalNodes(engine: engine, format: format)
+            engine.connect(effect.outputNode, to: engine.mainMixerNode, format: format)
+            try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 128)
+            engine.prepare()
             let eqs = effect.nodes.compactMap { $0 as? AVAudioUnitEQ }
-            #expect(eqs.allSatisfy { $0.bands.allSatisfy { !$0.bypass } })
+            #expect(!eqs.isEmpty)
+            for (unitIndex, eq) in eqs.enumerated() {
+                for (bandIndex, band) in eq.bands.enumerated() {
+                    #expect(!band.bypass, "\(effect.kind) EQ \(unitIndex) band \(bandIndex) must be active")
+                }
+            }
             if effect.kind == .warm {
-                let format = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)!
-                effect.connectInternalNodes(engine: engine, format: format)
                 for bus in 0..<4 {
                     #expect(engine.inputConnectionPoint(for: effect.outputNode, inputBus: AVAudioNodeBus(bus)) != nil)
                 }

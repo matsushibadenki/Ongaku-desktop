@@ -18,5 +18,5 @@ swiftc -parse-as-library -O -suppress-warnings -module-cache-path "$audit_dir/ca
 if "$audit_dir/reuse" --skip-reset > "$audit_dir/negative.log" 2>&1; then
  echo 'FAIL: retained-history negative control escaped detection'; exit 1
 fi
-rg -q 'retired track history survived graph reuse' "$audit_dir/negative.log" || { cat "$audit_dir/negative.log"; exit 1; }
+grep -Fq 'retired track history survived graph reuse' "$audit_dir/negative.log" || { cat "$audit_dir/negative.log"; exit 1; }
 echo 'PASS: rejected missing full-state reset negative control'

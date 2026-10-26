@@ -32,5 +32,5 @@ xcrun clang++ -std=c++20 -O2 -fobjc-arc -fblocks -I "$audit_dir/negative" \
 if "$audit_dir/negative/au" > "$audit_dir/negative.log" 2>&1; then
  echo 'FAIL: control-step substitute accepted'; exit 1
 fi
-rg -q 'sample-aligned cosine residual exceeded' "$audit_dir/negative.log"
+grep -Fq 'sample-aligned cosine residual exceeded' "$audit_dir/negative.log"
 echo 'PASS: negative control rejects a 48-step envelope'

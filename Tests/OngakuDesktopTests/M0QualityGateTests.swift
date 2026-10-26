@@ -355,10 +355,19 @@ struct M0QualityGateTests {
         #expect(!mobile.contains("@MainActor\nfinal class MobileSyncController"))
         #expect(desktop.contains("Task { @MainActor [weak self] in"))
         #expect(mobile.contains("Task { @MainActor [weak self] in"))
-        #expect(desktop.contains("private let checkpointStore"))
-        #expect(mobile.contains("private let checkpointStore"))
-        #expect(!desktop.contains("private lazy var checkpointStore"))
-        #expect(!mobile.contains("private lazy var checkpointStore"))
+        // Checkpoints now belong to the disk actor. Controllers eagerly create
+        // the transfer worker and bridge its events back to the main actor.
+        for controller in [desktop, mobile] {
+            #expect(controller.contains("let worker = DeviceChunkTransferWorker(checkpointDirectory:"))
+            #expect(controller.contains("chunkTransfers = worker"))
+            #expect(controller.contains("Task { @MainActor [weak self, events = worker.events] in"))
+            #expect(!controller.contains("DeviceTransferCheckpointStore("))
+            #expect(!controller.contains("private lazy var chunkTransfers"))
+        }
+        let worker = try Self.source("DeviceChunkTransferWorker.swift")
+        #expect(worker.contains("private actor DeviceChunkTransferDisk"))
+        #expect(worker.contains("private let store: DeviceTransferCheckpointStore"))
+        #expect(worker.contains("store = DeviceTransferCheckpointStore(directory: directory)"))
     }
 
     private static func stringsTable(named name: String, locale: String) throws -> [String: String] {
