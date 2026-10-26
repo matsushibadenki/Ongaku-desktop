@@ -1,0 +1,7 @@
+Baseline repository HEAD: 93ed712676f24cbd41e7c470e3c311fe1f7436f4
+before sha256 75a9794b2a1e6d59251fa44dc500162a64e0eeca1a60cb7c9e83c06f5e8ed0b1
+after sha256 8eae5be678f7f6a5e336eb09627c1b829848cd267e5aab32b1df9e62217b6b57
+models sha256 1b35c634b4ab167c4a841d8c5bca421eac720eacb6b53772528d82374e29a038
+harness sha256 1eba0a0395ca021d664ca591868ba98075ee799b5fed870d64e76ac7ad92b6d7
+Compile: swiftc -O -module-cache-path <temporary-cache> DeviceSyncModels.swift DeviceChunkTransfer.swift main.swift -o <variant>
+Run: ONGAKU_CHUNK_LOAD=1 <variant>

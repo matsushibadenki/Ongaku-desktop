@@ -158,11 +158,18 @@ private func finishChunks(_ fixture: ChunkFixture, _ harness: ChunkHarness, _ de
 private final class ChunkRelay: @unchecked Sendable {
     private let lock = NSLock()
     private var target: DeviceChunkTransferClient?
+    private let legacyOffers: Bool
+    init(legacyOffers: Bool = false) { self.legacyOffers = legacyOffers }
     func connect(_ target: DeviceChunkTransferClient) { lock.withLock { self.target = target } }
     func send(_ message: DeviceSyncMessage) throws {
         guard let target = lock.withLock({ target }) else { throw URLError(.networkConnectionLost) }
         // Exercise the actual wire DTO rather than sharing trusted snapshots.
-        let decoded = try JSONDecoder().decode(DeviceSyncMessage.self, from: JSONEncoder().encode(message))
+        var wire = message
+        if legacyOffers, case .chunkOffer(var descriptor) = wire {
+            descriptor.supportsCompactRequests = nil
+            wire = .chunkOffer(descriptor)
+        }
+        let decoded = try JSONDecoder().decode(DeviceSyncMessage.self, from: JSONEncoder().encode(wire))
         switch decoded {
         case .chunkOffer(let v): target.submit(.offer(v))
         case .chunkRequest(let v): target.submit(.request(v))
@@ -341,7 +348,8 @@ struct ChunkTransferWorkerTests {
             var resumed = descriptor; resumed.transferID = UUID()
             restarted.client.submit(.offer(resumed))
             try await chunkWait { restarted.spy.requests.count == 1 }
-            #expect(restarted.spy.requests[0].missingIndexes == [1,2])
+            #expect(restarted.spy.requests[0].missingIndexes == [1])
+            #expect(restarted.spy.requests[0].remainingChunkCount == 2)
             #expect(restarted.spy.state(resumed.transferID)?.resumedFromCheckpoint == true)
             try await finishChunks(f,restarted,resumed)
             #expect(restarted.spy.commits.count == 1)
@@ -394,7 +402,8 @@ struct ChunkTransferWorkerTests {
             h.client.submit(.offer(second)); await h.admitted(); gate.open(); await h.flush()
             #expect(h.spy.state(first.transferID)?.phase == .cancelled)
             #expect(h.spy.state(second.transferID)?.bytesTransferred == 0)
-            #expect(h.spy.requests.last?.missingIndexes == [0,1,2])
+            #expect(h.spy.requests.last?.missingIndexes == [0])
+            #expect(h.spy.requests.last?.remainingChunkCount == 3)
             try await finishChunks(f,h,second,startingAt:1)
             #expect(h.spy.commits.count == 1)
         }
@@ -488,6 +497,41 @@ struct ChunkTransferWorkerTests {
             #expect(h.spy.stopped)
         }
     }
+    @Test("Legacy offers retain full requests and sender progress stays compatible")
+    func legacyRequestFallback() async throws {
+        try await withChunkFixture(150_123) { f in
+            let h = f.make()
+            var descriptor = try f.descriptor()
+            descriptor.supportsCompactRequests = nil
+            h.client.submit(.offer(descriptor))
+            try await chunkWait { h.spy.requests.count == 1 }
+            #expect(h.spy.requests[0].missingIndexes == [0,1,2])
+            #expect(h.spy.requests[0].remainingChunkCount == nil)
+            try await finishChunks(f,h,descriptor)
+            #expect(h.spy.commits.count == 1)
+        }
+    }
+
+    @Test("Compact remaining count preserves sender progress and rejects invalid counts")
+    func compactSenderProgress() async throws {
+        try await withChunkFixture(600_123) { f in
+            let h = f.make(), id = UUID()
+            h.client.submit(.outgoing(id,f.item,f.source,.macToPhone,nil))
+            try await chunkWait { h.spy.offers.count == 1 }
+            #expect(h.spy.offers[0].supportsCompactRequests == true)
+            h.client.submit(.request(.init(transferID:id,missingIndexes:[0],remainingChunkCount:3)))
+            try await chunkWait { h.spy.payloads.count == 1 }
+            #expect(h.spy.state(id)?.bytesTransferred == 262_144)
+            h.client.submit(.request(.init(transferID:id,missingIndexes:[1,2])))
+            try await chunkWait { h.spy.payloads.count == 2 }
+            #expect(h.spy.state(id)?.bytesTransferred == 524_288)
+            h.client.submit(.request(.init(transferID:id,missingIndexes:[2],remainingChunkCount:0)))
+            await h.admitted(); await h.flush()
+            if case .failed? = h.spy.state(id)?.phase {} else { Issue.record("Invalid remaining count was not rejected") }
+            #expect(h.spy.payloads.count == 2)
+        }
+    }
+
     @Test("Whole-file verification cooperates with cancellation without changing the default digest")
     func cooperativeVerification() async throws {
         try await withChunkFixture(2_100_000) { f in
@@ -507,10 +551,10 @@ struct ChunkTransferWorkerTests {
     }
     @Test("Encoded loopback completes Mac-directory and mobile durable-library destinations")
     func loopbackParity() async throws {
-        for count in [0,150_123] {
+        for (count,legacy) in [(0,false),(150_123,false),(600_123,false),(600_123,true)] {
             for library in [false,true] {
                 try await withChunkFixture(count) { f in
-                    let toReceiver = ChunkRelay(), toSender = ChunkRelay()
+                    let toReceiver = ChunkRelay(legacyOffers:legacy), toSender = ChunkRelay()
                     let destination: DeviceChunkTransferWorker.Destination = library
                         ? .library(DeviceReceivedLibraryRepository(directory:f.root.appendingPathComponent("library")))
                         : .directory(f.root.appendingPathComponent("incoming"))
@@ -523,6 +567,7 @@ struct ChunkTransferWorkerTests {
                     #expect(sender.spy.state(id)?.phase == .completed)
                     #expect(try DeviceSyncFileIntegrity.verified(receiver.spy.commits[0].1,matches:f.item))
                     #expect((receiver.spy.commits[0].2 != nil) == library)
+                    #expect(receiver.spy.requests.allSatisfy { legacy ? $0.remainingChunkCount == nil : ($0.missingIndexes.count == 1 && $0.remainingChunkCount != nil) })
                     await sender.flush(); await receiver.flush()
                     #expect(receiver.spy.checkpoints.isEmpty)
                 }

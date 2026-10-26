@@ -479,8 +479,7 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
         switch event {
         case .state(let connection, let state):
             guard chunkTransfers.client.isCurrent(connection) else { return }
-            if let index = transfers.firstIndex(where: { $0.id == state.id }) { transfers[index] = state }
-            else { transfers.insert(state, at: 0) }
+            state.applyProjection(to: &transfers)
 
         case .checkpoints(let values): resumableTransfers = values
         case .committed(let descriptor, let url, let snapshot):

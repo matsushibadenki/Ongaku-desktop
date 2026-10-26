@@ -94,6 +94,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
     case bbe
     case body
     case exciter
+    case spectralTransient
     case gloss
     case optoFET
     case warm
@@ -108,6 +109,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
         case .simulation: return L10n.text("effect.simulation.name")
         case .bbe: return L10n.text("effect.bbe.name")
         case .body: return L10n.text("effect.body.name")
+        case .spectralTransient: return L10n.text("effect.spectral_transient.name")
         case .exciter: return L10n.text("effect.exciter.name")
         case .gloss: return L10n.text("effect.gloss.name")
         case .optoFET: return L10n.text("effect.opto_fet.name")
@@ -123,6 +125,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
         case .simulation: return L10n.text("effect.simulation.description")
         case .bbe: return L10n.text("effect.bbe.description")
         case .body: return L10n.text("effect.body.description")
+        case .spectralTransient: return L10n.text("effect.spectral_transient.description")
         case .exciter: return L10n.text("effect.exciter.description")
         case .gloss: return L10n.text("effect.gloss.description")
         case .optoFET: return L10n.text("effect.opto_fet.description")
@@ -158,6 +161,8 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
                 EffectParameterDefinition(key: "weight", name: L10n.text("effect.parameter.weight"), defaultValue: 0.52),
                 EffectParameterDefinition(key: "punch", name: L10n.text("effect.parameter.punch"), defaultValue: 0.48)
             ]
+        case .spectralTransient:
+            return [EffectParameterDefinition(key: "intensity", name: L10n.text("effect.parameter.intensity"), defaultValue: 0.20)]
         case .exciter:
             return [
                 EffectParameterDefinition(key: "mode", name: L10n.text("effect.parameter.mode"), defaultValue: 0.0),

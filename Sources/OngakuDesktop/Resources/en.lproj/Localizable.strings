@@ -1283,3 +1283,6 @@
 "storage.migration.restartFailed" = "Could not restart the app";
 "storage.migration.restartFailed.message" = "The repair is complete. Try restarting again, or quit and reopen the app.";
 "storage.migration.restart" = "Restart";
+
+"effect.spectral_transient.name" = "Transient · Prototype";
+"effect.spectral_transient.description" = "Gentle stereo-linked attack shaping by frequency band. No lookahead; changes are smoothed. Start with a low amount.";

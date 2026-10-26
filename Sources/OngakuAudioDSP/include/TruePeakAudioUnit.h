@@ -6,3 +6,4 @@ NS_ASSUME_NONNULL_BEGIN
 + (AVAudioUnitEffect *)makeNode;
 @end
 NS_ASSUME_NONNULL_END
+#import "SpectralTransientAudioUnit.h"

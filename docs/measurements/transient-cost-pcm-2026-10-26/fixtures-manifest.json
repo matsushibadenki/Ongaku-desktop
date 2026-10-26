@@ -1,0 +1,114 @@
+[
+  {
+    "file": "steady-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "a016774d42192487ce30cf75f3c09328434e32f7f9645a82243beb14f3d60c23"
+  },
+  {
+    "file": "percussion-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "ecafd0f2dd32a537e6281bd3bb21be40ef41f4c9f00b988233511b25af98965a"
+  },
+  {
+    "file": "pluck-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "6c7f7a71192c1f388d20225986389ed063c6339d1b36cd513745a432fff7ba87"
+  },
+  {
+    "file": "tail-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "a1558206d273d2fe224d65be1994a9fda8b0ae6c9737d4675c975f901f8d40fe"
+  },
+  {
+    "file": "stereo_mix-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "264d73c19855614bfd26b41f9532c0dfa0b1ce3139e86e62173051f3ae5f0c15"
+  },
+  {
+    "file": "antiphase-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "121ae574f2416c7b29c12e6fbee5a83d3549e63439aca37fe42c9d8fd6592699"
+  },
+  {
+    "file": "quiet_noise-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "3a610892f7f50b4c1a4f055cfb7bc4368a70f88cb68a1918a5471ca6a8470b88"
+  },
+  {
+    "file": "silence-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "626db8bea999709c8faead0ec9d60025604676fcc44130abe6c1168b90989b3b"
+  },
+  {
+    "file": "steady-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "b52dd7bcd76775d2591d2b1f41819ecd89702146f810ecbe8dba5713761c64bd"
+  },
+  {
+    "file": "percussion-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "539b338c4b777805c4f61caa7520950ef4c4af20730c1b2e603ec757f8307bd9"
+  },
+  {
+    "file": "pluck-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "80a80964f3d648849c6bca0498d23d0d861a7f05ead18daf8b53170ee9ece2ec"
+  },
+  {
+    "file": "tail-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "f5e9710cc6be704472634f81fa71f7730f1068d6b4cca87cd3dcf33c6c630333"
+  },
+  {
+    "file": "stereo_mix-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "4714778d16b0d80530fb5726237b65ef3ff4bb76727d369fd0a9a679282dbace"
+  },
+  {
+    "file": "antiphase-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "17637a7014948a7ca1b1950b6c27fa82dd42b5b24e62aafa65a5e4e86f0a149d"
+  },
+  {
+    "file": "quiet_noise-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "73754f313703f3c922dd4121e38388fa2f70e3c2ca2d35196d94f0d687f80885"
+  },
+  {
+    "file": "silence-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "76ed5c9c326ba62322d464a22d3fcf7b76c7352c6d33badc36ccea7a33325e97"
+  }
+]

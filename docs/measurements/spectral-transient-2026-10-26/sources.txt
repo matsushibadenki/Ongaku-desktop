@@ -1,0 +1,5 @@
+62024d26bb6f020440afcc14b1d675f8ba1ebfbd202c949ac3fee7adeb3e7251  audio/SpectralTransientDSP.hpp == Sources/OngakuAudioDSP/SpectralTransientDSP.hpp
+348eeff5808a0d562f5aff19833145d54d6528d7525b73414b74b6b1dc1b55ce  audio/SpectralTransientAudioUnit.h == Sources/OngakuAudioDSP/include/SpectralTransientAudioUnit.h
+d8861232aa2b99737a30fa136701cdc488874033f64f178a978bfe65cd46462b  audio/SpectralTransientAudioUnit.mm == Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm
+5d51e81e43b8426ac68e5ca3a50a4e814eb9b5b77d500482c8563d47cbcbfd3b  audio/effects/SpectralTransientAudioEffect.swift == Sources/OngakuDesktop/SpectralTransientAudioEffect.swift
+Client date: 2026-10-26 Asia/Tokyo.

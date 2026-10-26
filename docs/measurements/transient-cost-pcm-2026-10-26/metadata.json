@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-26",
+  "host": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0.1\nBuildVersion:\t\t26A434\n",
+  "architecture": "arm64",
+  "cpu": "Apple M4",
+  "clang": "Apple clang version 21.0.0 (clang-2100.3.34.2)\nTarget: arm64-apple-darwin27.0.0\nThread model: posix\nInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin\n",
+  "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)\nTarget: arm64-apple-macosx27.0.0\n",
+  "nativeFlags": "-std=c++20 -Os -fobjc-arc -mmacosx-version-min=14.0",
+  "simulatorFlags": "-target arm64-apple-ios17.0-simulator -std=c++20 -Os -fobjc-arc; iOS 27.0 runtime, iPhone SE 3rd generation profile",
+  "comparisonFlags": "-O -swift-version 6",
+  "sourceSHA256": {
+    "tests/TransientCostAudit.mm": "2d98152442bace0c85769a97b4928215f9d7abd38c121c6fd74c95d760c84457",
+    "tests/TransientCostAudit-Info.plist": "84f75bf1478f622562373f2b87e944d5c04b6385ba811871ebab8e70ccf6bd7c",
+    "tests/TransientLoudnessComparison.swift": "6eacab2e52e5a57e5036bf2a56f145cdfbec39064d92b945d972a9cd02033539",
+    "tests/generate_transient_cost_pcm.py": "d15462e24ddc58525547a09ab096b65390674e799f23080e11f55f959893d538",
+    "tests/run_transient_cost_samples.py": "11a7a9db3ffab8538825a3fd1def6d2c65ee667bef16e26562f405da114d4dfa",
+    "audio/SpectralTransientDSP.hpp": "62024d26bb6f020440afcc14b1d675f8ba1ebfbd202c949ac3fee7adeb3e7251",
+    "audio/SpectralTransientAudioUnit.mm": "d8861232aa2b99737a30fa136701cdc488874033f64f178a978bfe65cd46462b",
+    "audio/SpectralTransientAudioUnit.h": "348eeff5808a0d562f5aff19833145d54d6528d7525b73414b74b6b1dc1b55ce",
+    "audio/effects/SpectralTransientAudioEffect.swift": "5d51e81e43b8426ac68e5ca3a50a4e814eb9b5b77d500482c8563d47cbcbfd3b",
+    "audio/IntegratedLoudnessMeter.swift": "d9236a1d157c6058f2e2697bc0742ded24386739f52699f52517866e89b2dc1d"
+  }
+}

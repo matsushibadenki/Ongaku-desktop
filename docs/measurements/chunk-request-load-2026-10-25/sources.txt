@@ -1,0 +1,8 @@
+before sha256 8eae5be678f7f6a5e336eb09627c1b829848cd267e5aab32b1df9e62217b6b57
+after sha256 8aa2471a854dd291530f1ebf52487cedcbfcc400953bfe0f9f3101983ec3659e
+models sha256 1b35c634b4ab167c4a841d8c5bca421eac720eacb6b53772528d82374e29a038
+harness sha256 5fdd8851dc5a7ea07b99d57f4e89e94d16bfcbdb62cd5749b3b0628416b9a514
+worker sha256 99a19653ff54438d78e535bdfca07a1e91a2455029a261833bf5af2fca7f32d4
+Compile: swiftc -O [-D COMPACT for improved] -module-cache-path <cache> DeviceSyncModels.swift DeviceChunkTransfer.swift main.swift -o <variant>
+Run: <variant>
+Baseline is the working tree including prior uncommitted checkpoint optimization, not a HEAD build.

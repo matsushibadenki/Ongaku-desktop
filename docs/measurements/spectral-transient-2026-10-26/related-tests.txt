@@ -1,0 +1,86 @@
+✔ Test settingsRoundTripForPersistentRestoration() passed after 0.006 seconds.
+✔ Test defaultSettingsContainEveryDeclaredParameter() passed after 0.006 seconds.
+✔ Test registryBuildsCompleteOrderedPipeline() passed after 0.018 seconds.
+✔ Test "Enabled counts include only the selected effect mode" passed after 0.018 seconds.
+✔ Suite "Audio effect presets" passed after 0.019 seconds.
+BYPASS simulation 44100.0: 0.07071067789367086
+BYPASS equalizer 44100.0: 0.07071067789367086
+BYPASS body 44100.0: 0.07071067789367086
+BYPASS exciter 44100.0: 0.07071067789367086
+BYPASS spectralTransient 44100.0: 0.07071067789367086
+BYPASS optoFET 44100.0: 0.07071067789367086
+BYPASS warm 44100.0: 0.07071067789367086
+BYPASS gloss 44100.0: 0.07071067789367086
+BYPASS space 44100.0: 0.07071067789367086
+BYPASS bbe 44100.0: 0.07071067789367086
+BYPASS highQualityEnhancement 44100.0: 0.07071067789367086
+BYPASS simulation 48000.0: 0.07071067816015678
+BYPASS equalizer 48000.0: 0.07071067816015678
+BYPASS body 48000.0: 0.07071067816015678
+BYPASS exciter 48000.0: 0.07071067816015678
+BYPASS spectralTransient 48000.0: 0.07071067816015678
+BYPASS optoFET 48000.0: 0.07071067816015678
+BYPASS warm 48000.0: 0.07071067816015678
+BYPASS gloss 48000.0: 0.07071067816015678
+BYPASS space 48000.0: 0.07071067816015678
+BYPASS bbe 48000.0: 0.07071067816015678
+BYPASS highQualityEnhancement 48000.0: 0.07071067816015678
+BYPASS simulation 96000.0: 0.07071067804118145
+BYPASS equalizer 96000.0: 0.07071067804118145
+BYPASS body 96000.0: 0.07071067804118145
+BYPASS exciter 96000.0: 0.07071067804118145
+BYPASS spectralTransient 96000.0: 0.07071067804118145
+BYPASS optoFET 96000.0: 0.07071067804118145
+BYPASS warm 96000.0: 0.07071067804118145
+BYPASS gloss 96000.0: 0.07071067804118145
+BYPASS space 96000.0: 0.07071067804118145
+BYPASS bbe 96000.0: 0.07071067804118145
+BYPASS highQualityEnhancement 96000.0: 0.07071067804118145
+✔ Test auditEveryEffect() passed after 1.950 seconds.
+✔ Test "Continuous changes coalesce into eight steps and settle at the latest target" passed after 1.950 seconds.
+✔ Test defaultOffAndStateRestoration() passed after 1.950 seconds.
+✔ Test "EQ sections preserve every parameter exactly once and keep band controls together" passed after 1.950 seconds.
+TRANSIENT APPLE PROTECTION rate=44100.0 impulse=false peak=0.4817925
+TRANSIENT APPLE PROTECTION rate=44100.0 impulse=true peak=0.48402575
+TRANSIENT APPLE PROTECTION rate=48000.0 impulse=false peak=0.49948594
+TRANSIENT APPLE PROTECTION rate=48000.0 impulse=true peak=0.5124483
+TRANSIENT APPLE PROTECTION rate=96000.0 impulse=false peak=0.6920022
+TRANSIENT APPLE PROTECTION rate=96000.0 impulse=true peak=0.6979295
+TRANSIENT APPLE PROTECTION rate=192000.0 impulse=false peak=0.7870587
+TRANSIENT APPLE PROTECTION rate=192000.0 impulse=true peak=0.7940415
+✔ Test impulseLatencyAndProtectedOverload() passed after 0.788 seconds.
+✔ Test dynamicsUseSecondsAndDisableExpansion() passed after 0.847 seconds.
+✔ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" passed after 0.847 seconds.
+✔ Test "OFF, restart and graph rebuild reject older queued writes" passed after 0.847 seconds.
+TRANSIENT TAIL switch=0.256 energy=0.00258241179617791 boundaryJump=0.0010697183
+TRANSIENT TAIL switch=0.4266666666666667 energy=0.00046222742128730713 boundaryJump=0.00014436466
+TRANSIENT TAIL switch=0.5973333333333334 energy=0.00016183785739076802 boundaryJump=2.5160349e-05
+✔ Test switchingPreservesUpstreamReverb() passed after 0.083 seconds.
+✔ Suite "Spectral transient prototype" passed after 2.822 seconds.
+✔ Test "Disabled-only edits never rewrite unchanged audible modules" passed after 68.310 seconds.
+✔ Test frequencyAndLevelMatrix() passed after 68.310 seconds.
+✔ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" passed after 68.310 seconds.
+✔ Test limiterHandlesOverloadAndBypass() passed after 0.429 seconds.
+✔ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" passed after 0.432 seconds.
+✔ Test "Wheel scroll over a control reaches the scroll view, never the control" passed after 0.432 seconds.
+✔ Test warmAndExciterFiltersAreActiveAndWarmHasFourDistinctInputs() passed after 0.010 seconds.
+✔ Test "Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits" passed after 0.027 seconds.
+✔ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" passed after 3.194 seconds.
+✔ Test silenceAndOutputVolume() passed after 3.189 seconds.
+✔ Suite "Effect signal audit" passed after 74.737 seconds.
+✔ Test "Active and unexpectedly late overlaps never freeze the output muted" passed after 3.175 seconds.
+✔ Test "Stop or rebuild in either envelope phase cancels callbacks before resume" passed after 0.006 seconds.
+✔ Test "Transport becoming inaudible without an explicit cancel restores the envelope" passed after 0.001 seconds.
+✔ Test "Changed latency drains at zero and rejects stale restore after transport" passed after 0.001 seconds.
+✔ Test "Zero strength and Space amount are bypass boundaries despite an ON switch" passed after 0.001 seconds.
+✔ Suite "Effect parameter continuity" passed after 74.751 seconds.
+✔ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" passed after 0.288 seconds.
+✔ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" passed after 0.015 seconds.
+✔ Test "Two-finger scroll can start on a partially clipped control to reveal it" passed after 0.011 seconds.
+✔ Test "Momentum produced during a control drag cannot move the rack after mouse-up" passed after 0.038 seconds.
+✔ Test "Detaching the rack releases ownership and position protection" passed after 0.008 seconds.
+✔ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" passed after 1.256 seconds.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 51.702 seconds.
+✔ Test "SwiftUI region connects to the actual ancestor scroll view" passed after 0.180 seconds.
+✔ Suite "Effect rack input ownership" passed after 128.238 seconds.
+✔ Test run with 36 tests in 5 suites passed after 128.238 seconds.

@@ -1,0 +1,56 @@
+{
+  "4096": {
+    "baseline": {
+      "copy64_ms": 0.112834,
+      "progress256_ms": 0.524334,
+      "persist64_ms": 41.221291,
+      "main64_ms": 0.661791,
+      "acceptProgress64_ms": 51.324583,
+      "joined64_ms": 52.707583
+    },
+    "improved": {
+      "copy64_ms": 0.009875,
+      "progress256_ms": 0.001,
+      "persist64_ms": 40.083333,
+      "main64_ms": 0.568083,
+      "acceptProgress64_ms": 49.510583,
+      "joined64_ms": 50.363292
+    }
+  },
+  "16384": {
+    "baseline": {
+      "copy64_ms": 0.464125,
+      "progress256_ms": 2.120125,
+      "persist64_ms": 45.639041,
+      "main64_ms": 0.666583,
+      "acceptProgress64_ms": 56.975708,
+      "joined64_ms": 58.602584
+    },
+    "improved": {
+      "copy64_ms": 0.0105,
+      "progress256_ms": 0.001,
+      "persist64_ms": 40.099834,
+      "main64_ms": 0.566667,
+      "acceptProgress64_ms": 48.577958,
+      "joined64_ms": 50.632375
+    }
+  },
+  "65536": {
+    "baseline": {
+      "copy64_ms": 1.540791,
+      "progress256_ms": 8.304958,
+      "persist64_ms": 65.739583,
+      "main64_ms": 0.653708,
+      "acceptProgress64_ms": 83.467292,
+      "joined64_ms": 84.471375
+    },
+    "improved": {
+      "copy64_ms": 0.025458,
+      "progress256_ms": 0.001083,
+      "persist64_ms": 41.96625,
+      "main64_ms": 0.567917,
+      "acceptProgress64_ms": 50.329708,
+      "joined64_ms": 51.176833
+    }
+  }
+}

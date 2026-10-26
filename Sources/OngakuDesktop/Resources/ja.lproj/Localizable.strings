@@ -686,7 +686,7 @@
 "effect.warm.description" = "やわらかな倍音と温かみを原音に重ねます。";
 "effect.space.description" = "残響と広がりを加えて音場を自然に広げます。";
 "effect.equalizer.description" = "音楽的で透明感のあるトーンシェイピングを提供します。";
-"effect.high_quality_enhancement.name" = "高音質エンハンスメント";
+"effect.high_quality_enhancement.name" = "High Quality Enhancement";
 "effect.high_quality_enhancement.description" = "控えめな補正で、圧縮音源の存在感と倍音のディテールを引き出します。";
 "effect.parameter.intensity" = "強度";
 "effect.parameter.mode" = "モード";
@@ -1283,3 +1283,6 @@
 "storage.migration.restartFailed" = "アプリを再起動できませんでした";
 "storage.migration.restartFailed.message" = "修復は完了しています。再起動を再試行するか、アプリを終了して開き直してください。";
 "storage.migration.restart" = "再起動";
+
+"effect.spectral_transient.name" = "Transient · Prototype";
+"effect.spectral_transient.description" = "帯域別・左右連動で立ち上がりを控えめに調整。先読みなし、切替は滑らかに。弱い設定からお試しください。";

@@ -117,6 +117,7 @@ actor DeviceChunkTransferWorker {
         var checkpoint: DeviceTransferCheckpoint?
         var pendingRequest: DeviceChunkRequest?
         var awaitingIndex: Int?
+        var requestCursor = DeviceChunkRequestCursor()
         var staged: URL?
         var busy = true
         var paused = false
@@ -277,10 +278,17 @@ actor DeviceChunkTransferWorker {
             }
             if let request = entry.pendingRequest {
                 guard let index = request.missingIndexes.first, descriptor.chunkHashes.indices.contains(index) else { return }
+                if let remaining = request.remainingChunkCount {
+                    guard descriptor.supportsCompactRequests == true,
+                          request.missingIndexes.count == 1, remaining > 0,
+                          remaining <= descriptor.chunkCount else {
+                        fail(id, error: DeviceChunkTransferError.checkpointMismatch); return
+                    }
+                }
                 entry.pendingRequest = nil; entry.busy = true; entries[id] = entry
                 submitDisk(.read(entry.ticket, entry.cancellation, request))
             }
-        } else if let checkpoint = entry.checkpoint {
+        } else if let checkpoint = entry.checkpoint, let descriptor = entry.descriptor {
             if checkpoint.isComplete {
                 entry.busy = true; entry.state.phase = .verifying
                 if entry.staged != nil {
@@ -293,9 +301,12 @@ actor DeviceChunkTransferWorker {
                     submitDisk(.stage(entry.ticket, entry.cancellation))
                 }
             } else {
-                let missing = checkpoint.missingIndexes
-                entry.awaitingIndex = missing.first; entries[id] = entry
-                wire(.chunkRequest(.init(transferID: id, missingIndexes: missing)), id: id)
+                let request = entry.requestCursor.request(descriptor: descriptor, checkpoint: checkpoint)
+                guard let index = request.missingIndexes.first else {
+                    fail(id, error: DeviceChunkTransferError.checkpointMismatch); return
+                }
+                entry.awaitingIndex = index; entries[id] = entry
+                wire(.chunkRequest(request), id: id)
             }
         }
     }
@@ -392,7 +403,7 @@ actor DeviceChunkTransferWorker {
                 if entry.paused { if entry.pendingRequest == nil { entry.pendingRequest = request } }
                 else {
                     let descriptor = entry.descriptor!
-                    let completed = descriptor.chunkCount - request.missingIndexes.count + 1
+                    let completed = descriptor.chunkCount - (request.remainingChunkCount ?? request.missingIndexes.count) + 1
                     entry.state.updateProgress(fraction: Double(completed)/Double(max(1,descriptor.chunkCount)),
                         completedBytes: min(descriptor.item.fileSize, Int64(completed * descriptor.chunkSize)))
                     // Publish state before sending; a synchronous send error can

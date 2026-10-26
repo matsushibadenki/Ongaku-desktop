@@ -148,17 +148,27 @@ struct RotaryKnob: View {
     }
 
     private var ticks: some View {
-        ZStack {
-            ForEach(0..<tickCount, id: \.self) { index in
+        // One drawing surface instead of 25 independently laid-out tick views.
+        // Capture observed palette/control values while evaluating the view.
+        let accent = AppTheme.playbackAccent
+        let inactive = AppTheme.rule
+        let enabled = isEnabled
+        let value = normalizedValue
+        return Canvas { context, size in
+            for index in 0..<tickCount {
                 let fraction = Double(index) / Double(tickCount - 1)
-                Capsule()
-                    .fill(isEnabled && fraction <= normalizedValue ? AppTheme.playbackAccent : AppTheme.rule)
-                    .frame(width: 1.25, height: index.isMultiple(of: 4) ? 5 : 3)
-                    .offset(y: -23)
-                    .rotationEffect(.degrees(-135 + 270 * fraction))
+                let height: CGFloat = index.isMultiple(of: 4) ? 5 : 3
+                let tick = Path(roundedRect: CGRect(x: -0.625, y: -23 - height / 2,
+                                                   width: 1.25, height: height),
+                                cornerRadius: 0.625)
+                var drawing = context
+                drawing.translateBy(x: size.width / 2, y: size.height / 2)
+                drawing.rotate(by: .degrees(-135 + 270 * fraction))
+                drawing.fill(tick, with: .color(enabled && fraction <= value ? accent : inactive))
             }
         }
         .frame(width: diameter, height: diameter)
+        .allowsHitTesting(false)
     }
 
     private func updatePosition(_ point: NSPoint) {

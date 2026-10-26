@@ -8,6 +8,7 @@ struct DeviceChunkTransferDescriptor: Codable, Equatable, Sendable {
     var item: DeviceSyncItem
     var chunkSize: Int
     var chunkHashes: [String]
+    var supportsCompactRequests: Bool? = nil
 
     var chunkCount: Int { chunkHashes.count }
 
@@ -39,6 +40,27 @@ struct ValidatedDeviceChunkTransferDescriptor: Sendable {
 struct DeviceChunkRequest: Codable, Equatable, Sendable {
     var transferID: UUID
     var missingIndexes: [Int]
+    // Advertised senders understand this count even when only one index is sent.
+    var remainingChunkCount: Int? = nil
+}
+
+/// Session-local cursor over an admitted checkpoint. Received indexes only grow
+/// during a session; a resumed/new connection creates a fresh cursor.
+struct DeviceChunkRequestCursor: Sendable {
+    private var nextIndex = 0
+
+    mutating func request(descriptor: DeviceChunkTransferDescriptor,
+                          checkpoint: DeviceTransferCheckpoint) -> DeviceChunkRequest {
+        guard descriptor.supportsCompactRequests == true else {
+            return .init(transferID: descriptor.transferID, missingIndexes: checkpoint.missingIndexes)
+        }
+        while nextIndex < descriptor.chunkCount && checkpoint.hasReceived(nextIndex) {
+            nextIndex += 1
+        }
+        return .init(transferID: descriptor.transferID,
+                     missingIndexes: nextIndex < descriptor.chunkCount ? [nextIndex] : [],
+                     remainingChunkCount: descriptor.chunkCount - checkpoint.receivedCount)
+    }
 }
 
 struct DeviceChunkPayload: Codable, Equatable, Sendable {
@@ -52,30 +74,125 @@ struct DeviceChunkCompletion: Codable, Equatable, Sendable {
     var sha256: String
 }
 
+/// Compact value storage: snapshots share bytes until a receipt changes. Legacy
+/// Set access is retained for checkpoint JSON and non-hot callers only.
+private struct DeviceChunkReceipts: Equatable, Sendable {
+    let capacity: Int
+    var bitmap: Data
+    var count = 0
+    var invalid: Set<Int> = []
+
+    init(capacity: Int, indexes: Set<Int>) {
+        self.capacity = (0...DeviceChunkTransferDescriptor.maximumChunkCount).contains(capacity) ? capacity : 0
+        bitmap = Data(repeating: 0, count: (self.capacity + 7) / 8)
+        for index in indexes { insert(index) }
+    }
+    func contains(_ index: Int) -> Bool {
+        guard index >= 0, index < capacity else { return invalid.contains(index) }
+        return bitmap[index / 8] & (UInt8(1) << (index % 8)) != 0
+    }
+    mutating func insert(_ index: Int) {
+        guard index >= 0, index < capacity else {
+            if invalid.insert(index).inserted { count += 1 }; return
+        }
+        let mask = UInt8(1) << (index % 8)
+        if bitmap[index / 8] & mask == 0 { bitmap[index / 8] |= mask; count += 1 }
+    }
+    var indexes: Set<Int> {
+        Set((0..<capacity).filter { contains($0) }).union(invalid)
+    }
+    var maximumIndex: Int? {
+        for byte in bitmap.indices.reversed() where bitmap[byte] != 0 {
+            return byte * 8 + 7 - bitmap[byte].leadingZeroBitCount
+        }
+        return nil
+    }
+    mutating func restore(_ bytes: Data) throws {
+        guard bytes.count == (capacity + 7) / 8 else { throw DeviceChunkTransferError.checkpointMismatch }
+        if capacity % 8 != 0, let last = bytes.last,
+           last >> (capacity % 8) != 0 { throw DeviceChunkTransferError.checkpointMismatch }
+        bitmap = bytes.withUnsafeBytes { Data($0) }
+        invalid = []
+        count = bytes.reduce(0) { $0 + $1.nonzeroBitCount }
+    }
+}
+
 struct DeviceTransferCheckpoint: Codable, Equatable, Sendable {
     var itemSHA256: String
-    var itemTitle: String? = nil
-    var fileName: String? = nil
-    var direction: DeviceSyncDirection? = nil
+    var itemTitle: String?
+    var fileName: String?
+    var direction: DeviceSyncDirection?
     var fileSize: Int64
     var chunkSize: Int
     var chunkHashes: [String]
-    var receivedIndexes: Set<Int>
+    private var receipts: DeviceChunkReceipts
     var updatedAt: Date
+    var storageGeneration: UUID?
 
-    var missingIndexes: [Int] {
-        chunkHashes.indices.filter { !receivedIndexes.contains($0) }
+    init(itemSHA256: String, itemTitle: String? = nil, fileName: String? = nil,
+         direction: DeviceSyncDirection? = nil, fileSize: Int64, chunkSize: Int,
+         chunkHashes: [String], receivedIndexes: Set<Int>, updatedAt: Date,
+         storageGeneration: UUID? = nil) {
+        self.itemSHA256 = itemSHA256; self.itemTitle = itemTitle; self.fileName = fileName
+        self.direction = direction; self.fileSize = fileSize; self.chunkSize = chunkSize
+        self.chunkHashes = chunkHashes; self.updatedAt = updatedAt; self.storageGeneration = storageGeneration
+        receipts = .init(capacity: chunkHashes.count, indexes: receivedIndexes)
     }
-
-    var isComplete: Bool {
-        receivedIndexes.count == chunkHashes.count && missingIndexes.isEmpty
+    var receivedIndexes: Set<Int> {
+        get { receipts.indexes }
+        set { receipts = .init(capacity: chunkHashes.count, indexes: newValue) }
     }
+    var receivedCount: Int { receipts.count }
+    var hasInvalidReceivedIndexes: Bool { !receipts.invalid.isEmpty || receipts.capacity != chunkHashes.count }
+    var maximumReceivedIndex: Int? { receipts.maximumIndex }
+    var receivedBitmap: Data { receipts.bitmap }
+    func hasReceived(_ index: Int) -> Bool { receipts.contains(index) }
+    mutating func recordReceived(_ index: Int) { receipts.insert(index) }
+    mutating func restoreReceivedBitmap(_ bytes: Data) throws { try receipts.restore(bytes) }
 
+    var missingIndexes: [Int] { chunkHashes.indices.filter { !hasReceived($0) } }
+    var isComplete: Bool { !hasInvalidReceivedIndexes && receivedCount == chunkHashes.count }
     var completedBytes: Int64 {
-        receivedIndexes.reduce(into: Int64(0)) { total, index in
-            let offset = Int64(index * chunkSize)
-            total += min(Int64(chunkSize), max(0, fileSize - offset))
+        guard fileSize >= 0, chunkSize > 0 else { return 0 }
+        let size = Int64(chunkSize)
+        let expectedCount = fileSize / size + (fileSize % size == 0 ? 0 : 1)
+        if !hasInvalidReceivedIndexes, size <= 1_048_576, expectedCount == Int64(receipts.capacity) {
+            let padding = expectedCount * size - fileSize
+            return Int64(receivedCount) * size - (hasReceived(receipts.capacity - 1) ? padding : 0)
         }
+        // Preserve non-admitted/malformed checkpoint values for validation;
+        // never let invalid metadata manufacture completion or overflow here.
+        return receivedIndexes.reduce(into: Int64(0)) { total, index in
+            guard index >= 0 else { return }
+            let (offset, overflow) = Int64(index).multipliedReportingOverflow(by: size)
+            if !overflow, offset < fileSize { total += min(size, fileSize - offset) }
+        }
+    }
+    private enum CodingKeys: String, CodingKey {
+        case itemSHA256, itemTitle, fileName, direction, fileSize, chunkSize, chunkHashes
+        case receivedIndexes, updatedAt, storageGeneration
+    }
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(itemSHA256: try c.decode(String.self, forKey: .itemSHA256),
+                  itemTitle: try c.decodeIfPresent(String.self, forKey: .itemTitle),
+                  fileName: try c.decodeIfPresent(String.self, forKey: .fileName),
+                  direction: try c.decodeIfPresent(DeviceSyncDirection.self, forKey: .direction),
+                  fileSize: try c.decode(Int64.self, forKey: .fileSize),
+                  chunkSize: try c.decode(Int.self, forKey: .chunkSize),
+                  chunkHashes: try c.decode([String].self, forKey: .chunkHashes),
+                  receivedIndexes: try c.decode(Set<Int>.self, forKey: .receivedIndexes),
+                  updatedAt: try c.decode(Date.self, forKey: .updatedAt),
+                  storageGeneration: try c.decodeIfPresent(UUID.self, forKey: .storageGeneration))
+    }
+    func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(itemSHA256, forKey: .itemSHA256)
+        try c.encodeIfPresent(itemTitle, forKey: .itemTitle); try c.encodeIfPresent(fileName, forKey: .fileName)
+        try c.encodeIfPresent(direction, forKey: .direction); try c.encode(fileSize, forKey: .fileSize)
+        try c.encode(chunkSize, forKey: .chunkSize); try c.encode(chunkHashes, forKey: .chunkHashes)
+        try c.encode(receivedIndexes, forKey: .receivedIndexes); try c.encode(updatedAt, forKey: .updatedAt)
+        try c.encodeIfPresent(storageGeneration, forKey: .storageGeneration)
     }
 }
 
@@ -145,7 +262,8 @@ enum DeviceChunkTransfer {
             direction: direction,
             item: item,
             chunkSize: chunkSize,
-            chunkHashes: hashes
+            chunkHashes: hashes,
+            supportsCompactRequests: true
         )
         return try ValidatedDeviceChunkTransferDescriptor(descriptor)
     }
@@ -199,23 +317,21 @@ struct DeviceTransferCheckpointStore: Sendable {
         if let existing = try load(forSHA256: descriptor.item.sha256) {
             let partial = partialURL(forSHA256: descriptor.item.sha256)
             let partialSize = (try? partial.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? -1
-            let requiredSize = existing.receivedIndexes.map { index -> Int in
-                min(Int(existing.fileSize), (index + 1) * existing.chunkSize)
-            }.max() ?? 0
             if existing.itemSHA256 == descriptor.item.sha256,
                existing.fileSize == descriptor.item.fileSize,
                existing.chunkSize == descriptor.chunkSize,
                existing.chunkHashes == descriptor.chunkHashes,
-               existing.receivedIndexes.allSatisfy(descriptor.chunkHashes.indices.contains),
-               partialSize >= requiredSize {
-                // Share the already compared immutable hash array for this
-                // session; resumed checkpoints otherwise own decoded copies.
-                var resumed = existing
-                resumed.chunkHashes = descriptor.chunkHashes
-                return resumed
-            } else {
-                try remove(forSHA256: descriptor.item.sha256)
+               !existing.hasInvalidReceivedIndexes {
+                let requiredSize = existing.maximumReceivedIndex.map {
+                    min(Int(existing.fileSize), ($0 + 1) * existing.chunkSize)
+                } ?? 0
+                if partialSize >= requiredSize {
+                    var resumed = existing
+                    resumed.chunkHashes = descriptor.chunkHashes
+                    return resumed
+                }
             }
+            try remove(forSHA256: descriptor.item.sha256)
         }
         let checkpoint = DeviceTransferCheckpoint(
             itemSHA256: descriptor.item.sha256,
@@ -226,7 +342,8 @@ struct DeviceTransferCheckpointStore: Sendable {
             chunkSize: descriptor.chunkSize,
             chunkHashes: descriptor.chunkHashes,
             receivedIndexes: [],
-            updatedAt: .now
+            updatedAt: .now,
+            storageGeneration: UUID()
         )
         FileManager.default.createFile(atPath: partialURL(forSHA256: descriptor.item.sha256).path, contents: nil)
         try save(checkpoint)
@@ -279,9 +396,17 @@ struct DeviceTransferCheckpointStore: Sendable {
         defer { try? handle.close() }
         try handle.seek(toOffset: UInt64(payload.index * descriptor.chunkSize))
         try handle.write(contentsOf: payload.data)
-        checkpoint.receivedIndexes.insert(payload.index)
-        checkpoint.updatedAt = .now
-        try save(checkpoint)
+        var next = checkpoint
+        next.recordReceived(payload.index)
+        next.updatedAt = .now
+        // Migrate legacy metadata once, after a verified payload write. Each
+        // subsequent acknowledgement only requires an atomic compact bitmap.
+        if next.storageGeneration == nil {
+            next.storageGeneration = UUID()
+            try save(next)
+        }
+        try saveProgress(next)
+        checkpoint = next
     }
 
     func finalizedFile(
@@ -309,12 +434,28 @@ struct DeviceTransferCheckpointStore: Sendable {
         guard sha256.isSHA256Hex else { throw DeviceChunkTransferError.invalidDescriptor }
         let url = checkpointURL(forSHA256: sha256)
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        return try JSONDecoder().decode(DeviceTransferCheckpoint.self, from: Data(contentsOf: url))
+        var checkpoint = try JSONDecoder().decode(DeviceTransferCheckpoint.self, from: Data(contentsOf: url))
+        let progressURL = progressURL(forSHA256: sha256)
+        if FileManager.default.fileExists(atPath: progressURL.path) {
+            let progress = try PropertyListDecoder().decode(Progress.self, from: Data(contentsOf: progressURL))
+            // A stale sidecar must never mark chunks from replacement metadata
+            // as received. Ignore only a well-formed, different generation.
+            if let generation = checkpoint.storageGeneration, progress.generation == generation {
+                guard progress.version == 1, progress.count == checkpoint.chunkHashes.count,
+                      progress.count <= DeviceChunkTransferDescriptor.maximumChunkCount,
+                      progress.bitmap.count == (progress.count + 7) / 8 else {
+                    throw DeviceChunkTransferError.checkpointMismatch
+                }
+                try checkpoint.restoreReceivedBitmap(progress.bitmap)
+                checkpoint.updatedAt = progress.updatedAt
+            }
+        }
+        return checkpoint
     }
 
     func remove(forSHA256 sha256: String) throws {
         guard sha256.isSHA256Hex else { throw DeviceChunkTransferError.invalidDescriptor }
-        for url in [checkpointURL(forSHA256: sha256), partialURL(forSHA256: sha256)]
+        for url in [progressURL(forSHA256: sha256), checkpointURL(forSHA256: sha256), partialURL(forSHA256: sha256)]
             where FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
         }
@@ -330,11 +471,7 @@ struct DeviceTransferCheckpointStore: Sendable {
         return urls
             .filter { $0.pathExtension == "json" }
             .compactMap { url in
-                guard let data = try? Data(contentsOf: url),
-                      let checkpoint = try? JSONDecoder().decode(
-                          DeviceTransferCheckpoint.self,
-                          from: data
-                      ) else { return nil }
+                guard let checkpoint = try? load(forSHA256: url.deletingPathExtension().lastPathComponent) else { return nil }
                 return DeviceTransferCheckpointSummary(
                     itemSHA256: checkpoint.itemSHA256,
                     title: checkpoint.itemTitle
@@ -355,7 +492,7 @@ struct DeviceTransferCheckpointStore: Sendable {
             includingPropertiesForKeys: nil,
             options: [.skipsHiddenFiles]
         )
-        for url in urls where url.pathExtension == "json" || url.pathExtension == "part" {
+        for url in urls where url.pathExtension == "json" || url.pathExtension == "part" || url.pathExtension == "progress" {
             try FileManager.default.removeItem(at: url)
         }
     }
@@ -365,6 +502,32 @@ struct DeviceTransferCheckpointStore: Sendable {
         let stale = try summaries().filter { $0.updatedAt < cutoff }
         for summary in stale { try remove(forSHA256: summary.itemSHA256) }
         return stale.count
+    }
+
+    private struct Progress: Codable {
+        var version = 1
+        var generation: UUID
+        var count: Int
+        var bitmap: Data
+        var updatedAt: Date
+    }
+
+    func saveProgress(_ checkpoint: DeviceTransferCheckpoint) throws {
+        guard let generation = checkpoint.storageGeneration,
+              checkpoint.chunkHashes.count <= DeviceChunkTransferDescriptor.maximumChunkCount else {
+            throw DeviceChunkTransferError.checkpointMismatch
+        }
+        guard !checkpoint.hasInvalidReceivedIndexes else { throw DeviceChunkTransferError.invalidChunkIndex }
+        let bitmap = checkpoint.receivedBitmap
+        let encoder = PropertyListEncoder()
+        encoder.outputFormat = .binary
+        let data = try encoder.encode(Progress(generation: generation, count: checkpoint.chunkHashes.count,
+            bitmap: bitmap, updatedAt: checkpoint.updatedAt))
+        try data.write(to: progressURL(forSHA256: checkpoint.itemSHA256), options: .atomic)
+    }
+
+    private func progressURL(forSHA256 sha256: String) -> URL {
+        directory.appendingPathComponent("\(sha256).progress")
     }
 
     private func save(_ checkpoint: DeviceTransferCheckpoint) throws {

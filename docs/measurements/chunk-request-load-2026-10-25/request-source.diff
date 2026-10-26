@@ -1,0 +1,48 @@
+--- baseline-DeviceChunkTransfer.swift
++++ DeviceChunkTransfer.swift
+@@ -8,6 +8,7 @@
+     var item: DeviceSyncItem
+     var chunkSize: Int
+     var chunkHashes: [String]
++    var supportsCompactRequests: Bool? = nil
+ 
+     var chunkCount: Int { chunkHashes.count }
+ 
+@@ -39,6 +40,27 @@
+ struct DeviceChunkRequest: Codable, Equatable, Sendable {
+     var transferID: UUID
+     var missingIndexes: [Int]
++    // Advertised senders understand this count even when only one index is sent.
++    var remainingChunkCount: Int? = nil
++}
++
++/// Session-local cursor over an admitted checkpoint. Received indexes only grow
++/// during a session; a resumed/new connection creates a fresh cursor.
++struct DeviceChunkRequestCursor: Sendable {
++    private var nextIndex = 0
++
++    mutating func request(descriptor: DeviceChunkTransferDescriptor,
++                          checkpoint: DeviceTransferCheckpoint) -> DeviceChunkRequest {
++        guard descriptor.supportsCompactRequests == true else {
++            return .init(transferID: descriptor.transferID, missingIndexes: checkpoint.missingIndexes)
++        }
++        while nextIndex < descriptor.chunkCount && checkpoint.receivedIndexes.contains(nextIndex) {
++            nextIndex += 1
++        }
++        return .init(transferID: descriptor.transferID,
++                     missingIndexes: nextIndex < descriptor.chunkCount ? [nextIndex] : [],
++                     remainingChunkCount: descriptor.chunkCount - checkpoint.receivedIndexes.count)
++    }
+ }
+ 
+ struct DeviceChunkPayload: Codable, Equatable, Sendable {
+@@ -147,7 +169,8 @@
+             direction: direction,
+             item: item,
+             chunkSize: chunkSize,
+-            chunkHashes: hashes
++            chunkHashes: hashes,
++            supportsCompactRequests: true
+         )
+         return try ValidatedDeviceChunkTransferDescriptor(descriptor)
+     }

@@ -264,6 +264,7 @@ struct M8TransferResilienceMilestoneTests {
         #expect(summary.fractionCompleted > 0)
         #expect(summary.fractionCompleted < 1)
 
+        checkpoint.storageGeneration = UUID() // Replacement metadata invalidates the old progress sidecar.
         checkpoint.updatedAt = Date(timeIntervalSince1970: 1_000)
         let checkpointURL = fixture.checkpointDirectory
             .appendingPathComponent("\(fixture.item.sha256).json")

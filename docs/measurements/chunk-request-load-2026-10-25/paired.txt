@@ -1,0 +1,42 @@
+PAIR 0 VARIANT baseline
+REQUEST_LOAD count=4096 run=0 scan64_ms=2.853166 encode64_ms=5.600916 ipc64_ms=0.182583 bytes64=652384 checksum=133088
+REQUEST_LOAD count=4096 run=1 scan64_ms=2.281167 encode64_ms=3.682833 ipc64_ms=0.150584 bytes64=652384 checksum=133088
+REQUEST_LOAD count=4096 run=2 scan64_ms=1.964084 encode64_ms=3.389333 ipc64_ms=0.134167 bytes64=652384 checksum=133088
+REQUEST_LOAD count=16384 run=0 scan64_ms=10.440625 encode64_ms=12.472916 ipc64_ms=0.45825 bytes64=3027040 checksum=526304
+REQUEST_LOAD count=16384 run=1 scan64_ms=7.320166 encode64_ms=10.734917 ipc64_ms=0.413167 bytes64=3027040 checksum=526304
+REQUEST_LOAD count=16384 run=2 scan64_ms=6.46825 encode64_ms=10.58475 ipc64_ms=0.406708 bytes64=3027040 checksum=526304
+PAIR 0 VARIANT improved
+REQUEST_LOAD count=4096 run=0 scan64_ms=0.107375 encode64_ms=2.407167 ipc64_ms=0.118166 bytes64=9152 checksum=133088
+REQUEST_LOAD count=4096 run=1 scan64_ms=0.062459 encode64_ms=0.419375 ipc64_ms=0.087292 bytes64=9152 checksum=133088
+REQUEST_LOAD count=4096 run=2 scan64_ms=0.053583 encode64_ms=0.436083 ipc64_ms=0.084667 bytes64=9152 checksum=133088
+REQUEST_LOAD count=16384 run=0 scan64_ms=0.191541 encode64_ms=0.379709 ipc64_ms=0.077958 bytes64=9152 checksum=526304
+REQUEST_LOAD count=16384 run=1 scan64_ms=0.167834 encode64_ms=0.375083 ipc64_ms=0.076792 bytes64=9152 checksum=526304
+REQUEST_LOAD count=16384 run=2 scan64_ms=0.218625 encode64_ms=0.515042 ipc64_ms=0.104375 bytes64=9152 checksum=526304
+PAIR 1 VARIANT improved
+REQUEST_LOAD count=4096 run=0 scan64_ms=0.068208 encode64_ms=1.282917 ipc64_ms=0.0765 bytes64=9152 checksum=133088
+REQUEST_LOAD count=4096 run=1 scan64_ms=0.050834 encode64_ms=0.3205 ipc64_ms=0.064292 bytes64=9152 checksum=133088
+REQUEST_LOAD count=4096 run=2 scan64_ms=0.0385 encode64_ms=0.316375 ipc64_ms=0.063917 bytes64=9152 checksum=133088
+REQUEST_LOAD count=16384 run=0 scan64_ms=0.144 encode64_ms=0.316375 ipc64_ms=0.06375 bytes64=9152 checksum=526304
+REQUEST_LOAD count=16384 run=1 scan64_ms=0.133084 encode64_ms=0.313875 ipc64_ms=0.063834 bytes64=9152 checksum=526304
+REQUEST_LOAD count=16384 run=2 scan64_ms=0.121583 encode64_ms=0.310792 ipc64_ms=0.057 bytes64=9152 checksum=526304
+PAIR 1 VARIANT baseline
+REQUEST_LOAD count=4096 run=0 scan64_ms=2.652583 encode64_ms=4.832875 ipc64_ms=0.158791 bytes64=652384 checksum=133088
+REQUEST_LOAD count=4096 run=1 scan64_ms=2.141458 encode64_ms=3.603959 ipc64_ms=0.135125 bytes64=652384 checksum=133088
+REQUEST_LOAD count=4096 run=2 scan64_ms=1.853708 encode64_ms=3.363833 ipc64_ms=0.135041 bytes64=652384 checksum=133088
+REQUEST_LOAD count=16384 run=0 scan64_ms=8.712792 encode64_ms=12.200083 ipc64_ms=0.447417 bytes64=3027040 checksum=526304
+REQUEST_LOAD count=16384 run=1 scan64_ms=6.974958 encode64_ms=10.922125 ipc64_ms=0.407417 bytes64=3027040 checksum=526304
+REQUEST_LOAD count=16384 run=2 scan64_ms=6.743083 encode64_ms=10.8905 ipc64_ms=0.40425 bytes64=3027040 checksum=526304
+PAIR 2 VARIANT baseline
+REQUEST_LOAD count=4096 run=0 scan64_ms=1.613959 encode64_ms=3.349708 ipc64_ms=0.112583 bytes64=652384 checksum=133088
+REQUEST_LOAD count=4096 run=1 scan64_ms=1.446666 encode64_ms=2.640708 ipc64_ms=0.104708 bytes64=652384 checksum=133088
+REQUEST_LOAD count=4096 run=2 scan64_ms=1.4285 encode64_ms=2.639167 ipc64_ms=0.112042 bytes64=652384 checksum=133088
+REQUEST_LOAD count=16384 run=0 scan64_ms=8.366166 encode64_ms=10.84775 ipc64_ms=0.415291 bytes64=3027040 checksum=526304
+REQUEST_LOAD count=16384 run=1 scan64_ms=7.048875 encode64_ms=13.229875 ipc64_ms=0.401417 bytes64=3027040 checksum=526304
+REQUEST_LOAD count=16384 run=2 scan64_ms=6.17725 encode64_ms=10.722834 ipc64_ms=0.406625 bytes64=3027040 checksum=526304
+PAIR 2 VARIANT improved
+REQUEST_LOAD count=4096 run=0 scan64_ms=0.031791 encode64_ms=0.571625 ipc64_ms=0.038292 bytes64=9152 checksum=133088
+REQUEST_LOAD count=4096 run=1 scan64_ms=0.021125 encode64_ms=0.149209 ipc64_ms=0.030125 bytes64=9152 checksum=133088
+REQUEST_LOAD count=4096 run=2 scan64_ms=0.017208 encode64_ms=0.148334 ipc64_ms=0.032291 bytes64=9152 checksum=133088
+REQUEST_LOAD count=16384 run=0 scan64_ms=0.068833 encode64_ms=0.153833 ipc64_ms=0.033083 bytes64=9152 checksum=526304
+REQUEST_LOAD count=16384 run=1 scan64_ms=0.059709 encode64_ms=0.157875 ipc64_ms=0.032458 bytes64=9152 checksum=526304
+REQUEST_LOAD count=16384 run=2 scan64_ms=0.058875 encode64_ms=0.155667 ipc64_ms=0.032875 bytes64=9152 checksum=526304

@@ -10,7 +10,7 @@ struct AudioEffectPresetTests {
             .simulation,
             .equalizer,
             .body,
-            .exciter,
+            .exciter, .spectralTransient,
             .optoFET,
             .warm,
             .gloss,
@@ -18,7 +18,7 @@ struct AudioEffectPresetTests {
             .bbe,
             .highQualityEnhancement
         ])
-        #expect(AudioEffectModuleRegistry.makePipeline().count == 10)
+        #expect(AudioEffectModuleRegistry.makePipeline().count == 11)
         #expect(AudioEffectModuleRegistry.activeKinds(for: .off).isEmpty)
     }
 
@@ -68,7 +68,7 @@ struct AudioEffectPresetTests {
                 for: .pro,
                 settings: settings,
                 effectsBypassed: false
-            ) == AudioEffectCountSummary(enabled: 2, total: 9)
+            ) == AudioEffectCountSummary(enabled: 2, total: 10)
         )
         #expect(
             AudioEffectModuleRegistry.countSummary(

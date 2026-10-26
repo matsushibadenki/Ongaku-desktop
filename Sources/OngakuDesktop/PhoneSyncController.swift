@@ -968,8 +968,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         switch event {
         case .state(let connection, let state):
             guard chunkTransfers.client.isCurrent(connection) else { return }
-            if let index = transfers.firstIndex(where: { $0.id == state.id }) { transfers[index] = state }
-            else { transfers.insert(state, at: 0) }
+            state.applyProjection(to: &transfers)
             if state.direction == .phoneToMac {
                 let error: Error?
                 switch state.phase {

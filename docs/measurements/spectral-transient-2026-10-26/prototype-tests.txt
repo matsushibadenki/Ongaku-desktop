@@ -1,0 +1,16 @@
+✔ Test defaultOffAndStateRestoration() passed after 0.015 seconds.
+TRANSIENT APPLE PROTECTION rate=44100.0 impulse=false peak=0.4817925
+TRANSIENT APPLE PROTECTION rate=44100.0 impulse=true peak=0.48402575
+TRANSIENT APPLE PROTECTION rate=48000.0 impulse=false peak=0.49948594
+TRANSIENT APPLE PROTECTION rate=48000.0 impulse=true peak=0.5124483
+TRANSIENT APPLE PROTECTION rate=96000.0 impulse=false peak=0.6920022
+TRANSIENT APPLE PROTECTION rate=96000.0 impulse=true peak=0.6979295
+TRANSIENT APPLE PROTECTION rate=192000.0 impulse=false peak=0.7870587
+TRANSIENT APPLE PROTECTION rate=192000.0 impulse=true peak=0.7940415
+✔ Test impulseLatencyAndProtectedOverload() passed after 1.689 seconds.
+TRANSIENT TAIL switch=0.256 energy=0.00258241179617791 boundaryJump=0.0010697183
+TRANSIENT TAIL switch=0.4266666666666667 energy=0.00046222742128730713 boundaryJump=0.00014436466
+TRANSIENT TAIL switch=0.5973333333333334 energy=0.00016183785739076802 boundaryJump=2.5160349e-05
+✔ Test switchingPreservesUpstreamReverb() passed after 0.047 seconds.
+✔ Suite "Spectral transient prototype" passed after 1.752 seconds.
+✔ Test run with 3 tests in 1 suite passed after 1.752 seconds.

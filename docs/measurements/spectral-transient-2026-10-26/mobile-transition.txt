@@ -1,0 +1,4 @@
+PASS: OFF bypasses all selected processing, persists mode, retains saved settings and respects A/B reference
+PASS: 24 shipping effect/automatic-DSP transitions, latest-request coalescing, handoff deferral and stop cancellation
+PASS: transition guards reject parameter changes that bypass interpolation
+PASS: continuity guards reject output muting during parameter gestures

@@ -1,0 +1,6 @@
+PASS: 96 timed graph records (2 platforms x 4 modes x 4 rates x 3 process launches).
+PASS: 128 PCM records, OFF/bare identity; onset alignment; cross-platform raw max error 0.
+PASS: BS.1770 matches within 0.01 LU; gated noise uses RMS within 0.01 dB; silence preserved.
+PASS: three PCM24 exports within 0.01 LU after quantization.
+PASS: four production transient files and IntegratedLoudnessMeter byte-identical across repositories.
+Production DSP, adapters and host protection unchanged by this audit.

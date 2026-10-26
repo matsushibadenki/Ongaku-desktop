@@ -1,0 +1,12 @@
+PROTECTED rate=44100 dBTP=-1.4074
+PROTECTED rate=48000 dBTP=-1.4095
+PROTECTED rate=96000 dBTP=-1.4194
+PROTECTED rate=192000 dBTP=-1.4257
+PASS: 6 rates, bypass/latency, partitioning, linking, render allocations, ramp/tail/reset and protected peaks
+PROTECTED rate=44100 dBTP=-1.4074
+PROTECTED rate=48000 dBTP=-1.4095
+PROTECTED rate=96000 dBTP=-1.4194
+PROTECTED rate=192000 dBTP=-1.4257
+PASS: 6 rates, bypass/latency, partitioning, linking, render allocations, ramp/tail/reset and protected peaks
+PASS: real AU mono/stereo/6/8-channel x 4 rates, metadata, OFF PCM, active render, block/bus guards, reset and reallocation
+PASS: rejected abrupt-ramp negative control

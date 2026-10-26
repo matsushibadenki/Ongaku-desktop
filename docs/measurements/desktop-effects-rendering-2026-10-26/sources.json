@@ -1,0 +1,5 @@
+{
+  "Sources/OngakuDesktop/EffectsRackView.swift": "8b28277dd0c1c8a6897fcbb8be58032ceb990ad374ea0c084ebb839df11d15d7",
+  "Sources/OngakuDesktop/RotaryKnob.swift": "39b87edb1f214f95e699c0a8711ebbd99ce241079ee5a0f3443bee18ab6914e3",
+  "Tests/OngakuDesktopTests/EffectRackRenderingTests.swift": "db466db1a2238cdd93e008b0a6d47febc486b9586137516ccaa0c13c8e838501"
+}

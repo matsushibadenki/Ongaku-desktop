@@ -1,0 +1,42 @@
+PAIR 0 VARIANT before
+CHUNK_LOAD count=4096 run=0 scan64_ms=7.737542 progress64_ms=0.409542 accept64_ms=479.471584 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=4096 run=1 scan64_ms=3.38025 progress64_ms=0.285042 accept64_ms=655.955833 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=4096 run=2 scan64_ms=8.3545 progress64_ms=0.35325 accept64_ms=482.043625 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=16384 run=0 scan64_ms=46.084959 progress64_ms=1.848958 accept64_ms=1027.19875 metadata_bytes=1138149 checksum=34360262656
+CHUNK_LOAD count=16384 run=1 scan64_ms=41.818709 progress64_ms=2.260458 accept64_ms=919.685958 metadata_bytes=1138150 checksum=34360262656
+CHUNK_LOAD count=16384 run=2 scan64_ms=38.892708 progress64_ms=2.283084 accept64_ms=999.2385 metadata_bytes=1138150 checksum=34360262656
+PAIR 0 VARIANT after
+CHUNK_LOAD count=4096 run=0 scan64_ms=8.562209 progress64_ms=0.505459 accept64_ms=276.843 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=4096 run=1 scan64_ms=7.074333 progress64_ms=0.460916 accept64_ms=312.912625 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=4096 run=2 scan64_ms=6.866208 progress64_ms=0.698584 accept64_ms=164.433292 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=16384 run=0 scan64_ms=40.851583 progress64_ms=6.787042 accept64_ms=174.12725 metadata_bytes=1100260 checksum=34360262656
+CHUNK_LOAD count=16384 run=1 scan64_ms=46.698125 progress64_ms=10.609375 accept64_ms=169.619333 metadata_bytes=1100259 checksum=34360262656
+CHUNK_LOAD count=16384 run=2 scan64_ms=34.337542 progress64_ms=1.570084 accept64_ms=209.679333 metadata_bytes=1100260 checksum=34360262656
+PAIR 1 VARIANT after
+CHUNK_LOAD count=4096 run=0 scan64_ms=7.257041 progress64_ms=0.484041 accept64_ms=151.671959 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=4096 run=1 scan64_ms=3.859833 progress64_ms=0.282833 accept64_ms=150.651875 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=4096 run=2 scan64_ms=3.979125 progress64_ms=0.335125 accept64_ms=216.772916 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=16384 run=0 scan64_ms=42.27675 progress64_ms=3.507791 accept64_ms=161.640833 metadata_bytes=1100260 checksum=34360262656
+CHUNK_LOAD count=16384 run=1 scan64_ms=40.918875 progress64_ms=8.462458 accept64_ms=188.214667 metadata_bytes=1100260 checksum=34360262656
+CHUNK_LOAD count=16384 run=2 scan64_ms=33.113292 progress64_ms=2.426625 accept64_ms=197.361042 metadata_bytes=1100260 checksum=34360262656
+PAIR 1 VARIANT before
+CHUNK_LOAD count=4096 run=0 scan64_ms=3.785 progress64_ms=0.287125 accept64_ms=422.330042 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=4096 run=1 scan64_ms=3.432375 progress64_ms=0.287958 accept64_ms=526.642333 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=4096 run=2 scan64_ms=5.935709 progress64_ms=0.457542 accept64_ms=467.356583 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=16384 run=0 scan64_ms=148.097125 progress64_ms=1.961375 accept64_ms=1285.56 metadata_bytes=1138150 checksum=34360262656
+CHUNK_LOAD count=16384 run=1 scan64_ms=48.113042 progress64_ms=9.691167 accept64_ms=1372.711875 metadata_bytes=1138150 checksum=34360262656
+CHUNK_LOAD count=16384 run=2 scan64_ms=37.256375 progress64_ms=2.277875 accept64_ms=1405.82 metadata_bytes=1138150 checksum=34360262656
+PAIR 2 VARIANT before
+CHUNK_LOAD count=4096 run=0 scan64_ms=7.197291 progress64_ms=0.45675 accept64_ms=415.535375 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=4096 run=1 scan64_ms=5.410625 progress64_ms=0.442208 accept64_ms=543.177084 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=4096 run=2 scan64_ms=6.628791 progress64_ms=0.402792 accept64_ms=440.659084 metadata_bytes=284133 checksum=8590065664
+CHUNK_LOAD count=16384 run=0 scan64_ms=33.795875 progress64_ms=1.631875 accept64_ms=1044.817 metadata_bytes=1138150 checksum=34360262656
+CHUNK_LOAD count=16384 run=1 scan64_ms=37.018417 progress64_ms=1.963958 accept64_ms=1179.259208 metadata_bytes=1138150 checksum=34360262656
+CHUNK_LOAD count=16384 run=2 scan64_ms=74.182458 progress64_ms=4.764375 accept64_ms=1178.990667 metadata_bytes=1138150 checksum=34360262656
+PAIR 2 VARIANT after
+CHUNK_LOAD count=4096 run=0 scan64_ms=7.10925 progress64_ms=0.4635 accept64_ms=239.105584 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=4096 run=1 scan64_ms=7.569833 progress64_ms=0.406209 accept64_ms=259.933958 metadata_bytes=275426 checksum=8590065664
+CHUNK_LOAD count=4096 run=2 scan64_ms=6.890416 progress64_ms=0.348542 accept64_ms=352.970417 metadata_bytes=275427 checksum=8590065664
+CHUNK_LOAD count=16384 run=0 scan64_ms=73.656792 progress64_ms=1.895667 accept64_ms=223.072542 metadata_bytes=1100260 checksum=34360262656
+CHUNK_LOAD count=16384 run=1 scan64_ms=37.191125 progress64_ms=2.274834 accept64_ms=364.995875 metadata_bytes=1100260 checksum=34360262656
+CHUNK_LOAD count=16384 run=2 scan64_ms=42.628416 progress64_ms=1.718542 accept64_ms=249.949334 metadata_bytes=1100260 checksum=34360262656

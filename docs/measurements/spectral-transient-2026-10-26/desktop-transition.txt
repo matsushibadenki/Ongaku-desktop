@@ -1,0 +1,4 @@
+PASS: 48 desktop transition PCM cases
+PASS: rejected unprotected continuity defect
+PASS: rejected mute continuity defect
+PASS: rejected unsafe-bypass continuity defect

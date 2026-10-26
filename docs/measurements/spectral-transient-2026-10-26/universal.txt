@@ -1,0 +1,7 @@
+Release architectures: x86_64 arm64 
+arm64
+00000001007485e0 s _OBJC_CLASS_$_OngakuSpectralTransientAudioUnit
+00000001007401a8 s __OBJC_CLASS_RO_$_OngakuSpectralTransientAudioUnit
+x86_64
+000000010077dd30 s _OBJC_CLASS_$_OngakuSpectralTransientAudioUnit
+0000000100775480 s __OBJC_CLASS_RO_$_OngakuSpectralTransientAudioUnit

@@ -1,0 +1,2 @@
+Ignoring --strip-bitcode because --sign was not passed
+** BUILD SUCCEEDED **

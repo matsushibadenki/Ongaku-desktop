@@ -27,4 +27,4 @@ Evidence is in [the measurement directory](../measurements/chunk-transfer-actor-
 ## Remaining qualification
 
 - ⭕️ [Pending] Installed Mac/physical iPhone pairing, pause/resume/cancel, real network loss/reconnect and background/suspension; actual Music files and permissions; slow external/network volumes, sustained energy and end-to-end throughput.
-- 🟠 [Next] Profile missing-index/progress scans and checkpoint persistence under large transfers before further optimization. Legacy resource-path actor migration and broader A4 ownership remain separate work; this does not complete every A4 milestone.
+- 🟢 [Done] Initial large-transfer scan/progress/persistence comparison and compact checkpoint improvement are recorded in the [2026-10-25 follow-up](CHUNK_CHECKPOINT_LOAD_2026-10-25.md). Request/scan profiling and legacy resource-path / broader A4 ownership remain unfinished.

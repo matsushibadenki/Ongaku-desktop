@@ -1,0 +1,9 @@
+baseline-original sha256 8aa2471a854dd291530f1ebf52487cedcbfcc400953bfe0f9f3101983ec3659e
+baseline-instrumented sha256 d1f47f20dd58a52178054c8dcb1f74bdf9b59a1313637fc6270497536888915c
+after sha256 3a7b25e8c625774db00637a340db4af319fcc9f56c25be13355e041d57278a13
+baseline-models sha256 1b35c634b4ab167c4a841d8c5bca421eac720eacb6b53772528d82374e29a038
+after-models sha256 86dc13e81ab46c5d048cb461a5cf1e7cbb8f73ac9199af0befe32121d5438c7e
+harness sha256 33f1fddc45f54ec9239dc9828e451add9bc45939abde98f98cdc5736d7aa7a1c
+Compile: swiftc -O -swift-version 6 [-D RECEIPTS for improved] -module-cache-path <cache> DeviceSyncModels.swift DeviceChunkTransfer.swift main.swift -o <variant>
+Baseline-only instrumentation: replace private func saveProgress with func saveProgress. This is already internal in the improved production source.
+Baseline is the working tree including prior uncommitted checkpoint/request work, not a HEAD build.

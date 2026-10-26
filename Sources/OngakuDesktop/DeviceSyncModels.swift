@@ -43,6 +43,11 @@ struct DeviceTransferState: Identifiable, Equatable, Sendable {
         }
     }
 
+    func applyProjection(to values: inout [DeviceTransferState]) {
+        if let index = values.firstIndex(where: { $0.id == id }) { values[index] = self }
+        else { values.insert(self, at: 0) }
+    }
+
     mutating func updateProgress(fraction: Double, completedBytes: Int64) {
         fractionCompleted = min(max(fraction, 0), 1)
         bytesTransferred = min(max(completedBytes, 0), item.fileSize)

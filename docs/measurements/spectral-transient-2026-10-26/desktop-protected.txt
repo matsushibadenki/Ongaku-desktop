@@ -1,0 +1,25 @@
+PROTECTED GRAPH source=44100.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.2351742e-08 peak=0.08963905
+PROTECTED GRAPH source=44100.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=8.940697e-08 peak=0.8414012
+PROTECTED GRAPH source=44100.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.9802322e-08 peak=0.08965459
+PROTECTED GRAPH source=44100.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=8.940697e-08 peak=0.8413872
+PROTECTED GRAPH source=44100.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.2351742e-08 peak=0.08967403
+PROTECTED GRAPH source=44100.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=8.940697e-08 peak=0.8414866
+PROTECTED GRAPH source=48000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=1.4901161e-08 peak=0.089646004
+PROTECTED GRAPH source=48000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=8.940697e-08 peak=0.8413926
+PROTECTED GRAPH source=48000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=1.4901161e-08 peak=0.08965793
+PROTECTED GRAPH source=48000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=5.9604645e-08 peak=0.84139514
+PROTECTED GRAPH source=48000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.9802322e-08 peak=0.089660145
+PROTECTED GRAPH source=48000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=8.940697e-08 peak=0.84154475
+PROTECTED GRAPH source=96000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.2351742e-08 peak=0.08959762
+PROTECTED GRAPH source=96000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=2.9802322e-08 peak=0.842271
+PROTECTED GRAPH source=96000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=1.4901161e-08 peak=0.08962347
+PROTECTED GRAPH source=96000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=2.9802322e-08 peak=0.84139514
+PROTECTED GRAPH source=96000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=7.450581e-09 peak=0.08962558
+PROTECTED GRAPH source=96000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=2.9802322e-08 peak=0.84139514
+PROTECTED GRAPH source=192000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=5.9604645e-08 peak=0.089589335
+PROTECTED GRAPH source=192000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=1.4901161e-08 peak=0.82926434
+PROTECTED GRAPH source=192000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.9802322e-08 peak=0.08960957
+PROTECTED GRAPH source=192000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=7.450581e-09 peak=0.8295392
+PROTECTED GRAPH source=192000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.2351742e-08 peak=0.08961156
+PROTECTED GRAPH source=192000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=5.5879354e-09 peak=0.82953626
+PASS: 24 protected DSP/handoff pairs, max sample difference 8.940697e-08, max reconstructed peak 0.842271

@@ -1,0 +1,7 @@
+PROTECTED GRAPH source=96000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=2.2351742e-08 peak=0.10054283
+PROTECTED GRAPH source=96000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=1.1920929e-07 peak=0.84438473
+PROTECTED GRAPH source=96000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=1.4901161e-08 peak=0.10055918
+PROTECTED GRAPH source=96000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=2.3841858e-07 peak=0.84388256
+PROTECTED GRAPH source=96000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=0.1 null=7.450581e-09 peak=0.10056155
+PROTECTED GRAPH source=96000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.spectralTransient) level=4.0 null=1.1920929e-07 peak=0.84207904
+PASS: 6 protected DSP/handoff pairs, max sample difference 2.3841858e-07, max reconstructed peak 0.84438473

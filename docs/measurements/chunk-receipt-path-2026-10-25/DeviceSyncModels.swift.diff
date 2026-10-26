@@ -1,0 +1,14 @@
+--- baseline-DeviceSyncModels.swift
++++ DeviceSyncModels.swift
+@@ -41,6 +41,11 @@
+         case .completed, .cancelled, .interrupted, .insufficientStorage, .failed:
+             false
+         }
++    }
++
++    func applyProjection(to values: inout [DeviceTransferState]) {
++        if let index = values.firstIndex(where: { $0.id == id }) { values[index] = self }
++        else { values.insert(self, at: 0) }
+     }
+ 
+     mutating func updateProgress(fraction: Double, completedBytes: Int64) {

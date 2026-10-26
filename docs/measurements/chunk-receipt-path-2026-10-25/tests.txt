@@ -1,0 +1,72 @@
+✔ Test legacyCapabilitiesPreserveFullLists() passed after 0.003 seconds.
+✔ Test projectionPreservesOrderAndTerminalUpdates() passed after 0.003 seconds.
+✔ Test optionalWireFieldsRemainCompatible() passed after 0.004 seconds.
+✔ Test copyIsolationAndRestoreValidation() passed after 0.003 seconds.
+✔ Test "Individual transfer requests preserve the stable item ID" passed after 0.003 seconds.
+✔ Test "Manifests from an older app remain compatible" passed after 0.004 seconds.
+✔ Test "Bonjour discovery starts and stops at most once per lifecycle transition" passed after 0.003 seconds.
+✔ Test "Manifest messages preserve transfer metadata" passed after 0.003 seconds.
+✔ Test "Overlay identity matching tolerates display differences but rejects distant durations" passed after 0.003 seconds.
+✔ Test "Overlay receipt survives message encoding" passed after 0.003 seconds.
+✔ Test measureLoad() passed after 0.003 seconds.
+✔ Test "Manifest messages preserve independent playlist overlays" passed after 0.003 seconds.
+✔ Test "Opt-in repeated chunk preparation comparison" passed after 0.088 seconds.
+✔ Test "Reported transfer progress is bounded by the file size" passed after 0.088 seconds.
+✔ Test "Manifest messages preserve Ongaku track overlays" passed after 0.099 seconds.
+✔ Test "SHA-256 verification accepts the original and rejects changed metadata" passed after 0.099 seconds.
+✔ Test "Pause, resume, cancel, and capacity controls survive protocol encoding" passed after 0.095 seconds.
+✔ Test legacyJSONAndInvalidIndexes() passed after 0.099 seconds.
+✔ Test "Untrusted or edited descriptors cannot acquire validated status" passed after 0.095 seconds.
+✔ Test "Validated receive still rejects corruption, wrong sessions and checkpoint shape" passed after 0.095 seconds.
+✔ Test "Pause and deferred request state changes atomically" passed after 0.095 seconds.
+✔ Test sparseResumeAndRepeatedRequests() passed after 0.100 seconds.
+✔ Test "Validated resumed sessions retain chunks but reject an old transfer ID" passed after 0.095 seconds.
+✔ Test "Chunk offer, request, payload, and completion survive protocol encoding" passed after 0.095 seconds.
+✔ Test "Capacity preflight keeps a safety reserve" passed after 0.095 seconds.
+✔ Test "A manifest failure rolls back the received copy and remains retryable" passed after 0.095 seconds.
+✔ Test "Validated chunk snapshots preserve wire values and byte-exact payloads" passed after 0.095 seconds.
+✔ Test "Only resumable in-session phases remain active" passed after 0.096 seconds.
+✔ Test "Local copy index follows library replacement and duplicate hashes" passed after 0.106 seconds.
+✔ Test "Overlay audit history persists and records conflict reasons" passed after 0.106 seconds.
+✔ Test "Received files become visible only after their manifest is durable" passed after 0.102 seconds.
+✔ Suite ChunkRequestCursorTests passed after 0.108 seconds.
+✔ Test "Checkpoint summaries report retained bytes and stale data is removable" passed after 0.134 seconds.
+✔ Test "Retry after a durable commit does not create a duplicate" passed after 0.158 seconds.
+✔ Test "A corrupt primary manifest is preserved and restored from its backup" passed after 0.158 seconds.
+✔ Test compactProgressRecovery() passed after 0.055 seconds.
+✔ Test "A corrupt chunk is rejected without advancing the checkpoint" passed after 0.158 seconds.
+✔ Test corruptProgressIsRejected() passed after 0.009 seconds.
+✔ Test "Selected overlays merge counters without replacing playback history" passed after 0.181 seconds.
+✔ Test "Overlay application changes only selected fields" passed after 0.185 seconds.
+✔ Test "Pause preparation, resume once, then cancel without reviving the source" passed after 0.191 seconds.
+✔ Test "Playlist sync preserves order and can be safely undone" passed after 0.213 seconds.
+✔ Suite "Device sync protocol" passed after 0.214 seconds.
+✔ Test "Cancel during descriptor I/O never offers and calls completion exactly once" passed after 0.049 seconds.
+✔ Test "A paused read is deferred and rechecked against source bytes on resume" passed after 0.076 seconds.
+✔ Test "A persisted checkpoint requests only missing chunks after restart" passed after 0.345 seconds.
+✔ Suite "M8 transfer resilience milestone" passed after 0.349 seconds.
+✔ Test "Cancel during checkpoint I/O deletes only the cancelled session's partial" passed after 0.062 seconds.
+✔ Test "Pause can persist one requested in-flight chunk but sends no next request" passed after 0.088 seconds.
+✔ Test "Pause at verification retains staged data until resume" passed after 0.028 seconds.
+✔ Test "Cancellation before the commit claim never installs a received file" passed after 0.021 seconds.
+✔ Test "A claimed durable commit wins over late cancel and publishes only once" passed after 0.026 seconds.
+✔ Test "Disconnect retains checkpoint; restart resumes under a new ID and ignores old packets" passed after 0.079 seconds.
+✔ Test "Disconnect while final commit runs keeps the local commit and suppresses old-link acknowledgement" passed after 0.024 seconds.
+✔ Test largeSparseCheckpointResumesShortFinalChunk() passed after 0.488 seconds.
+✔ Suite "Large chunk transfer load" passed after 0.661 seconds.
+✔ Test "Finalization failure retains a complete checkpoint for retry" passed after 0.039 seconds.
+✔ Test "Cancel and immediate reopen do not let stale I/O delete or revive the new session" passed after 0.072 seconds.
+✔ Test "Duplicate offers cannot take an active SHA checkpoint from its owner" passed after 0.064 seconds.
+✔ Test "Disconnect during preparation invalidates old callbacks even when an ID is reused" passed after 0.050 seconds.
+✔ Test "Capacity rejection does not request payload or discard retryable checkpoint data" passed after 0.046 seconds.
+✔ Test "Send failures finish an outgoing callback once and cannot revive on completion replay" passed after 0.045 seconds.
+✔ Test "A failed old-connection commit cannot cancel a new link" passed after 0.031 seconds.
+✔ Test "Shutdown drains blocked work and finishes callbacks without reviving offers" passed after 0.048 seconds.
+✔ Test "Legacy offers retain full requests and sender progress stays compatible" passed after 0.064 seconds.
+✔ Test "Compact remaining count preserves sender progress and rejects invalid counts" passed after 0.147 seconds.
+✔ Test "Whole-file verification cooperates with cancellation without changing the default digest" passed after 0.532 seconds.
+✔ Test "Encoded loopback completes Mac-directory and mobile durable-library destinations" passed after 0.843 seconds.
+✔ Suite "Actor-owned chunk transfer" passed after 2.642 seconds.
+✔ Test receiptModelAgreement(count:) with 8 test cases passed after 4.622 seconds.
+✔ Suite ChunkReceiptBitmapTests passed after 4.623 seconds.
+✔ Test run with 65 tests in 6 suites passed after 4.623 seconds.

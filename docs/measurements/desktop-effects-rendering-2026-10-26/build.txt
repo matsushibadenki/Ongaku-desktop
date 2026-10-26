@@ -1,0 +1,5 @@
+PASS: Package Debug builds with 15 related tests.
+PASS: xcodebuild -scheme OngakuDesktopAppStore -configuration Release -destination generic/platform=macOS CODE_SIGNING_ALLOWED=NO build
+BUILD SUCCEEDED
+lipo -archs: x86_64 arm64
+No signing, installation or upload performed.

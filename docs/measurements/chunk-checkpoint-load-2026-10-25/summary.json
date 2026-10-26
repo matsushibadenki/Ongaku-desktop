@@ -1,0 +1,32 @@
+{
+  "4096": {
+    "before": {
+      "scan64_ms": 5.935709,
+      "progress64_ms": 0.402792,
+      "accept64_ms": 479.471584,
+      "metadata_bytes": 284133.0
+    },
+    "after": {
+      "scan64_ms": 7.074333,
+      "progress64_ms": 0.460916,
+      "accept64_ms": 239.105584,
+      "metadata_bytes": 275427.0
+    },
+    "accept_reduction_percent": 50.13143802907828
+  },
+  "16384": {
+    "before": {
+      "scan64_ms": 41.818709,
+      "progress64_ms": 2.260458,
+      "accept64_ms": 1178.990667,
+      "metadata_bytes": 1138150.0
+    },
+    "after": {
+      "scan64_ms": 40.918875,
+      "progress64_ms": 2.426625,
+      "accept64_ms": 197.361042,
+      "metadata_bytes": 1100260.0
+    },
+    "accept_reduction_percent": 83.26016926815927
+  }
+}

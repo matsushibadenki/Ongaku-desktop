@@ -33,7 +33,11 @@ struct EffectsRackView: View {
                         spacing: AppTheme.spaceMD
                     ) {
                         ForEach(visibleKinds) { kind in
-                            EffectModuleCard(kind: kind)
+                            EffectModuleCard(
+                                setting: player.effectSetting(for: kind),
+                                player: player
+                            )
+                            .equatable()
                         }
                     }
                 }
@@ -129,6 +133,27 @@ struct EffectsRackView: View {
     }
 }
 
+/// Reuses exact measurements across size/place passes, without estimating height.
+/// Child/environment changes invalidate through each Layout's updateCache hook.
+struct EffectLayoutMeasurementCache<Value> {
+    private var configuration: [CGFloat] = []
+    private var values: [CGFloat: Value] = [:]
+
+    mutating func invalidate() { values.removeAll(keepingCapacity: true) }
+
+    mutating func value(width: CGFloat, configuration: [CGFloat], measure: () -> Value) -> Value {
+        if self.configuration != configuration {
+            invalidate()
+            self.configuration = configuration
+        }
+        if let value = values[width] { return value }
+        let value = measure()
+        if values.count >= 4 { invalidate() }
+        values[width] = value
+        return value
+    }
+}
+
 private struct MasonryEffectLayout: Layout {
     let minimumColumnWidth: CGFloat
     let maximumColumnWidth: CGFloat
@@ -137,13 +162,13 @@ private struct MasonryEffectLayout: Layout {
     func sizeThatFits(
         proposal: ProposedViewSize,
         subviews: Subviews,
-        cache: inout ()
+        cache: inout EffectLayoutMeasurementCache<Arrangement>
     ) -> CGSize {
         // AppKit probes the hosting view with an unbounded width when calculating
         // window size limits. Do not convert that proposal to an integer column count.
         let proposedWidth = proposal.width ?? minimumColumnWidth
         let width = proposedWidth.isFinite ? max(0, proposedWidth) : minimumColumnWidth
-        let result = arrangement(width: width, subviews: subviews)
+        let result = arrangement(width: width, subviews: subviews, cache: &cache)
         return CGSize(width: width, height: result.height)
     }
 
@@ -151,9 +176,9 @@ private struct MasonryEffectLayout: Layout {
         in bounds: CGRect,
         proposal: ProposedViewSize,
         subviews: Subviews,
-        cache: inout ()
+        cache: inout EffectLayoutMeasurementCache<Arrangement>
     ) {
-        let result = arrangement(width: bounds.width, subviews: subviews)
+        let result = arrangement(width: bounds.width, subviews: subviews, cache: &cache)
         for (index, subview) in subviews.enumerated() {
             let origin = result.origins[index]
             subview.place(
@@ -164,7 +189,19 @@ private struct MasonryEffectLayout: Layout {
         }
     }
 
-    private func arrangement(width: CGFloat, subviews: Subviews) -> Arrangement {
+    func makeCache(subviews: Subviews) -> EffectLayoutMeasurementCache<Arrangement> { .init() }
+    func updateCache(_ cache: inout EffectLayoutMeasurementCache<Arrangement>, subviews: Subviews) {
+        cache.invalidate()
+    }
+
+    private func arrangement(width: CGFloat, subviews: Subviews,
+                             cache: inout EffectLayoutMeasurementCache<Arrangement>) -> Arrangement {
+        cache.value(width: width, configuration: [minimumColumnWidth, maximumColumnWidth, spacing]) {
+            measureArrangement(width: width, subviews: subviews)
+        }
+    }
+
+    private func measureArrangement(width: CGFloat, subviews: Subviews) -> Arrangement {
         let columnCount = Int(min(
             CGFloat(max(1, subviews.count)),
             max(1, (width + spacing) / (minimumColumnWidth + spacing))
@@ -197,7 +234,7 @@ private struct MasonryEffectLayout: Layout {
         return Arrangement(columnWidth: columnWidth, origins: origins, height: height)
     }
 
-    private struct Arrangement {
+    struct Arrangement {
         let columnWidth: CGFloat
         let origins: [CGPoint]
         let height: CGFloat
@@ -211,13 +248,13 @@ private struct EffectParameterLayout: Layout {
     let horizontalSpacing: CGFloat
     let verticalSpacing: CGFloat
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = arrangement(width: proposal.width, subviews: subviews)
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout EffectLayoutMeasurementCache<Arrangement>) -> CGSize {
+        let result = arrangement(width: proposal.width, subviews: subviews, cache: &cache)
         return CGSize(width: result.width, height: result.height)
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = arrangement(width: bounds.width, subviews: subviews)
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout EffectLayoutMeasurementCache<Arrangement>) {
+        let result = arrangement(width: bounds.width, subviews: subviews, cache: &cache)
         for (index, subview) in subviews.enumerated() {
             subview.place(
                 at: CGPoint(x: bounds.minX + result.origins[index].x, y: bounds.minY + result.origins[index].y),
@@ -227,7 +264,21 @@ private struct EffectParameterLayout: Layout {
         }
     }
 
-    private func arrangement(width proposedWidth: CGFloat?, subviews: Subviews) -> Arrangement {
+    func makeCache(subviews: Subviews) -> EffectLayoutMeasurementCache<Arrangement> { .init() }
+    func updateCache(_ cache: inout EffectLayoutMeasurementCache<Arrangement>, subviews: Subviews) {
+        cache.invalidate()
+    }
+
+    private func arrangement(width proposedWidth: CGFloat?, subviews: Subviews,
+                             cache: inout EffectLayoutMeasurementCache<Arrangement>) -> Arrangement {
+        let proposed = proposedWidth ?? 84
+        let width = proposed.isFinite ? max(0, proposed) : 84
+        return cache.value(width: width, configuration: [horizontalSpacing, verticalSpacing]) {
+            measureArrangement(width: width, subviews: subviews)
+        }
+    }
+
+    private func measureArrangement(width proposedWidth: CGFloat?, subviews: Subviews) -> Arrangement {
         let proposed = proposedWidth ?? 84
         let width = proposed.isFinite ? max(0, proposed) : 84
         let count = Int(min(
@@ -251,7 +302,7 @@ private struct EffectParameterLayout: Layout {
         return Arrangement(width: width, cellWidth: cellWidth, origins: origins, height: y + rowHeight)
     }
 
-    private struct Arrangement {
+    struct Arrangement {
         let width: CGFloat
         let cellWidth: CGFloat
         let origins: [CGPoint]
@@ -259,13 +310,16 @@ private struct EffectParameterLayout: Layout {
     }
 }
 
-private struct EffectModuleCard: View {
+/// A value boundary keeps meter/transport publications out of the control tree.
+/// The controller is only an action target here, deliberately not observed.
+struct EffectModuleCard: View, Equatable {
     @EnvironmentObject private var input: EffectRackInputRouter
-    @EnvironmentObject private var player: PlaybackController
-    let kind: RealtimeAudioEffectKind
+    let setting: RealtimeAudioEffectSetting
+    let player: PlaybackController
+    private var kind: RealtimeAudioEffectKind { setting.kind }
 
-    private var setting: RealtimeAudioEffectSetting {
-        player.effectSetting(for: kind)
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.setting == rhs.setting && lhs.player === rhs.player
     }
 
     var body: some View {
