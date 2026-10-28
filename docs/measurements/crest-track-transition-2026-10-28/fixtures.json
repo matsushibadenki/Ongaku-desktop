@@ -1,0 +1,29 @@
+[
+  {
+    "name": "crest-44100.f32",
+    "sampleRate": 44100,
+    "frames": 44100,
+    "samplePeak": 0.99,
+    "rms": 0.01960704942654164,
+    "sha256": "d20d9351fa84c980ff008b643a4362774fe0bc6d620eebe2b292061adcbfe8bc",
+    "method": "source"
+  },
+  {
+    "name": "crest-polyphase-96000.f32",
+    "sampleRate": 96000,
+    "frames": 96000,
+    "samplePeak": 1.0991163188485547,
+    "rms": 0.018257812877006997,
+    "sha256": "106f52681262c5e3ec29c7a66c850307b37921487a016b89fd873dd720449620",
+    "method": "scipy resample_poly"
+  },
+  {
+    "name": "crest-96000.f32",
+    "method": "shipping chunked Precision Sinc apodizing eco",
+    "sampleRate": 96000,
+    "frames": 96001,
+    "samplePeak": 0.8817238807678223,
+    "rms": 0.014434066292435226,
+    "sha256": "1fc4bedbc182e54f2c196c2c17a496eb5f140e82c2bc2f6ab886591b1ec40229"
+  }
+]

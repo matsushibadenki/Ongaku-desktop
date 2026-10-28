@@ -1,0 +1,13 @@
+CASE stable-44100-44100-off-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.6733051
+CASE handoff-44100-44100-off-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.6733051
+CASE stable-44100-44100-default-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.6647626
+CASE handoff-44100-44100-default-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.6647626
+CASE stable-44100-48000-off-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.7335217
+CASE handoff-44100-48000-off-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.73352176
+CASE stable-44100-48000-default-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.8310588
+CASE handoff-44100-48000-default-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.83105874
+CASE stable-44100-96000-off-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.79051495
+CASE handoff-44100-96000-off-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.79051495
+CASE stable-44100-96000-default-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.8887551
+CASE handoff-44100-96000-default-stock-analyzed inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.888755
+PASS finite PCM, full rack, actual protection nodes, SRC and gain staging; protection ceiling evaluated independently

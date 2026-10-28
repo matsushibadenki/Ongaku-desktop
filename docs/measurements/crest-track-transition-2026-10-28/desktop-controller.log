@@ -1,0 +1,13 @@
+Building for debugging...
+[1 / 1]
+Build complete! (0.48秒)
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Playback transport integration" started.
+◇ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" started.
+2026-10-28 10:13:36.682 swiftpm-testing-helper[32641:308352] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-10-28 10:13:36.684 swiftpm-testing-helper[32641:308352] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 4.173 seconds.
+✔ Suite "Playback transport integration" passed after 4.173 seconds.
+✔ Test run with 1 test in 1 suite passed after 4.173 seconds.

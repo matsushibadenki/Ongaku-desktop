@@ -1,0 +1,6 @@
+DIAGNOSTIC-BEFORE frame=518400 diagnostics=absent
+UPGRADE frame=518400 diagnostics=present
+FIRST frame=568192 diagnostics=absent
+NEXT frame=942592 diagnostics=absent firstDiagnosticFrame=587392
+OUTPUT rate=96000.0 frames=1326592 channels=2
+COMPLETE

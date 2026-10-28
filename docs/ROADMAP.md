@@ -26,7 +26,11 @@
 - 🟢 [Done] 最大強度・強い信号の曲間切替で、iPhone通常のAppleピークリミッター6組、iPhone検証用true-peak 6組、Mac最終true-peak 24組を確認。通常iPhoneのリミッターは一般的なtrue-peak上限を保証しない。iOS Simulator Debug・Mac Universal App Store Releaseの署名なしビルド、Mac設定7テスト・3言語の画面操作テスト成功。
 - 🟢 [Done] 合成PCM 9種・48／96 kHzでVocal PresenceとOptoFET／Exciter／Spaceを音量一致比較。両実装のMacネイティブ測定198出力は全サンプル一致。声風ミックスでは初期強度の1.5–5 kHz変化が約+0.22 dBで、伴奏にも作用。[条件・結果](quality/VOCAL_PRESENCE_MIX_COMPARISON_2026-10-28.md)。
 - 🟢 [Done] 製品ソースの全エフェクト列・通常の音量保護・96 kHz処理・出力レート変換をオフライン再構成し、両版144ケースの強入力ピークを検証。通常経路の最大16倍補間推定はiPhone診断待ち−0.068／Mac−0.067 dBFS、追加true-peak保護ありは両版とも−1.296 dBFS。実機経路の保証ではない。[条件と結果](quality/PRODUCT_OUTPUT_PEAK_2026-10-28.md)。
-- 🟠 [Next] 0 dBFS近傍の通常経路を実楽曲・44.1 kHz音源・高クレスト信号・診断更新／曲間で追加検証。true-peak保護の通常版への有効化判断、処理負荷と動的な歯擦音抑制の必要性を評価。
+- 🟢 [Done] 44.1 kHz・約34 dBクレストの合成音を製品Precision Sinc／Macのレート変換と通常保護で検証。36条件の最大16倍補間推定はiPhone−0.868／Mac−0.852 dBFS。同期した切替モデル、iPhone診断参照・transportの負の対照、Mac実コントローラーの診断更新とクロスフェードを確認。[条件と制約](quality/CREST_TRACK_TRANSITION_2026-10-28.md)。
+- 🟢 [Done] 匿名の実楽曲2曲・極性反転・音量差で通常保護の36ケースを測定し、Macのクリッピング防止OFF／ONを比較。iPhone Simulatorの実エンジン／ViewModelで診断取得と別曲遷移を通した出力も採取。今回0 dBFS超過なし。[測定条件と制約](quality/REAL_MUSIC_TRANSITION_2026-10-28.md)。
+- 🟠 [Next] 多様な実楽曲・高ピーク箇所・位相／タイミング・複数の正規化ゲイン、実Macコントローラーでの保護OFF出力、iPhone診断更新と曲間の競合を追加検証。true-peak保護の通常版への有効化判断、処理負荷と動的な歯擦音抑制の必要性を評価。
+- ⭕️ [Pending] 実機iPhone／Macでの実楽曲・出力機器変更・曲間・診断更新・復帰、聴感・クリック・途切れ・熱・電力。
+- ⭕️ [Pending] iPhone／Mac実機での44.1 kHz音源、出力機器・レート変更、曲間・診断更新・停止再開の音量、ピーク、聴感・途切れ・電力。
 - ⭕️ [Pending] 最終true-peak保護の実機iPhone／Macにおける出力・遅延・途切れ・曲間・復帰・消費電力の確認。通常版での有効化は保留。
 - ⭕️ [Pending] iOS Simulatorでの同一PCM比較、および実楽曲を用いたiPhone／Mac実機での音量一致聴感確認。
 - ⭕️ [Pending] 実機iPhoneスピーカー・ヘッドホン・Bluetooth／DACとMacの実楽曲で、ボーカルの聴き取り・刺さり・伴奏への影響・定位・疲労、音量一致した好み、切替音、出力経路・CPU／電力を確認。初期OFFを維持。

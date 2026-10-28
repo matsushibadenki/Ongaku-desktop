@@ -1,0 +1,25 @@
+CASE stable-96000-44100-off-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=0.0 samplePeak=0.33783066
+CASE stable-96000-44100-off-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.66685534
+CASE handoff-96000-44100-off-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=0.0 samplePeak=0.33783066
+CASE handoff-96000-44100-off-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.66685534
+CASE stable-96000-44100-default-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=1.9507219 samplePeak=0.33004242
+CASE stable-96000-44100-default-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.6562099
+CASE handoff-96000-44100-default-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=1.9507219 samplePeak=0.33004242
+CASE handoff-96000-44100-default-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.6562099
+CASE stable-96000-48000-off-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=0.0 samplePeak=0.37103668
+CASE stable-96000-48000-off-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.73240197
+CASE handoff-96000-48000-off-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=0.0 samplePeak=0.37103668
+CASE handoff-96000-48000-off-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.73240197
+CASE stable-96000-48000-default-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=1.9507219 samplePeak=0.41717643
+CASE stable-96000-48000-default-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.81961775
+CASE handoff-96000-48000-default-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=1.9507219 samplePeak=0.41717643
+CASE handoff-96000-48000-default-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.81961775
+CASE stable-96000-96000-off-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=0.0 samplePeak=0.39810717
+CASE stable-96000-96000-off-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.78583723
+CASE handoff-96000-96000-off-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=0.0 samplePeak=0.39810717
+CASE handoff-96000-96000-off-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=0.0 samplePeak=0.78583723
+CASE stable-96000-96000-default-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=1.9507219 samplePeak=0.45069703
+CASE stable-96000-96000-default-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.890791
+CASE handoff-96000-96000-default-stock-analyzed inputTrim=-5.906652 outputTrim=-1.0 boost=1.9507219 samplePeak=0.45069703
+CASE handoff-96000-96000-default-stock-unknown inputTrim=0.0 outputTrim=-1.0 boost=1.9507219 samplePeak=0.890791
+PASS finite PCM, full rack, actual protection nodes, SRC and gain staging; protection ceiling evaluated independently

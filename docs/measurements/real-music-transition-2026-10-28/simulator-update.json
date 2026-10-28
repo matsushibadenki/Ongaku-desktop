@@ -1,0 +1,17 @@
+{
+  "rate": 96000,
+  "frames": 1326592,
+  "nextObservationFrame": 942592,
+  "nextObservationUncertainty": "UI polling plus audio-tap buffering; not the exact boundary",
+  "diagnosticObservation": "587392",
+  "samplePeakDBFS": -2.057014788293627,
+  "reconstructed16xDBFS": -2.051173860871103,
+  "nextWindowReconstructed16xDBFS": -5.499813730593205,
+  "nextWindowMaxAdjacentStep": 0.02420894056558609,
+  "diagnosticWindowReconstructed16xDBFS": -2.863628220072982,
+  "diagnosticWindowMaxAdjacentStep": 0.05773119628429413,
+  "upgradeObservationFrame": 518400,
+  "upgradeDiagnostics": "present",
+  "upgradeWindowReconstructed16xDBFS": -2.863628220072982,
+  "upgradeWindowMaxAdjacentStep": 0.05773119628429413
+}

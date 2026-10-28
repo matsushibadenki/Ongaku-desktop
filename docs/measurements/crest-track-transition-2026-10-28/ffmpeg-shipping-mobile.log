@@ -1,0 +1,42 @@
+[f32le @ 0x7a96c3c000] Estimating duration from bitrate, this may be inaccurate
+[aist#0:0/pcm_f32le @ 0x7a97038180] Guessed Channel Layout: stereo
+Input #0, f32le, from '/private/tmp/OngakuCrestPeakAudit/shipping/mobile/stable-96000-96000-default-stock-unknown.f32':
+  Duration: 00:00:01.13, bitrate: 6144 kb/s
+  Stream #0:0: Audio: pcm_f32le, 96000 Hz, stereo, flt, 6144 kb/s
+Stream mapping:
+  Stream #0:0 (pcm_f32le) -> ebur128:default
+  ebur128:out0 -> Stream #0:0 (pcm_s16le)
+Press [q] to stop, [?] for help
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.0999896  TARGET:-23 LUFS    M:-120.7 S:-120.7     I: -70.0 LUFS       LRA:   0.0 LU  FTPK: -48.4 -50.3 dBFS  TPK: -48.4 -50.3 dBFS
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf61.7.103
+  Stream #0:0: Audio: pcm_s16le, 96000 Hz, stereo, s16, 3072 kb/s
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.19999    TARGET:-23 LUFS    M:-120.7 S:-120.7     I: -70.0 LUFS       LRA:   0.0 LU  FTPK:  -1.0  -2.8 dBFS  TPK:  -1.0  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.29999    TARGET:-23 LUFS    M:-120.7 S:-120.7     I: -70.0 LUFS       LRA:   0.0 LU  FTPK:  -0.9  -3.7 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.39999    TARGET:-23 LUFS    M: -30.6 S:-120.7     I: -30.6 LUFS       LRA:   0.0 LU  FTPK:  -1.7  -3.0 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.49999    TARGET:-23 LUFS    M: -29.6 S:-120.7     I: -30.0 LUFS       LRA:   0.0 LU  FTPK:  -1.0  -2.9 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.59999    TARGET:-23 LUFS    M: -29.6 S:-120.7     I: -29.9 LUFS       LRA:   0.0 LU  FTPK:  -1.6  -3.6 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.69999    TARGET:-23 LUFS    M: -30.5 S:-120.7     I: -30.0 LUFS       LRA:   0.0 LU  FTPK:  -1.0  -3.0 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.79999    TARGET:-23 LUFS    M: -30.6 S:-120.7     I: -30.2 LUFS       LRA:   0.0 LU  FTPK:  -1.7  -3.5 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.89999    TARGET:-23 LUFS    M: -30.6 S:-120.7     I: -30.2 LUFS       LRA:   0.0 LU  FTPK:  -0.9  -2.9 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 0.99999    TARGET:-23 LUFS    M: -30.6 S:-120.7     I: -30.3 LUFS       LRA:   0.0 LU  FTPK:  -1.7  -3.5 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] t: 1.09999    TARGET:-23 LUFS    M: -31.9 S:-120.7     I: -30.5 LUFS       LRA:   0.0 LU  FTPK: -43.4 -42.4 dBFS  TPK:  -0.9  -2.8 dBFS
+[Parsed_ebur128_0 @ 0x7a97029f80] Summary:
+
+  Integrated loudness:
+    I:         -30.5 LUFS
+    Threshold: -40.4 LUFS
+
+  Loudness range:
+    LRA:         0.0 LU
+    Threshold:   0.0 LUFS
+    LRA low:     0.0 LUFS
+    LRA high:    0.0 LUFS
+
+  True peak:
+    Peak:       -0.9 dBFS
+[out#0/null @ 0x7a97029b00] video:0KiB audio:424KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+size=N/A time=00:00:01.13 bitrate=N/A speed= 201x    

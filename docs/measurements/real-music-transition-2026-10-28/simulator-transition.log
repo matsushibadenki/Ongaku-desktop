@@ -1,0 +1,4 @@
+FIRST frame=9600 diagnostics=absent
+NEXT frame=384000 diagnostics=absent firstDiagnosticFrame=none
+OUTPUT rate=96000.0 frames=768000 channels=2
+COMPLETE

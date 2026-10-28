@@ -1,0 +1,7 @@
+mobile clip-on n 6 worst {'platform': 'mobile', 'case': '96000-44100-inverted-clip-on', 'samplePeakDBFS': -8.676675042390137, 'reconstructed16xDBFS': -8.667786406509212, 'transitionMaxStep': 0.06555132567882538, 'transitionReconstructed16xDBFS': -8.970293143873372}
+desktop clip-on n 6 worst {'platform': 'desktop', 'case': '44100-44100-inverted-clip-on', 'samplePeakDBFS': -8.642054941059943, 'reconstructed16xDBFS': -8.617579257348812, 'transitionMaxStep': 0.04912684112787247, 'transitionReconstructed16xDBFS': -11.437836127137743}
+desktop clip-off n 6 worst {'platform': 'desktop', 'case': '44100-44100-inverted-clip-off', 'samplePeakDBFS': -8.642054941059943, 'reconstructed16xDBFS': -8.617579257348812, 'transitionMaxStep': 0.06680364906787872, 'transitionReconstructed16xDBFS': -10.632952144752757}
+above 0 dBFS: 0 / 18
+mobile clip-on during transition worst 96000-96000-inverted-clip-on -8.960626249597311
+desktop clip-on during transition worst 44100-44100-inverted-clip-on -11.437836127137743
+desktop clip-off during transition worst 44100-96000-positive-clip-off -10.11071079428035

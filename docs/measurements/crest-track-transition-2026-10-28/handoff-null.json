@@ -1,0 +1,92 @@
+[
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-44100-default-stock-analyzed",
+    "maxAbsoluteDifference": 4.470348358154297e-08
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-44100-default-stock-unknown",
+    "maxAbsoluteDifference": 2.9802322387695312e-08
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-44100-off-stock-analyzed",
+    "maxAbsoluteDifference": 2.9802322387695312e-08
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-44100-off-stock-unknown",
+    "maxAbsoluteDifference": 5.960464477539063e-08
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-48000-default-stock-analyzed",
+    "maxAbsoluteDifference": 0.00011208653450012207
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-48000-default-stock-unknown",
+    "maxAbsoluteDifference": 0.0002199411392211914
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-48000-off-stock-analyzed",
+    "maxAbsoluteDifference": 9.542703628540039e-05
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-48000-off-stock-unknown",
+    "maxAbsoluteDifference": 0.00018835067749023438
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-96000-default-stock-analyzed",
+    "maxAbsoluteDifference": 7.904600352048874e-07
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-96000-default-stock-unknown",
+    "maxAbsoluteDifference": 1.5597324818372726e-06
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-96000-off-stock-analyzed",
+    "maxAbsoluteDifference": 7.967464625835419e-07
+  },
+  {
+    "platform": "mobile",
+    "pair": "stable-96000-96000-off-stock-unknown",
+    "maxAbsoluteDifference": 1.5730038285255432e-06
+  },
+  {
+    "platform": "desktop",
+    "pair": "stable-44100-44100-default-stock-analyzed",
+    "maxAbsoluteDifference": 8.940696716308594e-08
+  },
+  {
+    "platform": "desktop",
+    "pair": "stable-44100-44100-off-stock-analyzed",
+    "maxAbsoluteDifference": 8.940696716308594e-08
+  },
+  {
+    "platform": "desktop",
+    "pair": "stable-44100-48000-default-stock-analyzed",
+    "maxAbsoluteDifference": 8.940696716308594e-08
+  },
+  {
+    "platform": "desktop",
+    "pair": "stable-44100-48000-off-stock-analyzed",
+    "maxAbsoluteDifference": 5.960464477539063e-08
+  },
+  {
+    "platform": "desktop",
+    "pair": "stable-44100-96000-default-stock-analyzed",
+    "maxAbsoluteDifference": 1.1920928955078125e-07
+  },
+  {
+    "platform": "desktop",
+    "pair": "stable-44100-96000-off-stock-analyzed",
+    "maxAbsoluteDifference": 1.1920928955078125e-07
+  }
+]

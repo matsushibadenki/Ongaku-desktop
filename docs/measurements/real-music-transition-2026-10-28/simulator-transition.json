@@ -1,0 +1,11 @@
+{
+  "rate": 96000,
+  "frames": 768000,
+  "nextObservationFrame": 384000,
+  "nextObservationUncertainty": "UI polling plus audio-tap buffering; not the exact boundary",
+  "diagnosticObservation": "none",
+  "samplePeakDBFS": -2.057371693573509,
+  "reconstructed16xDBFS": -2.0515305262216357,
+  "nextWindowReconstructed16xDBFS": -5.499947331376603,
+  "nextWindowMaxAdjacentStep": 0.024132676422595978
+}

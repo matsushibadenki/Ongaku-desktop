@@ -1,0 +1,8 @@
+mobile stable n= 12 worst= {'platform': 'mobile', 'case': 'stable-96000-96000-default-stock-unknown', 'samplePeakDBFS': -1.0044835995383197, 'reconstructed16xDBFS': -0.8679869532526053}
+mobile handoff n= 12 worst= {'platform': 'mobile', 'case': 'handoff-96000-96000-default-stock-unknown', 'samplePeakDBFS': -1.0044835995383197, 'reconstructed16xDBFS': -0.8679869532526053}
+desktop stable n= 6 worst= {'platform': 'desktop', 'case': 'stable-44100-96000-default-stock-analyzed', 'samplePeakDBFS': -1.0243580476274423, 'reconstructed16xDBFS': -0.8523938584680818}
+desktop handoff n= 6 worst= {'platform': 'desktop', 'case': 'handoff-44100-96000-default-stock-analyzed', 'samplePeakDBFS': -1.024358630149437, 'reconstructed16xDBFS': -0.8523932873655444}
+CASES ABOVE 0 dBFS: 0 / 36
+mobile handoff vs stable maximum PCM difference 0.0002199411392211914
+desktop handoff vs stable maximum PCM difference 1.1920928955078125e-07
+PASS: all captured normal outputs below 0 dBFS; correlated handoff null difference < 0.001

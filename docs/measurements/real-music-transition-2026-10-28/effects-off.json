@@ -1,0 +1,149 @@
+{
+  "method": "16x scipy polyphase, not an ITU-certified true-peak measurement",
+  "rows": [
+    {
+      "platform": "mobile",
+      "case": "96000-44100-inverted-clip-on",
+      "samplePeakDBFS": -3.234350903828061,
+      "reconstructed16xDBFS": -3.2173086721765487,
+      "transitionMaxStep": 0.0597681850194931,
+      "transitionReconstructed16xDBFS": -8.479375389517523
+    },
+    {
+      "platform": "mobile",
+      "case": "96000-44100-positive-clip-on",
+      "samplePeakDBFS": -3.234350903828061,
+      "reconstructed16xDBFS": -3.2173086721765487,
+      "transitionMaxStep": 0.0597681850194931,
+      "transitionReconstructed16xDBFS": -8.479375389517523
+    },
+    {
+      "platform": "mobile",
+      "case": "96000-48000-inverted-clip-on",
+      "samplePeakDBFS": -3.2615822521032527,
+      "reconstructed16xDBFS": -3.2188257003716942,
+      "transitionMaxStep": 0.05475162714719772,
+      "transitionReconstructed16xDBFS": -8.480173860751172
+    },
+    {
+      "platform": "mobile",
+      "case": "96000-48000-positive-clip-on",
+      "samplePeakDBFS": -3.2615822521032527,
+      "reconstructed16xDBFS": -3.2188257003716942,
+      "transitionMaxStep": 0.05475162714719772,
+      "transitionReconstructed16xDBFS": -8.480173860751172
+    },
+    {
+      "platform": "mobile",
+      "case": "96000-96000-inverted-clip-on",
+      "samplePeakDBFS": -3.224084482483013,
+      "reconstructed16xDBFS": -3.217617605519545,
+      "transitionMaxStep": 0.02974693477153778,
+      "transitionReconstructed16xDBFS": -8.474106770118047
+    },
+    {
+      "platform": "mobile",
+      "case": "96000-96000-positive-clip-on",
+      "samplePeakDBFS": -3.224084482483013,
+      "reconstructed16xDBFS": -3.217617605519545,
+      "transitionMaxStep": 0.02974693477153778,
+      "transitionReconstructed16xDBFS": -8.474106770118047
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-44100-inverted-clip-off",
+      "samplePeakDBFS": -3.2341029791842475,
+      "reconstructed16xDBFS": -3.2170807284050933,
+      "transitionMaxStep": 0.057965997606515884,
+      "transitionReconstructed16xDBFS": -4.582038837101737
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-44100-inverted-clip-on",
+      "samplePeakDBFS": -3.2341029791842475,
+      "reconstructed16xDBFS": -3.2170807284050933,
+      "transitionMaxStep": 0.04276210069656372,
+      "transitionReconstructed16xDBFS": -7.440452528574031
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-44100-positive-clip-off",
+      "samplePeakDBFS": -3.2341029791842475,
+      "reconstructed16xDBFS": -3.2170807284050933,
+      "transitionMaxStep": 0.05313362181186676,
+      "transitionReconstructed16xDBFS": -3.907192389882843
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-44100-positive-clip-on",
+      "samplePeakDBFS": -3.2341029791842475,
+      "reconstructed16xDBFS": -3.2170807284050933,
+      "transitionMaxStep": 0.03919722139835358,
+      "transitionReconstructed16xDBFS": -6.816404070073316
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-48000-inverted-clip-off",
+      "samplePeakDBFS": -3.2339174159753052,
+      "reconstructed16xDBFS": -3.216618860682472,
+      "transitionMaxStep": 0.05263998359441757,
+      "transitionReconstructed16xDBFS": -4.601523103977016
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-48000-inverted-clip-on",
+      "samplePeakDBFS": -3.2339174159753052,
+      "reconstructed16xDBFS": -3.216618860682472,
+      "transitionMaxStep": 0.03882429003715515,
+      "transitionReconstructed16xDBFS": -7.465145866886291
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-48000-positive-clip-off",
+      "samplePeakDBFS": -3.2339174159753052,
+      "reconstructed16xDBFS": -3.216618860682472,
+      "transitionMaxStep": 0.04890761524438858,
+      "transitionReconstructed16xDBFS": -3.9064138996372115
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-48000-positive-clip-on",
+      "samplePeakDBFS": -3.2339174159753052,
+      "reconstructed16xDBFS": -3.216618860682472,
+      "transitionMaxStep": 0.03606591373682022,
+      "transitionReconstructed16xDBFS": -6.816194136888376
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-96000-inverted-clip-off",
+      "samplePeakDBFS": -3.2333930523042413,
+      "reconstructed16xDBFS": -3.2203542448789286,
+      "transitionMaxStep": 0.029455291107296944,
+      "transitionReconstructed16xDBFS": -4.59398667482092
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-96000-inverted-clip-on",
+      "samplePeakDBFS": -3.2333930523042413,
+      "reconstructed16xDBFS": -3.2203542448789286,
+      "transitionMaxStep": 0.021722521632909775,
+      "transitionReconstructed16xDBFS": -7.457609417273268
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-96000-positive-clip-off",
+      "samplePeakDBFS": -3.2333930523042413,
+      "reconstructed16xDBFS": -3.2203542448789286,
+      "transitionMaxStep": 0.026303380727767944,
+      "transitionReconstructed16xDBFS": -3.9041721725687877
+    },
+    {
+      "platform": "desktop",
+      "case": "44100-96000-positive-clip-on",
+      "samplePeakDBFS": -3.2333930523042413,
+      "reconstructed16xDBFS": -3.2203542448789286,
+      "transitionMaxStep": 0.019398115575313568,
+      "transitionReconstructed16xDBFS": -6.813952139992327
+    }
+  ]
+}

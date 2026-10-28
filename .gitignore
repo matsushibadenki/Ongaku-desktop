@@ -27,8 +27,9 @@ DerivedData/
 # Maintainer-only documentation. Never publish credentials or private procedures.
 /docs-private/
 
-# Local convenience alias
+# Local convenience aliases
 /Ongaku-desktop
+/Ongaku
 
 
 # 管理ファイル

@@ -1,0 +1,3 @@
+PASS: preserved unmeasured reference across quiet/hot upgrades; new track resets
+PASS: preserved measured reference across quiet/hot upgrades; new track resets
+PASS: reference guard rejects gain changes caused by late analysis
