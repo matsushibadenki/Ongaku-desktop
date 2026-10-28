@@ -1,0 +1,44 @@
+{
+  "method": "Manual accessibility UI actions using a separate Release app and normal Cmd-Q exits; saved preference assertions are programmatic.",
+  "environment": "Apple M4, macOS 27.2 (26B123), Xcode 27.1 (27A9275), arm64, signing disabled.",
+  "isolation": "Unique temporary app bundle identifier; qualification temporary library and qualification preferences; no tracks or playback.",
+  "sourceFileCountMatched": 106,
+  "executableSHA256": "d8e86d8bcc7dcb94716cb31c5f5abde8aa42cd4909131090380206afca9e905c",
+  "sourceSHA256": {
+    "Sources/OngakuDesktop/LibraryContent.swift": "c33478312e9c5c0f9a809ff6051227fd788721b5cc2f2e0a47b5fba8546c4ede",
+    "Sources/OngakuDesktop/EffectsRackView.swift": "bd4b92bc20bb889be396d0919159e97b44f8a976b20c684665cf0c0d179bde9b",
+    "Sources/OngakuDesktop/PlaybackController.swift": "014a061340e7c0a774620e4fe87279fce796bb15006676f9ef61e788a9191f57"
+  },
+  "observations": [
+    {
+      "case": "Pro with Simulation enabled",
+      "beforeExit": "Pro selected, Simulation ON, intensity 75%; saved mode pro, bypass default false",
+      "afterRelaunch": "Pro selected, Simulation ON, intensity 75%, one active"
+    },
+    {
+      "case": "OFF",
+      "beforeExit": "OFF selected, mode off and bypass true; Simulation setting remains enabled in saved settings",
+      "afterRelaunch": "OFF selected, bypass panel displayed, zero active"
+    },
+    {
+      "case": "OFF to Pro",
+      "beforeExit": "Pro selected, bypass false, Simulation ON with intensity 75%",
+      "afterRelaunch": "Pro selected, Simulation ON with intensity 75%"
+    },
+    {
+      "case": "BASIC",
+      "beforeExit": "BASIC selected, bypass false, Pro Simulation setting remains enabled in preferences",
+      "afterRelaunch": "BASIC selected and Basic controls displayed"
+    },
+    {
+      "case": "legacy OFF without tab key",
+      "beforeLaunch": "QA-only preferences changed to bypass true with tab key absent",
+      "afterLaunch": "OFF selected and bypass panel displayed; tab saved as off"
+    },
+    {
+      "case": "inconsistent OFF with bypass false",
+      "beforeLaunch": "QA-only bypass set false while stored tab was off",
+      "afterLaunch": "BASIC selected, stored tab corrected to basic, bypass remains false and Simulation setting remains enabled"
+    }
+  ]
+}

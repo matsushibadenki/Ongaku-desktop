@@ -467,6 +467,55 @@ struct EffectRackInputTests {
         }
     }
 
+    @Test("Effect mode survives leaving and returning; OFF remains authoritative")
+    func retainedModeAcrossPageVisits() async throws {
+        _ = NSApplication.shared
+        let key = "audio.effectsBypassed"
+        let saved = UserDefaults.standard.object(forKey: key)
+        defer {
+            if let saved { UserDefaults.standard.set(saved, forKey: key) }
+            else { UserDefaults.standard.removeObject(forKey: key) }
+        }
+        let player = PlaybackController(); player.setEffectsBypassed(false)
+        defer { player.clearCurrentTrack() }
+        let originalSettings = player.effectSettings
+        let tabs = RackTabState(); tabs.tab = .pro
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 500, height: 400),
+                              styleMask: [.titled], backing: .buffered, defer: false)
+        window.isReleasedWhenClosed = false
+        let host = NSHostingView(rootView: ProductionRackFixture(tabs: tabs, player: player))
+        window.contentView = host; window.makeKeyAndOrderFront(nil)
+        defer { window.close() }
+        func settleView() async throws {
+            host.layoutSubtreeIfNeeded()
+            try await Task.sleep(for: .milliseconds(100))
+        }
+        try await settleView()
+        #expect(tabs.tab == .pro && !player.effectsBypassed)
+        for _ in 0..<3 {
+            tabs.showRack = false; try await settleView()
+            tabs.showRack = true; try await settleView()
+            #expect(tabs.tab == .pro && !player.effectsBypassed)
+            #expect(player.effectSettings == originalSettings)
+        }
+        tabs.tab = .off; try await settleView()
+        #expect(player.effectsBypassed)
+        tabs.showRack = false; try await settleView()
+        tabs.showRack = true; try await settleView()
+        #expect(tabs.tab == .off && player.effectsBypassed)
+        tabs.tab = .pro; try await settleView()
+        #expect(!player.effectsBypassed && player.effectSettings == originalSettings)
+        tabs.showRack = false; try await settleView()
+        tabs.showRack = true; try await settleView()
+        #expect(tabs.tab == .pro && !player.effectsBypassed)
+        // A legacy installation may have persisted bypass without a tab value.
+        tabs.showRack = false; try await settleView()
+        player.setEffectsBypassed(true); tabs.tab = .basic
+        tabs.showRack = true; try await settleView()
+        #expect(tabs.tab == .off && player.effectsBypassed)
+        #expect(player.effectSettings == originalSettings)
+    }
+
     @Test("SwiftUI region connects to the actual ancestor scroll view")
     func hostingBridge() async throws {
         let router = EffectRackInputRouter()
@@ -591,11 +640,17 @@ private struct LiveKnobRack: View {
     }
 }
 
-@MainActor private final class RackTabState: ObservableObject { @Published var tab = AudioEffectPageTab.basic }
+@MainActor private final class RackTabState: ObservableObject {
+    @Published var tab = AudioEffectPageTab.basic
+    @Published var showRack = true
+}
 @MainActor private struct ProductionRackFixture: View {
     @ObservedObject var tabs: RackTabState
     let player: PlaybackController
-    var body: some View { EffectsRackView(selectedTab: $tabs.tab).environmentObject(player) }
+    var body: some View {
+        if tabs.showRack { EffectsRackView(selectedTab: $tabs.tab).environmentObject(player) }
+        else { Color.clear }
+    }
 }
 
 @MainActor private final class PublicationCount { var value = 0 }

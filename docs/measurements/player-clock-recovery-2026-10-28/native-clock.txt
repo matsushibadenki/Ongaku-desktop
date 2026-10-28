@@ -1,0 +1,2 @@
+2026-10-28 09:27:45.012 test[20390:215338] Ongaku: player clock unavailable (InjectedClockException): reconfigured
+PASS: injected Objective-C exception contained, invalid input skipped, live clock advances, stale clock does not crash

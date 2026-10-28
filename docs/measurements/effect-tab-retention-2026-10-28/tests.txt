@@ -1,0 +1,8 @@
+✔ Test registryBuildsCompleteOrderedPipeline() passed after 0.009 seconds.
+✔ Test defaultSettingsContainEveryDeclaredParameter() passed after 0.014 seconds.
+✔ Test settingsRoundTripForPersistentRestoration() passed after 0.014 seconds.
+✔ Test "Enabled counts include only the selected effect mode" passed after 0.230 seconds.
+✔ Suite "Audio effect presets" passed after 0.230 seconds.
+✔ Test "Effect mode survives leaving and returning; OFF remains authoritative" passed after 2.367 seconds.
+✔ Suite "Effect rack input ownership" passed after 2.367 seconds.
+✔ Test run with 5 tests in 2 suites passed after 2.367 seconds.

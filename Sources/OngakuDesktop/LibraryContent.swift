@@ -173,7 +173,7 @@ struct LibraryContent: View {
     @State private var unifiedSearchTask: Task<Void, Never>?
     @State private var pendingDeletion: LibraryDeletionRequest?
     @State private var deletionErrorMessage: String?
-    @State private var selectedEffectTab: AudioEffectPageTab = .basic
+    @AppStorage("audio.selectedEffectTab.v1") private var selectedEffectTab: AudioEffectPageTab = .basic
 
     var body: some View {
         VStack(spacing: 0) {

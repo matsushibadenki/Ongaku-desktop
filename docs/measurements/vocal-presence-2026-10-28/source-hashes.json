@@ -1,0 +1,9 @@
+{
+  "audio/effects/VocalPresenceAudioEffect.swift": "cdc60a76e96ce9516f77922afef852eb979fb024df2191336dbc37b8b130cb2a",
+  "audio/AudioEffectPreset.swift": "d0330fb7f083788e8edbf7260e1396888f23ed707f05b86dc60659ecef9e584f",
+  "audio/effects/AudioEffectModuleRegistry.swift": "b5bdb89dff419a4834ad35a72f5853cafa576993c4c1e3a7f1e13aa352360bb7",
+  "tests/VocalPresenceRegression.swift": "06b5f2bae1df59104f419452d5fd18304de81b7c837b22239092b30bca6b51c9",
+  "tests/ProtectedGraphRegression.swift": "5c5175c43fffbf7c60292f1386d5a659d877244a94f6095a0c032bf3191b5924",
+  "tests/DSPTransitionRegression.swift": "8d6c2ccb67f8be91b4275149d7355b8aa785742eccfa7b6025ed907217c3750e",
+  "tests/DesktopEffectTransitionRegression.swift": "fe516aa55afa1a97d65176ea91e18f96354c16cadd1c8ebd1cc6c4b8ccc44459"
+}

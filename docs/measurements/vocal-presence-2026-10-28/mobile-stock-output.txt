@@ -1,0 +1,13 @@
+STOCK OUTPUT samplePeak=0.09721224 reconstructedPeak=0.097217344
+PROTECTED GRAPH source=96000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.vocalPresence) level=0.1 null=1.4901161e-08 peak=0.097217344
+STOCK OUTPUT samplePeak=0.8487244 reconstructedPeak=0.85212564
+PROTECTED GRAPH source=96000.0 rate=44100.0 effect=Optional(test.RealtimeAudioEffectKind.vocalPresence) level=4.0 null=1.1920929e-07 peak=0.85212564
+STOCK OUTPUT samplePeak=0.097154565 reconstructedPeak=0.09724118
+PROTECTED GRAPH source=96000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.vocalPresence) level=0.1 null=2.2351742e-08 peak=0.09724118
+STOCK OUTPUT samplePeak=0.85059536 reconstructedPeak=0.85252833
+PROTECTED GRAPH source=96000.0 rate=48000.0 effect=Optional(test.RealtimeAudioEffectKind.vocalPresence) level=4.0 null=8.940697e-08 peak=0.85252833
+STOCK OUTPUT samplePeak=0.097218595 reconstructedPeak=0.09723876
+PROTECTED GRAPH source=96000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.vocalPresence) level=0.1 null=1.4901161e-08 peak=0.09723876
+STOCK OUTPUT samplePeak=0.8505749 reconstructedPeak=0.85250777
+PROTECTED GRAPH source=96000.0 rate=96000.0 effect=Optional(test.RealtimeAudioEffectKind.vocalPresence) level=4.0 null=5.9604645e-08 peak=0.85250777
+PASS: 6 protected DSP/handoff pairs, max sample difference 1.1920929e-07, max reconstructed peak 0.85252833

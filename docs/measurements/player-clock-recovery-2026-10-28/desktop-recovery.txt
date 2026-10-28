@@ -1,0 +1,7 @@
+✔ Test "A playing track resumes from its saved position after wake" passed after 0.001 seconds.
+✔ Test "A paused track remains paused after wake" passed after 0.001 seconds.
+✔ Test "Audio engine configuration notifications safely reach the main actor" passed after 2.237 seconds.
+✔ Suite "Playback recovery state" passed after 2.237 seconds.
+✔ Test "A stopped render clock recovers from the last position and honors a later pause" passed after 7.691 seconds.
+✔ Suite "Playback transport integration" passed after 7.691 seconds.
+✔ Test run with 4 tests in 2 suites passed after 7.691 seconds.

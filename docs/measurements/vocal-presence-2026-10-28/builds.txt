@@ -1,0 +1,3 @@
+PASS: iPhone Debug, iOS Simulator arm64, signing disabled
+PASS: Mac App Store Release, signing disabled, lipo: x86_64 arm64
+PASS: Mac registry/transient suites (7 tests)

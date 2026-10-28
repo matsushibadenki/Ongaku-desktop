@@ -1,0 +1,3894 @@
+{
+  "rows": [
+    {
+      "fixture": "antiphase-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.14713238889077,
+        -23.138743672448786
+      ],
+      "gainDB": [
+        0.0,
+        -0.008388716441984804
+      ],
+      "matchedLUFS": [
+        -23.14713238889077,
+        -23.14713238889077
+      ],
+      "presenceBandDeltaDB": 0.23172859413025276,
+      "highBandDeltaDB": 0.07142683718300984,
+      "residualRelativeDB": -43.893429931958906,
+      "tailRMSDB": [
+        -86.11943636085996,
+        -86.12073158540186
+      ],
+      "stereoCorrelation": [
+        -1.0,
+        -1.0
+      ],
+      "rawSamplePeakDBFS": [
+        -12.572371273898618,
+        -12.567711459535397
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.566844038399141,
+        -12.562183889218337
+      ]
+    },
+    {
+      "fixture": "antiphase-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.14713238889077,
+        -23.12296986233249
+      ],
+      "gainDB": [
+        0.0,
+        -0.02416252655828233
+      ],
+      "matchedLUFS": [
+        -23.14713238889077,
+        -23.14713238889077
+      ],
+      "presenceBandDeltaDB": 0.6676103291719981,
+      "highBandDeltaDB": 0.20464831499910574,
+      "residualRelativeDB": -34.74992929567051,
+      "tailRMSDB": [
+        -86.11943636085996,
+        -86.12318930504784
+      ],
+      "stereoCorrelation": [
+        -1.0,
+        -1.0
+      ],
+      "rawSamplePeakDBFS": [
+        -12.572371273898618,
+        -12.564577711378613
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.566844038399141,
+        -12.559050485765022
+      ]
+    },
+    {
+      "fixture": "antiphase-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.3118927569669,
+        -23.30307851154154
+      ],
+      "gainDB": [
+        0.0,
+        -0.008814245425359218
+      ],
+      "matchedLUFS": [
+        -23.3118927569669,
+        -23.3118927569669
+      ],
+      "presenceBandDeltaDB": 0.23583421229984416,
+      "highBandDeltaDB": 0.07150742384402906,
+      "residualRelativeDB": -43.684033021749784,
+      "tailRMSDB": [
+        -64.13174494964865,
+        -64.13212274138328
+      ],
+      "stereoCorrelation": [
+        -1.0,
+        -1.0
+      ],
+      "rawSamplePeakDBFS": [
+        -11.426236978055787,
+        -11.411111676166373
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.420709280839263,
+        -11.405583969517066
+      ]
+    },
+    {
+      "fixture": "antiphase-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.147131051322766,
+        -23.13874230328695
+      ],
+      "gainDB": [
+        0.0,
+        -0.008388748035816873
+      ],
+      "matchedLUFS": [
+        -23.147131051322766,
+        -23.147131051322766
+      ],
+      "presenceBandDeltaDB": 0.23173407849480857,
+      "highBandDeltaDB": 0.07141806263111479,
+      "residualRelativeDB": -43.89342242795102,
+      "tailRMSDB": [
+        -86.11943636276197,
+        -86.12073161403589
+      ],
+      "stereoCorrelation": [
+        -0.9999997164066916,
+        -0.9999997103253437
+      ],
+      "rawSamplePeakDBFS": [
+        -12.570533790328383,
+        -12.56575397183202
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.565006073905678,
+        -12.560226547496756
+      ]
+    },
+    {
+      "fixture": "antiphase-48000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.27366693911546,
+        -23.265449013232036
+      ],
+      "gainDB": [
+        0.0,
+        -0.008217925883424909
+      ],
+      "matchedLUFS": [
+        -23.27366693911546,
+        -23.27366693911546
+      ],
+      "presenceBandDeltaDB": 0.23187412130388568,
+      "highBandDeltaDB": 0.07160513341787406,
+      "residualRelativeDB": -43.98720387463764,
+      "tailRMSDB": [
+        -55.14751639451333,
+        -55.14266263874251
+      ],
+      "stereoCorrelation": [
+        -0.9916572292545522,
+        -0.9916388455374364
+      ],
+      "rawSamplePeakDBFS": [
+        -12.49900154188757,
+        -12.496062692209193
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.493473879891821,
+        -12.490535263953163
+      ]
+    },
+    {
+      "fixture": "antiphase-48000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.43955845789365,
+        -23.430922346231206
+      ],
+      "gainDB": [
+        0.0,
+        -0.008636111662443572
+      ],
+      "matchedLUFS": [
+        -23.43955845789365,
+        -23.43955845789365
+      ],
+      "presenceBandDeltaDB": 0.2359839718534583,
+      "highBandDeltaDB": 0.07168247630736935,
+      "residualRelativeDB": -43.777873286006056,
+      "tailRMSDB": [
+        -54.253950566473996,
+        -54.250500058385434
+      ],
+      "stereoCorrelation": [
+        -0.9914849050484867,
+        -0.9914654613476871
+      ],
+      "rawSamplePeakDBFS": [
+        -11.378685941985944,
+        -11.36529061111947
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.373158691539274,
+        -11.359257814745645
+      ]
+    },
+    {
+      "fixture": "antiphase-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.168138589435888,
+        -23.15986952590216
+      ],
+      "gainDB": [
+        0.0,
+        -0.00826906353372749
+      ],
+      "matchedLUFS": [
+        -23.168138589435888,
+        -23.168138589435888
+      ],
+      "presenceBandDeltaDB": 0.23259579150779933,
+      "highBandDeltaDB": 0.07587661190040676,
+      "residualRelativeDB": -43.95981857056172,
+      "tailRMSDB": [
+        -86.12106954555088,
+        -86.12234680685177
+      ],
+      "stereoCorrelation": [
+        -1.0,
+        -1.0
+      ],
+      "rawSamplePeakDBFS": [
+        -12.572371273898618,
+        -12.568942059055527
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.566844038399141,
+        -12.563414805398041
+      ]
+    },
+    {
+      "fixture": "antiphase-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.168138589435888,
+        -23.144320573205654
+      ],
+      "gainDB": [
+        0.0,
+        -0.023818016230233024
+      ],
+      "matchedLUFS": [
+        -23.168138589435888,
+        -23.168138589435888
+      ],
+      "presenceBandDeltaDB": 0.6701626041406518,
+      "highBandDeltaDB": 0.21734775633707754,
+      "residualRelativeDB": -34.816399079287834,
+      "tailRMSDB": [
+        -86.12106954555088,
+        -86.12476973438753
+      ],
+      "stereoCorrelation": [
+        -1.0,
+        -1.0
+      ],
+      "rawSamplePeakDBFS": [
+        -12.572371273898618,
+        -12.567065698338073
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.566844038399141,
+        -12.561537989146018
+      ]
+    },
+    {
+      "fixture": "antiphase-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.339366094866108,
+        -23.330677075994114
+      ],
+      "gainDB": [
+        0.0,
+        -0.008689018871994513
+      ],
+      "matchedLUFS": [
+        -23.339366094866108,
+        -23.339366094866108
+      ],
+      "presenceBandDeltaDB": 0.2367863259311317,
+      "highBandDeltaDB": 0.07594970013745223,
+      "residualRelativeDB": -43.75050390473534,
+      "tailRMSDB": [
+        -70.61638113228703,
+        -70.61848832114408
+      ],
+      "stereoCorrelation": [
+        -1.0,
+        -1.0
+      ],
+      "rawSamplePeakDBFS": [
+        -11.427165034813678,
+        -11.41234823828098
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.42163771129223,
+        -11.4068207073874
+      ]
+    },
+    {
+      "fixture": "antiphase-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.168137312947568,
+        -23.15986822093255
+      ],
+      "gainDB": [
+        0.0,
+        -0.00826909201501597
+      ],
+      "matchedLUFS": [
+        -23.168137312947568,
+        -23.168137312947568
+      ],
+      "presenceBandDeltaDB": 0.23260004620930413,
+      "highBandDeltaDB": 0.07586569287587887,
+      "residualRelativeDB": -43.959810176983396,
+      "tailRMSDB": [
+        -86.12106956311683,
+        -86.12234727372574
+      ],
+      "stereoCorrelation": [
+        -0.9999997284783754,
+        -0.999999722355882
+      ],
+      "rawSamplePeakDBFS": [
+        -12.571385621171876,
+        -12.567863830975085
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.565857912743517,
+        -12.562336163721117
+      ]
+    },
+    {
+      "fixture": "antiphase-96000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.258904551888893,
+        -23.250452280539395
+      ],
+      "gainDB": [
+        0.0,
+        -0.008452271349497902
+      ],
+      "matchedLUFS": [
+        -23.258904551888893,
+        -23.258904551888893
+      ],
+      "presenceBandDeltaDB": 0.23236222849388816,
+      "highBandDeltaDB": 0.07570828828010742,
+      "residualRelativeDB": -43.87126519127289,
+      "tailRMSDB": [
+        -56.18455972665021,
+        -56.184077741137386
+      ],
+      "stereoCorrelation": [
+        -0.9929177704422144,
+        -0.9929042728757983
+      ],
+      "rawSamplePeakDBFS": [
+        -12.484788506029842,
+        -12.48093076277774
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -12.47926116688457,
+        -12.475403155925537
+      ]
+    },
+    {
+      "fixture": "antiphase-96000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.427577114901943,
+        -23.41869603956562
+      ],
+      "gainDB": [
+        0.0,
+        -0.008881075336322907
+      ],
+      "matchedLUFS": [
+        -23.427577114901943,
+        -23.427577114901943
+      ],
+      "presenceBandDeltaDB": 0.2365501585813359,
+      "highBandDeltaDB": 0.07576293475790989,
+      "residualRelativeDB": -43.662002657958894,
+      "tailRMSDB": [
+        -55.90754208792633,
+        -55.90711607800416
+      ],
+      "stereoCorrelation": [
+        -0.9928287908751834,
+        -0.992814446300419
+      ],
+      "rawSamplePeakDBFS": [
+        -11.347615835992448,
+        -11.331083702396732
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.342088252711843,
+        -11.325556137573916
+      ]
+    },
+    {
+      "fixture": "instrumental-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.5216005391602,
+        -22.506780080197647
+      ],
+      "gainDB": [
+        -0.47839946083980006,
+        -0.4932199198023537
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.2719932544115593,
+      "highBandDeltaDB": 0.05885073284936746,
+      "residualRelativeDB": -43.16380898261836,
+      "tailRMSDB": [
+        -86.8568663358379,
+        -86.86580365409495
+      ],
+      "stereoCorrelation": [
+        0.5397406380556149,
+        0.5396585046977395
+      ],
+      "rawSamplePeakDBFS": [
+        -3.1286089378925808,
+        -3.0958666772131362
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -3.1230812574121067,
+        -3.0388178670888966
+      ]
+    },
+    {
+      "fixture": "instrumental-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.5216005391602,
+        -22.477774107188697
+      ],
+      "gainDB": [
+        -0.47839946083980006,
+        -0.5222258928113028
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.7812311459711749,
+      "highBandDeltaDB": 0.16738686217043083,
+      "residualRelativeDB": -33.939185435529865,
+      "tailRMSDB": [
+        -86.8568663358379,
+        -86.8837707290426
+      ],
+      "stereoCorrelation": [
+        0.5397406380556149,
+        0.5395522641106545
+      ],
+      "rawSamplePeakDBFS": [
+        -3.1286089378925808,
+        -3.0360247329076295
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -3.1230812574121067,
+        -2.8664485498968473
+      ]
+    },
+    {
+      "fixture": "instrumental-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.1848673762507,
+        -23.168459847100568
+      ],
+      "gainDB": [
+        0.0,
+        -0.01640752915013303
+      ],
+      "matchedLUFS": [
+        -23.1848673762507,
+        -23.1848673762507
+      ],
+      "presenceBandDeltaDB": 0.2625307672744472,
+      "highBandDeltaDB": 0.048945234376200394,
+      "residualRelativeDB": -41.876483819459544,
+      "tailRMSDB": [
+        -64.335839063311,
+        -64.34637072289985
+      ],
+      "stereoCorrelation": [
+        0.4360040777668066,
+        0.4362512614142138
+      ],
+      "rawSamplePeakDBFS": [
+        -3.183115067041,
+        -3.191336117523262
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -3.1522945875287176,
+        -3.0767354567851894
+      ]
+    },
+    {
+      "fixture": "instrumental-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.51520039711755,
+        -22.500346980078888
+      ],
+      "gainDB": [
+        -0.4847996028824503,
+        -0.4996530199211118
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.2718695701423071,
+      "highBandDeltaDB": 0.058919322542889604,
+      "residualRelativeDB": -43.16120744943972,
+      "tailRMSDB": [
+        -86.86310930221252,
+        -86.87207979998155
+      ],
+      "stereoCorrelation": [
+        0.5402908042524177,
+        0.5402088952096218
+      ],
+      "rawSamplePeakDBFS": [
+        -2.904363005530537,
+        -2.871004629101039
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.8988352115468006,
+        -2.865477135573891
+      ]
+    },
+    {
+      "fixture": "instrumental-48000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.767653924936752,
+        -22.752240495696977
+      ],
+      "gainDB": [
+        -0.23234607506324823,
+        -0.24775950430302232
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.27149938883659014,
+      "highBandDeltaDB": 0.058276091908686205,
+      "residualRelativeDB": -42.99647798852969,
+      "tailRMSDB": [
+        -56.36819062913584,
+        -56.371479752034716
+      ],
+      "stereoCorrelation": [
+        0.5240610465505849,
+        0.5239693473696507
+      ],
+      "rawSamplePeakDBFS": [
+        -3.1962685956722927,
+        -3.1633587065083084
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -3.1907410593727477,
+        -3.1355602576469463
+      ]
+    },
+    {
+      "fixture": "instrumental-48000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.335356806713598,
+        -23.31818945551862
+      ],
+      "gainDB": [
+        0.0,
+        -0.017167351194977268
+      ],
+      "matchedLUFS": [
+        -23.335356806713598,
+        -23.335356806713598
+      ],
+      "presenceBandDeltaDB": 0.2616453308550554,
+      "highBandDeltaDB": 0.04816390749445165,
+      "residualRelativeDB": -41.67144887185532,
+      "tailRMSDB": [
+        -55.75692495036612,
+        -55.76076484612016
+      ],
+      "stereoCorrelation": [
+        0.41413430352429226,
+        0.41439324399287847
+      ],
+      "rawSamplePeakDBFS": [
+        -3.2038762036029356,
+        -3.212672992397199
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -3.1855210970434875,
+        -3.10872647037089
+      ]
+    },
+    {
+      "fixture": "instrumental-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.512192528983192,
+        -22.50128066567963
+      ],
+      "gainDB": [
+        -0.4878074710168076,
+        -0.49871933432036986
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.2717267825972032,
+      "highBandDeltaDB": 0.06611030022284552,
+      "residualRelativeDB": -44.06933508056541,
+      "tailRMSDB": [
+        -86.86703603156694,
+        -86.87216279399203
+      ],
+      "stereoCorrelation": [
+        0.5391645859296741,
+        0.5389296370263774
+      ],
+      "rawSamplePeakDBFS": [
+        -3.0122632635373305,
+        -2.9809795516601163
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.7460520145481606,
+        -2.7096737831755116
+      ]
+    },
+    {
+      "fixture": "instrumental-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.512192528983192,
+        -22.480096900021366
+      ],
+      "gainDB": [
+        -0.4878074710168076,
+        -0.5199030999786346
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.7812544907660146,
+      "highBandDeltaDB": 0.1886666349998518,
+      "residualRelativeDB": -34.867039219009506,
+      "tailRMSDB": [
+        -86.86703603156694,
+        -86.88249253264581
+      ],
+      "stereoCorrelation": [
+        0.5391645859296741,
+        0.5385149332450556
+      ],
+      "rawSamplePeakDBFS": [
+        -3.0122632635373305,
+        -2.926779183292364
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.7460520145481606,
+        -2.6458159293423655
+      ]
+    },
+    {
+      "fixture": "instrumental-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.169934914961456,
+        -23.15822758162088
+      ],
+      "gainDB": [
+        0.0,
+        -0.01170733334057385
+      ],
+      "matchedLUFS": [
+        -23.169934914961456,
+        -23.169934914961456
+      ],
+      "presenceBandDeltaDB": 0.2642676939117383,
+      "highBandDeltaDB": 0.05970793505098385,
+      "residualRelativeDB": -42.864514141078914,
+      "tailRMSDB": [
+        -70.70026053099443,
+        -70.70611431931027
+      ],
+      "stereoCorrelation": [
+        0.4366495172062749,
+        0.43657624171663495
+      ],
+      "rawSamplePeakDBFS": [
+        -3.2232935863111063,
+        -3.209102717094649
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.9649366337024903,
+        -2.945086979394053
+      ]
+    },
+    {
+      "fixture": "instrumental-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.508963556821026,
+        -22.49805398491191
+      ],
+      "gainDB": [
+        -0.4910364431789737,
+        -0.5019460150880914
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.27183953560565893,
+      "highBandDeltaDB": 0.06597067686332084,
+      "residualRelativeDB": -44.07119584302197,
+      "tailRMSDB": [
+        -86.8702179679344,
+        -86.87534289066727
+      ],
+      "stereoCorrelation": [
+        0.5392719836253775,
+        0.5390365318212961
+      ],
+      "rawSamplePeakDBFS": [
+        -2.8405039708698663,
+        -2.809554128318263
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.5638765988681227,
+        -2.527791962207825
+      ]
+    },
+    {
+      "fixture": "instrumental-96000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.746991541982002,
+        -22.735580306720802
+      ],
+      "gainDB": [
+        -0.25300845801799804,
+        -0.2644196932791978
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.27131404705353557,
+      "highBandDeltaDB": 0.06564427558823299,
+      "residualRelativeDB": -43.86754744742703,
+      "tailRMSDB": [
+        -56.398312891351885,
+        -56.39606986239052
+      ],
+      "stereoCorrelation": [
+        0.5213224063727784,
+        0.5210526433951156
+      ],
+      "rawSamplePeakDBFS": [
+        -3.0544975271120176,
+        -3.0227536502277785
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.7868072493200864,
+        -2.749964114003021
+      ]
+    },
+    {
+      "fixture": "instrumental-96000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.306804224818183,
+        -23.29457977099148
+      ],
+      "gainDB": [
+        0.0,
+        -0.012224453826704201
+      ],
+      "matchedLUFS": [
+        -23.306804224818183,
+        -23.306804224818183
+      ],
+      "presenceBandDeltaDB": 0.26382563361824307,
+      "highBandDeltaDB": 0.05896563930864808,
+      "residualRelativeDB": -42.63718436577628,
+      "tailRMSDB": [
+        -56.108960328647946,
+        -56.106248744107475
+      ],
+      "stereoCorrelation": [
+        0.41164671245379,
+        0.41153945783382434
+      ],
+      "rawSamplePeakDBFS": [
+        -3.121587532595232,
+        -3.107321096716573
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.8505041740967436,
+        -2.8305174192980203
+      ]
+    },
+    {
+      "fixture": "percussion-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.08815420898243,
+        -27.061388591531752
+      ],
+      "gainDB": [
+        0.0,
+        -0.026765617450678056
+      ],
+      "matchedLUFS": [
+        -27.08815420898243,
+        -27.08815420898243
+      ],
+      "presenceBandDeltaDB": 0.26044271990286183,
+      "highBandDeltaDB": 0.04690227907699768,
+      "residualRelativeDB": -41.93542401768062,
+      "tailRMSDB": [
+        -105.34317842414018,
+        -105.37863607076918
+      ],
+      "stereoCorrelation": [
+        0.9999999999999571,
+        0.9999999999999651
+      ],
+      "rawSamplePeakDBFS": [
+        -5.036044355826003,
+        -5.00309934784264
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.03051681148251,
+        -4.9975715537197205
+      ]
+    },
+    {
+      "fixture": "percussion-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.08815420898243,
+        -27.007977881724354
+      ],
+      "gainDB": [
+        0.0,
+        -0.08017632725807677
+      ],
+      "matchedLUFS": [
+        -27.08815420898243,
+        -27.08815420898243
+      ],
+      "presenceBandDeltaDB": 0.7460051612634394,
+      "highBandDeltaDB": 0.13102842384988037,
+      "residualRelativeDB": -32.617155109891804,
+      "tailRMSDB": [
+        -105.34317842414018,
+        -105.4482693262627
+      ],
+      "stereoCorrelation": [
+        0.9999999999999571,
+        0.9999999999999692
+      ],
+      "rawSamplePeakDBFS": [
+        -5.036044355826003,
+        -4.943056040085245
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.03051681148251,
+        -4.937528838161217
+      ]
+    },
+    {
+      "fixture": "percussion-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -28.397531468332225,
+        -28.358381934963358
+      ],
+      "gainDB": [
+        0.0,
+        -0.0391495333688673
+      ],
+      "matchedLUFS": [
+        -28.397531468332225,
+        -28.397531468332225
+      ],
+      "presenceBandDeltaDB": 0.24306220243847,
+      "highBandDeltaDB": 0.029076984116470292,
+      "residualRelativeDB": -38.27233294447218,
+      "tailRMSDB": [
+        -82.10506999785468,
+        -82.14572936701367
+      ],
+      "stereoCorrelation": [
+        0.9999999999999553,
+        0.9999999999999609
+      ],
+      "rawSamplePeakDBFS": [
+        -5.816619910355197,
+        -5.705960920485928
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.142412621388602,
+        -5.068599770662244
+      ]
+    },
+    {
+      "fixture": "percussion-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.07547873664389,
+        -27.048657255923352
+      ],
+      "gainDB": [
+        0.0,
+        -0.02682148072053888
+      ],
+      "matchedLUFS": [
+        -27.07547873664389,
+        -27.07547873664389
+      ],
+      "presenceBandDeltaDB": 0.2603478624335034,
+      "highBandDeltaDB": 0.04695535363558733,
+      "residualRelativeDB": -41.93370929726988,
+      "tailRMSDB": [
+        -105.34317842413536,
+        -105.37869165175863
+      ],
+      "stereoCorrelation": [
+        0.9999724710514695,
+        0.9999721909662084
+      ],
+      "rawSamplePeakDBFS": [
+        -4.754501444094414,
+        -4.720823803391174
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.748973938481825,
+        -4.715296298085211
+      ]
+    },
+    {
+      "fixture": "percussion-48000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.08860920435966,
+        -27.061608127750155
+      ],
+      "gainDB": [
+        0.0,
+        -0.027001076609504578
+      ],
+      "matchedLUFS": [
+        -27.08860920435966,
+        -27.08860920435966
+      ],
+      "presenceBandDeltaDB": 0.2603064937716928,
+      "highBandDeltaDB": 0.04668570471949739,
+      "residualRelativeDB": -41.89531057814165,
+      "tailRMSDB": [
+        -69.19135435541745,
+        -69.1875883212457
+      ],
+      "stereoCorrelation": [
+        0.9979329782257467,
+        0.997910537107674
+      ],
+      "rawSamplePeakDBFS": [
+        -5.041584670714441,
+        -5.008604858373945
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.036057298529082,
+        -5.003077244392536
+      ]
+    },
+    {
+      "fixture": "percussion-48000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -28.385303207554887,
+        -28.345281405311493
+      ],
+      "gainDB": [
+        0.0,
+        -0.04002180224339488
+      ],
+      "matchedLUFS": [
+        -28.385303207554887,
+        -28.385303207554887
+      ],
+      "presenceBandDeltaDB": 0.24270146950340019,
+      "highBandDeltaDB": 0.028758406115808304,
+      "residualRelativeDB": -38.22769706500022,
+      "tailRMSDB": [
+        -71.7942062249169,
+        -71.76323000896122
+      ],
+      "stereoCorrelation": [
+        0.9967641054702203,
+        0.9967157985741142
+      ],
+      "rawSamplePeakDBFS": [
+        -5.468695936588963,
+        -5.361474323080015
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.935506276820592,
+        -4.860682669024682
+      ]
+    },
+    {
+      "fixture": "percussion-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.00602100442224,
+        -26.990292541510264
+      ],
+      "gainDB": [
+        0.0,
+        -0.015728462911976597
+      ],
+      "matchedLUFS": [
+        -27.00602100442224,
+        -27.00602100442224
+      ],
+      "presenceBandDeltaDB": 0.2681500427338049,
+      "highBandDeltaDB": 0.06128244384923851,
+      "residualRelativeDB": -44.18300412107166,
+      "tailRMSDB": [
+        -105.3638857924145,
+        -105.388292017845
+      ],
+      "stereoCorrelation": [
+        0.9999999999999415,
+        0.9999999999999512
+      ],
+      "rawSamplePeakDBFS": [
+        -5.278631528141889,
+        -5.319779361544688
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.840439945310433,
+        -4.8432605454002875
+      ]
+    },
+    {
+      "fixture": "percussion-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.00602100442224,
+        -26.958874822450298
+      ],
+      "gainDB": [
+        0.0,
+        -0.04714618197194341
+      ],
+      "matchedLUFS": [
+        -27.00602100442224,
+        -27.00602100442224
+      ],
+      "presenceBandDeltaDB": 0.7697086144905956,
+      "highBandDeltaDB": 0.17358414157809576,
+      "residualRelativeDB": -34.86375540565586,
+      "tailRMSDB": [
+        -105.3638857924145,
+        -105.4359049629315
+      ],
+      "stereoCorrelation": [
+        0.9999999999999415,
+        0.9999999999999443
+      ],
+      "rawSamplePeakDBFS": [
+        -5.278631528141889,
+        -5.400881606507225
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.840439945310433,
+        -4.85264110626553
+      ]
+    },
+    {
+      "fixture": "percussion-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -28.239397198792105,
+        -28.218779906091576
+      ],
+      "gainDB": [
+        0.0,
+        -0.020617292700528818
+      ],
+      "matchedLUFS": [
+        -28.239397198792105,
+        -28.239397198792105
+      ],
+      "presenceBandDeltaDB": 0.2575052844008953,
+      "highBandDeltaDB": 0.05193086364137195,
+      "residualRelativeDB": -40.55355956864474,
+      "tailRMSDB": [
+        -88.07925054372306,
+        -88.09992073773793
+      ],
+      "stereoCorrelation": [
+        0.9999999999999637,
+        0.9999999999999468
+      ],
+      "rawSamplePeakDBFS": [
+        -5.18303903283447,
+        -5.240830983401582
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.64272672781876,
+        -4.609851190947903
+      ]
+    },
+    {
+      "fixture": "percussion-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.001582075917653,
+        -26.985864461120816
+      ],
+      "gainDB": [
+        0.0,
+        -0.015717614796837434
+      ],
+      "matchedLUFS": [
+        -27.001582075917653,
+        -27.001582075917653
+      ],
+      "presenceBandDeltaDB": 0.26832223856209525,
+      "highBandDeltaDB": 0.061155592399042176,
+      "residualRelativeDB": -44.18824215004343,
+      "tailRMSDB": [
+        -105.3638857924145,
+        -105.38828113713797
+      ],
+      "stereoCorrelation": [
+        0.9999884278236056,
+        0.9999882891135573
+      ],
+      "rawSamplePeakDBFS": [
+        -5.227179453389007,
+        -5.269903136988237
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.804634767342426,
+        -4.8071024930001895
+      ]
+    },
+    {
+      "fixture": "percussion-96000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -27.0106993096083,
+        -26.994816797170845
+      ],
+      "gainDB": [
+        0.0,
+        -0.015882512437454175
+      ],
+      "matchedLUFS": [
+        -27.0106993096083,
+        -27.0106993096083
+      ],
+      "presenceBandDeltaDB": 0.2680882273929415,
+      "highBandDeltaDB": 0.06116179373478667,
+      "residualRelativeDB": -44.139240921721424,
+      "tailRMSDB": [
+        -69.65185671852484,
+        -69.64230238955504
+      ],
+      "stereoCorrelation": [
+        0.9982953343077231,
+        0.9982809374428692
+      ],
+      "rawSamplePeakDBFS": [
+        -5.280700414326777,
+        -5.321878136650913
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.839953665177329,
+        -4.842779532144102
+      ]
+    },
+    {
+      "fixture": "percussion-96000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -28.23579434315778,
+        -28.21481673703461
+      ],
+      "gainDB": [
+        0.0,
+        -0.020977606123171254
+      ],
+      "matchedLUFS": [
+        -28.23579434315778,
+        -28.23579434315778
+      ],
+      "presenceBandDeltaDB": 0.2567822811538489,
+      "highBandDeltaDB": 0.05173802466845411,
+      "residualRelativeDB": -40.483322992336895,
+      "tailRMSDB": [
+        -73.06248821753809,
+        -73.01985682746432
+      ],
+      "stereoCorrelation": [
+        0.9976966955729396,
+        0.9976645764276633
+      ],
+      "rawSamplePeakDBFS": [
+        -5.181450144617116,
+        -5.241838153369009
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -4.635038835151858,
+        -4.600939223373166
+      ]
+    },
+    {
+      "fixture": "quiet_noise-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.05798820501546968
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.22110968029105288,
+      "highBandDeltaDB": 0.014202107970702241,
+      "residualRelativeDB": -35.55660921372303,
+      "tailRMSDB": [
+        -140.27764030167248,
+        -140.2881966102334
+      ],
+      "stereoCorrelation": [
+        0.9999999999999386,
+        0.9999999999999348
+      ],
+      "rawSamplePeakDBFS": [
+        -67.36164594704039,
+        -67.30897329747746
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -67.35611829321223,
+        -67.30344564716957
+      ]
+    },
+    {
+      "fixture": "quiet_noise-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.17247580186659195
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.6304600913199142,
+      "highBandDeltaDB": 0.03450286785564636,
+      "residualRelativeDB": -26.298833721221932,
+      "tailRMSDB": [
+        -140.27764030167248,
+        -140.3100883294982
+      ],
+      "stereoCorrelation": [
+        0.9999999999999386,
+        0.9999999999999373
+      ],
+      "rawSamplePeakDBFS": [
+        -67.36164594704039,
+        -67.21093638851772
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -67.35611829321223,
+        -67.20540875397194
+      ]
+    },
+    {
+      "fixture": "quiet_noise-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.0578421231003417
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.22124936689671443,
+      "highBandDeltaDB": 0.014763502676318596,
+      "residualRelativeDB": -35.56581116008618,
+      "tailRMSDB": [
+        -117.48840537513516,
+        -117.48030750993252
+      ],
+      "stereoCorrelation": [
+        0.9999999999999336,
+        0.9999999999999389
+      ],
+      "rawSamplePeakDBFS": [
+        -66.31281890838963,
+        -66.23914208409575
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -66.30729116874879,
+        -66.23361438717541
+      ]
+    },
+    {
+      "fixture": "quiet_noise-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.05798820007979836
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.22110977612571722,
+      "highBandDeltaDB": 0.01420211174701418,
+      "residualRelativeDB": -35.556609739358066,
+      "tailRMSDB": [
+        -140.27763828862444,
+        -140.28819436083427
+      ],
+      "stereoCorrelation": [
+        0.9999999997447331,
+        0.99999999974396
+      ],
+      "rawSamplePeakDBFS": [
+        -67.36140582326546,
+        -67.30873403901629
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -67.35587832220007,
+        -67.30320654092056
+      ]
+    },
+    {
+      "fixture": "quiet_noise-48000.f32",
+      "pair": "space0 / space35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.05832759359377025
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.22106197555063484,
+      "highBandDeltaDB": 0.013869516041394695,
+      "residualRelativeDB": -35.53534172070373,
+      "tailRMSDB": [
+        -117.87238125519885,
+        -117.79772672213917
+      ],
+      "stereoCorrelation": [
+        0.9948543724190946,
+        0.9947841131864729
+      ],
+      "rawSamplePeakDBFS": [
+        -67.3991595264475,
+        -67.329225650233
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -67.39363223411137,
+        -67.32369802377048
+      ]
+    },
+    {
+      "fixture": "quiet_noise-48000.f32",
+      "pair": "all0 / all35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.058181934697668136
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.22119769166677575,
+      "highBandDeltaDB": 0.014429029566103542,
+      "residualRelativeDB": -35.54445243694442,
+      "tailRMSDB": [
+        -114.07994687798946,
+        -114.03335875300301
+      ],
+      "stereoCorrelation": [
+        0.9950502828696243,
+        0.9949792484171879
+      ],
+      "rawSamplePeakDBFS": [
+        -66.25943266118294,
+        -66.18632906871575
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -66.25390502410264,
+        -66.18080139455327
+      ]
+    },
+    {
+      "fixture": "quiet_noise-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.031311216820265116
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.24964412980425765,
+      "highBandDeltaDB": 0.045169055229971826,
+      "residualRelativeDB": -37.924171194424446,
+      "tailRMSDB": [
+        -142.4342246281977,
+        -142.43186350849922
+      ],
+      "stereoCorrelation": [
+        0.9999999999999121,
+        0.9999999999998863
+      ],
+      "rawSamplePeakDBFS": [
+        -66.630123475338,
+        -66.60122697672212
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -66.62459609091027,
+        -66.59569957799901
+      ]
+    },
+    {
+      "fixture": "quiet_noise-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.0934653280814364
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.7146020057906679,
+      "highBandDeltaDB": 0.12575862135929194,
+      "residualRelativeDB": -28.637526418607294,
+      "tailRMSDB": [
+        -142.4342246281977,
+        -142.4262916804944
+      ],
+      "stereoCorrelation": [
+        0.9999999999999121,
+        0.9999999999999047
+      ],
+      "rawSamplePeakDBFS": [
+        -66.630123475338,
+        -66.54766251298292
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -66.62459609091027,
+        -66.54213526215626
+      ]
+    },
+    {
+      "fixture": "quiet_noise-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.03074242074924697
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.25005975080921666,
+      "highBandDeltaDB": 0.04613951041223251,
+      "residualRelativeDB": -37.997438450205415,
+      "tailRMSDB": [
+        -124.59091400470831,
+        -124.58669877957882
+      ],
+      "stereoCorrelation": [
+        0.9999999999999274,
+        0.9999999999999211
+      ],
+      "rawSamplePeakDBFS": [
+        -65.75432582967261,
+        -65.72710274895043
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -65.74879872572376,
+        -65.72157535014519
+      ]
+    },
+    {
+      "fixture": "quiet_noise-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.03131120961964173
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.24964413173582226,
+      "highBandDeltaDB": 0.045169022150890185,
+      "residualRelativeDB": -37.924172085045896,
+      "tailRMSDB": [
+        -142.434226539824,
+        -142.43186538084962
+      ],
+      "stereoCorrelation": [
+        0.9999999999347315,
+        0.9999999999342024
+      ],
+      "rawSamplePeakDBFS": [
+        -66.63026068812448,
+        -66.60136373377956
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -66.62473321640663,
+        -66.59583624805602
+      ]
+    },
+    {
+      "fixture": "quiet_noise-96000.f32",
+      "pair": "space0 / space35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.03152756865407895
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.249592852053786,
+      "highBandDeltaDB": 0.044982446638912606,
+      "residualRelativeDB": -37.89668426158893,
+      "tailRMSDB": [
+        -119.79995149002968,
+        -119.71544003139435
+      ],
+      "stereoCorrelation": [
+        0.9968159943200142,
+        0.9967603835757021
+      ],
+      "rawSamplePeakDBFS": [
+        -66.62748648234636,
+        -66.60062646034825
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -66.62195914972904,
+        -66.59509890348191
+      ]
+    },
+    {
+      "fixture": "quiet_noise-96000.f32",
+      "pair": "all0 / all35",
+      "method": "RMS (gated)",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        -0.030953790522011713
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": 0.25001751113465825,
+      "highBandDeltaDB": 0.04596067188565833,
+      "residualRelativeDB": -37.97003902516556,
+      "tailRMSDB": [
+        -117.85588424091763,
+        -117.78319403893786
+      ],
+      "stereoCorrelation": [
+        0.9969603142492152,
+        0.996905645427785
+      ],
+      "rawSamplePeakDBFS": [
+        -65.75628929802134,
+        -65.73106771589295
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -65.75076192515259,
+        -65.7255397489433
+      ]
+    },
+    {
+      "fixture": "silence-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-48000.f32",
+      "pair": "space0 / space35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-48000.f32",
+      "pair": "all0 / all35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-96000.f32",
+      "pair": "space0 / space35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "silence-96000.f32",
+      "pair": "all0 / all35",
+      "method": "silence",
+      "rawLUFS": [
+        null,
+        null
+      ],
+      "gainDB": [
+        0.0,
+        0.0
+      ],
+      "matchedLUFS": [
+        null,
+        null
+      ],
+      "presenceBandDeltaDB": null,
+      "highBandDeltaDB": null,
+      "residualRelativeDB": null,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        null,
+        null
+      ],
+      "rawSamplePeakDBFS": [
+        null,
+        null
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        null,
+        null
+      ]
+    },
+    {
+      "fixture": "stress-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.657848709325313,
+        -13.627152075201895
+      ],
+      "gainDB": [
+        -9.342151290674687,
+        -9.372847924798105
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21637671098639827,
+      "highBandDeltaDB": 0.010959560407085827,
+      "residualRelativeDB": -38.68968457145598,
+      "tailRMSDB": [
+        -89.91992610787247,
+        -89.94473938343795
+      ],
+      "stereoCorrelation": [
+        0.7910871740299944,
+        0.7920927305845298
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0114851180286892,
+        -1.011326326494704
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.5930015334022807,
+        0.5370613190326652
+      ]
+    },
+    {
+      "fixture": "stress-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.657848709325313,
+        -13.56711350317606
+      ],
+      "gainDB": [
+        -9.342151290674687,
+        -9.43288649682394
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.6174776805582607,
+      "highBandDeltaDB": 0.018186197030322187,
+      "residualRelativeDB": -29.40604395408137,
+      "tailRMSDB": [
+        -89.91992610787247,
+        -89.99373869584248
+      ],
+      "stereoCorrelation": [
+        0.7910871740299944,
+        0.7939364531747921
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0114851180286892,
+        -1.0017640532595136
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.5930015334022807,
+        0.4322749933017349
+      ]
+    },
+    {
+      "fixture": "stress-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -16.894718779806386,
+        -16.884255823904013
+      ],
+      "gainDB": [
+        -6.105281220193614,
+        -6.115744176095987
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.2111528701400222,
+      "highBandDeltaDB": 0.0405042370795616,
+      "residualRelativeDB": -38.26205419954814,
+      "tailRMSDB": [
+        -64.64042793427,
+        -64.64501521464209
+      ],
+      "stereoCorrelation": [
+        0.7154388381275508,
+        0.7156794746044736
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0757542673735103,
+        -1.0729379224931703
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -1.070226727796543,
+        -1.0674104180760264
+      ]
+    },
+    {
+      "fixture": "stress-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.654070985768058,
+        -13.621469263337376
+      ],
+      "gainDB": [
+        -9.345929014231942,
+        -9.378530736662624
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21430048052179124,
+      "highBandDeltaDB": 0.01858786180210087,
+      "residualRelativeDB": -38.787003285755056,
+      "tailRMSDB": [
+        -89.92339696018482,
+        -89.95011582163147
+      ],
+      "stereoCorrelation": [
+        0.792457694786483,
+        0.7933223982634815
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0058442733340833,
+        -1.005324623070189
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.4276809215597672,
+        0.37370672333445987
+      ]
+    },
+    {
+      "fixture": "stress-48000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.681248761858257,
+        -13.651214054023724
+      ],
+      "gainDB": [
+        -9.318751238141743,
+        -9.348785945976276
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.2153758741468305,
+      "highBandDeltaDB": 0.002100303984257924,
+      "residualRelativeDB": -38.542558838116115,
+      "tailRMSDB": [
+        -56.155183226117,
+        -56.16030792373277
+      ],
+      "stereoCorrelation": [
+        0.7791573833736497,
+        0.7801180441275679
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0002314875993448,
+        -1.0202132278208353
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.5791289226722572,
+        0.5230873042979404
+      ]
+    },
+    {
+      "fixture": "stress-48000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -16.950778083177482,
+        -16.937516448147928
+      ],
+      "gainDB": [
+        -6.049221916822518,
+        -6.062483551852072
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21157558973791848,
+      "highBandDeltaDB": 0.0365719367628675,
+      "residualRelativeDB": -38.6394635950997,
+      "tailRMSDB": [
+        -54.917239038239714,
+        -54.925272883604194
+      ],
+      "stereoCorrelation": [
+        0.7028658846443293,
+        0.703313958204773
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0699591098358106,
+        -1.0669766353084211
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -1.0644317444927593,
+        -1.061449411923243
+      ]
+    },
+    {
+      "fixture": "stress-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.677077795722928,
+        -13.64403104505683
+      ],
+      "gainDB": [
+        -9.322922204277072,
+        -9.35596895494317
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21503720207692673,
+      "highBandDeltaDB": 0.0403196135396272,
+      "residualRelativeDB": -38.91023344691743,
+      "tailRMSDB": [
+        -89.90145861954709,
+        -89.92872001985192
+      ],
+      "stereoCorrelation": [
+        0.7906870980589258,
+        0.7914010813274872
+      ],
+      "rawSamplePeakDBFS": [
+        -1.009750783194702,
+        -1.0010796520096268
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.539222871886854,
+        0.5305247268159579
+      ]
+    },
+    {
+      "fixture": "stress-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.677077795722928,
+        -13.586798399568096
+      ],
+      "gainDB": [
+        -9.322922204277072,
+        -9.413201600431904
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.6205664582855803,
+      "highBandDeltaDB": 0.07558101943677305,
+      "residualRelativeDB": -29.667335267363832,
+      "tailRMSDB": [
+        -89.90145861954709,
+        -89.97509869410116
+      ],
+      "stereoCorrelation": [
+        0.7906870980589258,
+        0.7932496188133287
+      ],
+      "rawSamplePeakDBFS": [
+        -1.009750783194702,
+        -1.0031504505868956
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.539222871886854,
+        0.5107574881317104
+      ]
+    },
+    {
+      "fixture": "stress-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -17.76099079727987,
+        -17.75282981160165
+      ],
+      "gainDB": [
+        -5.23900920272013,
+        -5.24717018839835
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21504546657025841,
+      "highBandDeltaDB": 0.04958375222730316,
+      "residualRelativeDB": -38.6555220970141,
+      "tailRMSDB": [
+        -70.13857745352429,
+        -70.14088513494795
+      ],
+      "stereoCorrelation": [
+        0.6722955428448805,
+        0.672446064836208
+      ],
+      "rawSamplePeakDBFS": [
+        -2.299078751642493,
+        -2.324321943154177
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -1.939928838256646,
+        -1.9568820486333551
+      ]
+    },
+    {
+      "fixture": "stress-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.665897490076087,
+        -13.634365970979152
+      ],
+      "gainDB": [
+        -9.334102509923913,
+        -9.365634029020848
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21474528943744897,
+      "highBandDeltaDB": 0.02912040460000865,
+      "residualRelativeDB": -38.9615367670129,
+      "tailRMSDB": [
+        -89.91254753096968,
+        -89.93829398362394
+      ],
+      "stereoCorrelation": [
+        0.7913074274622616,
+        0.7921358031836555
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0065191675664438,
+        -1.0058710123318428
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.49479778403282815,
+        0.4860706801655821
+      ]
+    },
+    {
+      "fixture": "stress-96000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -13.68788803698405,
+        -13.662578947688655
+      ],
+      "gainDB": [
+        -9.31211196301595,
+        -9.337421052311345
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21673432838847526,
+      "highBandDeltaDB": 0.018915190446843193,
+      "residualRelativeDB": -37.170892364816176,
+      "tailRMSDB": [
+        -56.10336183804347,
+        -56.10254021437315
+      ],
+      "stereoCorrelation": [
+        0.7769710575230188,
+        0.7780689753432427
+      ],
+      "rawSamplePeakDBFS": [
+        -1.0045638042131686,
+        -1.00795748923177
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        0.5528639566190057,
+        0.5452015661215814
+      ]
+    },
+    {
+      "fixture": "stress-96000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -17.824559707964983,
+        -17.81195117631356
+      ],
+      "gainDB": [
+        -5.175440292035015,
+        -5.18804882368644
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.2132351365016007,
+      "highBandDeltaDB": 0.0537906476456301,
+      "residualRelativeDB": -38.27363709408871,
+      "tailRMSDB": [
+        -55.17560205415702,
+        -55.16430256059306
+      ],
+      "stereoCorrelation": [
+        0.6567740436858148,
+        0.6568979861840266
+      ],
+      "rawSamplePeakDBFS": [
+        -2.454716914063249,
+        -2.4648214957893098
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -2.150402974595451,
+        -2.164284595730646
+      ]
+    },
+    {
+      "fixture": "tail-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.64665261829133,
+        -22.515472891107017
+      ],
+      "gainDB": [
+        -0.3533473817086691,
+        -0.484527108892983
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.1954419875608484,
+      "highBandDeltaDB": -0.02548999337601211,
+      "residualRelativeDB": -34.289714855839485,
+      "tailRMSDB": [
+        -142.1650158607388,
+        -142.23897558806698
+      ],
+      "stereoCorrelation": [
+        0.9999999999999805,
+        0.999999999999986
+      ],
+      "rawSamplePeakDBFS": [
+        -11.530664939342092,
+        -11.4161322101776
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.52513772843921,
+        -11.410605160269224
+      ]
+    },
+    {
+      "fixture": "tail-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.64665261829133,
+        -22.256604230201756
+      ],
+      "gainDB": [
+        -0.3533473817086691,
+        -0.7433957697982442
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.5428367685688038,
+      "highBandDeltaDB": -0.08743140101937544,
+      "residualRelativeDB": -25.051219820296136,
+      "tailRMSDB": [
+        -142.1650158607388,
+        -142.38033953510129
+      ],
+      "stereoCorrelation": [
+        0.9999999999999805,
+        0.9999999999999888
+      ],
+      "rawSamplePeakDBFS": [
+        -11.530664939342092,
+        -11.199830801794343
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.52513772843921,
+        -11.194303456283816
+      ]
+    },
+    {
+      "fixture": "tail-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.217457193403646,
+        -22.07257060723843
+      ],
+      "gainDB": [
+        -0.7825428065963531,
+        -0.9274293927615715
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.1699391047268789,
+      "highBandDeltaDB": -0.08726333618370305,
+      "residualRelativeDB": -33.46635541995815,
+      "tailRMSDB": [
+        -119.4442556986308,
+        -119.50015115583679
+      ],
+      "stereoCorrelation": [
+        0.999999999999959,
+        0.9999999999999741
+      ],
+      "rawSamplePeakDBFS": [
+        -11.61818148432789,
+        -11.523021668568557
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.612653512271331,
+        -11.517494443461764
+      ]
+    },
+    {
+      "fixture": "tail-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.646096171380293,
+        -22.51492583379005
+      ],
+      "gainDB": [
+        -0.35390382861970693,
+        -0.48507416620995175
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.1954516509059878,
+      "highBandDeltaDB": -0.0776341440575404,
+      "residualRelativeDB": -34.28990551012512,
+      "tailRMSDB": [
+        -142.16553723411744,
+        -142.23948777516847
+      ],
+      "stereoCorrelation": [
+        0.9999965233736576,
+        0.9999965370931941
+      ],
+      "rawSamplePeakDBFS": [
+        -11.54121377872425,
+        -11.4262572360324
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.535046847542267,
+        -11.420729525927795
+      ]
+    },
+    {
+      "fixture": "tail-48000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.52771640309894,
+        -22.40278208691751
+      ],
+      "gainDB": [
+        -0.47228359690106053,
+        -0.5972179130824882
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.20168487710541014,
+      "highBandDeltaDB": -0.01924603121773345,
+      "residualRelativeDB": -34.50932158383487,
+      "tailRMSDB": [
+        -104.71980365855067,
+        -104.81879815965014
+      ],
+      "stereoCorrelation": [
+        0.9787574321997489,
+        0.978522143299944
+      ],
+      "rawSamplePeakDBFS": [
+        -11.530664939342092,
+        -11.4161322101776
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.52513772843921,
+        -11.410605160269224
+      ]
+    },
+    {
+      "fixture": "tail-48000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.127615740526828,
+        -22.29828919473522
+      ],
+      "gainDB": [
+        -0.8723842594731723,
+        -0.7017108052647814
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.48492402287565817,
+      "highBandDeltaDB": 0.2042233745940039,
+      "residualRelativeDB": -29.263358543240166,
+      "tailRMSDB": [
+        -104.91943199874824,
+        -104.71315854213472
+      ],
+      "stereoCorrelation": [
+        0.9777082888686246,
+        0.977446995794013
+      ],
+      "rawSamplePeakDBFS": [
+        -11.66645967348957,
+        -11.569964191974108
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.660932614663054,
+        -11.564436427950039
+      ]
+    },
+    {
+      "fixture": "tail-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.670251105507944,
+        -22.538978171629633
+      ],
+      "gainDB": [
+        -0.32974889449205613,
+        -0.4610218283703664
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.19591173770479797,
+      "highBandDeltaDB": -0.021787746863546623,
+      "residualRelativeDB": -34.2864498370661,
+      "tailRMSDB": [
+        -142.20361836917408,
+        -142.27869775301795
+      ],
+      "stereoCorrelation": [
+        0.9999999999999674,
+        0.9999999999999517
+      ],
+      "rawSamplePeakDBFS": [
+        -11.530664939342092,
+        -11.41599057053585
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.52513772843921,
+        -11.410462647812778
+      ]
+    },
+    {
+      "fixture": "tail-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.670251105507944,
+        -22.279879390254138
+      ],
+      "gainDB": [
+        -0.32974889449205613,
+        -0.7201206097458623
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.5441209219161705,
+      "highBandDeltaDB": -0.07688183822626717,
+      "residualRelativeDB": -25.04748722131886,
+      "tailRMSDB": [
+        -142.20361836917408,
+        -142.42204335138308
+      ],
+      "stereoCorrelation": [
+        0.9999999999999674,
+        0.9999999999999679
+      ],
+      "rawSamplePeakDBFS": [
+        -11.530664939342092,
+        -11.199378748404314
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.52513772843921,
+        -11.193851690463116
+      ]
+    },
+    {
+      "fixture": "tail-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.241593143739575,
+        -22.09733659429656
+      ],
+      "gainDB": [
+        -0.7584068562604254,
+        -0.902663405703439
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.1700441619533313,
+      "highBandDeltaDB": -0.15825390924971164,
+      "residualRelativeDB": -33.366388941974485,
+      "tailRMSDB": [
+        -126.01115887556317,
+        -126.07521473067996
+      ],
+      "stereoCorrelation": [
+        0.9999999999999646,
+        0.9999999999999404
+      ],
+      "rawSamplePeakDBFS": [
+        -11.792969443160148,
+        -11.702710044543442
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.78703248948276,
+        -11.697182768103879
+      ]
+    },
+    {
+      "fixture": "tail-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.66973822755666,
+        -22.53847328526952
+      ],
+      "gainDB": [
+        -0.3302617724433399,
+        -0.4615267147304789
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.1959198190633486,
+      "highBandDeltaDB": -0.07324733476726783,
+      "residualRelativeDB": -34.28659572268535,
+      "tailRMSDB": [
+        -142.2041206518503,
+        -142.27919220917602
+      ],
+      "stereoCorrelation": [
+        0.9999967551703177,
+        0.9999967641296461
+      ],
+      "rawSamplePeakDBFS": [
+        -11.549192039850503,
+        -11.433796483162128
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.53880062013596,
+        -11.426569793659624
+      ]
+    },
+    {
+      "fixture": "tail-96000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.605441494566257,
+        -22.478730982461396
+      ],
+      "gainDB": [
+        -0.394558505433743,
+        -0.5212690175386038
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.20047403847342626,
+      "highBandDeltaDB": -0.01718301970634425,
+      "residualRelativeDB": -34.44488783218456,
+      "tailRMSDB": [
+        -107.9420196916262,
+        -108.04415216422063
+      ],
+      "stereoCorrelation": [
+        0.9820218378076628,
+        0.9820977498423302
+      ],
+      "rawSamplePeakDBFS": [
+        -11.530664939342092,
+        -11.41599057053585
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.52513772843921,
+        -11.410462647812778
+      ]
+    },
+    {
+      "fixture": "tail-96000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.507441884468715,
+        -22.36830456552232
+      ],
+      "gainDB": [
+        -0.4925581155312853,
+        -0.6316954344776806
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.17475725902482214,
+      "highBandDeltaDB": -0.10173721603253222,
+      "residualRelativeDB": -33.48898828273196,
+      "tailRMSDB": [
+        -107.91386001148783,
+        -108.02036832194439
+      ],
+      "stereoCorrelation": [
+        0.9824251243771229,
+        0.9825150145232536
+      ],
+      "rawSamplePeakDBFS": [
+        -11.754944489812784,
+        -11.666010437677334
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.7494169250773,
+        -11.660482673578958
+      ]
+    },
+    {
+      "fixture": "voice_mix-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.85898418760382,
+        -22.82201155501027
+      ],
+      "gainDB": [
+        -0.1410158123961802,
+        -0.17798844498972927
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21726814133337563,
+      "highBandDeltaDB": 0.03629202991210701,
+      "residualRelativeDB": -38.94844038099528,
+      "tailRMSDB": [
+        -90.26121579854208,
+        -90.29230542394585
+      ],
+      "stereoCorrelation": [
+        0.7767899842274157,
+        0.7775149053185669
+      ],
+      "rawSamplePeakDBFS": [
+        -5.527364299944539,
+        -5.382390847050406
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.503501671641003,
+        -5.369892723455254
+      ]
+    },
+    {
+      "fixture": "voice_mix-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.85898418760382,
+        -22.7492386411903
+      ],
+      "gainDB": [
+        -0.1410158123961802,
+        -0.25076135880970085
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.6237471759417469,
+      "highBandDeltaDB": 0.10029727578371823,
+      "residualRelativeDB": -29.713818782080345,
+      "tailRMSDB": [
+        -90.26121579854208,
+        -90.35403903733994
+      ],
+      "stereoCorrelation": [
+        0.7767899842274157,
+        0.7789518093305522
+      ],
+      "rawSamplePeakDBFS": [
+        -5.527364299944539,
+        -5.112233735084757
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.503501671641003,
+        -5.106705972948573
+      ]
+    },
+    {
+      "fixture": "voice_mix-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.0422532424093,
+        -22.99987550963452
+      ],
+      "gainDB": [
+        0.0,
+        -0.042377732774777924
+      ],
+      "matchedLUFS": [
+        -23.0422532424093,
+        -23.0422532424093
+      ],
+      "presenceBandDeltaDB": 0.21678632699809577,
+      "highBandDeltaDB": 0.02951925124071633,
+      "residualRelativeDB": -38.21509393562672,
+      "tailRMSDB": [
+        -68.07757199545927,
+        -68.11407369535787
+      ],
+      "stereoCorrelation": [
+        0.763957686900347,
+        0.7649551611715464
+      ],
+      "rawSamplePeakDBFS": [
+        -6.178218908884382,
+        -6.02764116130192
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -6.061714419568683,
+        -5.924788928744029
+      ]
+    },
+    {
+      "fixture": "voice_mix-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.851241931018794,
+        -22.81423661998041
+      ],
+      "gainDB": [
+        -0.14875806898120586,
+        -0.18576338001959036
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.216767301693013,
+      "highBandDeltaDB": 0.036263010624335,
+      "residualRelativeDB": -38.943338602955485,
+      "tailRMSDB": [
+        -90.26885568649674,
+        -90.29997783396014
+      ],
+      "stereoCorrelation": [
+        0.7770072583697412,
+        0.7777328038478257
+      ],
+      "rawSamplePeakDBFS": [
+        -5.2987079699107555,
+        -5.1568060387645485
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.28172838523619,
+        -5.1511599122745535
+      ]
+    },
+    {
+      "fixture": "voice_mix-48000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.885025257784562,
+        -22.84735846953186
+      ],
+      "gainDB": [
+        -0.11497474221543778,
+        -0.1526415304681417
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21683247548636847,
+      "highBandDeltaDB": 0.035604718540093165,
+      "residualRelativeDB": -38.864845697651035,
+      "tailRMSDB": [
+        -56.49383204054443,
+        -56.506588742581194
+      ],
+      "stereoCorrelation": [
+        0.765965520849,
+        0.7666878689122621
+      ],
+      "rawSamplePeakDBFS": [
+        -5.497710520480215,
+        -5.352996955185767
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.472244313520776,
+        -5.338861799015819
+      ]
+    },
+    {
+      "fixture": "voice_mix-48000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.055475291632447,
+        -23.01243563969755
+      ],
+      "gainDB": [
+        0.0,
+        -0.04303965193489774
+      ],
+      "matchedLUFS": [
+        -23.055475291632447,
+        -23.055475291632447
+      ],
+      "presenceBandDeltaDB": 0.21572705736814388,
+      "highBandDeltaDB": 0.028149170163607455,
+      "residualRelativeDB": -38.12651237961707,
+      "tailRMSDB": [
+        -55.90240519600597,
+        -55.9188244729264
+      ],
+      "stereoCorrelation": [
+        0.7526605220366278,
+        0.7536555691494581
+      ],
+      "rawSamplePeakDBFS": [
+        -5.922150275582495,
+        -5.7731353322208045
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.812426623183386,
+        -5.676945126178161
+      ]
+    },
+    {
+      "fixture": "voice_mix-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.873012432445393,
+        -22.8382387194208
+      ],
+      "gainDB": [
+        -0.12698756755460713,
+        -0.16176128057919942
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21683024785439953,
+      "highBandDeltaDB": 0.0421852523120743,
+      "residualRelativeDB": -39.13385469261654,
+      "tailRMSDB": [
+        -90.24794885887125,
+        -90.27693766137313
+      ],
+      "stereoCorrelation": [
+        0.7767243382960367,
+        0.777413294458619
+      ],
+      "rawSamplePeakDBFS": [
+        -6.0990871489123935,
+        -6.038983896091762
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -6.008859763189694,
+        -5.949969628034895
+      ]
+    },
+    {
+      "fixture": "voice_mix-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.873012432445393,
+        -22.769791476992005
+      ],
+      "gainDB": [
+        -0.12698756755460713,
+        -0.23020852300799483
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.6227953387771344,
+      "highBandDeltaDB": 0.11735493713200527,
+      "residualRelativeDB": -29.899823195606032,
+      "tailRMSDB": [
+        -90.24794885887125,
+        -90.33453100630234
+      ],
+      "stereoCorrelation": [
+        0.7767243382960367,
+        0.778779546966153
+      ],
+      "rawSamplePeakDBFS": [
+        -6.0990871489123935,
+        -5.929828863942841
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -6.008859763189694,
+        -5.843302289659228
+      ]
+    },
+    {
+      "fixture": "voice_mix-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.1119264370058,
+        -23.074995103912496
+      ],
+      "gainDB": [
+        0.0,
+        -0.036931333093302814
+      ],
+      "matchedLUFS": [
+        -23.1119264370058,
+        -23.1119264370058
+      ],
+      "presenceBandDeltaDB": 0.216438664069931,
+      "highBandDeltaDB": 0.038549429304637325,
+      "residualRelativeDB": -38.45858847281613,
+      "tailRMSDB": [
+        -74.44199341908563,
+        -74.47307112362346
+      ],
+      "stereoCorrelation": [
+        0.7622853628025186,
+        0.7631353060625247
+      ],
+      "rawSamplePeakDBFS": [
+        -6.330457337401391,
+        -6.306643233358301
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -6.0714429916333925,
+        -6.041954108365961
+      ]
+    },
+    {
+      "fixture": "voice_mix-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.867100201558184,
+        -22.83229098043847
+      ],
+      "gainDB": [
+        -0.1328997984418157,
+        -0.1677090195615312
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21630589802963507,
+      "highBandDeltaDB": 0.04205446499695789,
+      "residualRelativeDB": -39.12695588906148,
+      "tailRMSDB": [
+        -90.25383107995583,
+        -90.28285527989476
+      ],
+      "stereoCorrelation": [
+        0.7768826958602542,
+        0.7775730987388786
+      ],
+      "rawSamplePeakDBFS": [
+        -6.092433560407114,
+        -6.033471147446257
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.938902994603553,
+        -5.945382993106568
+      ]
+    },
+    {
+      "fixture": "voice_mix-96000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -22.892083029030463,
+        -22.856657119852215
+      ],
+      "gainDB": [
+        -0.10791697096953684,
+        -0.14334288014778446
+      ],
+      "matchedLUFS": [
+        -23.0,
+        -23.0
+      ],
+      "presenceBandDeltaDB": 0.21629540427123176,
+      "highBandDeltaDB": 0.04156836370000968,
+      "residualRelativeDB": -39.04753256682084,
+      "tailRMSDB": [
+        -56.44159211870053,
+        -56.4508872704471
+      ],
+      "stereoCorrelation": [
+        0.7645980691026769,
+        0.7652748092588048
+      ],
+      "rawSamplePeakDBFS": [
+        -6.221030071951512,
+        -6.162502544041413
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -6.129445129584821,
+        -6.072038760059927
+      ]
+    },
+    {
+      "fixture": "voice_mix-96000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -23.120243861914407,
+        -23.082611422003634
+      ],
+      "gainDB": [
+        0.0,
+        -0.037632439910773474
+      ],
+      "matchedLUFS": [
+        -23.120243861914407,
+        -23.120243861914407
+      ],
+      "presenceBandDeltaDB": 0.21511783919718144,
+      "highBandDeltaDB": 0.03811131609554061,
+      "residualRelativeDB": -38.36634275317217,
+      "tailRMSDB": [
+        -56.17029173707316,
+        -56.18167328399026
+      ],
+      "stereoCorrelation": [
+        0.7493899510297746,
+        0.7502284438644834
+      ],
+      "rawSamplePeakDBFS": [
+        -6.268161468561252,
+        -6.245039542693521
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -5.99965341431425,
+        -5.970812982813163
+      ]
+    },
+    {
+      "fixture": "voice_solo-48000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.53919340284384,
+        -24.48388549656568
+      ],
+      "gainDB": [
+        0.0,
+        -0.05530790627815885
+      ],
+      "matchedLUFS": [
+        -24.53919340284384,
+        -24.53919340284384
+      ],
+      "presenceBandDeltaDB": 0.1948423682056964,
+      "highBandDeltaDB": 0.01649497118641974,
+      "residualRelativeDB": -37.097813792304024,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        0.999999999999975,
+        0.9999999999999671
+      ],
+      "rawSamplePeakDBFS": [
+        -13.498552932470304,
+        -13.301495874140873
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.487120304327245,
+        -13.295797636804414
+      ]
+    },
+    {
+      "fixture": "voice_solo-48000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.53919340284384,
+        -24.37539765754944
+      ],
+      "gainDB": [
+        0.0,
+        -0.1637957452944008
+      ],
+      "matchedLUFS": [
+        -24.53919340284384,
+        -24.53919340284384
+      ],
+      "presenceBandDeltaDB": 0.5580594897683401,
+      "highBandDeltaDB": 0.04205210943735416,
+      "residualRelativeDB": -27.87803184233813,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        0.999999999999975,
+        0.9999999999999563
+      ],
+      "rawSamplePeakDBFS": [
+        -13.498552932470304,
+        -12.933433651293491
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.487120304327245,
+        -12.920576172736416
+      ]
+    },
+    {
+      "fixture": "voice_solo-48000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.450433766598458,
+        -24.390690969748697
+      ],
+      "gainDB": [
+        0.0,
+        -0.05974279684976108
+      ],
+      "matchedLUFS": [
+        -24.450433766598458,
+        -24.450433766598458
+      ],
+      "presenceBandDeltaDB": 0.19608565175079756,
+      "highBandDeltaDB": 0.012461228472124365,
+      "residualRelativeDB": -36.821435582455784,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        0.9999999999999688,
+        0.9999999999999495
+      ],
+      "rawSamplePeakDBFS": [
+        -11.017691955833918,
+        -10.847437905054889
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.009423862734408,
+        -10.841910185635593
+      ]
+    },
+    {
+      "fixture": "voice_solo-48000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.528516373262914,
+        -24.473188310375328
+      ],
+      "gainDB": [
+        0.0,
+        -0.05532806288758586
+      ],
+      "matchedLUFS": [
+        -24.528516373262914,
+        -24.528516373262914
+      ],
+      "presenceBandDeltaDB": 0.1943104682386448,
+      "highBandDeltaDB": 0.016434404623027588,
+      "residualRelativeDB": -37.09294932136053,
+      "tailRMSDB": [
+        -329.70766999869954,
+        -329.76416070589863
+      ],
+      "stereoCorrelation": [
+        0.9999999115468933,
+        0.9999999104620759
+      ],
+      "rawSamplePeakDBFS": [
+        -13.421332660411558,
+        -13.238385267586509
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.411933573573268,
+        -13.225123890686065
+      ]
+    },
+    {
+      "fixture": "voice_solo-48000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.602167817327814,
+        -24.546961045105398
+      ],
+      "gainDB": [
+        0.0,
+        -0.05520677222241617
+      ],
+      "matchedLUFS": [
+        -24.602167817327814,
+        -24.602167817327814
+      ],
+      "presenceBandDeltaDB": 0.195286171992205,
+      "highBandDeltaDB": 0.016592849770801645,
+      "residualRelativeDB": -37.10454237177765,
+      "tailRMSDB": [
+        -59.05752172392568,
+        -59.0777744437753
+      ],
+      "stereoCorrelation": [
+        0.9822378556845007,
+        0.9822709000896024
+      ],
+      "rawSamplePeakDBFS": [
+        -13.073217336678836,
+        -12.905046127020356
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.04214702003944,
+        -12.899518609968245
+      ]
+    },
+    {
+      "fixture": "voice_solo-48000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.503002327358004,
+        -24.443394520996275
+      ],
+      "gainDB": [
+        0.0,
+        -0.059607806361729104
+      ],
+      "matchedLUFS": [
+        -24.503002327358004,
+        -24.503002327358004
+      ],
+      "presenceBandDeltaDB": 0.19602713306714512,
+      "highBandDeltaDB": 0.012552493331735618,
+      "residualRelativeDB": -36.8261846530435,
+      "tailRMSDB": [
+        -58.42883522053809,
+        -58.45246169765105
+      ],
+      "stereoCorrelation": [
+        0.982078739738751,
+        0.982117278495731
+      ],
+      "rawSamplePeakDBFS": [
+        -10.749527931096152,
+        -10.593682509624543
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -10.74400061844729,
+        -10.588155349593077
+      ]
+    },
+    {
+      "fixture": "voice_solo-96000.f32",
+      "pair": "bare / vocal35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.569397847143907,
+        -24.514538256778124
+      ],
+      "gainDB": [
+        0.0,
+        -0.054859590365783716
+      ],
+      "matchedLUFS": [
+        -24.569397847143907,
+        -24.569397847143907
+      ],
+      "presenceBandDeltaDB": 0.19457422358118118,
+      "highBandDeltaDB": 0.02274356563327206,
+      "residualRelativeDB": -37.13719490124386,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        0.9999999999999595,
+        0.9999999999999574
+      ],
+      "rawSamplePeakDBFS": [
+        -13.495248994513332,
+        -13.302836158080817
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.489721367155159,
+        -13.297308744526447
+      ]
+    },
+    {
+      "fixture": "voice_solo-96000.f32",
+      "pair": "bare / vocal100",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.569397847143907,
+        -24.406891775667134
+      ],
+      "gainDB": [
+        0.0,
+        -0.16250607147677337
+      ],
+      "matchedLUFS": [
+        -24.569397847143907,
+        -24.569397847143907
+      ],
+      "presenceBandDeltaDB": 0.5573731135104074,
+      "highBandDeltaDB": 0.05992619896813099,
+      "residualRelativeDB": -27.91636539783663,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        0.9999999999999595,
+        0.9999999999999688
+      ],
+      "rawSamplePeakDBFS": [
+        -13.495248994513332,
+        -12.935703616147691
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.489721367155159,
+        -12.929497047720238
+      ]
+    },
+    {
+      "fixture": "voice_solo-96000.f32",
+      "pair": "opto0 / opto35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.650330872181673,
+        -24.593249225504785
+      ],
+      "gainDB": [
+        0.0,
+        -0.057081646676888094
+      ],
+      "matchedLUFS": [
+        -24.650330872181673,
+        -24.650330872181673
+      ],
+      "presenceBandDeltaDB": 0.19570503592449728,
+      "highBandDeltaDB": 0.02070472058880629,
+      "residualRelativeDB": -36.87456760364424,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        0.9999999999999601,
+        0.9999999999999696
+      ],
+      "rawSamplePeakDBFS": [
+        -11.063433515541934,
+        -10.897719387765232
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -11.057906273391822,
+        -10.892192243525784
+      ]
+    },
+    {
+      "fixture": "voice_solo-96000.f32",
+      "pair": "exciter0 / exciter35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.560308160021815,
+        -24.505414089064093
+      ],
+      "gainDB": [
+        0.0,
+        -0.054894070957722474
+      ],
+      "matchedLUFS": [
+        -24.560308160021815,
+        -24.560308160021815
+      ],
+      "presenceBandDeltaDB": 0.19400891659235112,
+      "highBandDeltaDB": 0.022694886459960862,
+      "residualRelativeDB": -37.131171496829715,
+      "tailRMSDB": [
+        null,
+        null
+      ],
+      "stereoCorrelation": [
+        0.9999999165670388,
+        0.9999999154864723
+      ],
+      "rawSamplePeakDBFS": [
+        -13.426224256622746,
+        -13.247033817928642
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.420696676051607,
+        -13.241506123515832
+      ]
+    },
+    {
+      "fixture": "voice_solo-96000.f32",
+      "pair": "space0 / space35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.626684709834958,
+        -24.571967006396637
+      ],
+      "gainDB": [
+        0.0,
+        -0.05471770343832086
+      ],
+      "matchedLUFS": [
+        -24.626684709834958,
+        -24.626684709834958
+      ],
+      "presenceBandDeltaDB": 0.19489606141074065,
+      "highBandDeltaDB": 0.022953654297632756,
+      "residualRelativeDB": -37.145701319323095,
+      "tailRMSDB": [
+        -58.8529116537413,
+        -58.87157849241051
+      ],
+      "stereoCorrelation": [
+        0.9819021444347189,
+        0.98193142098362
+      ],
+      "rawSamplePeakDBFS": [
+        -13.072162688791707,
+        -12.897698597824432
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -13.066635024105477,
+        -12.892171185048827
+      ]
+    },
+    {
+      "fixture": "voice_solo-96000.f32",
+      "pair": "all0 / all35",
+      "method": "BS.1770 integrated",
+      "rawLUFS": [
+        -24.570491807484277,
+        -24.513624489723234
+      ],
+      "gainDB": [
+        0.0,
+        -0.056867317761043236
+      ],
+      "matchedLUFS": [
+        -24.570491807484277,
+        -24.570491807484277
+      ],
+      "presenceBandDeltaDB": 0.19548808428285144,
+      "highBandDeltaDB": 0.02094564697952561,
+      "residualRelativeDB": -36.88081766552881,
+      "tailRMSDB": [
+        -58.59014428889445,
+        -58.61006257523805
+      ],
+      "stereoCorrelation": [
+        0.9817271376514805,
+        0.9817623485764824
+      ],
+      "rawSamplePeakDBFS": [
+        -10.809821193860842,
+        -10.655424238569411
+      ],
+      "rawReconstructed4xPeakDBFS": [
+        -10.804294006289188,
+        -10.649896478619032
+      ]
+    }
+  ],
+  "peakMethod": "scipy resample_poly 4x diagnostic, not certified true peak",
+  "loudness": "production IntegratedLoudnessMeter; each pair attenuation-only to common LUFS <= -23, then shared sample peak <= -1.94 dBFS; gated signals matched by RMS"
+}

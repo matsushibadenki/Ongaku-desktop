@@ -4,6 +4,22 @@
 #include <vector>
 #include <array>
 #include <cstring>
+#include <atomic>
+
+AVAudioTime * _Nullable OngakuSafePlayerTime(AVAudioPlayerNode *node, AVAudioTime *nodeTime) {
+    if (!nodeTime.isSampleTimeValid && !nodeTime.isHostTimeValid) return nil;
+    @try {
+        return [node playerTimeForNodeTime:nodeTime];
+    } @catch (NSException *exception) {
+        // AVAudioEngine may reconfigure concurrently even after Swift's state
+        // checks. Only this Objective-C clock conversion is guarded.
+        static std::atomic_flag reported = ATOMIC_FLAG_INIT;
+        if (!reported.test_and_set(std::memory_order_relaxed)) {
+            NSLog(@"Ongaku: player clock unavailable (%@): %@", exception.name, exception.reason ?: @"unknown");
+        }
+        return nil;
+    }
+}
 
 namespace {
 struct TruePeakStorage {

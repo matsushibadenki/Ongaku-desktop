@@ -1,0 +1,146 @@
+[
+  {
+    "file": "voice_mix-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "1708d31eda6c91268cf1dfabee67d6d1eb6011fa4f1ecbee434415a49b8bea01",
+    "samplePeak": 0.5937885046005249
+  },
+  {
+    "file": "voice_solo-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "41880184c0ee3c61dda22d0ae040366aab3230669a23a6c2d713f7177e1bd911",
+    "samplePeak": 0.23717688024044037
+  },
+  {
+    "file": "instrumental-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "4a690a6af7d45ad4767972763f3383984c0581536190c7656dc8f9c4ccc0f631",
+    "samplePeak": 0.7826535105705261
+  },
+  {
+    "file": "percussion-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "760cb002378c73807569942aafe9a4b58593c669c0c6cf5f65fd3070387101e6",
+    "samplePeak": 0.6283444166183472
+  },
+  {
+    "file": "tail-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "98caab452a4789224f8a0b7c20f2cf2baaa3d1cf17c66f9169d0e38b2d8e26d9",
+    "samplePeak": 0.29748615622520447
+  },
+  {
+    "file": "antiphase-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "1bf95329bfd1c0dada1f0205fe5dde8e090286afa3cad6c089d2aa4515754594",
+    "samplePeak": 0.26386478543281555
+  },
+  {
+    "file": "quiet_noise-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "e56e5c57f3971e7101a8cdee62b56d70f5f6c5be0c6ef2fb1464d4d644812cdb",
+    "samplePeak": 0.0004807482473552227
+  },
+  {
+    "file": "silence-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "626db8bea999709c8faead0ec9d60025604676fcc44130abe6c1168b90989b3b",
+    "samplePeak": 0.0
+  },
+  {
+    "file": "stress-48000.f32",
+    "rate": 48000,
+    "channels": 2,
+    "frames": 192000,
+    "sha256": "72413408bb8972ae03de2fda7823f0714ff465d927f828ce1816c027379c4fa2",
+    "samplePeak": 1.7813655138015747
+  },
+  {
+    "file": "voice_mix-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "cbc613dd9b69c8c03f590db71384f5e6777f10928fcbd7e2dfc1fcb32c098587",
+    "samplePeak": 0.5559626817703247
+  },
+  {
+    "file": "voice_solo-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "2fda458bc1cb7daba1d972ff4af10311e5af95036135d9a7757e4fb156ef6104",
+    "samplePeak": 0.2372671216726303
+  },
+  {
+    "file": "instrumental-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "d3fd82ee8ca742fd559200dc024ae5f3d6ea2607aaab509241720c82aaec055f",
+    "samplePeak": 0.7932075262069702
+  },
+  {
+    "file": "percussion-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "0fa96db21c67afd7d66d47ef0a7b271b1996029653161647e48e5844551b4135",
+    "samplePeak": 0.6110382676124573
+  },
+  {
+    "file": "tail-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "726ac0168356abe36044114f81073d746663405678dbffd05edf5945566fe83a",
+    "samplePeak": 0.29748615622520447
+  },
+  {
+    "file": "antiphase-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "64384e45c623f31e95c48841d075248b92fd936909c66a16b97a49bb95612c30",
+    "samplePeak": 0.26386478543281555
+  },
+  {
+    "file": "quiet_noise-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "97c772bc800a3c801dc2be2ddee6849e7c08ba8780b5ec5fb34784e092b51a78",
+    "samplePeak": 0.0005229905364103615
+  },
+  {
+    "file": "silence-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "76ed5c9c326ba62322d464a22d3fcf7b76c7352c6d33badc36ccea7a33325e97",
+    "samplePeak": 0.0
+  },
+  {
+    "file": "stress-96000.f32",
+    "rate": 96000,
+    "channels": 2,
+    "frames": 384000,
+    "sha256": "ade27d9e4fca37cae2c85a01dcc0fe464ba9d5159774126687d9aae73a4be99d",
+    "samplePeak": 1.6678881645202637
+  }
+]

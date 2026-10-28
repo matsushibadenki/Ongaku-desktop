@@ -1,0 +1,38 @@
+DESKTOP ADJACENT rate=44100.0 scenario=offRestore maxStep=0.015059139
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=offRestore peak=0.029362634 minWindowRatio=0.059568202797073526
+DESKTOP ADJACENT rate=44100.0 scenario=bypassOverlap maxStep=0.014949405
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=bypassOverlap peak=0.029362634 minWindowRatio=0.12711019905509352
+DESKTOP ADJACENT rate=44100.0 scenario=lateOverlap maxStep=0.014949405
+DESKTOP CONTINUITY rate=44100.0 protected=false tab=pro scenario=lateOverlap peak=0.029362634 minWindowRatio=0.12711019905509352
+DESKTOP ADJACENT rate=44100.0 scenario=offRestore maxStep=0.015059139
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=offRestore peak=0.029393937 minWindowRatio=0.07223551217614355
+DESKTOP ADJACENT rate=44100.0 scenario=bypassOverlap maxStep=0.014949405
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=bypassOverlap peak=0.029393937 minWindowRatio=0.1524286737823789
+DESKTOP ADJACENT rate=44100.0 scenario=lateOverlap maxStep=0.014949405
+DESKTOP CONTINUITY rate=44100.0 protected=true tab=pro scenario=lateOverlap peak=0.029393937 minWindowRatio=0.1524286737823789
+DESKTOP ADJACENT rate=48000.0 scenario=offRestore maxStep=0.013880889
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=offRestore peak=0.029347211 minWindowRatio=0.029883362136135433
+DESKTOP ADJACENT rate=48000.0 scenario=bypassOverlap maxStep=0.0138061615
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=bypassOverlap peak=0.029347211 minWindowRatio=0.05647943456412229
+DESKTOP ADJACENT rate=48000.0 scenario=lateOverlap maxStep=0.0138061615
+DESKTOP CONTINUITY rate=48000.0 protected=false tab=pro scenario=lateOverlap peak=0.029347211 minWindowRatio=0.05647943456412229
+DESKTOP ADJACENT rate=48000.0 scenario=offRestore maxStep=0.013880889
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=offRestore peak=0.029394254 minWindowRatio=0.06316612121043985
+DESKTOP ADJACENT rate=48000.0 scenario=bypassOverlap maxStep=0.0138061615
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=bypassOverlap peak=0.029394254 minWindowRatio=0.08083195344973884
+DESKTOP ADJACENT rate=48000.0 scenario=lateOverlap maxStep=0.0138061615
+DESKTOP CONTINUITY rate=48000.0 protected=true tab=pro scenario=lateOverlap peak=0.029394254 minWindowRatio=0.08083195344973884
+DESKTOP ADJACENT rate=96000.0 scenario=offRestore maxStep=0.0071131517
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=offRestore peak=0.029353496 minWindowRatio=0.01292120422009742
+DESKTOP ADJACENT rate=96000.0 scenario=bypassOverlap maxStep=0.0070655043
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=bypassOverlap peak=0.029353496 minWindowRatio=0.14335577816917766
+DESKTOP ADJACENT rate=96000.0 scenario=lateOverlap maxStep=0.0070655043
+DESKTOP CONTINUITY rate=96000.0 protected=false tab=pro scenario=lateOverlap peak=0.029353496 minWindowRatio=0.14335577816917766
+DESKTOP ADJACENT rate=96000.0 scenario=offRestore maxStep=0.0071131517
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=offRestore peak=0.029393943 minWindowRatio=0.0044594314466158145
+DESKTOP ADJACENT rate=96000.0 scenario=bypassOverlap maxStep=0.0070655043
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=bypassOverlap peak=0.029393943 minWindowRatio=0.2052807357075221
+DESKTOP ADJACENT rate=96000.0 scenario=lateOverlap maxStep=0.0070655043
+DESKTOP CONTINUITY rate=96000.0 protected=true tab=pro scenario=lateOverlap peak=0.029393943 minWindowRatio=0.2052807357075221
+PASS: 18 desktop transition PCM cases
+PASS: rejected injected vocal ON/OFF click

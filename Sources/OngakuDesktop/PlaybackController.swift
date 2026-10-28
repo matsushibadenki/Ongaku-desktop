@@ -4,6 +4,9 @@ import AppKit
 import Combine
 import Foundation
 import OSLog
+#if canImport(OngakuAudioDSP)
+import OngakuAudioDSP
+#endif
 
 struct StereoLevels: Equatable, Sendable {
     var left: Double
@@ -2060,9 +2063,15 @@ final class PlaybackController: ObservableObject {
     }
 
     private func currentElapsed() -> TimeInterval {
-        guard let audioFile,
+        // The engine can stop or replace its render clock before the
+        // configuration notification reaches MainActor. Prefer the last
+        // published position whenever the current clock is unavailable.
+        guard let audioFile, engine.isRunning, playerNode.isPlaying,
               let renderTime = playerNode.lastRenderTime,
-              let playerTime = playerNode.playerTime(forNodeTime: renderTime) else {
+              let playerTime = OngakuSafePlayerTime(playerNode, renderTime),
+              playerTime.isSampleTimeValid,
+              audioFile.processingFormat.sampleRate.isFinite,
+              audioFile.processingFormat.sampleRate > 0 else {
             return elapsed
         }
         let renderedFrames = max(0, playerTime.sampleTime)
@@ -2359,7 +2368,7 @@ final class PlaybackController: ObservableObject {
         transportEnvelope.start(ready: { [weak self] in
             guard let self, self.engine.isRunning, self.playerNode.isPlaying,
                   let stamp = self.playerNode.lastRenderTime,
-                  let time = self.playerNode.playerTime(forNodeTime: stamp) else { return false }
+                  let time = OngakuSafePlayerTime(self.playerNode, stamp) else { return false }
             guard time.isSampleTimeValid else { return false }
             if baseline == nil { baseline = time.sampleTime }
             return Double(time.sampleTime - (baseline ?? time.sampleTime)) / rate >= minimum

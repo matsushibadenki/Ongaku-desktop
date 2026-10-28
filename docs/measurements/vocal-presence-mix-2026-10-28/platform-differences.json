@@ -1,0 +1,992 @@
+[
+  {
+    "file": "vocal100--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--percussion-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--stress-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--instrumental-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--percussion-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto35--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal35--silence-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--voice_mix-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--antiphase-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "bare--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--stress-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--tail-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all0--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--silence-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space35--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--instrumental-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "vocal100--voice_mix-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "space0--tail-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "opto0--voice_solo-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--quiet_noise-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter35--quiet_noise-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "exciter0--antiphase-48000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  },
+  {
+    "file": "all35--voice_solo-96000.f32",
+    "maxAbs": 0.0,
+    "rms": 0.0
+  }
+]

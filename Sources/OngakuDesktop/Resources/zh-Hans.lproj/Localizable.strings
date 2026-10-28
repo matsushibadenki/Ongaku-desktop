@@ -1286,3 +1286,6 @@
 
 "effect.spectral_transient.name" = "Transient · Prototype";
 "effect.spectral_transient.description" = "按频段联动左右声道，轻微调整起音。不使用前瞻，切换平滑。建议从较低强度开始。";
+
+"effect.vocal_presence.name" = "Vocal Presence · Prototype";
+"effect.vocal_presence.description" = "轻微调整整首歌曲的中高频，不会分离人声。建议从较低强度开始。";

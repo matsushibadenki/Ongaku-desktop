@@ -1,0 +1,22 @@
+114 |         print("PASS: an already-stopped engine releases resources synchronously")
+PASS: startup waits for render before fading
+PASS: pause intent, silent drain, position and restart
+PASS: rapid resume cancels old gains and pause without rescheduling
+PASS: stop invalidates transport callbacks before new playback
+PASS: stop retains sources through fade/drain; repeated stop coalesces and only latest session cleanup runs
+PASS: a superseding load cancels old preparation/session release and survives the old stop callbacks
+PASS: an already-stopped engine releases resources synchronously
+PASS: seek cancellation and paused seek
+PASS: latest seek wins, including immediate seek/play callers
+PASS: explicit play after node loss retires the old seek and delivers EOF
+PASS: missing render ends in paused state
+PASS: EOF cannot override pause/seek; resume replaces an already-ended schedule
+TRANSPORT_PCM rate=44100.0 fadeIn=false maxStep=0.0003630072
+TRANSPORT_PCM rate=44100.0 fadeIn=true maxStep=0.0003629923
+TRANSPORT_PCM rate=48000.0 fadeIn=false maxStep=0.00033335388
+TRANSPORT_PCM rate=48000.0 fadeIn=true maxStep=0.00033335388
+TRANSPORT_PCM rate=96000.0 fadeIn=false maxStep=0.00016668439
+TRANSPORT_PCM rate=96000.0 fadeIn=true maxStep=0.00016669929
+PASS: 6 stock-mixer PCM fade cases
+PASS: PCM guard rejects abrupt source start/stop
+PASS: state guard rejects resource teardown before fade/drain

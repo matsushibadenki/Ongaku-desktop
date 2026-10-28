@@ -1,0 +1,8 @@
+{
+  "mobile:audio/TruePeakAudioUnit.h": "efb338670aebfccf0e7de9198aba7d8578e69257c6e65a16f0972064a28cdbc5",
+  "mobile:audio/TruePeakAudioUnit.mm": "87953fdc6dc4fd76e8677983a1ea87873967b177788674a634d0a4e114c039e6",
+  "mobile:audio/HiResPlaybackEngine.swift": "8b521322826b5c89b09cf7b378e3acfac7c9dd7651daa76a69ddf0147fa7ff44",
+  "desktop:PlaybackController.swift": "014a061340e7c0a774620e4fe87279fce796bb15006676f9ef61e788a9191f57",
+  "desktop:PlaybackTransportIntegrationTests.swift": "45717ead4825e96888bd2f44a0d11741d4781bda90815f6ef9ca6cc57e9e8c55",
+  "test:SafePlayerTimeRegression.mm": "dc5414e93a9ddf712b589c2ef7698b951f86f5386877dcf9f6157ff470979571"
+}

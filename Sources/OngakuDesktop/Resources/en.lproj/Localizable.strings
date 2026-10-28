@@ -1286,3 +1286,6 @@
 
 "effect.spectral_transient.name" = "Transient · Prototype";
 "effect.spectral_transient.description" = "Gentle stereo-linked attack shaping by frequency band. No lookahead; changes are smoothed. Start with a low amount.";
+
+"effect.vocal_presence.name" = "Vocal Presence · Prototype";
+"effect.vocal_presence.description" = "Gently brings presence to the entire mix. Vocals are not isolated; start with a low amount.";

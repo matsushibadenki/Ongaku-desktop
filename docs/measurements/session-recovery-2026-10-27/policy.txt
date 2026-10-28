@@ -1,0 +1,15 @@
+PASS: recovery classifies activation vs progress failure; expired background defers; stale/success suppress alerts
+PASS: observed starts run once; automatic advancement, re-selection and cancellation/retry re-arm recovery
+PASS: native readiness unlocks controls before quality work and playback observation finish
+PASS: explicit play can reactivate without interruption end; new interruptions still block pending playback
+PASS: Music owns its Now Playing metadata; local progress avoids per-tick publication
+PASS: DRM never enters the PCM decoder even when an asset URL exists
+PASS: store identity tolerates library-ID changes without accepting another track
+PASS: alert delivery rejects cleared, superseded, inactive and cancelled recovery errors
+PASS: DRM startup waits for preparation, plays once, and terminates on success/error/timeout
+PASS: stale DRM notifications cannot overwrite a new selection; auto-advance remains valid
+PASS: loading ends only for the requested, actually playing system track
+PASS: stopped engines and interruptions cannot publish playing
+PASS: watchdog respects startup/recovery and only enforces explicit pause
+PASS: pause, song changes, interruption and cancellation invalidate stale play requests
+PASS: automatic fallback waits for other audio to finish

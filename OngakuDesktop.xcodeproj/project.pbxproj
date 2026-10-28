@@ -29,6 +29,7 @@
 		200000000000000000000014 /* BodyAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000026 /* BodyAudioEffect.swift */; };
 		200000000000000000000015 /* ExciterAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000027 /* ExciterAudioEffect.swift */; };
 		ECC1DDB86510453E91CE5AD6 /* SpectralTransientAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAA736A2E134E139E43F874 /* SpectralTransientAudioEffect.swift */; };
+		C7A100000000000000000002 /* VocalPresenceAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A100000000000000000001 /* VocalPresenceAudioEffect.swift */; };
 		200000000000000000000016 /* OptoFETAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000028 /* OptoFETAudioEffect.swift */; };
 		200000000000000000000017 /* WarmAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000029 /* WarmAudioEffect.swift */; };
 		200000000000000000000018 /* GlossAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002A /* GlossAudioEffect.swift */; };
@@ -157,6 +158,7 @@
 		E8DA8EB930825B1B00B38A1B /* BodyAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000026 /* BodyAudioEffect.swift */; };
 		E8DA8EBA30825B1B00B38A1B /* ExciterAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000027 /* ExciterAudioEffect.swift */; };
 		8453B045B0A7495C8A5E082E /* SpectralTransientAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAAA736A2E134E139E43F874 /* SpectralTransientAudioEffect.swift */; };
+		C7A100000000000000000003 /* VocalPresenceAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A100000000000000000001 /* VocalPresenceAudioEffect.swift */; };
 		E8DA8EBB30825B1B00B38A1B /* OptoFETAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000028 /* OptoFETAudioEffect.swift */; };
 		E8DA8EBC30825B1B00B38A1B /* WarmAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000029 /* WarmAudioEffect.swift */; };
 		E8DA8EBD30825B1B00B38A1B /* GlossAudioEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000002A /* GlossAudioEffect.swift */; };
@@ -228,6 +230,7 @@
 		100000000000000000000026 /* BodyAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyAudioEffect.swift; sourceTree = "<group>"; };
 		100000000000000000000027 /* ExciterAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExciterAudioEffect.swift; sourceTree = "<group>"; };
 		DAAA736A2E134E139E43F874 /* SpectralTransientAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectralTransientAudioEffect.swift; sourceTree = "<group>"; };
+		C7A100000000000000000001 /* VocalPresenceAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VocalPresenceAudioEffect.swift; sourceTree = "<group>"; };
 		100000000000000000000028 /* OptoFETAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptoFETAudioEffect.swift; sourceTree = "<group>"; };
 		100000000000000000000029 /* WarmAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarmAudioEffect.swift; sourceTree = "<group>"; };
 		10000000000000000000002A /* GlossAudioEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlossAudioEffect.swift; sourceTree = "<group>"; };
@@ -419,6 +422,7 @@
 				100000000000000000000026 /* BodyAudioEffect.swift */,
 				100000000000000000000027 /* ExciterAudioEffect.swift */,
 				DAAA736A2E134E139E43F874 /* SpectralTransientAudioEffect.swift */,
+				C7A100000000000000000001 /* VocalPresenceAudioEffect.swift */,
 				100000000000000000000028 /* OptoFETAudioEffect.swift */,
 				100000000000000000000029 /* WarmAudioEffect.swift */,
 				10000000000000000000002A /* GlossAudioEffect.swift */,
@@ -729,6 +733,7 @@
 				200000000000000000000014 /* BodyAudioEffect.swift in Sources */,
 				200000000000000000000015 /* ExciterAudioEffect.swift in Sources */,
 				ECC1DDB86510453E91CE5AD6 /* SpectralTransientAudioEffect.swift in Sources */,
+				C7A100000000000000000002 /* VocalPresenceAudioEffect.swift in Sources */,
 				200000000000000000000016 /* OptoFETAudioEffect.swift in Sources */,
 				200000000000000000000017 /* WarmAudioEffect.swift in Sources */,
 				200000000000000000000018 /* GlossAudioEffect.swift in Sources */,
@@ -833,6 +838,7 @@
 				E8DA8EB930825B1B00B38A1B /* BodyAudioEffect.swift in Sources */,
 				E8DA8EBA30825B1B00B38A1B /* ExciterAudioEffect.swift in Sources */,
 				8453B045B0A7495C8A5E082E /* SpectralTransientAudioEffect.swift in Sources */,
+				C7A100000000000000000003 /* VocalPresenceAudioEffect.swift in Sources */,
 				E8DA8EBB30825B1B00B38A1B /* OptoFETAudioEffect.swift in Sources */,
 				E8DA8EBC30825B1B00B38A1B /* WarmAudioEffect.swift in Sources */,
 				E8DA8EBD30825B1B00B38A1B /* GlossAudioEffect.swift in Sources */,

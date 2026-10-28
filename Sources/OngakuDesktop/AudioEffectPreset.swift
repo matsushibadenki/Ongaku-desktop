@@ -95,6 +95,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
     case body
     case exciter
     case spectralTransient
+    case vocalPresence
     case gloss
     case optoFET
     case warm
@@ -110,6 +111,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
         case .bbe: return L10n.text("effect.bbe.name")
         case .body: return L10n.text("effect.body.name")
         case .spectralTransient: return L10n.text("effect.spectral_transient.name")
+        case .vocalPresence: return L10n.text("effect.vocal_presence.name")
         case .exciter: return L10n.text("effect.exciter.name")
         case .gloss: return L10n.text("effect.gloss.name")
         case .optoFET: return L10n.text("effect.opto_fet.name")
@@ -126,6 +128,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
         case .bbe: return L10n.text("effect.bbe.description")
         case .body: return L10n.text("effect.body.description")
         case .spectralTransient: return L10n.text("effect.spectral_transient.description")
+        case .vocalPresence: return L10n.text("effect.vocal_presence.description")
         case .exciter: return L10n.text("effect.exciter.description")
         case .gloss: return L10n.text("effect.gloss.description")
         case .optoFET: return L10n.text("effect.opto_fet.description")
@@ -163,6 +166,8 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
             ]
         case .spectralTransient:
             return [EffectParameterDefinition(key: "intensity", name: L10n.text("effect.parameter.intensity"), defaultValue: 0.20)]
+        case .vocalPresence:
+            return [EffectParameterDefinition(key: "intensity", name: L10n.text("effect.parameter.intensity"), defaultValue: 0.35)]
         case .exciter:
             return [
                 EffectParameterDefinition(key: "mode", name: L10n.text("effect.parameter.mode"), defaultValue: 0.0),

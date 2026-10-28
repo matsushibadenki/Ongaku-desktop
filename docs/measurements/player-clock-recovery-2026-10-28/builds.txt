@@ -1,0 +1,2 @@
+PASS: iPhone Debug / iOS Simulator arm64 / signing disabled
+PASS: Mac App Store Release / x86_64 + arm64 / signing disabled

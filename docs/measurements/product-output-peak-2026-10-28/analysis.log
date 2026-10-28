@@ -1,0 +1,7 @@
+PASS 144 captured graphs; final-protector 16x estimates within -1 dBFS + 0.002 amplitude
+mobile stock worst: stress-96000-96000-off-stock-unknown -0.068 dBFS; above 0: 0 / 36
+mobile truepeak worst: stress-96000-96000-off-truepeak-unknown -1.296 dBFS; above 0: 0 / 36
+desktop stock worst: stress-96000-96000-off-stock-analyzed -0.067 dBFS; above 0: 0 / 36
+desktop truepeak worst: stress-96000-96000-off-truepeak-analyzed -1.296 dBFS; above 0: 0 / 36
+PASS: calibrated over-ceiling sine is rejected
+Observed stock negative control: mobile stress-96000-96000-off-stock-unknown

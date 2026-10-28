@@ -85,6 +85,38 @@ import Testing
         #expect(!engine.isRunning && !primary.isPlaying)
     }
 
+    @Test("A stopped render clock recovers from the last position and honors a later pause")
+    func configurationRecoveryWithStoppedClock() async throws {
+        let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }
+        let player = PlaybackController(); configure(player); player.crossfadeDuration = 0
+        defer { player.clearCurrentTrack() }
+        let engine = try field(player, "engine", AVAudioEngine.self)
+        player.play(tracks[0], queue: tracks); try await settle(player)
+        player.seek(to: 3); try await settle(player)
+        try await Task.sleep(for: .milliseconds(1200)) // Configuration-notification suppression expires.
+        let lastPosition = player.elapsed
+        #expect(player.isPlaying && engine.isRunning && lastPosition >= 3)
+        engine.stop() // Simulate the device invalidating the running graph before delivery.
+        NotificationCenter.default.post(name: .AVAudioEngineConfigurationChange, object: engine)
+        for _ in 0..<300 {
+            if engine.isRunning && player.isPlaying { break }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(engine.isRunning && player.isPlaying)
+        #expect(player.currentTrack?.id == tracks[0].id)
+        #expect(player.elapsed >= lastPosition - 0.25 && player.elapsed < lastPosition + 3)
+        #expect(player.errorMessage == nil)
+
+        try await Task.sleep(for: .milliseconds(1200))
+        engine.stop()
+        NotificationCenter.default.post(name: .AVAudioEngineConfigurationChange, object: engine)
+        try await Task.sleep(for: .milliseconds(50))
+        player.pauseForExternalPlayback()
+        try await Task.sleep(for: .milliseconds(500))
+        #expect(!player.isPlaying && !engine.isRunning)
+        #expect(player.currentTrack?.id == tracks[0].id)
+    }
+
     @Test("Device-side output format wins over a previously negotiated engine input")
     func deviceOutputScope() async throws {
         let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }

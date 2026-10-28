@@ -1,0 +1,2 @@
+PASS: temporary duplicate of desktop project, Release arm64, signing disabled, unique bundle identifier.
+PASS: 106 source files match the current workspace; app bundle identifier verified distinct from production.

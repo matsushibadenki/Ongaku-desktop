@@ -51,7 +51,14 @@ struct EffectsRackView: View {
         }
         .environmentObject(input)
         .onAppear {
-            selectedTab = player.effectsBypassed ? .off : .basic
+            // Keep the selected Basic/Pro tab on every visit. The persisted
+            // bypass flag remains authoritative for OFF, including upgrades
+            // from versions that did not store the selected tab.
+            if player.effectsBypassed {
+                if selectedTab != .off { selectedTab = .off }
+            } else if selectedTab == .off {
+                selectedTab = .basic
+            }
         }
         .onChange(of: selectedTab) { _, newValue in
             player.setEffectsBypassed(newValue == .off)

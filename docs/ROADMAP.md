@@ -1,5 +1,43 @@
 # Ongaku Desktop ロードマップ
 
+## Macエフェクトモードの終了・再起動検証 — 2026-10-28
+
+- 🟢 [Done] 専用識別子・一時ライブラリを使用したMac Release実アプリで通常終了と再起動を検証。Pro／OFF／BASICが各々復元され、Proで有効にしたエフェクトの設定はOFFを経由しても保持された。旧版のOFF設定と、モード・バイパスの不一致も確認。[条件と結果](quality/EFFECT_MODE_RELAUNCH_2026-10-28.md)。
+- 🟢 [Done] 現行Macソース106ファイルとの一致、arm64ビルド、通常終了後の専用UserDefaultsと画面表示を確認。ユーザーの通常アプリは起動せず、実楽曲の再生は行っていない。
+- ⭕️ [Pending] インストール済みアプリと実際の保存設定・楽曲で、再起動後のPro／OFFの音声処理と出力保護を確認。Intel、外部出力、異常終了・電源断時の確認も継続。
+
+## Macエフェクトモードの選択保持 — 2026-10-28
+
+- 🟢 [Done] 画面再表示時にProをBASICへ戻していた初期化を修正。選択したBASIC／Pro／OFFを保存し、画面を離れて戻っても保持。旧版のOFF設定と不一致の場合は既存のバイパス状態を優先。[原因と検証](quality/EFFECT_TAB_RETENTION_2026-10-28.md)。
+- 🟢 [Done] 実SwiftUI画面の再表示3回、Pro→OFF→Pro、旧OFF設定、エフェクト設定値の保持を検証。関連5テストとMac App Store Universal Releaseビルド成功。iPhone版は既存の選択状態の保存・復元を確認し、変更なし。
+- ⭕️ [Pending] インストール済みMacアプリで画面移動、完全終了・再起動、保存済みOFF設定と実再生を確認。自動テストは画面の再生成までを対象とする。
+
+## 再生クロック取得時のクラッシュ対策 — 2026-10-28
+
+- 🟢 [Done] 添付スタックのMac出力構成変更後、`currentElapsed()` からの `playerTimeForNodeTime:` がObjective-C例外で終了する経路を保護。エンジン停止・無効クロック時は最後に確定した再生位置を使用し、変換時の例外は限定的に捕捉して初回の名前・理由をログに記録。[原因の確認範囲・検証](quality/PLAYER_CLOCK_RECOVERY_2026-10-28.md)。
+- 🟢 [Done] 同じ時刻変換を使うiPhone側5か所とMac開始待ちも共通の安全な変換へ統一。無効時刻・注入例外・正常進行・停止後を実AVAudioEngineで検証。Macの停止エンジンからの復旧と待機中の一時停止、再生統合15テスト、iPhoneの既存フェードPCM回帰が成功。
+- 🟢 [Done] iPhone Simulator arm64 Debug、Mac App Store Universal Release（arm64／x86_64）の署名なしビルド成功。既存DSP・出力保護の処理は変更なし。
+- ⭕️ [Pending] 実機Macの出力機器切替・切断、レート変更、スリープ復帰、曲間切替中の再発確認。iPhone実機の割り込み復帰・高音質データ切替も確認。元の例外理由はログに含まれておらず未確定。
+
+## Vocal Presence 試作 — 2026-10-28
+
+- 🟢 [Done] iPhone／MacのProに「Vocal Presence · Prototype」を追加。初期OFF・強度0.35、2.8 kHz中心の全体EQを最大+1.2 dBで調整。ボーカル分離はせず、既存OptoFETとは役割を分ける。DSP実装と3言語表示は両アプリで一致。[設計・検証記録](quality/VOCAL_PRESENCE_PROTOTYPE_2026-10-28.md)。
+- 🟢 [Done] 実EQを4レートで検証。OFFはノードなしとの差1e−5未満、中心周波数は初期強度+0.42 dB／最大+1.2 dB。iPhone側24・Mac側48の保護付き切替ケース、Mac追加18ケースでON/OFF波形を検証し、意図的なクリックと保護欠落の負の対照を検出。無条件のクリック無発生を保証するものではない。
+- 🟢 [Done] 最大強度・強い信号の曲間切替で、iPhone通常のAppleピークリミッター6組、iPhone検証用true-peak 6組、Mac最終true-peak 24組を確認。通常iPhoneのリミッターは一般的なtrue-peak上限を保証しない。iOS Simulator Debug・Mac Universal App Store Releaseの署名なしビルド、Mac設定7テスト・3言語の画面操作テスト成功。
+- 🟢 [Done] 合成PCM 9種・48／96 kHzでVocal PresenceとOptoFET／Exciter／Spaceを音量一致比較。両実装のMacネイティブ測定198出力は全サンプル一致。声風ミックスでは初期強度の1.5–5 kHz変化が約+0.22 dBで、伴奏にも作用。[条件・結果](quality/VOCAL_PRESENCE_MIX_COMPARISON_2026-10-28.md)。
+- 🟢 [Done] 製品ソースの全エフェクト列・通常の音量保護・96 kHz処理・出力レート変換をオフライン再構成し、両版144ケースの強入力ピークを検証。通常経路の最大16倍補間推定はiPhone診断待ち−0.068／Mac−0.067 dBFS、追加true-peak保護ありは両版とも−1.296 dBFS。実機経路の保証ではない。[条件と結果](quality/PRODUCT_OUTPUT_PEAK_2026-10-28.md)。
+- 🟠 [Next] 0 dBFS近傍の通常経路を実楽曲・44.1 kHz音源・高クレスト信号・診断更新／曲間で追加検証。true-peak保護の通常版への有効化判断、処理負荷と動的な歯擦音抑制の必要性を評価。
+- ⭕️ [Pending] 最終true-peak保護の実機iPhone／Macにおける出力・遅延・途切れ・曲間・復帰・消費電力の確認。通常版での有効化は保留。
+- ⭕️ [Pending] iOS Simulatorでの同一PCM比較、および実楽曲を用いたiPhone／Mac実機での音量一致聴感確認。
+- ⭕️ [Pending] 実機iPhoneスピーカー・ヘッドホン・Bluetooth／DACとMacの実楽曲で、ボーカルの聴き取り・刺さり・伴奏への影響・定位・疲労、音量一致した好み、切替音、出力経路・CPU／電力を確認。初期OFFを維持。
+
+## iPhone復帰時の再生セッション再試行 — 2026-10-27
+
+- 🟢 [Done] 明示再生の再試行を、保持位置からの保護付き再スケジュール＋音声進行確認へ変更。短い曲末の完了処理、復旧後の次曲プリロード・高音質差し替え予約を既存経路につなぐ。
+- 🟢 [Done] 有効化例外と再生進行未確認を区別。背景実行期限切れは誤った「Session activation failed」を表示せず、停止・選曲トークンと他アプリ音声を照合して次回復帰時に再試行。段階・ドメイン・コードをログへ記録。3言語の再生未確認表示を整備。[根拠・検証範囲](quality/SESSION_RECOVERY_2026-10-27.md)。
+- 🟢 [Done] 再生方針回帰と既存の保護付きtransport／6組のPCMフェード・負の対照が成功。iOS Simulator arm64 Debugビルド成功。Macに同一AVAudioSession経路はなく、音声DSP・最終保護・初期値は変更なし。
+- ⭕️ [Pending] 実機iPhoneで他アプリの出力取得・解放、背景期限切れ・復帰、ロック画面、停止・選曲との競合、曲末・次曲・リピート・出力切替・通話。画像の発生原因そのものは実機ログ未取得で未確定。
+
 ## Macエフェクトページの描画負荷 — 2026-10-26
 
 - 🟢 [Done] 各カードのPlaybackController直接監視を廃止し、設定スナップショット＋Equatable境界へ変更。メーター・再生位置等の無関係な通知でカード内部を再構築する負荷を抑制。設定・有効状態・操作先変更とテーマ／入力状態の更新は維持。

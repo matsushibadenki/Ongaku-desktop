@@ -69,6 +69,9 @@ enum AudioEffectModuleRegistry {
         .init(kind: .spectralTransient, clippingReductionParameterKeys: ["intensity"]) {
             SpectralTransientAudioEffect()
         },
+        .init(kind: .vocalPresence, clippingReductionParameterKeys: ["intensity"]) {
+            VocalPresenceAudioEffect()
+        },
         .init(kind: .optoFET, isIncluded: true, clippingReductionParameterKeys: ["intensity", "peak"]) {
             OptoFETAudioEffect()
         },

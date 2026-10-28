@@ -1286,3 +1286,6 @@
 
 "effect.spectral_transient.name" = "Transient · Prototype";
 "effect.spectral_transient.description" = "帯域別・左右連動で立ち上がりを控えめに調整。先読みなし、切替は滑らかに。弱い設定からお試しください。";
+
+"effect.vocal_presence.name" = "Vocal Presence · Prototype";
+"effect.vocal_presence.description" = "楽曲全体の中高域を控えめに調整します。ボーカルは分離せず、弱い設定からお試しください。";

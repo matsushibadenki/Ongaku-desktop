@@ -1,0 +1,2 @@
+PASS: audio scheme, Debug, generic/platform=iOS Simulator, ARCHS=arm64, CODE_SIGNING_ALLOWED=NO
+BUILD SUCCEEDED

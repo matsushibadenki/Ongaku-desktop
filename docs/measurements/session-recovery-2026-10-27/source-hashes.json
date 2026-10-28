@@ -1,0 +1,5 @@
+{
+  "audio/AudioPlayerViewModel.swift": "42c80c48b63729f588e554bed3cfe732a3f46e79bd85ab0419f8c5e0f92aaf3f",
+  "audio/PlaybackTransportPolicy.swift": "5182eb21a19a6d1a5620aeb2739c81aa05708ce1e480db2ef6dcccae0db45870",
+  "tests/PlaybackTransportRegression.swift": "09573a80397b5fcec7a16a7d3d0e599dc29fd7efa35ad8f0a15e1a90e21cf73a"
+}

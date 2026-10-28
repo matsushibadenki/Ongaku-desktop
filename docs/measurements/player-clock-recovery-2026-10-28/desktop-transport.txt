@@ -1,0 +1,25 @@
+CD availability PASS: alac, channels=1
+CD availability PASS: aiff, channels=1
+CD availability PASS: wav, channels=1
+CD availability PASS: aac, channels=1
+CD availability PASS: alac, channels=2
+CD availability PASS: aiff, channels=2
+CD availability PASS: wav, channels=2
+CD availability PASS: aac, channels=2
+✔ Test "CD rip formats retain local playback, real RMS/spectrum and effect response" passed after 19.777 seconds.
+✔ Test "Real controller retains sources during drain and latest pause/seek/load wins" passed after 2.371 seconds.
+✔ Test "A stopped render clock recovers from the last position and honors a later pause" passed after 7.669 seconds.
+✔ Test "Device-side output format wins over a previously negotiated engine input" passed after 2.106 seconds.
+✔ Test "Compatible file reload retains the graph but retires source, gain and tail ownership" passed after 6.478 seconds.
+✔ Test "Late track analysis survives pause/resume and changes only at new load" passed after 2.336 seconds.
+✔ Test "Incoming analysis is frozen before overlap, including repeat-one" passed after 7.912 seconds.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 3.850 seconds.
+✔ Test "An incoming EOF delivered before outgoing EOF is retained" with 2 test cases passed after 4.891 seconds.
+✔ Test "Repeated same-track schedules cannot consume an outgoing duplicate" passed after 2.481 seconds.
+✔ Test "Pause at a queued EOF cannot start the next song" passed after 2.739 seconds.
+✔ Test "A delayed configuration recovery cannot rewind the next gapless song" passed after 4.006 seconds.
+✔ Test "Deferred and obsolete EOF cannot override pause, resume or selection" passed after 2.728 seconds.
+✔ Test "Rejected preroll preserves the active EOF and falls back to a fresh load" passed after 2.225 seconds.
+✔ Test "Real 10 ms tails reach next, repeat-one, queue/album wrap and final stop" passed after 11.337 seconds.
+✔ Suite "Playback transport integration" passed after 82.913 seconds.
+✔ Test run with 15 tests in 1 suite passed after 82.914 seconds.

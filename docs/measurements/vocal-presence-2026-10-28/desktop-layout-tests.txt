@@ -1,0 +1,5 @@
+◇ Suite "Effect rack input ownership" started.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 54.597 seconds.
+✔ Suite "Effect rack input ownership" passed after 54.597 seconds.
+✔ Test run with 1 test in 1 suite passed after 54.597 seconds.
