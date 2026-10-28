@@ -120,8 +120,11 @@ private final class ChunkFixture: @unchecked Sendable {
     func payload(_ descriptor: DeviceChunkTransferDescriptor, _ index: Int) throws -> DeviceChunkPayload {
         try DeviceChunkTransfer.payload(descriptor: descriptor, index: index, fileURL: source)
     }
+    private func cleanupSnapshot() -> ([ChunkHarness], [ChunkIOGate]) {
+        lock.withLock { (self.sessions, self.gates) }
+    }
     func cleanup() async {
-        let (sessions,gates) = lock.withLock { (sessions,gates) }
+        let (sessions, gates) = cleanupSnapshot()
         gates.forEach { $0.open() }
         for session in sessions { await session.close() }
         for gate in gates { #expect(!gate.timedOut) }

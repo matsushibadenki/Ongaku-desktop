@@ -355,8 +355,11 @@ struct M0QualityGateTests {
         #expect(!mobile.contains("@MainActor\nfinal class MobileSyncController"))
         #expect(desktop.contains("Task { @MainActor [weak self] in"))
         #expect(mobile.contains("Task { @MainActor [weak self] in"))
-        #expect(desktop.contains("private let checkpointStore"))
-        #expect(mobile.contains("private let checkpointStore"))
+        let worker = try Self.source("DeviceChunkTransferWorker.swift")
+        #expect(desktop.contains("DeviceChunkTransferWorker(checkpointDirectory:"))
+        #expect(mobile.contains("DeviceChunkTransferWorker(checkpointDirectory:"))
+        #expect(worker.contains("actor DeviceChunkTransferWorker"))
+        #expect(worker.contains("DeviceChunkTransferDisk(directory: checkpointDirectory"))
         #expect(!desktop.contains("private lazy var checkpointStore"))
         #expect(!mobile.contains("private lazy var checkpointStore"))
     }
