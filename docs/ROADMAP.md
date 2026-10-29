@@ -5,6 +5,7 @@
 - 🟢 [Done] 原因となった動的Audio Unit登録にサンドボックス対応フラグを設定。Transient・音量エンベロープ・true-peakの3種類を、署名済みApp Storeサンドボックス構成のmacOS 27.2実Macで生成できた。登録フラグの回帰テストも成功。
 - 🟢 [Done] 再提出用0.1.12 (20) はarm64／x86_64・署名・サンドボックス・Sparkle非同梱を確認。監査コードを除いた提出ビルド自体もmacOS 27.2実Macで12秒間起動し、生成エラー・クラッシュなし。
 - 🟢 [Done] 生成失敗時のTransientバイパス、Transient既存テスト、音量保護・true-peakの9テスト、サニタイザー付き音量エンベロープ72条件とグラフ再利用・負の対照が成功。true-peakは通常版では引き続き既定無効。
+- 🟢 [Done] 0.1.12 (20) をApp Store Connectにアップロードし、却下されたビルド19から差し替えて再審査へ提出。「審査待ち」を確認。
 - ⭕️ [Pending] macOS 27.0.1の審査対象機、Intel Mac、外部出力と実楽曲での再生・音量変化・停止再開・聴感。Appleによる再審査と公開。
 
 - 🟢 [Done] 0.1.12 (19) の審査クラッシュログを、UUIDが一致する配布アーカイブのdSYMで解析。起動時のSpectral Transient Audio Unit生成中にObjective-C例外が発生したことを確認。
