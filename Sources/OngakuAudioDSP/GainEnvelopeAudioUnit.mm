@@ -82,7 +82,7 @@ struct GainEnvelopeStorage {
 }
 + (AVAudioUnitEffect *)makeNode {
     static dispatch_once_t once;
-    AudioComponentDescription description = {kAudioUnitType_Effect, 'ogen', 'Ongk', 0, 0};
+    AudioComponentDescription description = {kAudioUnitType_Effect, 'ogen', 'Ongk', kAudioComponentFlag_SandboxSafe, 0};
     dispatch_once(&once, ^{ [AUAudioUnit registerSubclass:self asComponentDescription:description name:@"Ongaku:Gain Envelope" version:1]; });
     return [[AVAudioUnitEffect alloc] initWithAudioComponentDescription:description];
 }

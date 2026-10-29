@@ -91,7 +91,7 @@ struct TruePeakStorage {
 }
 + (AVAudioUnitEffect *)makeNode {
     static dispatch_once_t once;
-    AudioComponentDescription description = {kAudioUnitType_Effect, 'otpk', 'Ongk', 0, 0};
+    AudioComponentDescription description = {kAudioUnitType_Effect, 'otpk', 'Ongk', kAudioComponentFlag_SandboxSafe, 0};
     dispatch_once(&once, ^{ [AUAudioUnit registerSubclass:self asComponentDescription:description name:@"Ongaku:Final True Peak" version:1]; });
     return [[AVAudioUnitEffect alloc] initWithAudioComponentDescription:description];
 }

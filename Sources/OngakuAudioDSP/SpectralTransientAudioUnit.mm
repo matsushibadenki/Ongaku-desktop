@@ -75,9 +75,20 @@ struct SpectralTransientStorage {
 }
 + (AVAudioUnitEffect *)makeNode {
     static dispatch_once_t once;
-    AudioComponentDescription description = {kAudioUnitType_Effect, 'ostp', 'Ongk', 0, 0};
-    dispatch_once(&once, ^{ [AUAudioUnit registerSubclass:self asComponentDescription:description name:@"Ongaku:Spectral Transient" version:1]; });
-    return [[AVAudioUnitEffect alloc] initWithAudioComponentDescription:description];
+    AudioComponentDescription description = {kAudioUnitType_Effect, 'ostp', 'Ongk', kAudioComponentFlag_SandboxSafe, 0};
+    dispatch_once(&once, ^{
+        @try {
+            [AUAudioUnit registerSubclass:self asComponentDescription:description name:@"Ongaku:Spectral Transient" version:1];
+        } @catch (NSException *exception) {
+            NSLog(@"Ongaku: Spectral Transient registration failed (%@): %@", exception.name, exception.reason);
+        }
+    });
+    @try {
+        return [[AVAudioUnitEffect alloc] initWithAudioComponentDescription:description];
+    } @catch (NSException *exception) {
+        NSLog(@"Ongaku: Spectral Transient unavailable (%@): %@", exception.name, exception.reason);
+        return nil;
+    }
 }
 - (instancetype)initWithComponentDescription:(AudioComponentDescription)description options:(AudioComponentInstantiationOptions)options error:(NSError **)error {
     self = [super initWithComponentDescription:description options:options error:error];

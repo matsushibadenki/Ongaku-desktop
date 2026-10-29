@@ -7,8 +7,17 @@ import OngakuAudioDSP
 final class SpectralTransientAudioEffect: AudioEffectNode {
     let kind: RealtimeAudioEffectKind = .spectralTransient
     private(set) var isEnabled = false
-    private let node = OngakuSpectralTransientAudioUnit.makeNode()
-    private var unit: OngakuSpectralTransientAudioUnit { node.auAudioUnit as! OngakuSpectralTransientAudioUnit }
+    private let node: AVAudioNode
+    private let unit: OngakuSpectralTransientAudioUnit?
+    init(makeNode: () -> AVAudioUnitEffect? = { OngakuSpectralTransientAudioUnit.makeNode() }) {
+        if let effect = makeNode(), let unit = effect.auAudioUnit as? OngakuSpectralTransientAudioUnit {
+            self.node = effect
+            self.unit = unit
+        } else {
+            self.node = AVAudioMixerNode()
+            self.unit = nil
+        }
+    }
     var nodes: [AVAudioNode] { [node] }
     var inputNode: AVAudioNode { node }
     var outputNode: AVAudioNode { node }
@@ -21,13 +30,13 @@ final class SpectralTransientAudioEffect: AudioEffectNode {
     func apply(setting: RealtimeAudioEffectSetting) {
         let value = setting.parameters["intensity"] ?? 0.20
         let amount = value.isFinite ? min(1, max(0, value)) : 0
-        isEnabled = setting.isEnabled && amount > 0.001
+        isEnabled = unit != nil && setting.isEnabled && amount > 0.001
         // Conservative bound for complementary causal branches; final output
         // protection remains authoritative, including during OFF ramp-down.
         estimatedGainBoostDB = isEnabled ? 1.5 * amount : 0
-        unit.setAmount(isEnabled ? Float(amount) : 0)
+        unit?.setAmount(isEnabled ? Float(amount) : 0)
     }
     // Transport calls this behind its existing mute/drain boundary. The render
     // thread consumes the reset request; control never mutates live DSP state.
-    func resetTailState() { unit.reset() }
+    func resetTailState() { unit?.reset() }
 }

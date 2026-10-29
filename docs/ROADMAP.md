@@ -1,5 +1,18 @@
 # Ongaku Desktop ロードマップ
 
+## App Review起動クラッシュ — 2026-10-29
+
+- 🟢 [Done] 原因となった動的Audio Unit登録にサンドボックス対応フラグを設定。Transient・音量エンベロープ・true-peakの3種類を、署名済みApp Storeサンドボックス構成のmacOS 27.2実Macで生成できた。登録フラグの回帰テストも成功。
+- 🟢 [Done] 再提出用0.1.12 (20) はarm64／x86_64・署名・サンドボックス・Sparkle非同梱を確認。監査コードを除いた提出ビルド自体もmacOS 27.2実Macで12秒間起動し、生成エラー・クラッシュなし。
+- 🟢 [Done] 生成失敗時のTransientバイパス、Transient既存テスト、音量保護・true-peakの9テスト、サニタイザー付き音量エンベロープ72条件とグラフ再利用・負の対照が成功。true-peakは通常版では引き続き既定無効。
+- ⭕️ [Pending] macOS 27.0.1の審査対象機、Intel Mac、外部出力と実楽曲での再生・音量変化・停止再開・聴感。Appleによる再審査と公開。
+
+- 🟢 [Done] 0.1.12 (19) の審査クラッシュログを、UUIDが一致する配布アーカイブのdSYMで解析。起動時のSpectral Transient Audio Unit生成中にObjective-C例外が発生したことを確認。
+- 🟢 [Done] Audio Unitの登録・生成例外を捕捉し、生成失敗時は音声を通すミキサーにフォールバック。エフェクトは無効として扱い、エラーをログに残す。生成失敗を注入した音声グラフ接続テストと既存Transientテストが成功。
+- 🟢 [Done] macOS 27.2の実Macで署名済みApp Store構成（0.1.12 build 20）を起動。Spectral Transient生成時に `com.apple.coreaudio.avfaudio` error -3000 を記録し、バイパスに切り替わった状態で12秒間起動を維持。Universal Binaryと署名検証も成功。
+- 🔴 [Later] 万一カスタムAudio Unitの生成に失敗した場合のエフェクト利用不可表示を検討する。
+
+
 ## Macエフェクトモードの終了・再起動検証 — 2026-10-28
 
 - 🟢 [Done] 専用識別子・一時ライブラリを使用したMac Release実アプリで通常終了と再起動を検証。Pro／OFF／BASICが各々復元され、Proで有効にしたエフェクトの設定はOFFを経由しても保持された。旧版のOFF設定と、モード・バイパスの不一致も確認。[条件と結果](quality/EFFECT_MODE_RELAUNCH_2026-10-28.md)。
