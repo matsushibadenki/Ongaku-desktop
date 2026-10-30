@@ -7,12 +7,16 @@
 xcuserdata/
 *.xcuserstate
 DerivedData/
+/.xcode-derived/
 *.xccheckout
 *.xcscmblueprint
 
 # Swift Package Manager output and local IDE state
 .build/
 .swiftpm/
+
+# Generated coverage profile
+/default.profraw
 
 # Generated release output. Keep scripts, SparkleTools, appcast.xml, and docs.
 /Releases/build/
