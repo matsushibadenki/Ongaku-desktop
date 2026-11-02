@@ -23,6 +23,25 @@ struct EffectRackRenderingTests {
         #expect(first != EffectModuleCard(setting: original, player: otherPlayer))
     }
 
+    @Test("Page boundary ignores transport updates but tracks settings, bypass and tab snapshots")
+    func pageBoundary() {
+        let player = PlaybackController()
+        defer { player.clearCurrentTrack() }
+        var tab = AudioEffectPageTab.basic
+        let binding = Binding(get: { tab }, set: { tab = $0 })
+        let settings = player.effectSettings
+        let first = EffectRackContent(player: player, settings: settings, bypassed: false, selectedTab: binding)
+        player.volume = 0.45
+        #expect(first == EffectRackContent(player: player, settings: settings, bypassed: false, selectedTab: binding))
+        #expect(first != EffectRackContent(player: player, settings: settings, bypassed: true, selectedTab: binding))
+        var edited = settings
+        edited[0].isEnabled.toggle()
+        #expect(first != EffectRackContent(player: player, settings: edited, bypassed: false, selectedTab: binding))
+        tab = .pro
+        #expect(first != EffectRackContent(player: player, settings: settings, bypassed: false, selectedTab: binding),
+                "The same Binding must not hide a tab change")
+    }
+
     @Test("Repeated size/place proposals reuse exact geometry; resize and invalidation remeasure")
     func layoutReuse() {
         var cache = EffectLayoutMeasurementCache<CGSize>()

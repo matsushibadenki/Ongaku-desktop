@@ -8,7 +8,41 @@ import SwiftUI
 struct EffectsRackView: View {
     @EnvironmentObject private var player: PlaybackController
     @Binding var selectedTab: AudioEffectPageTab
+
+    var body: some View {
+        EffectRackContent(
+            player: player,
+            settings: player.effectSettings,
+            bypassed: player.effectsBypassed,
+            selectedTab: $selectedTab
+        )
+        .equatable()
+    }
+}
+
+/// Keep transport/meter publications outside the layout and native input regions.
+/// Include the tab value explicitly: comparing Binding instances cannot detect edits.
+struct EffectRackContent: View, Equatable {
+    let player: PlaybackController
+    let settings: [RealtimeAudioEffectSetting]
+    let bypassed: Bool
+    @Binding var selectedTab: AudioEffectPageTab
+    private let tab: AudioEffectPageTab
     @StateObject private var input = EffectRackInputRouter()
+
+    init(player: PlaybackController, settings: [RealtimeAudioEffectSetting],
+         bypassed: Bool, selectedTab: Binding<AudioEffectPageTab>) {
+        self.player = player
+        self.settings = settings
+        self.bypassed = bypassed
+        self._selectedTab = selectedTab
+        self.tab = selectedTab.wrappedValue
+    }
+
+    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.player === rhs.player && lhs.settings == rhs.settings
+            && lhs.bypassed == rhs.bypassed && lhs.tab == rhs.tab
+    }
 
     private var visibleKinds: [RealtimeAudioEffectKind] {
         let allowed = AudioEffectModuleRegistry.activeKinds(for: selectedTab)
@@ -16,7 +50,7 @@ struct EffectsRackView: View {
     }
 
     private var countSummary: AudioEffectCountSummary {
-        player.effectCountSummary(for: selectedTab)
+        AudioEffectModuleRegistry.countSummary(for: selectedTab, settings: settings, effectsBypassed: bypassed)
     }
 
     var body: some View {
@@ -34,7 +68,7 @@ struct EffectsRackView: View {
                     ) {
                         ForEach(visibleKinds) { kind in
                             EffectModuleCard(
-                                setting: player.effectSetting(for: kind),
+                                setting: settings.first(where: { $0.kind == kind }) ?? RealtimeAudioEffectSetting(kind: kind),
                                 player: player
                             )
                             .equatable()
@@ -54,7 +88,7 @@ struct EffectsRackView: View {
             // Keep the selected Basic/Pro tab on every visit. The persisted
             // bypass flag remains authoritative for OFF, including upgrades
             // from versions that did not store the selected tab.
-            if player.effectsBypassed {
+            if bypassed {
                 if selectedTab != .off { selectedTab = .off }
             } else if selectedTab == .off {
                 selectedTab = .basic

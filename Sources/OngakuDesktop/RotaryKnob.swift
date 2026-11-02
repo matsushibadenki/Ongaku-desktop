@@ -347,15 +347,17 @@ final class EffectRackInputRouter: @MainActor ObservableObject {
         let point = scrollView.convert(event.locationInWindow, from: nil)
         let inside = scrollView.bounds.intersection(scrollView.visibleRect).contains(point)
         guard inside || controlPressed || scrollerPressed || rejectedClick else { return event }
-        let overControl = regions.allObjects.contains {
-            !$0.isHiddenOrHasHiddenAncestor && $0.window === window
-                && $0.bounds.intersection($0.visibleRect).contains($0.convert(event.locationInWindow, from: nil))
-        }
-        let overScroller = [scrollView.verticalScroller, scrollView.horizontalScroller].compactMap { $0 }.contains {
-            !$0.isHidden && $0.bounds.contains($0.convert(event.locationInWindow, from: nil))
-        }
         switch event.type {
         case .leftMouseDown:
+            // Hit testing every region is only needed to acquire click ownership.
+            // Scroll/momentum events must not walk the entire native control tree.
+            let overControl = regions.allObjects.contains {
+                !$0.isHiddenOrHasHiddenAncestor && $0.window === window
+                    && $0.bounds.intersection($0.visibleRect).contains($0.convert(event.locationInWindow, from: nil))
+            }
+            let overScroller = [scrollView.verticalScroller, scrollView.horizontalScroller].compactMap { $0 }.contains {
+                !$0.isHidden && $0.bounds.contains($0.convert(event.locationInWindow, from: nil))
+            }
             if overScroller {
                 expiry?.cancel()
                 scrollerPressed = true
