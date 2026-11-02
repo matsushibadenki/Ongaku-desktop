@@ -186,6 +186,29 @@ private final class ChunkRelay: @unchecked Sendable {
 
 @Suite("Actor-owned chunk transfer", .serialized)
 struct ChunkTransferWorkerTests {
+    @Test("Idle refresh prunes stale checkpoints and publishes retained progress")
+    func refreshPrunesAndPublishesSnapshot() async throws {
+        try await withChunkFixture { f in
+            let directory = f.root.appendingPathComponent("receiver")
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let store = DeviceTransferCheckpointStore(directory: directory)
+            for (index, age) in [40.0, 1.0].enumerated() {
+                let sha = String(format: "%064x", index + 1)
+                let checkpoint = DeviceTransferCheckpoint(itemSHA256: sha, fileSize: 4, chunkSize: 2,
+                    chunkHashes: Array(repeating: String(repeating: "a", count: 64), count: 2),
+                    receivedIndexes: [0], updatedAt: Date().addingTimeInterval(-age * 86400), storageGeneration: UUID())
+                try JSONEncoder().encode(checkpoint).write(to: directory.appendingPathComponent("\(sha).json"))
+                try store.saveProgress(checkpoint)
+            }
+            let h = f.make("receiver")
+            h.client.submit(.refresh(removingStale: true))
+            await h.flush()
+            try await chunkWait { h.spy.checkpoints.count == 1 }
+            #expect(h.spy.checkpoints.first?.itemSHA256 == String(format: "%064x", 2))
+            #expect(h.spy.checkpoints.first?.completedBytes == 2)
+            #expect(try store.summaries() == h.spy.checkpoints)
+        }
+    }
     @Test("Pause preparation, resume once, then cancel without reviving the source")
     func pausePreparingSource() async throws {
         try await withChunkFixture { f in

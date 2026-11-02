@@ -54,6 +54,34 @@ struct DeviceTransferState: Identifiable, Equatable, Sendable {
     }
 }
 
+/// Cache positions from the end, so prepending a new transfer does not shift
+/// existing cached offsets. Every hit is validated against the current array.
+struct DeviceTransferProjectionIndex {
+    private var offsets: [UUID: Int] = [:]
+
+    mutating func index(of id: UUID, in values: [DeviceTransferState]) -> Int? {
+        if let offset = offsets[id], offset >= 0, offset < values.count {
+            let index = values.count - 1 - offset
+            if values[index].id == id { return index }
+        }
+        guard let index = values.firstIndex(where: { $0.id == id }) else {
+            offsets.removeValue(forKey: id)
+            return nil
+        }
+        offsets[id] = values.count - 1 - index
+        return index
+    }
+
+    mutating func apply(_ state: DeviceTransferState, to values: inout [DeviceTransferState]) {
+        if let index = index(of: state.id, in: values) {
+            values[index] = state
+        } else {
+            offsets[state.id] = values.count
+            values.insert(state, at: 0)
+        }
+    }
+}
+
 enum DeviceSyncDirection: String, Codable, Sendable {
     case macToPhone
     case phoneToMac

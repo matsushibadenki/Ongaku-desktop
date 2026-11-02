@@ -573,7 +573,9 @@ private actor DeviceChunkTransferDisk {
             emit(.released(sha, discard && (try? result.get()) != nil, result))
         case .refresh(let stale):
             emit(.refreshed(Result {
-                if stale && incoming.isEmpty && outgoing.isEmpty { _ = try store.removeStale(before: Date().addingTimeInterval(-30*24*60*60)) }
+                if stale && incoming.isEmpty && outgoing.isEmpty {
+                    return try store.pruneStaleAndSummarize(before: Date().addingTimeInterval(-30*24*60*60)).summaries
+                }
                 return try store.summaries()
             }))
         case .discard:

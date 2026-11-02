@@ -50,6 +50,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     @Published private(set) var latestOverlayReceipt: DeviceSyncOverlayReceipt?
     @Published private(set) var overlayAuditHistory: [DeviceSyncAuditEntry] = []
     @Published private(set) var transfers: [DeviceTransferState] = []
+    private var transferProjectionIndex = DeviceTransferProjectionIndex()
     @Published private(set) var resumableTransfers: [DeviceTransferCheckpointSummary] = []
     @Published private(set) var isBulkSyncing = false
     @Published private(set) var bulkSyncTotalCount = 0
@@ -856,24 +857,20 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private func updateTransfer(_ state: DeviceTransferState) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            if let index = transfers.firstIndex(where: { $0.id == state.id }) {
-                transfers[index] = state
-            } else {
-                transfers.insert(state, at: 0)
-            }
+            transferProjectionIndex.apply(state, to: &transfers)
         }
     }
 
     private func updateTransfer(id: UUID, phase: DeviceTransferState.Phase) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
+            guard let self, let index = transferProjectionIndex.index(of: id, in: transfers) else { return }
             transfers[index].phase = phase
         }
     }
 
     private func updateTransferProgress(id: UUID, fraction: Double, completedBytes: Int64) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
+            guard let self, let index = transferProjectionIndex.index(of: id, in: transfers) else { return }
             transfers[index].updateProgress(fraction: fraction, completedBytes: completedBytes)
         }
     }
@@ -968,7 +965,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         switch event {
         case .state(let connection, let state):
             guard chunkTransfers.client.isCurrent(connection) else { return }
-            state.applyProjection(to: &transfers)
+            transferProjectionIndex.apply(state, to: &transfers)
             if state.direction == .phoneToMac {
                 let error: Error?
                 switch state.phase {

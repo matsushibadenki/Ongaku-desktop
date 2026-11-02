@@ -497,11 +497,18 @@ struct DeviceTransferCheckpointStore: Sendable {
         }
     }
 
+    /// Prune and return one coherent snapshot. Re-reading every checkpoint after
+    /// deleting stale entries needlessly decodes the full hash arrays twice.
+    func pruneStaleAndSummarize(before cutoff: Date) throws -> (removed: Int, summaries: [DeviceTransferCheckpointSummary]) {
+        let all = try summaries()
+        let stale = all.filter { $0.updatedAt < cutoff }
+        for summary in stale { try remove(forSHA256: summary.itemSHA256) }
+        return (stale.count, all.filter { $0.updatedAt >= cutoff })
+    }
+
     @discardableResult
     func removeStale(before cutoff: Date) throws -> Int {
-        let stale = try summaries().filter { $0.updatedAt < cutoff }
-        for summary in stale { try remove(forSHA256: summary.itemSHA256) }
-        return stale.count
+        try pruneStaleAndSummarize(before: cutoff).removed
     }
 
     private struct Progress: Codable {

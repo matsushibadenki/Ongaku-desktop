@@ -26,6 +26,7 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
     @Published private(set) var localItems: [DeviceSyncItem] = []
     @Published private(set) var remoteItems: [DeviceSyncItem] = []
     @Published private(set) var transfers: [DeviceTransferState] = []
+    private var transferProjectionIndex = DeviceTransferProjectionIndex()
     @Published private(set) var resumableTransfers: [DeviceTransferCheckpointSummary] = []
     @Published var pairingRequest: MobilePairingRequest?
 
@@ -360,24 +361,20 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
     private func updateTransfer(_ state: DeviceTransferState) {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            if let index = transfers.firstIndex(where: { $0.id == state.id }) {
-                transfers[index] = state
-            } else {
-                transfers.insert(state, at: 0)
-            }
+            transferProjectionIndex.apply(state, to: &transfers)
         }
     }
 
     private func updateTransfer(id: UUID, phase: DeviceTransferState.Phase) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
+            guard let self, let index = transferProjectionIndex.index(of: id, in: transfers) else { return }
             transfers[index].phase = phase
         }
     }
 
     private func updateTransferProgress(id: UUID, fraction: Double, completedBytes: Int64) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, let index = transfers.firstIndex(where: { $0.id == id }) else { return }
+            guard let self, let index = transferProjectionIndex.index(of: id, in: transfers) else { return }
             transfers[index].updateProgress(fraction: fraction, completedBytes: completedBytes)
         }
     }
@@ -479,7 +476,7 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
         switch event {
         case .state(let connection, let state):
             guard chunkTransfers.client.isCurrent(connection) else { return }
-            state.applyProjection(to: &transfers)
+            transferProjectionIndex.apply(state, to: &transfers)
 
         case .checkpoints(let values): resumableTransfers = values
         case .committed(let descriptor, let url, let snapshot):
