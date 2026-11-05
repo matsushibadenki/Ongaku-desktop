@@ -20,7 +20,19 @@ jobs:
       - name: Swift unit, localization, layout, and privacy tests
         # Suite-level .serialized does not isolate a suite from other suites.
         # Keep heavy MainActor/DSP audits away from wall-clock audio playback.
-        run: swift test --skip 'PlaybackTransportIntegrationTests|AudioThreadGainIntegrationTests'
+        run: swift test --skip 'PlaybackTransportIntegrationTests|AudioThreadGainIntegrationTests|StorageDelayedFailureTests|LibraryPresentationTests|LargeLibraryPerformanceTests'
+
+      - name: Library switch and storage isolation tests
+        # The write gates need an uncongested MainActor. Suite-level
+        # serialization does not isolate them from other test suites.
+        run: swift test --skip-build --filter StorageDelayedFailureTests
+
+      - name: Library presentation tests
+        run: swift test --skip-build --filter LibraryPresentationTests
+
+      - name: Large library fixture and performance tests
+        # Keep the 100,000-track work out of timing-sensitive suites.
+        run: swift test --skip-build --filter LargeLibraryPerformanceTests
 
       - name: Connected gain acknowledgement and tail integration tests
         # Uses real MainActor polling; isolate from long synchronous DSP audits.

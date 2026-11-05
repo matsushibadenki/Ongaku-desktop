@@ -415,6 +415,9 @@ struct LibraryPresentationTests {
         let oldTracks = LargeLibraryFixture.makeDocument(trackCount: 200).tracks
         var newTrack = oldTracks[0]
         newTrack.title = "New library"
+        // Library switching verifies external references before accepting the
+        // destination. The fixture belongs to the target media folder.
+        newTrack.managedPath = root.appendingPathComponent("Second/Media/new.wav").path
         try await first.save(tracks: oldTracks)
         try await second.save(tracks: [newTrack])
         let store = LibraryStore(repository: first)
