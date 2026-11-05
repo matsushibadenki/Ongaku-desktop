@@ -619,6 +619,8 @@
 "lyrics.editor.empty" = "保存空白内容将移除歌词。";
 "lyrics.editor.invalidLRC" = "未找到有效的LRC时间戳。";
 "lyrics.editor.lineCount" = "%d行同步歌词";
+"lyrics.web.open" = "在浏览器中使用 %@ 搜索";
+"lyrics.web.detail" = "打开所选网站并发送搜索词。无法从这些网站将歌词保存到 Ongaku 或同步显示。";
 "lrclib.search" = "搜索LRCLIB";
 "lrclib.search.placeholder" = "按歌名、艺人或专辑搜索";
 "lrclib.search.currentSong" = "搜索当前歌曲";
@@ -765,7 +767,7 @@
 "settings.storage.authorizeMusicMedia" = "请选择此Music资料库的媒体文件夹，以允许访问歌曲并创建Ongaku Media。";
 "settings.storage.musicLibraryHelp" = "选择Apple Music的.musiclibrary包";
 "settings.storage.importingMusicLibrary" = "正在扫描并导入所选资料库中的音乐…";
-"settings.storage.musicLibraryImportResult" = "资料库扫描完成：找到%d个音频文件，新增%d个，%d首已重新链接到原始文件，%d个无法建立索引。";
+"settings.storage.musicLibraryImportResult" = "资料库扫描完成：找到%d个音频文件，新增%d个，更新%d首的存储路径，%d个无法建立索引。";
 "settings.storage.dropFolderHint" = "将音乐文件夹拖到此处，可将其设为存储位置并保持原目录层级注册歌曲";
 "settings.storage.registeringDroppedFolder" = "正在保持文件夹层级并原地注册音乐…";
 "settings.storage.folderRegistrationResult" = "文件夹注册完成：找到%d个音频文件，新增%d个，更新%d个文件引用，%d个无法建立索引。";
@@ -777,7 +779,7 @@
 "settings.storage.source.selectedAppleMusicLibrary" = "已从所选Apple Music资料库读取";
 "settings.storage.source.default" = "使用Ongaku默认的Application Support位置";
 "settings.storage.source.custom" = "正在使用所选位置";
-"settings.storage.safetyNote" = "新文件夹将创建独立的管理数据。重新选择以前的文件夹时，会读取其中的歌曲和播放列表，不会移动其他资料库。选择Music资料库时，将在媒体文件夹中创建Ongaku Media，并引用原始歌曲而不修改它们。";
+"settings.storage.safetyNote" = "歌曲、资料库、图片和搜索数据均保存在所选文件夹内。重新选择以前的文件夹即可打开对应资料库。外部引用的歌曲将被复制并保留原始文件，因此需要足够的可用空间。";
 "settings.storage.error.multiplePreservedLibraries" = "发现多个保留的资料库。为避免恢复错误的资料库，已停止自动恢复。请通过资料库导入选择要恢复的目录文件：\n%@";
 "settings.storage.error.invalidMusicLibrary" = "请选择有效的.musiclibrary包。";
 "settings.storage.error.mediaFolderNotFound" = "找不到与此Apple Music资料库对应的Media文件夹。";
@@ -791,7 +793,7 @@
 "common.cancel" = "取消";
 "status.storageChanged" = "已切换资料库的存储位置。";
 "status.appleMusicNoFiles" = "Apple Music的Media文件夹中未找到支持的音频文件。";
-"status.appleMusicImported" = "已索引%d首歌曲，并将%d首重新链接到Apple Music原始文件。";
+"status.appleMusicImported" = "已登记%d首歌曲并更新%d首的存储路径。原始文件已保留。";
 "status.folderNoFiles" = "所选文件夹中未找到支持的音频文件。";
 "status.folderRegistered" = "已注册%d首歌曲，并将%d首的引用更新到所选文件夹。";
 "settings.sidebar.general" = "通用";
@@ -1242,7 +1244,7 @@
 "storage.migration.recoveryFailed" = "无法修复资料库";
 
 "storage.migration.create.title" = "要创建新资料库吗？";
-"storage.migration.create.message" = "在所选文件夹中未找到 Ongaku 资料库文件。是否在新的子文件夹中创建独立的空资料库？原资料库和现有文件将保留。";
+"storage.migration.create.message" = "未找到 Ongaku 资料库。要在此文件夹中创建资料库并注册其中的音频文件吗？现有文件和原资料库将保留。";
 
 // Pastel appearances shared with iPhone.
 "settings.appearance.pink" = "粉色";
@@ -1289,3 +1291,24 @@
 
 "effect.vocal_presence.name" = "Vocal Presence · Prototype";
 "effect.vocal_presence.description" = "轻微调整整首歌曲的中高频，不会分离人声。建议从较低强度开始。";
+
+"deviceSync.overlay.rollbackFailed" = "无法完全恢复同步更改。请检查资料库后重试。";
+
+"storage.migration.volumeUnavailable" = "无法访问宗卷“%@”。请连接驱动器或网络宗卷，确认它显示在访达中，然后重新打开 Ongaku Desktop 或重新选择资料库文件夹。";
+
+"storage.migration.otherLibrary.title" = "打开其他资料库？";
+"storage.migration.otherLibrary.message" = "所选文件夹包含另一个 Ongaku 资料库（%d 首歌曲）。要将其作为单独的资料库打开吗？原资料库的注册信息将保留。";
+"storage.migration.otherLibrary.open" = "打开资料库";
+"storage.migration.searchedFolder" = "已搜索的文件夹：%@";
+
+"storage.migration.chooseExisting.title" = "选择资料库";
+"storage.migration.chooseExisting.message" = "找到多个资料库。请选择要打开的资料库。";
+"storage.migration.registrationWarning" = "部分文件无法注册";
+
+"storage.migration.confirmExisting.title" = "打开此资料库？";
+"storage.migration.confirmExisting.message" = "所选资料库包含%d首歌曲。要从此位置打开吗？其他资料库的注册信息将保留。";
+
+"storage.migration.authorizeMediaFolder" = "请选择包含 Ongaku Library Data 的媒体文件夹，以便应用访问音频文件。";
+
+"library.error.staleOrganizedTrack" = "整理期间歌曲位置已更改。请重新载入资料库后重试。";
+"metadataEditor.error.mediaOrganizationBusy" = "请等待歌曲信息保存或媒体整理完成后重试。";

@@ -10,6 +10,24 @@ enum LibraryMigrationRecovery {
         let error = error as NSError
         return error.domain == "OngakuMigration" && error.code == 7
     }
+    /// Only diagnose availability of the volume root; folder permissions and
+    /// the presence of a particular library are separate questions.
+    nonisolated static func inaccessibleVolumeName(
+        for media: URL, volumesRoot: URL = URL(fileURLWithPath: "/Volumes", isDirectory: true),
+        fileManager: FileManager = .default
+    ) -> String? {
+        let root = volumesRoot.standardizedFileURL.path
+        let path = media.standardizedFileURL.path
+        let prefix = root == "/" ? "/" : root + "/"
+        guard path.hasPrefix(prefix) else { return nil }
+        let suffix = path.dropFirst(prefix.count)
+        guard let name = suffix.split(separator: "/").first, !name.isEmpty else { return nil }
+        let volume = volumesRoot.appendingPathComponent(String(name), isDirectory: true)
+        var isDirectory: ObjCBool = false
+        return fileManager.fileExists(atPath: volume.path, isDirectory: &isDirectory) && isDirectory.boolValue
+            ? nil : String(name)
+    }
+
     nonisolated static func catalogIdentity(at catalog: URL) -> String? {
         guard let data = try? Data(contentsOf: catalog.appendingPathComponent("library-v1.json")),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
@@ -42,10 +60,60 @@ enum LibraryMigrationRecovery {
                                       expectedLibraryID: libraryID)
     }
 
+    /// Discover existing catalogs under a user-selected root without opening or modifying them.
+    nonisolated static func existingMediaCandidates(
+        in selected: URL, fileManager: FileManager = .default
+    ) throws -> [URL] {
+        let root = selected.resolvingSymlinksInPath().standardizedFileURL
+        let direct = root.lastPathComponent == PortableLibraryStorage.directoryName
+            ? root.deletingLastPathComponent() : root
+        let directManifest = PortableLibraryStorage(mediaURL: direct).rootURL.appendingPathComponent("library-v1.json")
+        if fileManager.fileExists(atPath: directManifest.path) { return [direct] }
+        var queue: [(URL, Int)] = [(root, 0)]
+        var visited = 0
+        var results: [String: URL] = [:]
+        while visited < queue.count {
+            try Task.checkCancellation()
+            guard visited < 4_096 else {
+                throw NSError(domain: "OngakuMigration", code: 4, userInfo: [
+                    NSLocalizedDescriptionKey: L10n.text("storage.migration.scanLimit")
+                ])
+            }
+            let (directory, depth) = queue[visited]
+            visited += 1
+            let values = try directory.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+            guard values.isDirectory == true, values.isSymbolicLink != true else { continue }
+            let media = directory.lastPathComponent == PortableLibraryStorage.directoryName
+                ? directory.deletingLastPathComponent() : directory
+            let manifest = PortableLibraryStorage(mediaURL: media).rootURL.appendingPathComponent("library-v1.json")
+            if fileManager.fileExists(atPath: manifest.path) {
+                results[media.standardizedFileURL.path] = media.standardizedFileURL
+                continue
+            }
+            guard depth < 5 else { continue }
+            for child in try fileManager.contentsOfDirectory(
+                at: directory, includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey],
+                options: [.skipsHiddenFiles]
+            ) {
+                let childValues = try child.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+                if childValues.isDirectory == true, childValues.isSymbolicLink != true {
+                    guard queue.count < 4_096 else {
+                        throw NSError(domain: "OngakuMigration", code: 4, userInfo: [
+                            NSLocalizedDescriptionKey: L10n.text("storage.migration.scanLimit")
+                        ])
+                    }
+                    queue.append((child, depth + 1))
+                }
+            }
+        }
+        return results.values.sorted { $0.path.localizedStandardCompare($1.path) == .orderedAscending }
+    }
+
     nonisolated static func findMediaDirectory(
         in selected: URL, expectedMedia: URL, expectedCatalog: URL,
         expectedLibraryID: String? = nil,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        matchAnyLibrary: Bool = false
     ) throws -> URL {
         let root = selected.resolvingSymlinksInPath().standardizedFileURL
         let expected = expectedMedia.resolvingSymlinksInPath().standardizedFileURL
@@ -54,8 +122,8 @@ enum LibraryMigrationRecovery {
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
             return json["libraryID"] as? String
         }
-        let expectedID = expectedLibraryID ?? identity(expectedCatalog)
-        let hasLegacyCatalog = fileManager.fileExists(
+        let expectedID = matchAnyLibrary ? nil : (expectedLibraryID ?? identity(expectedCatalog))
+        let hasLegacyCatalog = !matchAnyLibrary && fileManager.fileExists(
             atPath: expectedCatalog.appendingPathComponent("library-v1.json").path
         )
         var queue: [(URL, Int)] = [(root, 0)]
@@ -82,8 +150,8 @@ enum LibraryMigrationRecovery {
                 || fileManager.fileExists(atPath: directory.appendingPathComponent(".ongaku-library.json").path) {
                 foundRelatedData = true
             }
-            if hasCatalog || (directory.lastPathComponent == "Ongaku Media"
-                && (directory.path == expected.path || hasLegacyCatalog)) {
+            if hasCatalog || (!matchAnyLibrary && hasLegacyCatalog
+                && directory.lastPathComponent == "Ongaku Media" && directory.path == expected.path) {
                 let candidateID = identity(catalog)
                 if candidateID == expectedID && candidateID != nil
                     || expectedID == nil
@@ -485,10 +553,20 @@ final class LibraryProfileSettings: ObservableObject {
         for index in profiles.indices where securityScopedProfileURLs[profiles[index].id] == nil {
             let profile = profiles[index]
             let oldPath = profile.mediaURL.standardizedFileURL.path
+            func recordUnavailableRecovery() {
+                unavailableRecoveryProfiles.insert(profile.id)
+                if profile.id == activeLibraryID {
+                    if let volume = LibraryMigrationRecovery.inaccessibleVolumeName(for: profile.mediaURL, fileManager: fileManager) {
+                        migrationError = L10n.format("storage.migration.volumeUnavailable", volume)
+                    } else {
+                        migrationError = L10n.text("storage.migration.notFound")
+                    }
+                }
+            }
             guard let data = recoveryBookmarks[oldPath] as? Data else {
-                if locations[oldPath] != nil {
-                    unavailableRecoveryProfiles.insert(profile.id)
-                    if profile.id == activeLibraryID { migrationError = L10n.text("storage.migration.notFound") }
+                if locations[oldPath] != nil
+                    || LibraryMigrationRecovery.inaccessibleVolumeName(for: profile.mediaURL, fileManager: fileManager) != nil {
+                    recordUnavailableRecovery()
                 }
                 continue
             }
@@ -517,12 +595,18 @@ final class LibraryProfileSettings: ObservableObject {
                     }
                     } catch {
                         unavailableRecoveryProfiles.insert(profile.id)
-                        if profile.id == activeLibraryID { migrationError = error.localizedDescription }
+                        if profile.id == activeLibraryID {
+                            if let volume = LibraryMigrationRecovery.inaccessibleVolumeName(for: url, fileManager: fileManager) {
+                                migrationError = L10n.format("storage.migration.volumeUnavailable", volume)
+                            } else {
+                                migrationError = error.localizedDescription
+                            }
+                        }
                     }
                 }
-            } else if locations[oldPath] != nil {
-                unavailableRecoveryProfiles.insert(profile.id)
-                if profile.id == activeLibraryID { migrationError = L10n.text("storage.migration.notFound") }
+            } else if locations[oldPath] != nil
+                || LibraryMigrationRecovery.inaccessibleVolumeName(for: profile.mediaURL, fileManager: fileManager) != nil {
+                recordUnavailableRecovery()
             }
         }
         for index in profiles.indices where !unavailableRecoveryProfiles.contains(profiles[index].id)
@@ -649,6 +733,56 @@ final class LibraryProfileSettings: ObservableObject {
         guard let profile = profiles.first(where: { $0.id == id && !$0.isArchived }),
               connectionState(for: profile) == .connected else { return }
         activeLibraryID = id
+    }
+
+    /// Called after the user confirms opening a different existing catalog.
+    /// Preserve the old profile and reuse a previously registered destination.
+    func openExistingLibraryAfterRecoveryConfirmation(at mediaURL: URL) throws {
+        let media = mediaURL.standardizedFileURL
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        guard let identity = LibraryMigrationRecovery.catalogIdentity(at: catalog),
+              UUID(uuidString: identity) != nil else { throw ExternalLibraryError.invalidLocation }
+        if let existing = profiles.first(where: { !$0.isArchived && $0.mediaURL.standardizedFileURL == media }) {
+            activeLibraryID = existing.id
+        } else {
+            let id = UUID()
+            profiles.append(LibraryProfile(
+                id: id, name: normalizedName(media.lastPathComponent), catalogPath: catalog.path,
+                mediaPath: media.path, isArchived: false, createdAt: .now
+            ))
+            activeLibraryID = id
+        }
+        migrationError = nil
+    }
+
+    /// Create a new catalog exactly at the selected media folder after confirmation.
+    /// Never replace an existing catalog, sidecar, journal or symbolic-link directory.
+    func createLibraryAtSelectedFolderAfterConfirmation(_ directory: URL) throws {
+        let media = directory.standardizedFileURL
+        let values = try media.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+        guard values.isDirectory == true, values.isSymbolicLink != true else { throw ExternalLibraryError.invalidLocation }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        var isDirectory: ObjCBool = false
+        if fileManager.fileExists(atPath: catalog.path, isDirectory: &isDirectory) {
+            let catalogValues = try catalog.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey])
+            guard isDirectory.boolValue, catalogValues.isSymbolicLink != true,
+                  try fileManager.contentsOfDirectory(atPath: catalog.path).isEmpty else {
+                throw CocoaError(.fileWriteFileExists)
+            }
+        } else {
+            try fileManager.createDirectory(at: catalog, withIntermediateDirectories: false)
+        }
+        let id = UUID()
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(LibraryDocument(libraryID: id)).write(
+            to: catalog.appendingPathComponent("library-v1.json"), options: .withoutOverwriting
+        )
+        profiles.append(LibraryProfile(
+            id: id, name: normalizedName(media.lastPathComponent), catalogPath: catalog.path,
+            mediaPath: media.path, isArchived: false, createdAt: .now
+        ))
+        activeLibraryID = id
+        migrationError = nil
     }
 
     /// Called only after the recovery UI explicitly confirms a separate library.
@@ -1231,6 +1365,8 @@ final class LibraryStorageSettings: ObservableObject {
     }
 
     /// Keep bookmarks and the previous storage selection intact if preparation fails.
+    private var isActivatingDirectory = false
+
     func activateDirectory(
         _ directoryURL: URL,
         source newSource: LibraryStorageSource = .userSelected,
@@ -1238,6 +1374,9 @@ final class LibraryStorageSettings: ObservableObject {
         musicMedia: URL? = nil,
         prepare: (URL) async throws -> Void
     ) async throws {
+        guard !isActivatingDirectory else { throw CocoaError(.userCancelled) }
+        isActivatingDirectory = true
+        defer { isActivatingDirectory = false }
         let directory = directoryURL.standardizedFileURL
         let sourceScope = musicMedia.flatMap { $0.startAccessingSecurityScopedResource() ? $0 : nil }
             ?? restoreMediaAccess(for: directory)
@@ -1251,6 +1390,18 @@ final class LibraryStorageSettings: ObservableObject {
                 options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil
             )
             try await prepare(directory)
+            // Retain a grant for every chosen library, not only the last one.
+            // This lets a later profile switch reopen an earlier external folder.
+            var recoveryBookmarks = defaults.dictionary(forKey: Self.migrationAccessKey) ?? [:]
+            recoveryBookmarks[directory.path] = bookmark
+            defaults.set(recoveryBookmarks, forKey: Self.migrationAccessKey)
+            if let libraryID = LibraryMigrationRecovery.catalogIdentity(
+                at: PortableLibraryStorage(mediaURL: directory).rootURL
+            ) {
+                var locations = defaults.dictionary(forKey: Self.migrationLocationsKey) ?? [:]
+                locations[directory.path] = ["rootPath": directory.path, "libraryID": libraryID]
+                defaults.set(locations, forKey: Self.migrationLocationsKey)
+            }
             securityScopedURL?.stopAccessingSecurityScopedResource()
             musicMediaScopedURL?.stopAccessingSecurityScopedResource()
             securityScopedURL = didAccess ? directory : nil

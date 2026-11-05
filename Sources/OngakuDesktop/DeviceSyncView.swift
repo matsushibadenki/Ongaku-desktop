@@ -1459,15 +1459,17 @@ private struct OverlaySyncPreviewSheet: View {
             )
         }
         isApplying = true
+        let storageIdentity = library.storageIdentity
         Task {
+            defer { isApplying = false }
             let applied = await library.applySyncedTrackOverlays(applications)
+            guard library.storageIdentity == storageIdentity else { return }
             sync.updateLocalTracks(
                 library.tracks,
                 playbackEvents: library.playbackEvents,
                 playlists: library.playlists,
                 displayTags: library.syncedDisplayTags
             )
-            isApplying = false
             if applied > 0 {
                 let receipt = DeviceSyncOverlayReceipt(
                     id: auditID,
@@ -1838,11 +1840,15 @@ private struct OverlaySyncAuditSheet: View {
 
     private func undo(_ entry: DeviceSyncAuditEntry) {
         undoingID = entry.id
+        let storageIdentity = library.storageIdentity
         Task {
+            defer { undoingID = nil }
             let trackResult = await library.undoSyncedTrackOverlays(entry.changes)
+            guard library.storageIdentity == storageIdentity else { return }
             let playlistResult = await library.undoSyncedPlaylistChanges(
                 entry.playlistChanges ?? []
             )
+            guard library.storageIdentity == storageIdentity else { return }
             undoConflictCount = trackResult.conflictFieldCount
                 + playlistResult.conflictFieldCount
             if trackResult.restoredFieldCount + playlistResult.restoredFieldCount > 0 {
@@ -1854,7 +1860,6 @@ private struct OverlaySyncAuditSheet: View {
                     displayTags: library.syncedDisplayTags
                 )
             }
-            undoingID = nil
         }
     }
 

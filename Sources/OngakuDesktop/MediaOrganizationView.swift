@@ -30,6 +30,9 @@ struct MediaOrganizationPreview: Sendable {
     var sourceRootURL: URL
     var destinationRootURL: URL
     var items: [MediaOrganizationItem]
+    // Assigned by LibraryStore, not serialized; previews cannot cross a library switch.
+    var storageIdentity: UUID? = nil
+    var contentRevision: Int? = nil
 
     var moveCount: Int { items.count { $0.status == .move } }
     var conflictCount: Int { items.count { $0.status == .conflict } }
@@ -42,13 +45,17 @@ struct MediaOrganizationPreview: Sendable {
             return MediaOrganizationPreview(
                 sourceRootURL: sourceRootURL,
                 destinationRootURL: destinationRootURL,
-                items: []
+                items: [],
+                storageIdentity: storageIdentity,
+                contentRevision: contentRevision
             )
         }
         return MediaOrganizationPreview(
             sourceRootURL: sourceRootURL,
             destinationRootURL: destinationRootURL,
-            items: items.filter { !trackIDs.isDisjoint(with: $0.trackIDs) }
+            items: items.filter { !trackIDs.isDisjoint(with: $0.trackIDs) },
+            storageIdentity: storageIdentity,
+            contentRevision: contentRevision
         )
     }
 }

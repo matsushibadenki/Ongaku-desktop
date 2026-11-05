@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import Foundation
 import SwiftUI
 import Testing
@@ -159,6 +160,200 @@ struct ApplicationSettingsTests {
             )
         }
         #expect(FileManager.default.fileExists(atPath: PortableLibraryStorage(mediaURL: rearranged).rootURL.path))
+    }
+
+    @Test("A different existing library can be selected without replacing the missing profile")
+    @MainActor
+    func opensDifferentExistingLibrary() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let media = root.appendingPathComponent("Music", isDirectory: true)
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let oldMedia = URL(fileURLWithPath: "/Volumes", isDirectory: true)
+            .appendingPathComponent("OngakuMissing-" + UUID().uuidString, isDirectory: true)
+            .appendingPathComponent("Music", isDirectory: true)
+        let suite = "DifferentRecovery-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite); try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: catalog, withIntermediateDirectories: true)
+        let existingDocument = LargeLibraryFixture.makeDocument(trackCount: 3)
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        let original = try encoder.encode(existingDocument)
+        try original.write(to: catalog.appendingPathComponent("library-v1.json"))
+        let settings = LibraryProfileSettings(defaultMediaURL: oldMedia, defaults: defaults,
+                                               applicationSupportURL: root.appendingPathComponent("Support"))
+        let oldProfile = settings.activeProfile
+        #expect(settings.migrationError != nil)
+        let selected = try LibraryMigrationRecovery.findMediaDirectory(
+            in: media, expectedMedia: media, expectedCatalog: oldProfile.catalogURL,
+            expectedLibraryID: nil, matchAnyLibrary: true
+        )
+        #expect(selected.standardizedFileURL == media.standardizedFileURL)
+        let reader = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let verified = try await reader.readExternalLibraryDocument(at: catalog.appendingPathComponent("library-v1.json"))
+        #expect(verified.libraryID == existingDocument.libraryID)
+        try settings.openExistingLibraryAfterRecoveryConfirmation(at: selected)
+        #expect(settings.activeProfile.mediaURL.standardizedFileURL == media.standardizedFileURL)
+        #expect(settings.profiles.contains { $0 == oldProfile })
+        #expect(settings.migrationError == nil)
+        #expect(try Data(contentsOf: catalog.appendingPathComponent("library-v1.json")) == original)
+        let restarted = LibraryProfileSettings(defaultMediaURL: media, defaults: defaults,
+                                               applicationSupportURL: root.appendingPathComponent("Support"))
+        #expect(restarted.activeProfile.mediaURL.standardizedFileURL == media.standardizedFileURL)
+        #expect(restarted.profiles.contains { $0 == oldProfile })
+        #expect(restarted.migrationError == nil)
+        #expect(try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document.tracks.count == 3)
+    }
+
+    @Test("Multiple existing libraries can be enumerated, while an exact selection stays exact")
+    func findsMultipleExistingLibraries() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("one/Media", isDirectory: true)
+        let second = root.appendingPathComponent("two/Media", isDirectory: true)
+        for media in [first, second] {
+            let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+            try FileManager.default.createDirectory(at: catalog, withIntermediateDirectories: true)
+            try JSONSerialization.data(withJSONObject: ["libraryID": UUID().uuidString]).write(
+                to: catalog.appendingPathComponent("library-v1.json"))
+        }
+        let choices = try LibraryMigrationRecovery.existingMediaCandidates(in: root)
+        #expect(Set(choices.map(\.path)) == Set([first.path, second.path]))
+        #expect(try LibraryMigrationRecovery.existingMediaCandidates(in: first).map(\.path) == [first.path])
+        #expect(try LibraryMigrationRecovery.existingMediaCandidates(in: PortableLibraryStorage(mediaURL: second).rootURL).map(\.path) == [second.path])
+    }
+
+    @Test("A new Ongaku Media folder does not automatically inherit the old catalog")
+    func newSameNamedMediaNeedsExplicitCreation() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let oldMedia = root.appendingPathComponent("old/Ongaku Media", isDirectory: true)
+        let newMedia = root.appendingPathComponent("new/Ongaku Media", isDirectory: true)
+        let legacyCatalog = root.appendingPathComponent("legacy", isDirectory: true)
+        try FileManager.default.createDirectory(at: legacyCatalog, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: newMedia, withIntermediateDirectories: true)
+        let legacy = legacyCatalog.appendingPathComponent("library-v1.json")
+        let bytes = try JSONSerialization.data(withJSONObject: ["libraryID": UUID().uuidString])
+        try bytes.write(to: legacy)
+        do {
+            _ = try LibraryMigrationRecovery.findMediaDirectory(
+                in: newMedia, expectedMedia: oldMedia, expectedCatalog: legacyCatalog
+            )
+            Issue.record("New folder must require an explicit choice")
+        } catch {
+            #expect(LibraryMigrationRecovery.canOfferCreation(after: error))
+        }
+        #expect(try Data(contentsOf: legacy) == bytes)
+        #expect(!FileManager.default.fileExists(atPath: PortableLibraryStorage(mediaURL: newMedia).rootURL.path))
+    }
+
+    @Test("New selected media folder registers its audio in place and survives restart")
+    @MainActor
+    func createsAtSelectedFolderAndRegistersAudio() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let media = root.appendingPathComponent("chosen", isDirectory: true)
+        let suite = "SelectedMedia-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite); try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+        let file = media.appendingPathComponent("sample.aiff")
+        do {
+            let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+            let output = try AVAudioFile(forWriting: file, settings: format.settings)
+            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 128))
+            buffer.frameLength = 128
+            try output.write(from: buffer)
+        }
+        let original = try Data(contentsOf: file)
+        let oldMedia = root.appendingPathComponent("old", isDirectory: true)
+        let settings = LibraryProfileSettings(defaultMediaURL: oldMedia, defaults: defaults,
+                                               applicationSupportURL: root.appendingPathComponent("Support"))
+        let oldProfile = settings.activeProfile
+        try settings.createLibraryAtSelectedFolderAfterConfirmation(media)
+        #expect(settings.activeProfile.mediaURL.standardizedFileURL == media.standardizedFileURL)
+        #expect(settings.profiles.contains { $0 == oldProfile })
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let backupFolder = catalog.appendingPathComponent("Recovery Backups", isDirectory: true)
+        try FileManager.default.createDirectory(at: backupFolder, withIntermediateDirectories: true)
+        try original.write(to: backupFolder.appendingPathComponent("hidden.aiff"))
+        let store = LibraryStore(repository: LibraryRepository(rootURL: catalog, mediaURL: media))
+        await store.load()
+        let summary = await store.registerMediaFolderInPlace(media)
+        #expect(summary.discovered == 1)
+        #expect(summary.imported == 1)
+        #expect(summary.issues == 0)
+        #expect(try Data(contentsOf: file) == original)
+        let saved = try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document
+        #expect(saved.tracks.count == 1)
+        #expect(saved.tracks.first?.fileURL.standardizedFileURL == file.standardizedFileURL)
+        let restarted = LibraryProfileSettings(defaultMediaURL: media, defaults: defaults,
+                                               applicationSupportURL: root.appendingPathComponent("Support"))
+        #expect(restarted.activeProfile.mediaURL.standardizedFileURL == media.standardizedFileURL)
+        #expect(restarted.profiles.contains { $0 == oldProfile })
+        let manifest = catalog.appendingPathComponent("library-v1.json")
+        let before = try Data(contentsOf: manifest)
+        #expect(throws: Error.self) { try settings.createLibraryAtSelectedFolderAfterConfirmation(media) }
+        #expect(try Data(contentsOf: manifest) == before)
+        #expect(try Data(contentsOf: file) == original)
+    }
+
+    @Test("Existing sidecars prevent a new library from overwriting recoverable data")
+    @MainActor
+    func refusesNonemptyCatalogWithoutPrimary() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let media = root.appendingPathComponent("chosen", isDirectory: true)
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let suite = "ExistingSidecars-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite); try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: catalog, withIntermediateDirectories: true)
+        let backup = catalog.appendingPathComponent("library-v1.backup.json")
+        let bytes = Data("old backup".utf8); try bytes.write(to: backup)
+        let settings = LibraryProfileSettings(defaultMediaURL: root.appendingPathComponent("old"), defaults: defaults,
+                                               applicationSupportURL: root.appendingPathComponent("Support"))
+        let prior = settings.activeProfile
+        #expect(throws: Error.self) { try settings.createLibraryAtSelectedFolderAfterConfirmation(media) }
+        #expect(settings.activeProfile == prior)
+        #expect(try Data(contentsOf: backup) == bytes)
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("library-v1.json").path))
+    }
+
+    @Test("Unavailable volume is distinguished from a missing folder on an accessible volume")
+    func inaccessibleVolumeDetection() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let volumes = root.appendingPathComponent("Volumes", isDirectory: true)
+        let media = volumes.appendingPathComponent("SUB/Music", isDirectory: true)
+        #expect(LibraryMigrationRecovery.inaccessibleVolumeName(for: media, volumesRoot: volumes) == "SUB")
+        try FileManager.default.createDirectory(at: volumes.appendingPathComponent("SUB"), withIntermediateDirectories: true)
+        #expect(LibraryMigrationRecovery.inaccessibleVolumeName(for: media, volumesRoot: volumes) == nil)
+        #expect(LibraryMigrationRecovery.inaccessibleVolumeName(for: root.appendingPathComponent("Other"), volumesRoot: volumes) == nil)
+        #expect(LibraryMigrationRecovery.inaccessibleVolumeName(for: volumes, volumesRoot: volumes) == nil)
+    }
+
+    @Test("Disconnected saved volume does not trigger migration or create a replacement")
+    @MainActor
+    func disconnectedSavedVolume() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let support = root.appendingPathComponent("Support", isDirectory: true)
+        let legacy = support.appendingPathComponent("Ongaku Desktop", isDirectory: true)
+        let volumeName = "OngakuMissing-" + UUID().uuidString
+        let media = URL(fileURLWithPath: "/Volumes", isDirectory: true)
+            .appendingPathComponent(volumeName, isDirectory: true).appendingPathComponent("Music", isDirectory: true)
+        let suite = "MissingVolume-" + UUID().uuidString
+        let defaults = UserDefaults(suiteName: suite)!
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: root)
+        }
+        try FileManager.default.createDirectory(at: legacy, withIntermediateDirectories: true)
+        let original = legacy.appendingPathComponent("library-v1.json")
+        let bytes = Data("preserved catalog".utf8)
+        try bytes.write(to: original)
+        let settings = LibraryProfileSettings(defaultMediaURL: media, defaults: defaults, applicationSupportURL: support)
+        #expect(settings.migrationError?.contains(volumeName) == true)
+        #expect(settings.activeProfile.mediaURL.standardizedFileURL == media.standardizedFileURL)
+        #expect(!FileManager.default.fileExists(atPath: media.path))
+        #expect(try Data(contentsOf: original) == bytes)
     }
 
     @Test("Missing recovery grants never create an empty replacement library")
@@ -535,12 +730,12 @@ struct ApplicationSettingsTests {
         let secondRoot = root.appendingPathComponent("Second", isDirectory: true)
         let firstTrack = Track(
             id: UUID(), title: "First Song", artist: "Artist", album: "Album",
-            duration: 10, fileSize: 1, managedPath: "/tmp/first.m4a",
+            duration: 10, fileSize: 1, managedPath: firstRoot.appendingPathComponent("Ongaku Media/first.m4a").path,
             sha256: "first", addedAt: .now, health: .verified
         )
         let secondTrack = Track(
             id: UUID(), title: "Second Song", artist: "Artist", album: "Album",
-            duration: 10, fileSize: 1, managedPath: "/tmp/second.m4a",
+            duration: 10, fileSize: 1, managedPath: secondRoot.appendingPathComponent("Ongaku Media/second.m4a").path,
             sha256: "second", addedAt: .now, health: .verified
         )
         try await LibraryRepository(rootURL: firstRoot).save(tracks: [firstTrack])
@@ -735,8 +930,11 @@ struct ApplicationSettingsTests {
         let profiles = LibraryProfileSettings(
             defaultMediaURL: first, defaults: defaults, applicationSupportURL: root.appendingPathComponent("Support")
         )
+        let originalProfile = profiles.activeProfile
         try await settings.activateDirectory(second) { try await store.openStorageDirectory($0) }
-        profiles.adoptActiveStorageLocation(second)
+        try profiles.openExistingLibraryAfterRecoveryConfirmation(at: second)
+        #expect(profiles.profiles.contains { $0 == originalProfile })
+        #expect(profiles.profiles.count == 2)
         let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
         #expect(store.tracks.isEmpty)
         #expect(profiles.activeProfile.catalogURL == secondCatalog)
@@ -748,7 +946,15 @@ struct ApplicationSettingsTests {
         let secondID = try await secondRepository.load().document.libraryID
         #expect(secondID != firstID)
         try await settings.activateDirectory(first) { try await store.openStorageDirectory($0) }
-        profiles.adoptActiveStorageLocation(first)
+        try profiles.openExistingLibraryAfterRecoveryConfirmation(at: first)
+        #expect(profiles.activeLibraryID == originalProfile.id)
+        #expect(profiles.profiles.count == 2)
+        let bookmarks = try #require(defaults.dictionary(forKey: LibraryStorageSettings.migrationAccessKey))
+        let locations = try #require(defaults.dictionary(forKey: LibraryStorageSettings.migrationLocationsKey))
+        #expect(bookmarks[first.standardizedFileURL.path] is Data)
+        #expect(bookmarks[second.standardizedFileURL.path] is Data)
+        #expect(locations[first.standardizedFileURL.path] != nil)
+        #expect(locations[second.standardizedFileURL.path] != nil)
         #expect(store.tracks.map(\.id) == [track.id])
         #expect(store.playlists.map(\.id) == [playlist.id])
         #expect(store.playbackQueue == queue)
@@ -756,6 +962,12 @@ struct ApplicationSettingsTests {
         #expect(try await LibraryRepository(rootURL: secondCatalog, mediaURL: second).load().document.libraryID == secondID)
         let restored = LibraryStorageSettings(defaults: defaults)
         #expect(restored.mediaDirectoryURL == first)
+        let reopenedProfiles = LibraryProfileSettings(
+            defaultMediaURL: first, defaults: defaults, applicationSupportURL: root.appendingPathComponent("Support")
+        )
+        #expect(reopenedProfiles.activeLibraryID == originalProfile.id)
+        #expect(reopenedProfiles.profiles.contains { $0.mediaURL.standardizedFileURL == second.standardizedFileURL })
+        #expect(reopenedProfiles.migrationError == nil)
 
         let broken = root.appendingPathComponent("Broken", isDirectory: true)
         let brokenCatalog = PortableLibraryStorage(mediaURL: broken).rootURL
@@ -821,6 +1033,50 @@ struct ApplicationSettingsTests {
         #expect(settings.mediaDirectoryURL == managed)
         let bookmarks = try #require(defaults.dictionary(forKey: "library.storage.mediaAccessBookmarks.v1"))
         #expect(bookmarks[managed.path] is Data)
+    }
+
+    @Test("Imported Music songs reopen from Ongaku without the Music package or original audio")
+    @MainActor
+    func musicImportReopensIndependently() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let suite = "Ongaku.MusicIndependent.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer {
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: root)
+        }
+        let music = root.appendingPathComponent("Music Library.musiclibrary")
+        let media = root.appendingPathComponent("Media")
+        let source = media.appendingPathComponent("Music/Artist/Album/Song.mp3")
+        try FileManager.default.createDirectory(at: music, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: source.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let audio = Data([0x49, 0x44, 0x33, 10, 11, 12])
+        try audio.write(to: source)
+        try Data("Music's private database is not an Ongaku database".utf8)
+            .write(to: music.appendingPathComponent("Library.musicdb"))
+        let settings = LibraryStorageSettings(defaults: defaults, freshMusicDirectoryURL: root)
+        let managed = media.appendingPathComponent("Ongaku Media", isDirectory: true)
+        let catalog = PortableLibraryStorage(mediaURL: managed).rootURL
+        let store = LibraryStore(repository: LibraryRepository(rootURL: catalog, mediaURL: managed))
+        try await settings.activateAppleMusicLibrary(music) { try await store.openStorageDirectory($0) }
+        let summary = await store.importAppleMusicMediaFolder(media, excluding: managed)
+        #expect(summary.imported == 1)
+        #expect(summary.issues == 0)
+        let song = try #require(store.tracks.first)
+        #expect(song.fileURL.path.hasPrefix(managed.path + "/"))
+        let first = try await LibraryRepository(rootURL: catalog, mediaURL: managed).load().document
+        // Remove only this test's source fixtures; the managed Ongaku copy remains.
+        try FileManager.default.removeItem(at: music)
+        try FileManager.default.removeItem(at: source)
+        let restored = LibraryStorageSettings(defaults: defaults)
+        #expect(restored.mediaDirectoryURL == managed)
+        let reopened = LibraryStore(repository: LibraryRepository(rootURL: catalog, mediaURL: restored.mediaDirectoryURL))
+        await reopened.load()
+        #expect(reopened.tracks.map(\.id) == [song.id])
+        #expect(reopened.tracks.first?.title == song.title)
+        #expect(try Data(contentsOf: #require(reopened.tracks.first).fileURL) == audio)
+        let second = try await LibraryRepository(rootURL: catalog, mediaURL: managed).load().document
+        #expect(first.libraryID == second.libraryID)
     }
 
 }

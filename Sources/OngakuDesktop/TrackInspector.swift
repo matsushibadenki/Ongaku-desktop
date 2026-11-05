@@ -376,7 +376,8 @@ private struct LyricsEditorView: View {
         self.track = track
         _onlineSearchQuery = State(
             initialValue: [track.title, track.artist]
-                .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
                 .joined(separator: " ")
         )
         if let lyrics = track.lyrics, lyrics.isSynced {
@@ -444,6 +445,24 @@ private struct LyricsEditorView: View {
                 .disabled(!canSearchOnline)
             }
             .accessibilityElement(children: .contain)
+
+            HStack(spacing: AppTheme.spaceSM) {
+                ForEach(ExternalLyricsSite.allCases) { site in
+                    if let url = site.searchURL(query: onlineSearchQuery) {
+                        Link(destination: url) {
+                            Label(site.name, systemImage: "arrow.up.right")
+                        }
+                        .help(L10n.format("lyrics.web.open", site.name))
+                    } else {
+                        Label(site.name, systemImage: "arrow.up.right")
+                            .foregroundStyle(AppTheme.secondaryInk)
+                    }
+                }
+                Image(systemName: "info.circle")
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .help(L10n.text("lyrics.web.detail"))
+                    .accessibilityLabel(L10n.text("lyrics.web.detail"))
+            }
 
             TextEditor(text: $text)
                 .font(mode == .synced ? .body.monospaced() : .body)

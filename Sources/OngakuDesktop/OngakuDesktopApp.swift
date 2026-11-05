@@ -247,6 +247,7 @@ struct OngakuDesktopApp: App {
     private let qualificationConfiguration: LibraryQualificationConfiguration?
     @State private var isRecoveringMigration = false
     @State private var migrationRecoveryError: String?
+    @State private var migrationRecoverySelection: URL?
     @StateObject private var migrationRelauncher = LibraryRecoveryRelauncher()
     @StateObject private var storage: LibraryStorageSettings
     @StateObject private var libraryProfiles: LibraryProfileSettings
@@ -332,9 +333,29 @@ struct OngakuDesktopApp: App {
         panel.allowsMultipleSelection = false
         panel.directoryURL = libraryProfiles.activeProfile.mediaURL
         panel.message = L10n.text("storage.migration.sameFolder")
-        guard panel.runModal() == .OK, let selected = panel.url else { return }
+        guard panel.runModal() == .OK, let initialSelection = panel.url else { return }
+        var authorizedSelection = initialSelection
+        if initialSelection.lastPathComponent == PortableLibraryStorage.directoryName {
+            // A sandbox grant for the catalog does not grant access to sibling audio files.
+            let media = initialSelection.deletingLastPathComponent().standardizedFileURL
+            let authorization = NSOpenPanel()
+            authorization.canChooseFiles = false
+            authorization.canChooseDirectories = true
+            authorization.allowsMultipleSelection = false
+            authorization.directoryURL = media
+            authorization.message = L10n.text("storage.migration.authorizeMediaFolder")
+            guard authorization.runModal() == .OK, let granted = authorization.url,
+                  granted.standardizedFileURL == media else {
+                migrationRecoveryError = L10n.text("storage.migration.authorizeMediaFolder")
+                migrationRecoverySelection = initialSelection
+                return
+            }
+            authorizedSelection = granted
+        }
+        let selected = authorizedSelection
         isRecoveringMigration = true
         migrationRecoveryError = nil
+        migrationRecoverySelection = selected
         Task { @MainActor in
             defer { isRecoveringMigration = false }
             do {
@@ -343,6 +364,43 @@ struct OngakuDesktopApp: App {
                 let expectedMedia = libraryProfiles.activeProfile.mediaURL
                 let expectedCatalog = libraryProfiles.activeProfile.catalogURL
                 let expectedLibraryID = libraryProfiles.recoveryLibraryID
+                let discovered = try await Task.detached {
+                    try LibraryMigrationRecovery.existingMediaCandidates(in: selected)
+                }.value
+                if discovered.count > 1 {
+                    let picker = NSAlert()
+                    picker.messageText = L10n.text("storage.migration.chooseExisting.title")
+                    picker.informativeText = L10n.text("storage.migration.chooseExisting.message")
+                    let menu = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 520, height: 26))
+                    menu.addItems(withTitles: discovered.map(\.path))
+                    picker.accessoryView = menu
+                    picker.addButton(withTitle: L10n.text("common.cancel"))
+                    picker.addButton(withTitle: L10n.text("storage.migration.otherLibrary.open"))
+                    guard picker.runModal() == .alertSecondButtonReturn,
+                          discovered.indices.contains(menu.indexOfSelectedItem) else { return }
+                    let chosen = discovered[menu.indexOfSelectedItem]
+                    let catalog = PortableLibraryStorage(mediaURL: chosen).rootURL
+                    let reader = LibraryRepository(rootURL: catalog, mediaURL: chosen)
+                    let document = try await reader.readExternalLibraryDocument(
+                        at: catalog.appendingPathComponent("library-v1.json")
+                    )
+                    let matches = expectedLibraryID.flatMap(UUID.init(uuidString:)) == document.libraryID
+                    let confirmation = NSAlert()
+                    confirmation.messageText = L10n.text("storage.migration.confirmExisting.title")
+                    confirmation.informativeText = L10n.format(
+                        "storage.migration.confirmExisting.message", document.tracks.count
+                    ) + "\n\n" + chosen.path
+                    confirmation.addButton(withTitle: L10n.text("common.cancel"))
+                    confirmation.addButton(withTitle: L10n.text("storage.migration.otherLibrary.open"))
+                    guard confirmation.runModal() == .alertSecondButtonReturn else { return }
+                    try storage.authorizeMigrationAccess(selecting: selected, mediaURL: chosen) {
+                        if matches { try libraryProfiles.repairMigration(at: chosen) }
+                        else { try libraryProfiles.openExistingLibraryAfterRecoveryConfirmation(at: chosen) }
+                    }
+                    storage.activateProfileMediaDirectory(chosen)
+                    await migrationRelauncher.restart()
+                    return
+                }
                 let destination: URL
                 do {
                     destination = try await Task.detached {
@@ -352,7 +410,32 @@ struct OngakuDesktopApp: App {
                         )
                     }.value
                 } catch {
-                    guard LibraryMigrationRecovery.canOfferCreation(after: error) else { throw error }
+                    let originalError = error
+                    let nsError = error as NSError
+                    let alternative = nsError.domain == "OngakuMigration" && [3, 7].contains(nsError.code)
+                        ? discovered.first : nil
+                    if let other = alternative {
+                        let catalog = PortableLibraryStorage(mediaURL: other).rootURL
+                        let reader = LibraryRepository(rootURL: catalog, mediaURL: other)
+                        let document = try await reader.readExternalLibraryDocument(
+                            at: catalog.appendingPathComponent("library-v1.json")
+                        )
+                        let confirmation = NSAlert()
+                        confirmation.messageText = L10n.text("storage.migration.otherLibrary.title")
+                        confirmation.informativeText = L10n.format(
+                            "storage.migration.otherLibrary.message", document.tracks.count
+                        ) + "\n\n" + other.path
+                        confirmation.addButton(withTitle: L10n.text("common.cancel"))
+                        confirmation.addButton(withTitle: L10n.text("storage.migration.otherLibrary.open"))
+                        guard confirmation.runModal() == .alertSecondButtonReturn else { return }
+                        try storage.authorizeMigrationAccess(selecting: selected, mediaURL: other) {
+                            try libraryProfiles.openExistingLibraryAfterRecoveryConfirmation(at: other)
+                        }
+                        storage.activateProfileMediaDirectory(other)
+                        await migrationRelauncher.restart()
+                        return
+                    }
+                    guard LibraryMigrationRecovery.canOfferCreation(after: originalError) else { throw originalError }
                     let confirmation = NSAlert()
                     confirmation.messageText = L10n.text("storage.migration.create.title")
                     confirmation.informativeText = L10n.text("storage.migration.create.message")
@@ -360,8 +443,24 @@ struct OngakuDesktopApp: App {
                     confirmation.addButton(withTitle: L10n.text("common.cancel"))
                     confirmation.addButton(withTitle: L10n.text("common.create"))
                     guard confirmation.runModal() == .alertSecondButtonReturn else { return }
-                    try libraryProfiles.createLibraryAfterRecoveryConfirmation(in: selected)
-                    storage.activateProfileMediaDirectory(libraryProfiles.activeProfile.mediaURL)
+                    try storage.authorizeMigrationAccess(selecting: selected, mediaURL: selected) {
+                        try libraryProfiles.createLibraryAtSelectedFolderAfterConfirmation(selected)
+                    }
+                    storage.activateProfileMediaDirectory(selected)
+                    let catalog = PortableLibraryStorage(mediaURL: selected).rootURL
+                    let importer = LibraryStore(repository: LibraryRepository(rootURL: catalog, mediaURL: selected))
+                    await importer.load()
+                    let summary = await importer.registerMediaFolderInPlace(selected)
+                    if case .failed(let message) = importer.activity {
+                        let warning = NSAlert()
+                        warning.messageText = L10n.text("storage.migration.registrationWarning")
+                        warning.informativeText = message + "\n\n" + L10n.format(
+                            "settings.storage.folderRegistrationResult", summary.discovered,
+                            summary.imported, summary.relinked, summary.issues
+                        )
+                        warning.addButton(withTitle: L10n.text("common.ok"))
+                        warning.runModal()
+                    }
                     await migrationRelauncher.restart()
                     return
                 }
@@ -401,8 +500,15 @@ struct OngakuDesktopApp: App {
                             ProgressView(L10n.text("storage.migration.checking"))
                         }
                         if let migrationRecoveryError {
-                            Text(migrationRecoveryError).textSelection(.enabled)
-                                .fixedSize(horizontal: false, vertical: true)
+                            if migrationRecoveryError != error {
+                                Text(migrationRecoveryError).textSelection(.enabled)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            if let migrationRecoverySelection {
+                                Text(L10n.format("storage.migration.searchedFolder", migrationRecoverySelection.path))
+                                    .font(.caption).textSelection(.enabled)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                     .multilineTextAlignment(.center)
@@ -508,6 +614,7 @@ struct OngakuDesktopApp: App {
                     guard qualificationConfiguration == nil || qualificationConfiguration?.exercisesRecovery == true else { return }
                     let profile = libraryProfiles.activeProfile
                     storage.activateProfileMediaDirectory(profile.mediaURL)
+                    guard !library.isUsingCatalog(at: profile.catalogURL) else { return }
                     Task {
                         try? await ArtworkResolver.shared.configure(
                             libraryRootURL: profile.catalogURL

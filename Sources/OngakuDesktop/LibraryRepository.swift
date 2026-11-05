@@ -4,6 +4,18 @@ import CryptoKit
 import Foundation
 
 actor LibraryRepository {
+    enum OverlayJournalStep: Sendable { case journalWritten, catalogWritten, tagsWritten }
+    struct OverlayJournalInterruption: Error {}
+    private struct OverlayJournal: Codable {
+        let version: Int
+        let libraryID: UUID
+        let previous: [Track]
+        let updated: [Track]
+        let tags: [UUID: [String]]
+    }
+    private var overlayJournalURL: URL { rootURL.appendingPathComponent("device-sync-overlay-journal-v1.json") }
+    private var overlayTagsURL: URL { rootURL.appendingPathComponent("device-sync-tags-v1.json") }
+
     private enum ImportPhase: String, Codable {
         case copying
         case installing
@@ -186,6 +198,7 @@ actor LibraryRepository {
         case relinkFingerprintMismatch(String)
         case mediaOrganizationConflict(Int)
         case mediaOrganizationAmbiguousConflict(String)
+        case staleOrganizedTrack
         case multiplePreservedLibraries(String)
 
         var errorDescription: String? {
@@ -202,6 +215,8 @@ actor LibraryRepository {
                 L10n.format("library.error.mediaOrganizationConflict", count)
             case .mediaOrganizationAmbiguousConflict(let file):
                 L10n.format("library.error.mediaOrganizationAmbiguousConflict", file)
+            case .staleOrganizedTrack:
+                L10n.text("library.error.staleOrganizedTrack")
             case .multiplePreservedLibraries(let paths):
                 L10n.format("settings.storage.error.multiplePreservedLibraries", paths)
             }
@@ -212,6 +227,9 @@ actor LibraryRepository {
     private let fileManager: FileManager
     private var mediaURL: URL
     private var currentDocument: LibraryDocument?
+    // Paths moved by this repository instance; in-flight callers can still hold
+    // pre-move track arrays even after the actor finishes the transaction.
+    private var organizedPreviousPaths: [Track.ID: Set<String>] = [:]
 
     init(rootURL: URL? = nil, mediaURL: URL? = nil, fileManager: FileManager = .default) {
         self.fileManager = fileManager
@@ -268,6 +286,10 @@ actor LibraryRepository {
     /// Legacy Imports. Only explicit storage selection invokes this recovery.
     /// Originals and the replaced empty catalog remain available on disk.
     func restorePreservedLibraryIfEmpty() throws {
+        if fileManager.fileExists(atPath: overlayJournalURL.path) {
+            _ = try load()
+            return
+        }
         if let current = try storageCatalog(at: rootURL) {
             guard !hasLibraryContent(current.document) else { return }
             if let receipt = try? Data(contentsOf: storageRecoveryReceiptURL),
@@ -311,6 +333,10 @@ actor LibraryRepository {
             )
         }
 
+        if fileManager.fileExists(atPath: candidate.directory.appendingPathComponent("device-sync-overlay-journal-v1.json").path),
+           candidate.manifest.lastPathComponent != "library-v1.json" {
+            throw OverlayRecoveryRequired()
+        }
         let recovery = rootURL.appendingPathComponent("Recovery Backups/\(UUID().uuidString)")
         let prepared = recovery.appendingPathComponent("Prepared")
         let previous = recovery.appendingPathComponent("Previous")
@@ -320,7 +346,7 @@ actor LibraryRepository {
         var names = [
             "library-v1.backup.json", "playback-queue-v1.json", "playback-queue-v1.backup.json",
             "playback-events-v1.json", "playback-events-v1.backup.json",
-            "device-sync-tags-v1.json", "audio-features-v1.json"
+            "device-sync-tags-v1.json", "device-sync-overlay-journal-v1.json", "audio-features-v1.json"
         ]
         for name in names + ["Artwork", "Playlist Artwork"] {
             let source = candidate.directory.appendingPathComponent(name)
@@ -389,6 +415,57 @@ actor LibraryRepository {
         return nil
     }
 
+    /// Copy external references into this volume without changing IDs or metadata.
+    /// Commit paths only after every copy has passed SHA-256 verification.
+    func makeLibrarySelfContained() throws {
+        var document = try load().document
+        let root = mediaURL.resolvingSymlinksInPath().standardizedFileURL
+        var changed = false
+        for index in document.tracks.indices {
+            try Task.checkCancellation()
+            let source = document.tracks[index].fileURL.resolvingSymlinksInPath().standardizedFileURL
+            if isInside(source, directory: root) { continue }
+            let scope = source.startAccessingSecurityScopedResource()
+            defer { if scope { source.stopAccessingSecurityScopedResource() } }
+            let values = try source.resourceValues(forKeys: [.isRegularFileKey])
+            guard values.isRegularFile == true else { throw CocoaError(.fileReadUnsupportedScheme) }
+            let hash = try Self.sha256(of: source)
+            let track = document.tracks[index]
+            let destination = try copyIntoMedia(source, artist: track.artist, album: track.album, hash: hash)
+            document.tracks[index].managedPath = destination.path
+            changed = true
+        }
+        if changed {
+            document.updatedAt = .now
+            try persistDocument(document, backUpReadablePrimary: true)
+            currentDocument = document
+        }
+    }
+
+    private func copyIntoMedia(_ source: URL, artist: String, album: String, hash: String) throws -> URL {
+        try prepareDirectories()
+        let root = mediaURL.resolvingSymlinksInPath().standardizedFileURL
+        let destination = try destinationURL(artist: artist, album: album,
+                                             originalName: source.lastPathComponent, hash: hash)
+        guard isInside(destination.resolvingSymlinksInPath(), directory: root) else {
+            throw CocoaError(.fileWriteNoPermission)
+        }
+        try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if !fileManager.fileExists(atPath: destination.path) {
+            let staged = incomingURL.appendingPathComponent(UUID().uuidString)
+            defer { try? fileManager.removeItem(at: staged) }
+            try fileManager.copyItem(at: source, to: staged)
+            guard try Self.sha256(of: staged) == hash else {
+                throw RepositoryError.copyVerificationFailed(source.lastPathComponent)
+            }
+            try fileManager.moveItem(at: staged, to: destination)
+        }
+        guard try Self.sha256(of: destination) == hash else {
+            throw RepositoryError.copyVerificationFailed(source.lastPathComponent)
+        }
+        return destination
+    }
+
     func load() throws -> LibraryLoadResult {
         try prepareDirectories()
         var recoveredFromBackup = false
@@ -418,6 +495,7 @@ actor LibraryRepository {
             )
         }
 
+        try recoverOverlayJournal(using: decoded.document, recoveredFromBackup: recoveredFromBackup)
         var document = try applyingPlaybackSidecars(to: decoded.document)
         try reconcileMediaOrganizationJournal(with: document.tracks)
         let recovery = try recoverImports(into: &document)
@@ -559,6 +637,11 @@ actor LibraryRepository {
         collisionPolicy: MediaOrganizationCollisionPolicy = .stop
     ) throws -> (document: LibraryDocument, summary: MediaOrganizationSummary) {
         try prepareDirectories()
+        // Serialize against repository writers and retain changes made after the
+        // UI captured its snapshot. A changed track list invalidates the plan.
+        let latestDocument = try documentForMutation()
+        guard latestDocument.libraryID == document.libraryID,
+              latestDocument.tracks == document.tracks else { throw CancellationError() }
         let conflicts = preview.items.filter { $0.status == .conflict }
         if !conflicts.isEmpty, collisionPolicy == .stop {
             throw RepositoryError.mediaOrganizationConflict(conflicts.count)
@@ -610,6 +693,7 @@ actor LibraryRepository {
         })
         try persistMediaOrganizationJournal(journal)
 
+        var catalogCommitted = false
         do {
             for index in journal.entries.indices {
                 let source = URL(fileURLWithPath: journal.entries[index].sourcePath)
@@ -645,7 +729,7 @@ actor LibraryRepository {
                     item.trackIDs.map { ($0, item.destinationURL.path) }
                 }
             )
-            var updated = document
+            var updated = latestDocument
             for index in updated.tracks.indices {
                 if let path = destinationByTrackID[updated.tracks[index].id] {
                     updated.tracks[index].managedPath = path
@@ -656,6 +740,12 @@ actor LibraryRepository {
             updated.updatedAt = .now
             try persistDocument(updated, backUpReadablePrimary: true)
             currentDocument = updated
+            for item in moves {
+                for trackID in item.trackIDs {
+                    organizedPreviousPaths[trackID, default: []].insert(item.sourceURL.standardizedFileURL.path)
+                }
+            }
+            catalogCommitted = true
             removeMediaOrganizationBackups(journal)
             try clearMediaOrganizationJournal()
             mediaURL = preview.destinationRootURL.standardizedFileURL
@@ -667,9 +757,13 @@ actor LibraryRepository {
                 )
             )
         } catch {
-            rollbackMediaOrganizationJournal(journal)
-            removeMediaOrganizationBackups(journal)
-            try? clearMediaOrganizationJournal()
+            // After catalog publication the new locations are authoritative. Never
+            // undo the files merely because journal cleanup failed.
+            if !catalogCommitted {
+                try rollbackMediaOrganizationJournal(journal)
+                removeMediaOrganizationBackups(journal)
+                try clearMediaOrganizationJournal()
+            }
             throw error
         }
     }
@@ -677,11 +771,105 @@ actor LibraryRepository {
     func save(tracks: [Track]) throws {
         try prepareDirectories()
         var document = try documentForMutation()
+        let currentPaths = Dictionary(uniqueKeysWithValues: document.tracks.map {
+            ($0.id, $0.fileURL.standardizedFileURL.path)
+        })
+        guard tracks.allSatisfy({ track in
+            let path = track.fileURL.standardizedFileURL.path
+            guard let current = currentPaths[track.id], current != path else { return true }
+            return organizedPreviousPaths[track.id]?.contains(path) != true
+        }) else { throw RepositoryError.staleOrganizedTrack }
         document.updatedAt = .now
         document.tracks = tracks
         try persistDocument(document, backUpReadablePrimary: true)
         currentDocument = document
         try reconcileImportJournal(with: tracks)
+    }
+
+    /// Journaled as one actor operation so ordinary repository writes cannot interleave.
+    func saveSynchronizedOverlay(
+        previous: [Track], updated: [Track], tags: [UUID: [String]],
+        interruption: (@Sendable (OverlayJournalStep) throws -> Void)? = nil
+    ) throws {
+        try prepareDirectories()
+        guard !fileManager.fileExists(atPath: overlayJournalURL.path) else { throw CocoaError(.fileWriteUnknown) }
+        let document = try documentForMutation()
+        guard document.tracks == previous else { throw CocoaError(.fileWriteUnknown) }
+        var isDirectory: ObjCBool = false
+        if fileManager.fileExists(atPath: overlayTagsURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+            throw CocoaError(.fileWriteFileExists)
+        }
+        let filtered = tags.filter { !$0.value.isEmpty }
+        let tagData = try JSONEncoder().encode(filtered)
+        let staged = rootURL.appendingPathComponent(".device-sync-tags-" + UUID().uuidString + ".tmp")
+        defer { try? fileManager.removeItem(at: staged) }
+        try tagData.write(to: staged, options: .atomic)
+        let journal = OverlayJournal(version: 1, libraryID: document.libraryID,
+                                     previous: previous, updated: updated, tags: filtered)
+        try encoder.encode(journal).write(to: overlayJournalURL, options: .atomic)
+        try synchronizeOverlayFile(overlayJournalURL)
+        performingOverlayMutation = true
+        defer { performingOverlayMutation = false }
+        do {
+            try interruption?(.journalWritten)
+            try save(tracks: updated)
+            try synchronizeOverlayFile(manifestURL)
+            try interruption?(.catalogWritten)
+            guard rename(staged.path, overlayTagsURL.path) == 0 else {
+                throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+            }
+            try synchronizeOverlayFile(overlayTagsURL)
+            try interruption?(.tagsWritten)
+            try fileManager.removeItem(at: overlayJournalURL)
+        } catch is OverlayJournalInterruption {
+            // Test-only interruption models process loss: preserve the on-disk journal.
+            throw OverlayJournalInterruption()
+        } catch {
+            // After publication, keep the updated catalog and journal together for recovery.
+            guard fileManager.fileExists(atPath: staged.path) else { throw OverlayRecoveryRequired() }
+            do {
+                guard try restoreOverlayTracksIfUnchanged(expected: updated, previous: previous) else {
+                    throw CocoaError(.fileWriteUnknown)
+                }
+                try fileManager.removeItem(at: overlayJournalURL)
+            } catch { throw OverlayRecoveryRequired() }
+            throw error
+        }
+    }
+
+    struct OverlayRecoveryRequired: LocalizedError {
+        var errorDescription: String? { L10n.text("deviceSync.overlay.rollbackFailed") }
+    }
+
+    private func synchronizeOverlayFile(_ url: URL) throws {
+        let file = try FileHandle(forWritingTo: url)
+        defer { try? file.close() }
+        try file.synchronize()
+    }
+
+    private func recoverOverlayJournal(using document: LibraryDocument, recoveredFromBackup: Bool) throws {
+        guard fileManager.fileExists(atPath: overlayJournalURL.path) else { return }
+        // A backup may predate the journal and cannot establish which tag generation was published.
+        guard !recoveredFromBackup else { throw OverlayRecoveryRequired() }
+        let journal = try decoder.decode(OverlayJournal.self, from: Data(contentsOf: overlayJournalURL))
+        guard journal.version == 1, journal.libraryID == document.libraryID else { throw OverlayRecoveryRequired() }
+        if document.tracks == journal.updated {
+            let data = try JSONEncoder().encode(journal.tags)
+            try data.write(to: overlayTagsURL, options: .atomic)
+            try synchronizeOverlayFile(overlayTagsURL)
+        } else if document.tracks != journal.previous {
+            throw OverlayRecoveryRequired()
+        }
+        try fileManager.removeItem(at: overlayJournalURL)
+    }
+
+    /// Roll back only if no other catalog writer has changed the track snapshot.
+    func restoreOverlayTracksIfUnchanged(expected: [Track], previous: [Track]) throws -> Bool {
+        let current = try documentForMutation().tracks
+        if current == previous { return true }
+        guard current == expected else { return false }
+        try save(tracks: previous)
+        return true
     }
 
     func save(document: LibraryDocument) throws {
@@ -1004,7 +1192,8 @@ actor LibraryRepository {
 
     func referenceFilesInPlace(
         _ sourceURLs: [URL],
-        existing: [Track]
+        existing: [Track],
+        copyExternalFiles: Bool = false
     ) async -> ImportResult {
         var referenced: [Track] = []
         var issues: [ImportIssue] = []
@@ -1033,8 +1222,15 @@ actor LibraryRepository {
                     fallbackName: source.deletingPathExtension().lastPathComponent
                 )
 
+                let destination: URL
+                if copyExternalFiles && !isInside(source.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()) {
+                    destination = try copyIntoMedia(source, artist: metadata.artist, album: metadata.album, hash: hash)
+                } else {
+                    destination = source.standardizedFileURL
+                }
+
                 if var track = existingByHash[hash] {
-                    track.managedPath = source.standardizedFileURL.path
+                    track.managedPath = destination.path
                     track.fileSize = Int64(values.fileSize ?? 0)
                     track.lastVerifiedAt = .now
                     track.health = .verified
@@ -1073,7 +1269,7 @@ actor LibraryRepository {
                         lyrics: metadata.lyrics,
                         duration: metadata.duration,
                         fileSize: Int64(values.fileSize ?? 0),
-                        managedPath: source.standardizedFileURL.path,
+                        managedPath: destination.path,
                         sha256: hash,
                         addedAt: .now,
                         lastVerifiedAt: .now,
@@ -1497,6 +1693,9 @@ actor LibraryRepository {
         _ document: LibraryDocument,
         backUpReadablePrimary: Bool
     ) throws {
+        if !performingOverlayMutation && fileManager.fileExists(atPath: overlayJournalURL.path) {
+            throw OverlayRecoveryRequired()
+        }
         try persistPlaybackSidecars(document)
         let data = try encoder.encode(document)
         if backUpReadablePrimary,
@@ -1638,7 +1837,12 @@ actor LibraryRepository {
         try Data(contentsOf: sourceURL).write(to: archiveURL, options: [.atomic])
     }
 
+    private var performingOverlayMutation = false
+
     private func documentForMutation() throws -> LibraryDocument {
+        if !performingOverlayMutation && fileManager.fileExists(atPath: overlayJournalURL.path) {
+            throw OverlayRecoveryRequired()
+        }
         if let currentDocument { return currentDocument }
         if fileManager.fileExists(atPath: manifestURL.path)
             || fileManager.fileExists(atPath: backupURL.path)
@@ -1880,44 +2084,52 @@ actor LibraryRepository {
         }
         let catalogPaths = Set(tracks.map { $0.fileURL.standardizedFileURL.path })
         let committed = !journal.entries.isEmpty && journal.entries.allSatisfy {
-            let destination = URL(fileURLWithPath: $0.destinationPath).standardizedFileURL
-            return catalogPaths.contains(destination.path)
-                && fileManager.fileExists(atPath: destination.path)
-                && (try? Self.sha256(of: destination)) == $0.expectedSHA256
+            catalogPaths.contains(URL(fileURLWithPath: $0.destinationPath).standardizedFileURL.path)
         }
         if committed {
-            removeMediaOrganizationBackups(journal)
+            // A missing or inaccessible destination is not evidence that the
+            // catalog was uncommitted. Retain the journal and replacement backups.
+            for entry in journal.entries {
+                let destination = URL(fileURLWithPath: entry.destinationPath)
+                guard try Self.sha256(of: destination) == entry.expectedSHA256 else {
+                    throw RepositoryError.copyVerificationFailed(destination.lastPathComponent)
+                }
+            }
         } else {
-            rollbackMediaOrganizationJournal(journal)
-            removeMediaOrganizationBackups(journal)
+            try rollbackMediaOrganizationJournal(journal)
         }
+        removeMediaOrganizationBackups(journal)
         try clearMediaOrganizationJournal()
     }
 
-    private func rollbackMediaOrganizationJournal(_ journal: MediaOrganizationJournal) {
+    private func rollbackMediaOrganizationJournal(_ journal: MediaOrganizationJournal) throws {
         for entry in journal.entries.reversed() {
             let source = URL(fileURLWithPath: entry.sourcePath)
             let destination = URL(fileURLWithPath: entry.destinationPath)
-            if !fileManager.fileExists(atPath: source.path),
-               fileManager.fileExists(atPath: destination.path),
-               (try? Self.sha256(of: destination)) == entry.expectedSHA256 {
-                try? fileManager.createDirectory(
-                    at: source.deletingLastPathComponent(),
-                    withIntermediateDirectories: true
+            let sourceExists = fileManager.fileExists(atPath: source.path)
+            let destinationExists = fileManager.fileExists(atPath: destination.path)
+            if !sourceExists {
+                guard destinationExists,
+                      try Self.sha256(of: destination) == entry.expectedSHA256 else {
+                    throw RepositoryError.copyVerificationFailed(source.lastPathComponent)
+                }
+                try fileManager.createDirectory(
+                    at: source.deletingLastPathComponent(), withIntermediateDirectories: true
                 )
-                try? fileManager.moveItem(at: destination, to: source)
+                try fileManager.moveItem(at: destination, to: source)
             }
             if let backupPath = entry.replacedDestinationBackupPath {
                 let backup = URL(fileURLWithPath: backupPath)
                 if fileManager.fileExists(atPath: backup.path) {
-                    if fileManager.fileExists(atPath: destination.path) {
-                        try? fileManager.removeItem(at: destination)
+                    // Never delete a file that appeared at the destination while
+                    // recovery was interrupted or the medium was unavailable.
+                    guard !fileManager.fileExists(atPath: destination.path) else {
+                        throw RepositoryError.mediaOrganizationConflict(1)
                     }
-                    try? fileManager.createDirectory(
-                        at: destination.deletingLastPathComponent(),
-                        withIntermediateDirectories: true
+                    try fileManager.createDirectory(
+                        at: destination.deletingLastPathComponent(), withIntermediateDirectories: true
                     )
-                    try? fileManager.moveItem(at: backup, to: destination)
+                    try fileManager.moveItem(at: backup, to: destination)
                 }
             }
         }

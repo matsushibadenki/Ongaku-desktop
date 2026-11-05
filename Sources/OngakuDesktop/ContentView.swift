@@ -35,6 +35,8 @@ struct ContentView: View {
         .accessibilityIdentifier("main.window")
         .tint(AppTheme.accent)
         .dropDestination(for: URL.self) { urls, _ in
+            // End the visual hover before starting asynchronous import work.
+            isDropTargeted = false
             guard !urls.isEmpty else { return false }
             Task {
                 let sourceURLs = await library.audioFiles(inDroppedItems: urls)
@@ -53,6 +55,25 @@ struct ContentView: View {
             }
         }
         .animation(.easeOut(duration: 0.15), value: isDropTargeted)
+        .task(id: isDropTargeted) {
+            guard isDropTargeted else { return }
+            // SwiftUI can miss isTargeted(false) when a drag is cancelled or
+            // finishes over nested drop destinations. Observe the physical end
+            // only while the overlay is visible; never time out a held drag.
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .milliseconds(100)) }
+                catch { return }
+                guard !Task.isCancelled else { return }
+                if NSEvent.pressedMouseButtons & 1 == 0 {
+                    isDropTargeted = false
+                    return
+                }
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase != .active { isDropTargeted = false }
+        }
+        .onDisappear { isDropTargeted = false }
 #if !APP_STORE
         .sheet(isPresented: $isImportingCD) {
             AudioCDImportView()

@@ -619,6 +619,8 @@
 "lyrics.editor.empty" = "空のまま保存すると歌詞を削除します。";
 "lyrics.editor.invalidLRC" = "有効なLRCタイムスタンプが見つかりません。";
 "lyrics.editor.lineCount" = "%d行の同期歌詞";
+"lyrics.web.open" = "%@をブラウザで検索";
+"lyrics.web.detail" = "選んだサイトを開き、検索語を送信します。これらのサイトからOngakuへの歌詞保存・同期表示はできません。";
 "lrclib.search" = "LRCLIBで検索";
 "lrclib.search.placeholder" = "曲名、アーティスト名、アルバム名で検索";
 "lrclib.search.currentSong" = "現在の楽曲情報で検索";
@@ -765,7 +767,7 @@
 "settings.storage.authorizeMusicMedia" = "このMusicライブラリのメディアフォルダを選択してください。楽曲へのアクセスを許可し、Ongaku Mediaを作成します。";
 "settings.storage.musicLibraryHelp" = "Apple Musicの.musiclibraryパッケージを選択します";
 "settings.storage.importingMusicLibrary" = "選択したライブラリの音楽を検索して読み込んでいます…";
-"settings.storage.musicLibraryImportResult" = "ライブラリの読み込みが完了しました：音声ファイル%d件、新規登録%d件、原本へ参照を戻した曲%d件、登録できなかったファイル%d件。";
+"settings.storage.musicLibraryImportResult" = "ライブラリの読み込みが完了しました：音声ファイル%d件、新規登録%d件、保存先を更新した曲%d件、登録できなかったファイル%d件。";
 "settings.storage.dropFolderHint" = "音楽フォルダをここへドロップすると、階層を変えずに保存先・楽曲として登録します";
 "settings.storage.registeringDroppedFolder" = "フォルダ内の音楽を階層を保ったまま登録しています…";
 "settings.storage.folderRegistrationResult" = "フォルダの登録が完了しました：音声ファイル%d件、新規登録%d件、参照先を更新した曲%d件、登録できなかったファイル%d件。";
@@ -777,7 +779,7 @@
 "settings.storage.source.selectedAppleMusicLibrary" = "選択したApple Musicライブラリから読み込みました";
 "settings.storage.source.default" = "Ongaku標準のApplication Support内に保存します";
 "settings.storage.source.custom" = "選択した保存先を使用しています";
-"settings.storage.safetyNote" = "新しいフォルダには専用の管理データを作成します。以前のフォルダを選ぶと、その楽曲・プレイリストを読み込みます。別のライブラリのデータは移動しません。Musicライブラリを選ぶとメディア内にOngaku Mediaを用意し、元の楽曲を変更せず参照登録します。";
+"settings.storage.safetyNote" = "楽曲・台帳・画像・検索データは保存先フォルダ内にまとめます。以前の保存先を選ぶと、そのライブラリを開きます。外部参照の楽曲は原本を残してコピーするため、空き容量が必要です。";
 "settings.storage.error.multiplePreservedLibraries" = "復元候補のライブラリが複数あるため、自動復元を停止しました。ライブラリのインポートから復元する台帳を選択してください。\n%@";
 "settings.storage.error.invalidMusicLibrary" = "有効な.musiclibraryパッケージを選択してください。";
 "settings.storage.error.mediaFolderNotFound" = "このApple Musicライブラリに対応するMediaフォルダが見つかりませんでした。";
@@ -791,7 +793,7 @@
 "common.cancel" = "キャンセル";
 "status.storageChanged" = "ライブラリの保存先を切り替えました。";
 "status.appleMusicNoFiles" = "Apple MusicのMediaフォルダに対応音声ファイルが見つかりませんでした。";
-"status.appleMusicImported" = "Apple Musicの原本を%d曲登録し、%d曲の参照先を原本へ戻しました。";
+"status.appleMusicImported" = "%d曲を登録し、%d曲の保存先を更新しました。原本は保持されています。";
 "status.folderNoFiles" = "選択したフォルダに対応音声ファイルが見つかりませんでした。";
 "status.folderRegistered" = "%d曲を登録し、%d曲の参照先を選択したフォルダへ更新しました。";
 "settings.sidebar.general" = "一般";
@@ -1242,7 +1244,7 @@
 "storage.migration.recoveryFailed" = "ライブラリを修復できませんでした";
 
 "storage.migration.create.title" = "新しいライブラリを作成しますか？";
-"storage.migration.create.message" = "選択したフォルダにOngakuのライブラリファイルが見つかりませんでした。新しいサブフォルダに空のライブラリを作成しますか？以前のライブラリと既存のファイルは保持されます。";
+"storage.migration.create.message" = "Ongakuのライブラリが見つかりませんでした。このフォルダにライブラリを作成し、フォルダ内の音楽ファイルを登録しますか？ 既存ファイルと以前のライブラリは保持されます。";
 
 // Pastel appearances shared with iPhone.
 "settings.appearance.pink" = "ピンク";
@@ -1289,3 +1291,24 @@
 
 "effect.vocal_presence.name" = "Vocal Presence · Prototype";
 "effect.vocal_presence.description" = "楽曲全体の中高域を控えめに調整します。ボーカルは分離せず、弱い設定からお試しください。";
+
+"deviceSync.overlay.rollbackFailed" = "同期の変更を完全に元に戻せませんでした。ライブラリを確認して再試行してください。";
+
+"storage.migration.volumeUnavailable" = "ボリューム「%@」にアクセスできません。ドライブまたはネットワークを接続し、Finderに表示されることを確認してから、Ongaku Desktopを開き直すかライブラリフォルダを選び直してください。";
+
+"storage.migration.otherLibrary.title" = "別のライブラリを開きますか？";
+"storage.migration.otherLibrary.message" = "選択先には別のOngakuライブラリ（%d曲）があります。別のライブラリとして開きますか？ 元のライブラリの登録は保持されます。";
+"storage.migration.otherLibrary.open" = "ライブラリを開く";
+"storage.migration.searchedFolder" = "検索したフォルダ：%@";
+
+"storage.migration.chooseExisting.title" = "ライブラリを選択";
+"storage.migration.chooseExisting.message" = "複数のライブラリが見つかりました。開くライブラリを選択してください。";
+"storage.migration.registrationWarning" = "登録できなかったファイルがあります";
+
+"storage.migration.confirmExisting.title" = "このライブラリを開きますか？";
+"storage.migration.confirmExisting.message" = "選択したライブラリには%d曲あります。この場所から開きますか？ 他のライブラリの登録は保持されます。";
+
+"storage.migration.authorizeMediaFolder" = "音楽ファイルにもアクセスできるよう、Ongaku Library Dataを含むメディアフォルダを選択してください。";
+
+"library.error.staleOrganizedTrack" = "整理によって楽曲の保存先が変わりました。ライブラリを再読み込みしてから、もう一度操作してください。";
+"metadataEditor.error.mediaOrganizationBusy" = "楽曲情報の保存またはファイルの整理が完了してから、もう一度操作してください。";

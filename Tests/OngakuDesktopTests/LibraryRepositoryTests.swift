@@ -160,6 +160,62 @@ struct LibraryRepositoryTests {
         #expect(try await repository.load().document.libraryID == initial.libraryID)
     }
 
+    @Test("External songs become portable without changing metadata or deleting originals")
+    func externalSongsBecomePortable() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let original = root.appendingPathComponent("original.mp3")
+        let bytes = Data("external audio fixture".utf8)
+        try bytes.write(to: original)
+        let media = root.appendingPathComponent("SSD-A")
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let song = Track(id: UUID(), title: "Song", artist: "Artist", album: "Album",
+                         duration: 12, fileSize: Int64(bytes.count), managedPath: original.path,
+                         sha256: try LibraryRepository.sha256(of: original), addedAt: .now, health: .verified)
+        try await repository.save(tracks: [song])
+        let playlist = Playlist(name: "Keep", entries: [PlaylistEntry(trackID: song.id)])
+        try await repository.save(playlists: [playlist])
+        let libraryID = try await repository.load().document.libraryID
+        try await repository.makeLibrarySelfContained()
+        let loaded = try await repository.load().document
+        let copied = try #require(loaded.tracks.first)
+        #expect(copied.id == song.id)
+        #expect(copied.title == song.title)
+        #expect(loaded.libraryID == libraryID)
+        #expect(loaded.playlists.map(\.id) == [playlist.id])
+        #expect(loaded.playlists.first?.entries.map(\.trackID) == [song.id])
+        #expect(copied.fileURL.path.hasPrefix(media.path + "/"))
+        #expect(try Data(contentsOf: original) == bytes)
+        #expect(try Data(contentsOf: copied.fileURL) == bytes)
+        // Carry just the selected folder to a differently named volume/folder.
+        let moved = root.appendingPathComponent("SSD-B")
+        try FileManager.default.moveItem(at: media, to: moved)
+        try FileManager.default.removeItem(at: original)
+        let reopened = try await LibraryRepository(rootURL: PortableLibraryStorage(mediaURL: moved).rootURL,
+                                                  mediaURL: moved).load().document
+        #expect(reopened.tracks.first?.id == song.id)
+        #expect(try Data(contentsOf: #require(reopened.tracks.first).fileURL) == bytes)
+    }
+
+    @Test("Missing external originals do not commit a partially localized catalog")
+    func missingExternalCopyPreservesCatalog() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let media = root.appendingPathComponent("Media")
+        let repository = LibraryRepository(rootURL: PortableLibraryStorage(mediaURL: media).rootURL, mediaURL: media)
+        let song = Track(id: UUID(), title: "Missing", artist: "Artist", album: "Album", duration: 1,
+                         fileSize: 1, managedPath: root.appendingPathComponent("missing.mp3").path,
+                         sha256: "missing", addedAt: .now, health: .missing)
+        try await repository.save(tracks: [song])
+        do {
+            try await repository.makeLibrarySelfContained()
+            Issue.record("Missing originals must be reported")
+        } catch {}
+        #expect(try await repository.load().document.tracks.first?.managedPath == song.managedPath)
+    }
+
     private func fixtureURL(_ name: String) -> URL {
         guard let url = Bundle.module.url(
             forResource: name,
@@ -1312,7 +1368,7 @@ struct LibraryRepositoryTests {
         try? FileManager.default.removeItem(at: root)
     }
 
-    @Test("Selecting an Apple Music library references originals and relinks old managed copies")
+    @Test("Selecting an Apple Music library keeps originals and stores portable copies")
     @MainActor
     func importsAppleMusicMediaFolder() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -1339,12 +1395,14 @@ struct LibraryRepositoryTests {
         let first = await store.importAppleMusicMediaFolder(media, excluding: managed)
         #expect(first.discovered == 2)
         #expect(first.imported == 1)
-        #expect(first.relinked == 1)
+        #expect(first.relinked == 0)
         #expect(store.tracks.count == 2)
-        #expect(Set(store.tracks.map { $0.fileURL.standardizedFileURL }) == Set([
-            source.standardizedFileURL,
-            secondSource.standardizedFileURL
+        #expect(store.tracks.allSatisfy { $0.fileURL.path.hasPrefix(managed.path + "/") })
+        #expect(Set(store.tracks.map(\.sha256)) == Set([
+            try LibraryRepository.sha256(of: source), try LibraryRepository.sha256(of: secondSource)
         ]))
+        #expect(FileManager.default.fileExists(atPath: source.path))
+        #expect(FileManager.default.fileExists(atPath: secondSource.path))
         #expect(FileManager.default.fileExists(atPath: oldManagedCopy.path))
 
         let second = await store.importAppleMusicMediaFolder(media, excluding: managed)
@@ -2048,10 +2106,769 @@ struct LibraryRepositoryTests {
         ))
     }
 
+    @Test("Media organization preserves its journal and replacement backup when rollback is interrupted")
+    func mediaOrganizationRollbackRetriesAfterStorageFailure() async throws {
+        struct Entry: Codable {
+            var sourcePath: String; var destinationPath: String; var expectedSHA256: String
+            var moved: Bool; var replacedDestinationBackupPath: String?
+        }
+        struct Journal: Codable { var schemaVersion = 1; var updatedAt = Date.now; var entries: [Entry] }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog")
+        let media = root.appendingPathComponent("Media")
+        let source = media.appendingPathComponent("source.wav")
+        let destination = media.appendingPathComponent("Artist/destination.wav")
+        let backup = catalog.appendingPathComponent("Media Organization Backups/backup.wav")
+        try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let audio = Data("source audio".utf8)
+        try audio.write(to: destination)
+        let hash = try LibraryRepository.sha256(of: destination)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: Int64(audio.count), managedPath: source.path, sha256: hash, addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: [track]))
+        try FileManager.default.createDirectory(at: backup.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let replacement = Data("original destination".utf8)
+        try replacement.write(to: backup)
+        let journalURL = catalog.appendingPathComponent("media-organization-journal-v1.json")
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(Journal(entries: [Entry(sourcePath: source.path, destinationPath: destination.path,
+                    expectedSHA256: hash, moved: true, replacedDestinationBackupPath: backup.path)])).write(to: journalURL)
+        let failing = LibraryRepository(rootURL: catalog, mediaURL: media,
+                                        fileManager: FailingOrganizationMoveFileManager())
+        do { _ = try await failing.load(); Issue.record("Recovery unexpectedly succeeded") } catch { }
+        #expect(try Data(contentsOf: destination) == audio)
+        #expect(try Data(contentsOf: backup) == replacement)
+        #expect(FileManager.default.fileExists(atPath: journalURL.path))
+        let recovered = try await LibraryRepository(rootURL: catalog, mediaURL: media).load()
+        #expect(recovered.document.tracks.first?.managedPath == source.path)
+        #expect(try Data(contentsOf: source) == audio)
+        #expect(try Data(contentsOf: destination) == replacement)
+        #expect(!FileManager.default.fileExists(atPath: journalURL.path))
+    }
+
+    @Test("A committed organization retains recovery data while the destination is missing")
+    func committedOrganizationWaitsForDestination() async throws {
+        struct Entry: Codable {
+            var sourcePath: String; var destinationPath: String; var expectedSHA256: String
+            var moved: Bool; var replacedDestinationBackupPath: String?
+        }
+        struct Journal: Codable { var schemaVersion = 1; var updatedAt = Date.now; var entries: [Entry] }
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog")
+        let media = root.appendingPathComponent("Media")
+        let source = media.appendingPathComponent("source.wav")
+        let destination = media.appendingPathComponent("destination.wav")
+        let backup = catalog.appendingPathComponent("Media Organization Backups/backup.wav")
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+        let audio = Data("source audio".utf8)
+        try audio.write(to: destination)
+        let hash = try LibraryRepository.sha256(of: destination)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: Int64(audio.count), managedPath: destination.path, sha256: hash, addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await repository.save(document: LibraryDocument(tracks: [track]))
+        try FileManager.default.createDirectory(at: backup.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let replacement = Data("old destination".utf8)
+        try replacement.write(to: backup)
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        let journalURL = catalog.appendingPathComponent("media-organization-journal-v1.json")
+        try encoder.encode(Journal(entries: [Entry(sourcePath: source.path, destinationPath: destination.path,
+                expectedSHA256: hash, moved: true, replacedDestinationBackupPath: backup.path)])).write(to: journalURL)
+        let disconnected = root.appendingPathComponent("disconnected.wav")
+        try FileManager.default.moveItem(at: destination, to: disconnected)
+        do { _ = try await LibraryRepository(rootURL: catalog, mediaURL: media).load(); Issue.record("Missing destination accepted") } catch { }
+        #expect(try Data(contentsOf: backup) == replacement)
+        #expect(FileManager.default.fileExists(atPath: journalURL.path))
+        #expect(!FileManager.default.fileExists(atPath: source.path))
+        try FileManager.default.moveItem(at: disconnected, to: destination)
+        let recovered = try await LibraryRepository(rootURL: catalog, mediaURL: media).load()
+        #expect(recovered.document.tracks.first?.managedPath == destination.path)
+        #expect(try Data(contentsOf: destination) == audio)
+        #expect(!FileManager.default.fileExists(atPath: journalURL.path))
+    }
+
+    @Test("Organization preserves a playlist written after the UI snapshot")
+    func organizationPreservesConcurrentPlaylist() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.wav")
+        try Data("audio".utf8).write(to: source)
+        let hash = try LibraryRepository.sha256(of: source)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: source.path, sha256: hash, addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: PortableLibraryStorage(mediaURL: root).rootURL, mediaURL: root)
+        try await repository.save(tracks: [track])
+        let snapshot = try await repository.load().document
+        let preview = try await repository.planMediaOrganization(tracks: snapshot.tracks, destinationRootURL: root)
+        let playlist = Playlist(name: "Concurrent", description: "")
+        try await repository.save(playlists: [playlist])
+        _ = try await repository.executeMediaOrganization(document: snapshot, preview: preview)
+        let saved = try await repository.load().document
+        #expect(saved.playlists.contains { $0.id == playlist.id })
+        #expect(saved.tracks.first?.managedPath == preview.items.first?.destinationURL.path)
+    }
+
     @Test("Apple Music media-folder-url is decoded")
     func decodesAppleMusicMediaFolder() {
         let expected = URL(fileURLWithPath: "/Volumes/Music/Media.localized", isDirectory: true)
         let preferences: [String: Any] = ["media-folder-url": expected.absoluteString]
         #expect(AppleMusicSettingsReader.mediaFolderURL(from: preferences) == expected.standardizedFileURL)
     }
+}
+
+private final class FailingOrganizationMoveFileManager: FileManager, @unchecked Sendable {
+    override func moveItem(at srcURL: URL, to dstURL: URL) throws {
+        throw CocoaError(.fileWriteNoPermission)
+    }
+}
+
+/// Stop a real repository write at its first directory preparation, then fail it.
+private final class StorageWriteGate: @unchecked Sendable {
+    let fails: Bool
+    init(fails: Bool = true) { self.fails = fails }
+    let entered = DispatchSemaphore(value: 0)
+    let resume = DispatchSemaphore(value: 0)
+    private let lock = NSLock()
+    private var armed = false
+    func arm() { lock.withLock { armed = true } }
+    func waitUntilEntered() -> Bool { entered.wait(timeout: .now() + 5) == .success }
+    func waitUntilResumed() -> Bool { resume.wait(timeout: .now() + 10) == .success }
+    func consume() -> Bool { lock.withLock { let value = armed; armed = false; return value } }
+}
+
+private final class DelayedStorageFailureFileManager: FileManager, @unchecked Sendable {
+    private let gate: StorageWriteGate
+    private let root: URL
+    init(root: URL, gate: StorageWriteGate) {
+        self.root = root.standardizedFileURL
+        self.gate = gate
+        super.init()
+    }
+    override func createDirectory(at url: URL, withIntermediateDirectories: Bool,
+                                  attributes: [FileAttributeKey: Any]? = nil) throws {
+        if url.standardizedFileURL == root, gate.consume() {
+            gate.entered.signal()
+            guard gate.resume.wait(timeout: .now() + 10) == .success else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            if gate.fails { throw CocoaError(.fileWriteNoPermission) }
+        }
+        try super.createDirectory(at: url, withIntermediateDirectories: withIntermediateDirectories,
+                                  attributes: attributes)
+    }
+}
+
+@Suite("Storage delayed failure isolation", .serialized)
+@MainActor
+struct StorageDelayedFailureTests {
+    @Test("An old history-clear failure cannot restore old events over the new library")
+    func oldHistoryFailure() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First")
+        let second = root.appendingPathComponent("Second")
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        let gate = StorageWriteGate()
+        let manager = DelayedStorageFailureFileManager(root: firstCatalog, gate: gate)
+        defer { gate.resume.signal() }
+        let oldRepository = LibraryRepository(rootURL: firstCatalog, mediaURL: first, fileManager: manager)
+        let newRepository = LibraryRepository(rootURL: secondCatalog, mediaURL: second)
+        let oldEvent = PlaybackEvent(trackID: UUID(), kind: .completed)
+        let newEvent = PlaybackEvent(trackID: UUID(), kind: .started)
+        let oldTrack = Track(id: oldEvent.trackID, title: "First", artist: "A", album: "A", duration: 10,
+                             fileSize: 1, managedPath: first.appendingPathComponent("a.mp3").path,
+                             sha256: "a", addedAt: .now, health: .missing)
+        let newTrack = Track(id: newEvent.trackID, title: "Second", artist: "B", album: "B", duration: 10,
+                             fileSize: 1, managedPath: second.appendingPathComponent("b.mp3").path,
+                             sha256: "b", addedAt: .now, health: .missing)
+        try await oldRepository.save(tracks: [oldTrack])
+        try await newRepository.save(tracks: [newTrack])
+        try await oldRepository.recordPlaybackEvent(oldEvent)
+        try await newRepository.recordPlaybackEvent(newEvent)
+        let newID = try await newRepository.load().document.libraryID
+        let store = LibraryStore(repository: oldRepository)
+        await store.load()
+        gate.arm()
+        let clear = Task { await store.clearPlaybackHistory() }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); await clear.value; return }
+        await store.switchLibrary(catalogURL: secondCatalog, mediaURL: second)
+        #expect(store.isUsingCatalog(at: secondCatalog))
+        #expect(try await newRepository.load().document.libraryID == newID)
+        #expect(store.playbackEvents.map(\.id) == [newEvent.id])
+        gate.resume.signal()
+        await clear.value
+        #expect(store.playbackEvents.map(\.id) == [newEvent.id])
+        #expect(try await newRepository.load().document.playbackEvents.map(\.id) == [newEvent.id])
+        #expect(try await oldRepository.load().document.playbackEvents.map(\.id) == [oldEvent.id])
+    }
+    @Test("An old successful edit cannot overwrite the new library", arguments: ["metadata", "playlist"])
+    func oldEditCompletion(operation: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First")
+        let second = root.appendingPathComponent("Second")
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        let gate = StorageWriteGate(fails: false)
+        defer { gate.resume.signal() }
+        let manager = DelayedStorageFailureFileManager(root: firstCatalog, gate: gate)
+        let oldRepository = LibraryRepository(rootURL: firstCatalog, mediaURL: first, fileManager: manager)
+        let newRepository = LibraryRepository(rootURL: secondCatalog, mediaURL: second)
+        let oldTrack = Track(id: UUID(), title: "First", artist: "A", album: "A", duration: 10,
+                             fileSize: 1, managedPath: first.appendingPathComponent("a.mp3").path,
+                             sha256: "a", addedAt: .now, health: .missing)
+        let newTrack = Track(id: UUID(), title: "Second", artist: "B", album: "B", duration: 10,
+                             fileSize: 1, managedPath: second.appendingPathComponent("b.mp3").path,
+                             sha256: "b", addedAt: .now, health: .missing)
+        try await oldRepository.save(tracks: [oldTrack])
+        try await newRepository.save(tracks: [newTrack])
+        let store = LibraryStore(repository: oldRepository)
+        await store.load()
+        gate.arm()
+        let edit = Task { () -> Bool in
+            do {
+                if operation == "metadata" { try await store.updateTrackLyrics(id: oldTrack.id, lyrics: nil) }
+                else { _ = try await store.createPlaylist(name: "Old edit", description: "", artworkData: nil) }
+                return false
+            } catch is CancellationError { return true }
+            catch { Issue.record("Unexpected edit error: \(error)"); return false }
+        }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await edit.value; return }
+        await store.switchLibrary(catalogURL: secondCatalog, mediaURL: second)
+        gate.resume.signal()
+        #expect(await edit.value, "A stale caller must receive cancellation, not UI success")
+        #expect(store.tracks.map(\.id) == [newTrack.id])
+        #expect(store.playlists.isEmpty)
+        let saved = try await newRepository.load().document
+        #expect(saved.tracks.map(\.id) == [newTrack.id])
+        #expect(saved.playlists.isEmpty)
+        let oldSaved = try await oldRepository.load().document
+        #expect(oldSaved.tracks.map(\.id) == [oldTrack.id])
+        if operation == "playlist" { #expect(oldSaved.playlists.map(\.name) == ["Old edit"]) }
+    }
+
+    @Test("Old overlay completion and failure stay with their original library", arguments: [
+        "apply-success", "apply-failure", "undo-success", "undo-failure"
+    ])
+    func oldOverlayCompletion(operation: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First")
+        let second = root.appendingPathComponent("Second")
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        let fails = operation.hasSuffix("failure")
+        let isUndo = operation.hasPrefix("undo")
+        let gate = StorageWriteGate(fails: fails)
+        defer { gate.resume.signal() }
+        let manager = DelayedStorageFailureFileManager(root: firstCatalog, gate: gate)
+        let oldRepository = LibraryRepository(rootURL: firstCatalog, mediaURL: first, fileManager: manager)
+        let newRepository = LibraryRepository(rootURL: secondCatalog, mediaURL: second)
+        let oldTrack = Track(id: UUID(), title: "First", artist: "A", album: "A", duration: 10,
+                             fileSize: 1, managedPath: first.appendingPathComponent("a.mp3").path,
+                             sha256: "a", addedAt: .now, health: .missing)
+        let newTrack = Track(id: UUID(), title: "Second", artist: "B", album: "B", duration: 10,
+                             fileSize: 1, managedPath: second.appendingPathComponent("b.mp3").path,
+                             sha256: "b", addedAt: .now, health: .missing)
+        try await oldRepository.save(tracks: [oldTrack])
+        try await newRepository.save(tracks: [newTrack])
+        let newTagsURL = secondCatalog.appendingPathComponent("device-sync-tags-v1.json")
+        try JSONEncoder().encode([newTrack.id: ["New tag"]]).write(to: newTagsURL)
+        let store = LibraryStore(repository: oldRepository)
+        await store.load()
+        let before = DeviceSyncTrackOverlay(
+            sourceKey: "old", title: "First", artist: "A", album: "A", duration: 10,
+            isFavorite: false, rating: 0, playCount: 0, skipCount: 0,
+            lastPlayedAt: nil, displayTags: [], updatedAt: .now
+        )
+        var after = before
+        after.rating = 4
+        after.displayTags = ["Old tag"]
+        let application = DeviceSyncOverlayApplication(
+            trackID: oldTrack.id, overlay: after, fields: [.rating, .displayTags]
+        )
+        if isUndo { #expect(await store.applySyncedTrackOverlays([application]) == 1) }
+        let change = DeviceSyncAuditChange(
+            trackID: oldTrack.id, title: oldTrack.title, before: before,
+            after: after, fields: [.rating, .displayTags]
+        )
+        gate.arm()
+        let operationTask = Task {
+            if isUndo { return await store.undoSyncedTrackOverlays([change]).restoredFieldCount }
+            return await store.applySyncedTrackOverlays([application])
+        }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await operationTask.value; return }
+        await store.switchLibrary(catalogURL: secondCatalog, mediaURL: second)
+        #expect(store.tracks.map(\.id) == [newTrack.id])
+        #expect(store.syncedDisplayTags[newTrack.id] == ["New tag"])
+        gate.resume.signal()
+        #expect(await operationTask.value == 0)
+        #expect(store.tracks.map(\.id) == [newTrack.id])
+        #expect(store.syncedDisplayTags == [newTrack.id: ["New tag"]])
+        let savedNew = try await newRepository.load().document
+        #expect(savedNew.tracks.map(\.id) == [newTrack.id])
+        let newTags = try JSONDecoder().decode([UUID: [String]].self, from: Data(contentsOf: newTagsURL))
+        #expect(newTags == [newTrack.id: ["New tag"]])
+        let savedOld = try await oldRepository.load().document
+        let expectedRating = (isUndo ? fails : !fails) ? 4 : 0
+        #expect(savedOld.tracks.first?.rating == expectedRating)
+        let oldTagsURL = firstCatalog.appendingPathComponent("device-sync-tags-v1.json")
+        if isUndo || !fails {
+            let oldTags = try JSONDecoder().decode([UUID: [String]].self, from: Data(contentsOf: oldTagsURL))
+            #expect(oldTags[oldTrack.id] == (expectedRating == 4 ? ["Old tag"] : nil))
+        }
+    }
+
+    @Test("Failed storage switch preserves the outcome of an in-flight overlay", arguments: [false, true])
+    func failedSwitchDuringOverlay(writeFails: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("catalog", isDirectory: true)
+        let gate = StorageWriteGate(fails: writeFails)
+        defer { gate.resume.signal() }
+        let repository = LibraryRepository(rootURL: catalog, fileManager: DelayedStorageFailureFileManager(root: catalog, gate: gate))
+        let track = Track(id: UUID(), title: "A", artist: "B", album: "C", duration: 10,
+                          fileSize: 1, managedPath: root.appendingPathComponent("a.mp3").path,
+                          sha256: "a", addedAt: .now, health: .missing)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let overlay = DeviceSyncTrackOverlay(sourceKey: "phone", title: "A", artist: "B", album: "C",
+            duration: 10, isFavorite: false, rating: 4, playCount: 0, skipCount: 0,
+            lastPlayedAt: nil, displayTags: ["tag"], updatedAt: .now)
+        gate.arm()
+        let operation = Task { await store.applySyncedTrackOverlays([
+            DeviceSyncOverlayApplication(trackID: track.id, overlay: overlay, fields: [.rating, .displayTags])
+        ]) }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await operation.value; return }
+        let blocker = root.appendingPathComponent("not-a-directory")
+        try Data("file".utf8).write(to: blocker)
+        await store.switchLibrary(catalogURL: blocker.appendingPathComponent("catalog"), mediaURL: blocker)
+        #expect(store.isUsingCatalog(at: catalog))
+        gate.resume.signal()
+        #expect(await operation.value == (writeFails ? 0 : 1))
+        #expect(store.tracks.first?.rating == (writeFails ? 0 : 4))
+        #expect((try await repository.load().document.tracks.first?.rating) == (writeFails ? 0 : 4))
+        #expect(store.syncedDisplayTags[track.id] == (writeFails ? nil : ["tag"]))
+    }
+
+    @Test("Unwritable tag destination does not commit the catalog", arguments: [false, true])
+    func tagPreparationFails(isUndo: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let track = Track(id: UUID(), title: "A", artist: "B", album: "C", duration: 10,
+                          fileSize: 1, managedPath: root.appendingPathComponent("a.mp3").path,
+                          sha256: "a", addedAt: .now, health: .missing)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let before = DeviceSyncTrackOverlay(sourceKey: "phone", title: "A", artist: "B", album: "C",
+            duration: 10, isFavorite: false, rating: 0, playCount: 0, skipCount: 0,
+            lastPlayedAt: nil, displayTags: [], updatedAt: .now)
+        var after = before; after.rating = 4; after.displayTags = ["tag"]
+        let application = DeviceSyncOverlayApplication(trackID: track.id, overlay: after, fields: [.rating, .displayTags])
+        if isUndo { #expect(await store.applySyncedTrackOverlays([application]) == 1) }
+        let tagURL = root.appendingPathComponent("device-sync-tags-v1.json")
+        if FileManager.default.fileExists(atPath: tagURL.path) { try FileManager.default.removeItem(at: tagURL) }
+        try FileManager.default.createDirectory(at: tagURL, withIntermediateDirectories: false)
+        if isUndo {
+            let change = DeviceSyncAuditChange(trackID: track.id, title: track.title, before: before, after: after, fields: [.rating, .displayTags])
+            #expect(await store.undoSyncedTrackOverlays([change]).restoredFieldCount == 0)
+        } else { #expect(await store.applySyncedTrackOverlays([application]) == 0) }
+        let expected = isUndo ? 4 : 0
+        #expect(store.tracks.first?.rating == expected)
+        #expect((try await repository.load().document.tracks.first?.rating) == expected)
+        #expect(store.syncedDisplayTags[track.id] == (isUndo ? ["tag"] : nil))
+    }
+
+    @Test("Failed final tag publication restores the prior catalog")
+    func tagPublicationFailsAfterCatalogWrite() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let gate = StorageWriteGate(fails: false)
+        defer { gate.resume.signal() }
+        let manager = DelayedStorageFailureFileManager(root: root, gate: gate)
+        let repository = LibraryRepository(rootURL: root, fileManager: manager)
+        let track = Track(id: UUID(), title: "A", artist: "B", album: "C", duration: 10,
+                          fileSize: 1, managedPath: root.appendingPathComponent("a.mp3").path,
+                          sha256: "a", addedAt: .now, health: .missing)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let overlay = DeviceSyncTrackOverlay(sourceKey: "phone", title: "A", artist: "B", album: "C",
+            duration: 10, isFavorite: false, rating: 4, playCount: 0, skipCount: 0,
+            lastPlayedAt: nil, displayTags: ["tag"], updatedAt: .now)
+        gate.arm()
+        let operation = Task { await store.applySyncedTrackOverlays([
+            DeviceSyncOverlayApplication(trackID: track.id, overlay: overlay, fields: [.rating, .displayTags])
+        ]) }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await operation.value; return }
+        let target = root.appendingPathComponent("device-sync-tags-v1.json")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: false)
+        gate.resume.signal()
+        #expect(await operation.value == 0)
+        #expect(store.tracks.first?.rating == 0)
+        #expect(store.syncedDisplayTags[track.id] == nil)
+        #expect((try await repository.load().document.tracks.first?.rating) == 0)
+        #expect(!((try FileManager.default.contentsOfDirectory(atPath: root.path)).contains { $0.hasPrefix(".device-sync-tags-") }))
+    }
+
+    @Test("Overlay rollback does not overwrite a newer track edit")
+    func rollbackRefusesNewerTrackEdit() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let original = Track(id: UUID(), title: "A", artist: "B", album: "C", duration: 10,
+                             fileSize: 1, managedPath: root.appendingPathComponent("a.mp3").path,
+                             sha256: "a", addedAt: .now, health: .missing)
+        var overlay = original; overlay.rating = 4
+        var newer = overlay; newer.title = "Newer edit"
+        try await repository.save(tracks: [newer])
+        #expect(try await !repository.restoreOverlayTracksIfUnchanged(expected: [overlay], previous: [original]))
+        let saved = try await repository.load().document.tracks
+        #expect(saved.first?.id == newer.id)
+        #expect(saved.first?.title == "Newer edit")
+        #expect(saved.first?.rating == 4)
+    }
+
+    @Test("Duplicate resolution completion stays with its starting library", arguments: [false, true])
+    func duplicateResolutionAfterSwitch(writeFails: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First", isDirectory: true)
+        let second = root.appendingPathComponent("Second", isDirectory: true)
+        try FileManager.default.createDirectory(at: first, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: second, withIntermediateDirectories: true)
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        let gate = StorageWriteGate(fails: writeFails)
+        defer { gate.resume.signal() }
+        let manager = DelayedStorageFailureFileManager(root: firstCatalog, gate: gate)
+        let oldRepository = LibraryRepository(rootURL: firstCatalog, mediaURL: first, fileManager: manager)
+        let newRepository = LibraryRepository(rootURL: secondCatalog, mediaURL: second)
+        let source = first.appendingPathComponent("keep.wav")
+        let other = first.appendingPathComponent("remove.wav")
+        try Data("identical".utf8).write(to: source)
+        try Data("identical".utf8).write(to: other)
+        let hash = try LibraryRepository.sha256(of: source)
+        let keep = Track(id: UUID(), title: "Keep", artist: "A", album: "A", duration: 10,
+                         fileSize: 9, managedPath: source.path, sha256: hash, addedAt: .now, health: .verified)
+        let remove = Track(id: UUID(), title: "Copy", artist: "A", album: "A", duration: 10,
+                           fileSize: 9, managedPath: other.path, sha256: hash, addedAt: .now, health: .verified)
+        let replacement = Track(id: UUID(), title: "New", artist: "B", album: "B", duration: 10,
+                                fileSize: 1, managedPath: second.appendingPathComponent("new.wav").path,
+                                sha256: "new", addedAt: .now, health: .missing)
+        try await oldRepository.save(tracks: [keep, remove])
+        try await newRepository.save(tracks: [replacement])
+        let store = LibraryStore(repository: oldRepository)
+        await store.load()
+        let group = try #require(store.duplicateGroups.first)
+        gate.arm()
+        let operation = Task { () -> Bool in
+            do { _ = try await store.resolveDuplicateGroup(group.id, keeping: keep.id, moveManagedFilesToTrash: true); return false }
+            catch is CancellationError { return true }
+            catch { Issue.record("Unexpected error: \(error)"); return false }
+        }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await operation.value; return }
+        await store.switchLibrary(catalogURL: secondCatalog, mediaURL: second)
+        gate.resume.signal()
+        #expect(await operation.value)
+        #expect(store.tracks.map(\.id) == [replacement.id])
+        #expect(try await newRepository.load().document.tracks.map(\.id) == [replacement.id])
+        #expect(try await oldRepository.load().document.tracks.count == (writeFails ? 2 : 1))
+        #expect(FileManager.default.fileExists(atPath: source.path))
+        #expect(FileManager.default.fileExists(atPath: other.path))
+    }
+
+    @Test("Media organization completion stays with its starting library", arguments: [false, true])
+    func mediaOrganizationAfterSwitch(writeFails: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First", isDirectory: true)
+        let second = root.appendingPathComponent("Second", isDirectory: true)
+        try FileManager.default.createDirectory(at: first, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: second, withIntermediateDirectories: true)
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        let gate = StorageWriteGate(fails: writeFails)
+        defer { gate.resume.signal() }
+        let manager = DelayedStorageFailureFileManager(root: firstCatalog, gate: gate)
+        let oldRepository = LibraryRepository(rootURL: firstCatalog, mediaURL: first, fileManager: manager)
+        let newRepository = LibraryRepository(rootURL: secondCatalog, mediaURL: second)
+        let source = first.appendingPathComponent("loose.wav")
+        try Data("sample".utf8).write(to: source)
+        let hash = try LibraryRepository.sha256(of: source)
+        let oldTrack = Track(id: UUID(), title: "Old", artist: "A", album: "A", duration: 10,
+                             fileSize: 6, managedPath: source.path, sha256: hash, addedAt: .now, health: .verified)
+        let replacement = Track(id: UUID(), title: "New", artist: "B", album: "B", duration: 10,
+                                fileSize: 1, managedPath: second.appendingPathComponent("new.wav").path,
+                                sha256: "new", addedAt: .now, health: .missing)
+        try await oldRepository.save(tracks: [oldTrack])
+        try await newRepository.save(tracks: [replacement])
+        let store = LibraryStore(repository: oldRepository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: first)
+        #expect(preview.moveCount == 1)
+        let destination = try #require(preview.items.first?.destinationURL)
+        gate.arm()
+        let operation = Task { () -> Bool in
+            do { _ = try await store.executeMediaOrganization(preview); return false }
+            catch is CancellationError { return true }
+            catch { Issue.record("Unexpected error: \(error)"); return false }
+        }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await operation.value; return }
+        await store.switchLibrary(catalogURL: secondCatalog, mediaURL: second)
+        gate.resume.signal()
+        #expect(await operation.value)
+        #expect(store.tracks.map(\.id) == [replacement.id])
+        #expect(try await newRepository.load().document.tracks.map(\.id) == [replacement.id])
+        let saved = try await oldRepository.load().document.tracks.first
+        #expect(saved?.fileURL.standardizedFileURL == (writeFails ? source : destination).standardizedFileURL)
+        #expect(FileManager.default.fileExists(atPath: (writeFails ? source : destination).path))
+        #expect(try LibraryRepository.sha256(of: writeFails ? source : destination) == hash)
+    }
+
+    @Test("Playlist edit queued during organization keeps the new file path")
+    func playlistEditDuringOrganization() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let catalog = PortableLibraryStorage(mediaURL: root).rootURL
+        let gate = StorageWriteGate(fails: false)
+        defer { gate.resume.signal() }
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: root,
+            fileManager: DelayedStorageFailureFileManager(root: catalog, gate: gate))
+        let source = root.appendingPathComponent("source.wav")
+        try Data("audio".utf8).write(to: source)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: source.path,
+                          sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: root)
+        let destination = try #require(preview.items.first?.destinationURL)
+        gate.arm()
+        let organizing = Task { try await store.executeMediaOrganization(preview) }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = try? await organizing.value; return }
+        let editing = Task { try await store.createPlaylist(name: "During", description: "", artworkData: nil) }
+        await Task.yield()
+        gate.resume.signal()
+        _ = try await organizing.value
+        _ = try await editing.value
+        let saved = try await repository.load().document
+        #expect(saved.playlists.contains { $0.name == "During" })
+        #expect(saved.tracks.first?.managedPath == destination.path)
+        #expect(FileManager.default.fileExists(atPath: destination.path))
+    }
+
+    @Test("Stale track snapshots cannot restore paths after organization")
+    func staleTracksAfterOrganization() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.wav")
+        try Data("audio".utf8).write(to: source)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: source.path,
+                          sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: PortableLibraryStorage(mediaURL: root).rootURL, mediaURL: root)
+        try await repository.save(tracks: [track])
+        let snapshot = try await repository.load().document
+        let preview = try await repository.planMediaOrganization(tracks: snapshot.tracks, destinationRootURL: root)
+        _ = try await repository.executeMediaOrganization(document: snapshot, preview: preview)
+        var stale = snapshot.tracks
+        stale[0].title = "Edited"
+        do { try await repository.save(tracks: stale); Issue.record("Stale path was saved") }
+        catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        let saved = try await repository.load().document
+        let destination = try #require(preview.items.first?.destinationURL)
+        #expect(saved.tracks.first?.managedPath == destination.path)
+        #expect(try Data(contentsOf: destination) == Data("audio".utf8))
+        #expect(!FileManager.default.fileExists(atPath: source.path))
+        var fresh = saved.tracks
+        fresh[0].title = "Edited"
+        try await repository.save(tracks: fresh)
+        #expect(try await repository.load().document.tracks.first?.title == "Edited")
+    }
+
+    @Test("Metadata writing cannot start while organization is moving the same library")
+    func metadataWaitsForOrganization() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let catalog = PortableLibraryStorage(mediaURL: root).rootURL
+        let gate = StorageWriteGate(fails: false)
+        defer { gate.resume.signal() }
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: root,
+            fileManager: DelayedStorageFailureFileManager(root: catalog, gate: gate))
+        let source = root.appendingPathComponent("source.wav")
+        try Data("audio".utf8).write(to: source)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: source.path,
+                          sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: root)
+        let destination = try #require(preview.items.first?.destinationURL)
+        gate.arm()
+        let organizing = Task { try await store.executeMediaOrganization(preview) }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = try? await organizing.value; return }
+        do { try await store.updateTrackLyrics(id: track.id, lyrics: nil); Issue.record("Metadata write started") }
+        catch LibraryStore.MetadataEditError.mediaOrganizationBusy { }
+        gate.resume.signal()
+        _ = try await organizing.value
+        #expect(try await repository.load().document.tracks.first?.managedPath == destination.path)
+        #expect(try Data(contentsOf: destination) == Data("audio".utf8))
+    }
+
+#if DEBUG
+    @Test("Organization cannot start while metadata editing owns the same library")
+    func organizationWaitsForMetadata() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.wav")
+        try Data("audio".utf8).write(to: source)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: source.path,
+                          sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: PortableLibraryStorage(mediaURL: root).rootURL, mediaURL: root)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: root)
+        let gate = StorageWriteGate(fails: false)
+        defer { gate.resume.signal() }
+        store.metadataWriteTestGate = {
+            gate.entered.signal()
+            _ = await Task.detached { @Sendable [gate] in gate.waitUntilResumed() }.value
+        }
+        let editing = Task { try await store.updateTrackLyrics(id: track.id, lyrics: nil) }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = try? await editing.value; return }
+        do { _ = try await store.executeMediaOrganization(preview); Issue.record("Organization started") }
+        catch LibraryStore.MetadataEditError.mediaOrganizationBusy { }
+        #expect(FileManager.default.fileExists(atPath: source.path))
+        gate.resume.signal()
+        try await editing.value
+        store.metadataWriteTestGate = nil
+        let fresh = try await store.previewMediaOrganization(destination: root)
+        _ = try await store.executeMediaOrganization(fresh)
+        #expect(!FileManager.default.fileExists(atPath: source.path))
+    }
+
+#endif
+
+    @Test("Media organization refuses a preview from a previous library")
+    func staleOrganizationPreview() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First", isDirectory: true)
+        let second = root.appendingPathComponent("Second", isDirectory: true)
+        try FileManager.default.createDirectory(at: first, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: second, withIntermediateDirectories: true)
+        let catalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let source = first.appendingPathComponent("loose.wav")
+        try Data("sample".utf8).write(to: source)
+        let hash = try LibraryRepository.sha256(of: source)
+        let track = Track(id: UUID(), title: "Old", artist: "A", album: "A", duration: 10,
+                          fileSize: 6, managedPath: source.path, sha256: hash, addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: first)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: first)
+        let destination = try #require(preview.items.first?.destinationURL)
+        await store.switchLibrary(catalogURL: PortableLibraryStorage(mediaURL: second).rootURL, mediaURL: second)
+        do { _ = try await store.executeMediaOrganization(preview); Issue.record("Old preview accepted") }
+        catch is CancellationError { }
+        #expect(FileManager.default.fileExists(atPath: source.path))
+        #expect(!FileManager.default.fileExists(atPath: destination.path))
+        #expect(try await repository.load().document.tracks.first?.id == track.id)
+    }
+
+    @Test("Media organization refuses a preview after the same library changes")
+    func staleOrganizationPreviewAfterEdit() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("loose.wav")
+        let bytes = Data("sample".utf8)
+        try bytes.write(to: source)
+        let hash = try LibraryRepository.sha256(of: source)
+        let track = Track(id: UUID(), title: "Old", artist: "A", album: "A", duration: 10,
+                          fileSize: 6, managedPath: source.path, sha256: hash, addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: PortableLibraryStorage(mediaURL: root).rootURL, mediaURL: root)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let preview = try await store.previewMediaOrganization(destination: root)
+        let restricted = preview.restricted(to: [track.id])
+        let destination = try #require(preview.items.first?.destinationURL)
+        _ = try await store.createPlaylist(name: "New playlist", description: "", artworkData: nil)
+        for candidate in [preview, restricted] {
+            do { _ = try await store.executeMediaOrganization(candidate); Issue.record("Stale preview accepted") }
+            catch is CancellationError { }
+        }
+        #expect(try Data(contentsOf: source) == bytes)
+        #expect(!FileManager.default.fileExists(atPath: destination.path))
+        let saved = try await repository.load().document
+        #expect(saved.tracks.first?.fileURL.standardizedFileURL == source.standardizedFileURL)
+        #expect(saved.playlists.contains { $0.name == "New playlist" })
+        let refreshed = try await store.previewMediaOrganization(destination: root)
+        _ = try await store.executeMediaOrganization(refreshed)
+        #expect(try Data(contentsOf: destination) == bytes)
+        let organized = try await repository.load().document
+        #expect(organized.playlists.contains { $0.name == "New playlist" })
+        #expect(organized.tracks.first?.fileURL.standardizedFileURL == destination.standardizedFileURL)
+    }
+
+    @Test("Successful library switch clears only the store's previous undo actions")
+    func switchingDropsOldUndo() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First")
+        let second = root.appendingPathComponent("Second")
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        let repository = LibraryRepository(rootURL: firstCatalog, mediaURL: first)
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let undo = UndoManager()
+        store.undoManager = undo
+        _ = try await store.createPlaylist(name: "First playlist", description: "", artworkData: nil)
+        #expect(undo.canUndo)
+        await store.switchLibrary(catalogURL: secondCatalog, mediaURL: second)
+        #expect(!undo.canUndo)
+        #expect(store.playlists.isEmpty)
+        #expect(try await repository.load().document.playlists.map(\.name) == ["First playlist"])
+    }
+
 }

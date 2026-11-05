@@ -28,6 +28,29 @@ private final class ArtworkRequestProbeURLProtocol: URLProtocol, @unchecked Send
 }
 
 struct ArtworkResolverTests {
+    @Test("Artwork follows the active storage and remains available when returning")
+    func artworkStorageRoundTrip() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("A/Ongaku Library Data")
+        let second = root.appendingPathComponent("B/Ongaku Library Data")
+        let resolver = ArtworkResolver()
+        let subject = ArtworkSubject.album(name: "Same Album", artist: "Same Artist")
+        let png = try #require(Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1cAAAAASUVORK5CYII="))
+        try await resolver.configure(libraryRootURL: first)
+        try await resolver.registerCustomArtwork(png, for: subject)
+        #expect(await resolver.customArtworkData(for: subject) == png)
+        try await resolver.configure(libraryRootURL: second)
+        #expect(await resolver.customArtworkData(for: subject) == nil)
+        #expect(await resolver.artworkData(for: subject, allowsNetwork: false) == nil)
+        try await resolver.configure(libraryRootURL: first)
+        #expect(await resolver.customArtworkData(for: subject) == png)
+        for library in [first, second] {
+            #expect(FileManager.default.fileExists(atPath: library.appendingPathComponent("Artwork/Custom").path))
+            #expect(FileManager.default.fileExists(atPath: library.appendingPathComponent("Artwork/Downloaded").path))
+        }
+    }
+
     @Test("Disabled automatic artwork never sends an external request")
     func disabledAutomaticArtworkDoesNotUseNetwork() async throws {
         ArtworkRequestProbeURLProtocol.reset()

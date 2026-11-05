@@ -103,7 +103,7 @@ struct StorageSettingsView: View {
                 try await storage.activateAutomaticLocation { url in
                   try await library.openStorageDirectory(url)
                 }
-                finishStorageSwitch()
+                try finishStorageSwitch()
               } catch { errorMessage = error.localizedDescription }
             }
           }
@@ -231,7 +231,8 @@ struct StorageSettingsView: View {
       return false
     }
 
-    registerDroppedFolder(folderURL)
+    guard let media = mediaFolderForSelection(folderURL) else { return false }
+    registerDroppedFolder(media)
     return true
   }
 
@@ -247,7 +248,7 @@ struct StorageSettingsView: View {
         try await storage.activateDirectory(folderURL) { url in
           try await library.openStorageDirectory(url)
         }
-        finishStorageSwitch()
+        try finishStorageSwitch()
         let summary = await library.registerMediaFolderInPlace(storage.mediaDirectoryURL)
         resultMessage = L10n.format(
           "settings.storage.folderRegistrationResult",
@@ -273,20 +274,51 @@ struct StorageSettingsView: View {
     panel.directoryURL = storage.mediaDirectoryURL.deletingLastPathComponent()
     panel.prompt = L10n.text("settings.storage.choosePanelConfirm")
     panel.begin { response in
-      guard response == .OK, let parent = panel.url else { return }
+      guard response == .OK, let selected = panel.url,
+        let parent = mediaFolderForSelection(selected) else { return }
       Task { @MainActor in
         isApplyingLocation = true
         defer { isApplyingLocation = false }
         do {
+          let catalog = PortableLibraryStorage(mediaURL: parent).rootURL
+          let hadCatalog = ["library-v1.json", "library-v1.backup.json"].contains {
+            FileManager.default.fileExists(atPath: catalog.appendingPathComponent($0).path)
+          }
           try await storage.activateDirectory(parent) { url in
             try await library.openStorageDirectory(url)
           }
-          finishStorageSwitch()
+          try finishStorageSwitch()
+          if !hadCatalog {
+            let summary = await library.registerMediaFolderInPlace(storage.mediaDirectoryURL)
+            if case .failed(let message) = library.activity {
+              errorMessage = message
+            } else {
+              resultMessage = L10n.format(
+                "settings.storage.folderRegistrationResult",
+                summary.discovered, summary.imported, summary.relinked, summary.issues
+              )
+            }
+          }
         } catch {
           errorMessage = error.localizedDescription
         }
       }
     }
+  }
+
+  @MainActor
+  private func mediaFolderForSelection(_ selected: URL) -> URL? {
+    guard selected.lastPathComponent == PortableLibraryStorage.directoryName else { return selected }
+    let media = selected.deletingLastPathComponent().standardizedFileURL
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.allowsMultipleSelection = false
+    panel.directoryURL = media
+    panel.message = L10n.text("storage.migration.authorizeMediaFolder")
+    guard panel.runModal() == .OK, let granted = panel.url,
+          granted.standardizedFileURL == media else { return nil }
+    return granted
   }
 
   @MainActor
@@ -311,7 +343,7 @@ struct StorageSettingsView: View {
           try await storage.activateAppleMusicLibrary(libraryURL, authorizedMediaURL: mediaURL) { url in
             try await library.openStorageDirectory(url)
           }
-          finishStorageSwitch()
+          try finishStorageSwitch()
           guard let musicLibraryMediaURL = storage.musicLibraryMediaURL else { return }
           let summary = await library.importAppleMusicMediaFolder(
             musicLibraryMediaURL,
@@ -362,8 +394,8 @@ struct StorageSettingsView: View {
   }
 
   @MainActor
-  private func finishStorageSwitch() {
-    libraryProfiles.adoptActiveStorageLocation(storage.mediaDirectoryURL)
+  private func finishStorageSwitch() throws {
+    try libraryProfiles.openExistingLibraryAfterRecoveryConfirmation(at: storage.mediaDirectoryURL)
     player.clearCurrentTrack()
     player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
     errorMessage = nil

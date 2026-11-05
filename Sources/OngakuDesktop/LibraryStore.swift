@@ -54,6 +54,7 @@ final class LibraryStore: ObservableObject {
         case trackNotFound
         case mediaOrganizationUnavailable(Int)
         case mediaOrganizationPathMismatch(String)
+        case mediaOrganizationBusy
 
         var errorDescription: String? {
             switch self {
@@ -63,6 +64,8 @@ final class LibraryStore: ObservableObject {
                 L10n.format("metadataEditor.error.mediaOrganizationUnavailable", count)
             case .mediaOrganizationPathMismatch(let fileName):
                 L10n.format("metadataEditor.error.mediaOrganizationPathMismatch", fileName)
+            case .mediaOrganizationBusy:
+                L10n.text("metadataEditor.error.mediaOrganizationBusy")
             }
         }
     }
@@ -181,6 +184,7 @@ final class LibraryStore: ObservableObject {
 
     private var repository: LibraryRepository
     private var deviceSyncTagsURL: URL
+    private var overlayWriteInProgress = false
     private var audioFeatureCache: AudioFeatureCache
     private var searchIndex: SQLiteCatalogPrototype
     private var libraryID = UUID()
@@ -342,7 +346,12 @@ final class LibraryStore: ObservableObject {
     func applySyncedTrackOverlays(
         _ applications: [DeviceSyncOverlayApplication]
     ) async -> Int {
-        guard !applications.isEmpty else { return 0 }
+        guard !applications.isEmpty, !isSwitchingLibrary, !overlayWriteInProgress else { return 0 }
+        overlayWriteInProgress = true
+        defer { overlayWriteInProgress = false }
+        let generation = storageGeneration
+        let targetRepository = repository
+        let tagsURL = deviceSyncTagsURL
         let previous = tracks
         let previousTags = syncedDisplayTags
         let statistics = PlaybackStatisticsResolver.statistics(
@@ -389,14 +398,30 @@ final class LibraryStore: ObservableObject {
 
         guard appliedCount > 0 else { return 0 }
         contentRevision &+= 1
+        let updatedTracks = tracks
+        let updatedTags = syncedDisplayTags
         do {
-            try await repository.save(tracks: tracks)
-            try saveDeviceSyncTags()
+            try await Self.persistOverlay(
+                repository: targetRepository, previous: previous, updated: updatedTracks,
+                tags: updatedTags, tagsURL: tagsURL
+            )
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else { return 0 }
+
             activity = .notice(L10n.text("deviceSync.overlay.applied"))
             return appliedCount
         } catch {
-            tracks = previous
-            syncedDisplayTags = previousTags
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else { return 0 }
+            if error is LibraryRepository.OverlayRecoveryRequired {
+                // Rollback could not be verified; show the catalog's actual state if readable.
+                if let actual = try? await targetRepository.load() {
+                    guard await stillOwnsOverlay(targetRepository, generation: generation) else { return 0 }
+                    tracks = actual.document.tracks
+                    loadDeviceSyncTags()
+                }
+            } else {
+                tracks = previous
+                syncedDisplayTags = previousTags
+            }
             contentRevision &+= 1
             activity = .failed(error.localizedDescription)
             return 0
@@ -407,9 +432,14 @@ final class LibraryStore: ObservableObject {
     func undoSyncedTrackOverlays(
         _ changes: [DeviceSyncAuditChange]
     ) async -> DeviceSyncOverlayUndoResult {
-        guard !changes.isEmpty else {
-            return DeviceSyncOverlayUndoResult(restoredFieldCount: 0, conflictFieldCount: 0)
+        guard !changes.isEmpty, !isSwitchingLibrary, !overlayWriteInProgress else {
+            return DeviceSyncOverlayUndoResult(restoredFieldCount: 0, conflictFieldCount: changes.reduce(0) { $0 + $1.fields.count })
         }
+        overlayWriteInProgress = true
+        defer { overlayWriteInProgress = false }
+        let generation = storageGeneration
+        let targetRepository = repository
+        let tagsURL = deviceSyncTagsURL
         let previous = tracks
         let previousTags = syncedDisplayTags
         let statistics = PlaybackStatisticsResolver.statistics(
@@ -469,17 +499,44 @@ final class LibraryStore: ObservableObject {
             )
         }
         contentRevision &+= 1
+        let updatedTracks = tracks
+        let updatedTags = syncedDisplayTags
         do {
-            try await repository.save(tracks: tracks)
-            try saveDeviceSyncTags()
+            try await Self.persistOverlay(
+                repository: targetRepository, previous: previous, updated: updatedTracks,
+                tags: updatedTags, tagsURL: tagsURL
+            )
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else {
+                return DeviceSyncOverlayUndoResult(
+                    restoredFieldCount: 0,
+                    conflictFieldCount: changes.reduce(0) { $0 + $1.fields.count }
+                )
+            }
             activity = .notice(L10n.text("deviceSync.audit.undoCompleted"))
             return DeviceSyncOverlayUndoResult(
                 restoredFieldCount: restoredFieldCount,
                 conflictFieldCount: conflictFieldCount
             )
         } catch {
-            tracks = previous
-            syncedDisplayTags = previousTags
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else {
+                return DeviceSyncOverlayUndoResult(
+                    restoredFieldCount: 0,
+                    conflictFieldCount: changes.reduce(0) { $0 + $1.fields.count }
+                )
+            }
+            if error is LibraryRepository.OverlayRecoveryRequired {
+                // Rollback could not be verified; show the catalog's actual state if readable.
+                if let actual = try? await targetRepository.load() {
+                    guard await stillOwnsOverlay(targetRepository, generation: generation) else {
+                        return DeviceSyncOverlayUndoResult(restoredFieldCount: 0, conflictFieldCount: changes.reduce(0) { $0 + $1.fields.count })
+                    }
+                    tracks = actual.document.tracks
+                    loadDeviceSyncTags()
+                }
+            } else {
+                tracks = previous
+                syncedDisplayTags = previousTags
+            }
             contentRevision &+= 1
             activity = .failed(error.localizedDescription)
             return DeviceSyncOverlayUndoResult(
@@ -513,6 +570,9 @@ final class LibraryStore: ObservableObject {
         description: String,
         artworkData: Data?
     ) async throws -> Playlist.ID {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let repository = self.repository
         let nextOrder = playlists.filter { $0.folderID == nil }
             .map(\.sortOrder).max().map { $0 + 1 } ?? 0
         var playlist = Playlist(
@@ -527,6 +587,7 @@ final class LibraryStore: ObservableObject {
             )
         }
         do {
+            guard generation == storageGeneration else { throw CancellationError() }
             try await persistPlaylists(
                 playlists + [playlist],
                 undoActionName: L10n.text("undo.playlist.create")
@@ -1084,6 +1145,9 @@ final class LibraryStore: ObservableObject {
         undoActionName: String? = nil,
         registersUndo: Bool = true
     ) async throws {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let repository = self.repository
         let previous = PlaylistOrganizationSnapshot(
             playlists: playlists,
             folders: playlistFolders
@@ -1091,6 +1155,7 @@ final class LibraryStore: ObservableObject {
         let folders = updatedFolders ?? playlistFolders
         do {
             try await repository.save(playlists: updated, folders: folders)
+            guard generation == storageGeneration else { throw CancellationError() }
             playlists = updated
             playlistFolders = folders
             contentRevision &+= 1
@@ -1111,6 +1176,7 @@ final class LibraryStore: ObservableObject {
                 )
             }
         } catch {
+            guard generation == storageGeneration else { throw CancellationError() }
             activity = .failed(error.localizedDescription)
             throw error
         }
@@ -1246,22 +1312,29 @@ final class LibraryStore: ObservableObject {
     }
 
     func load() async {
+        let generation = storageGeneration
+        let repository = self.repository
         do {
             let result = try await repository.load()
+            guard generation == storageGeneration else { return }
             await applyLoadedLibrary(result)
         } catch {
+            guard generation == storageGeneration else { return }
             activity = .failed(error.localizedDescription)
         }
     }
 
     private func applyLoadedLibrary(_ result: LibraryLoadResult) async {
+        let generation = storageGeneration
         tracks = result.document.tracks
         playlists = result.document.playlists
         playlistFolders = result.document.playlistFolders
         playbackEvents = result.document.playbackEvents
         playbackQueue = result.document.playbackQueue
         loadDeviceSyncTags()
-        audioFeatures = (try? await audioFeatureCache.load(validTracks: tracks)) ?? [:]
+        let loadedFeatures = (try? await audioFeatureCache.load(validTracks: tracks)) ?? [:]
+        guard generation == storageGeneration else { return }
+        audioFeatures = loadedFeatures
         audioFeatureRevision &+= 1
         libraryID = result.document.libraryID
         libraryCreatedAt = result.document.createdAt
@@ -1304,13 +1377,24 @@ final class LibraryStore: ObservableObject {
     }
 
     private func saveDeviceSyncTags() throws {
-        let nonEmpty = syncedDisplayTags.filter { !$0.value.isEmpty }
+        try Self.saveDeviceSyncTags(syncedDisplayTags, to: deviceSyncTagsURL)
+    }
+
+    private static func saveDeviceSyncTags(_ tags: [Track.ID: [String]], to url: URL) throws {
+        let nonEmpty = tags.filter { !$0.value.isEmpty }
         let data = try JSONEncoder().encode(nonEmpty)
         try FileManager.default.createDirectory(
-            at: deviceSyncTagsURL.deletingLastPathComponent(),
+            at: url.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        try data.write(to: deviceSyncTagsURL, options: .atomic)
+        try data.write(to: url, options: .atomic)
+    }
+
+    private static func persistOverlay(
+        repository: LibraryRepository, previous: [Track], updated: [Track],
+        tags: [Track.ID: [String]], tagsURL: URL
+    ) async throws {
+        try await repository.saveSynchronizedOverlay(previous: previous, updated: updated, tags: tags)
     }
 
     private nonisolated static func normalizedDisplayTags(_ values: [String]) -> [String] {
@@ -1326,9 +1410,59 @@ final class LibraryStore: ObservableObject {
         }.prefix(12))
     }
 
+    private var storageGeneration = UUID()
+    private var metadataWritingLibraries: Set<String> = []
+    private var organizingLibraries: Set<String> = []
+#if DEBUG
+    var metadataWriteTestGate: (@MainActor () async -> Void)?
+#endif
+    private var storageSwitchWaiters: [CheckedContinuation<Void, Never>] = []
+    private(set) var storageIdentity = UUID()
+
+    private func waitForStorageSwitch() async {
+        while isSwitchingLibrary {
+            await withCheckedContinuation { storageSwitchWaiters.append($0) }
+        }
+    }
+
+    private func finishStorageSwitch() {
+        isSwitchingLibrary = false
+        let waiters = storageSwitchWaiters
+        storageSwitchWaiters.removeAll()
+        for waiter in waiters { waiter.resume() }
+    }
+
+    private func stillOwnsOverlay(_ target: LibraryRepository, generation: UUID) async -> Bool {
+        if generation != storageGeneration { await waitForStorageSwitch() }
+        return target === repository
+    }
+
     func switchLibrary(catalogURL: URL, mediaURL: URL, preparedResult: LibraryLoadResult? = nil) async {
+        let generation = UUID()
+        storageGeneration = generation
         isSwitchingLibrary = true
-        defer { isSwitchingLibrary = false }
+        defer { if generation == storageGeneration { finishStorageSwitch() } }
+        var loaded = preparedResult
+        if loaded == nil {
+            let destination = LibraryRepository(rootURL: catalogURL, mediaURL: mediaURL)
+            do {
+                playbackQueueSaveTask?.cancel()
+                if let playbackQueue { try await repository.save(playbackQueue: playbackQueue) }
+                guard generation == storageGeneration else { return }
+                try await destination.makeLibrarySelfContained()
+                loaded = try await destination.load()
+                guard generation == storageGeneration else { return }
+                try await ArtworkResolver.shared.configure(libraryRootURL: catalogURL)
+                guard generation == storageGeneration else { return }
+            } catch {
+                guard generation == storageGeneration else { return }
+                activity = .failed(error.localizedDescription)
+                return
+            }
+        }
+        // Undo entries target this store, whose backing library is about to change.
+        // Keep unrelated window/document targets in the shared UndoManager intact.
+        undoManager?.removeAllActions(withTarget: self)
         presentationTask?.cancel()
         isPresentationScheduled = false
         presentationGeneration &+= 1
@@ -1340,6 +1474,7 @@ final class LibraryStore: ObservableObject {
         audioFeatureAnalysisTask = nil
         audioFeatureAnalysisGeneration = UUID()
         repository = LibraryRepository(rootURL: catalogURL, mediaURL: mediaURL)
+        storageIdentity = UUID()
         deviceSyncTagsURL = catalogURL.appendingPathComponent("device-sync-tags-v1.json")
         audioFeatureCache = AudioFeatureCache(rootURL: catalogURL)
         searchIndex = SQLiteCatalogPrototype(rootURL: catalogURL)
@@ -1366,11 +1501,7 @@ final class LibraryStore: ObservableObject {
         searchBackendStatus = .jsonFallback
         lastIssues = []
         contentRevision &+= 1
-        if let preparedResult {
-            await applyLoadedLibrary(preparedResult)
-        } else {
-            await load()
-        }
+        if let loaded { await applyLoadedLibrary(loaded) }
     }
 
     func startOngakuMixFeatureAnalysis() {
@@ -1526,7 +1657,9 @@ final class LibraryStore: ObservableObject {
         _ urls: [URL],
         requiredMetadataOverrides: [String: RequiredImportMetadataDraft] = [:]
     ) async {
-        guard !urls.isEmpty else { return }
+        guard !urls.isEmpty, !isSwitchingLibrary else { return }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .importing
         lastIssues = []
         let normalizedOverrides = requiredMetadataOverrides.mapValues { draft in
@@ -1536,6 +1669,7 @@ final class LibraryStore: ObservableObject {
             return normalized
         }
         let required = await repository.requiredImportMetadata(for: urls)
+        guard generation == storageGeneration else { return }
         let unresolved = required.filter { draft in
             guard let override = normalizedOverrides[draft.id] else { return true }
             return override.artist.isEmpty || override.album.isEmpty
@@ -1555,6 +1689,7 @@ final class LibraryStore: ObservableObject {
             existing: tracks,
             requiredMetadataOverrides: normalizedOverrides
         )
+        guard generation == storageGeneration else { return }
         tracks.append(contentsOf: result.imported)
         tracks.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
         contentRevision &+= 1
@@ -1562,6 +1697,7 @@ final class LibraryStore: ObservableObject {
 
         do {
             try await repository.save(tracks: tracks)
+            guard generation == storageGeneration else { return }
             selectedTrackID = result.imported.first?.id ?? selectedTrackID
             scheduleSearchIndexSynchronization(document: currentDocument())
             activity =
@@ -1574,7 +1710,9 @@ final class LibraryStore: ObservableObject {
 
     @discardableResult
     func importAudioCD(_ requests: [AudioCDImportRequest]) async -> Int {
-        guard !requests.isEmpty else { return 0 }
+        guard !requests.isEmpty, !isSwitchingLibrary else { return 0 }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .importing
         lastIssues = []
         let unresolved = requests.filter {
@@ -1601,6 +1739,7 @@ final class LibraryStore: ObservableObject {
             existing: tracks,
             metadataOverrides: overrides
         )
+        guard generation == storageGeneration else { return 0 }
         tracks.append(contentsOf: result.imported)
         tracks.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
         contentRevision &+= 1
@@ -1608,6 +1747,7 @@ final class LibraryStore: ObservableObject {
 
         do {
             try await repository.save(tracks: tracks)
+            guard generation == storageGeneration else { return 0 }
             selectedTrackID = result.imported.first?.id ?? selectedTrackID
             scheduleSearchIndexSynchronization(document: currentDocument())
             if result.imported.isEmpty, !result.issues.isEmpty {
@@ -1626,6 +1766,9 @@ final class LibraryStore: ObservableObject {
     func importLegacyLibrary(
         _ preview: LegacyLibraryMigrationPreview
     ) async throws -> LegacyLibraryMigrationSummary {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .importing
         lastIssues = []
 
@@ -1639,6 +1782,7 @@ final class LibraryStore: ObservableObject {
                 catch { return (source.id, url, .failure(error)) }
             }
         }.value
+        guard generation == storageGeneration else { throw CancellationError() }
 
         var hashByLegacyID: [Int: String] = [:]
         var sourceIssues: [ImportIssue] = []
@@ -1684,6 +1828,7 @@ final class LibraryStore: ObservableObject {
             metadataOverrides: overrides
         )
 
+        guard generation == storageGeneration else { throw CancellationError() }
         var updatedTracks = tracks + importResult.imported
         let importedIDs: Set<Track.ID> = Set(importResult.imported.map(\.id))
         let sourceByHash = Dictionary(
@@ -1753,6 +1898,7 @@ final class LibraryStore: ObservableObject {
         )
         do {
             try await repository.save(document: document)
+            guard generation == storageGeneration else { throw CancellationError() }
             tracks = updatedTracks
             playlists = updatedPlaylists
             lastIssues = sourceIssues + importResult.issues
@@ -1775,6 +1921,7 @@ final class LibraryStore: ObservableObject {
             ))
             return summary
         } catch {
+            guard generation == storageGeneration else { throw CancellationError() }
             activity = .failed(error.localizedDescription)
             throw error
         }
@@ -1825,6 +1972,9 @@ final class LibraryStore: ObservableObject {
     func importOngakuLibrary(
         _ preview: OngakuLibraryMigrationPreview
     ) async throws -> OngakuLibraryMigrationSummary {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .importing
         lastIssues = []
         let readySources = preview.rows.filter { $0.status == .ready }.map(\.track)
@@ -1834,6 +1984,7 @@ final class LibraryStore: ObservableObject {
                 catch { return (source, .failure(error)) }
             }
         }.value
+        guard generation == storageGeneration else { throw CancellationError() }
 
         var actualHashBySourceID: [Track.ID: String] = [:]
         var sourceIssues: [ImportIssue] = []
@@ -1878,6 +2029,7 @@ final class LibraryStore: ObservableObject {
             metadataOverrides: overrides
         )
 
+        guard generation == storageGeneration else { throw CancellationError() }
         var updatedTracks = tracks + importResult.imported
         let importedIDs: Set<Track.ID> = Set(importResult.imported.map(\.id))
         let sourceByHash = Dictionary(
@@ -1978,6 +2130,7 @@ final class LibraryStore: ObservableObject {
         )
         do {
             try await repository.save(document: destinationDocument)
+            guard generation == storageGeneration else { throw CancellationError() }
             tracks = updatedTracks
             playlists = updatedPlaylists
             playlistFolders = updatedFolders
@@ -2001,6 +2154,7 @@ final class LibraryStore: ObservableObject {
             ))
             return summary
         } catch {
+            guard generation == storageGeneration else { throw CancellationError() }
             activity = .failed(error.localizedDescription)
             throw error
         }
@@ -2049,6 +2203,9 @@ final class LibraryStore: ObservableObject {
     func importSharedFolder(
         _ preview: SharedFolderMigrationPreview
     ) async throws -> SharedFolderMigrationSummary {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .importing
         lastIssues = []
         let sources = preview.rows.filter { $0.status == .ready }.map(\.sourceURL)
@@ -2057,12 +2214,14 @@ final class LibraryStore: ObservableObject {
             existing: tracks,
             reportDuplicates: false
         )
+        guard generation == storageGeneration else { throw CancellationError() }
         var updatedTracks = tracks + result.imported
         updatedTracks.sort {
             $0.title.localizedStandardCompare($1.title) == .orderedAscending
         }
         do {
             try await repository.save(tracks: updatedTracks)
+            guard generation == storageGeneration else { throw CancellationError() }
             tracks = updatedTracks
             lastIssues = result.issues
             selectedTrackID = result.imported.first?.id ?? selectedTrackID
@@ -2081,6 +2240,7 @@ final class LibraryStore: ObservableObject {
             ))
             return summary
         } catch {
+            guard generation == storageGeneration else { throw CancellationError() }
             activity = .failed(error.localizedDescription)
             throw error
         }
@@ -2093,10 +2253,19 @@ final class LibraryStore: ObservableObject {
     func previewMediaOrganization(
         destination: URL
     ) async throws -> MediaOrganizationPreview {
-        try await repository.planMediaOrganization(
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let identity = storageIdentity
+        let revision = contentRevision
+        let repository = self.repository
+        var preview = try await repository.planMediaOrganization(
             tracks: tracks,
             destinationRootURL: destination
         )
+        guard generation == storageGeneration, revision == contentRevision else { throw CancellationError() }
+        preview.storageIdentity = identity
+        preview.contentRevision = revision
+        return preview
     }
 
     @discardableResult
@@ -2104,11 +2273,13 @@ final class LibraryStore: ObservableObject {
         trackIDs: Set<Track.ID>,
         collisionPolicy: MediaOrganizationCollisionPolicy = .stop
     ) async throws -> MediaOrganizationSummary {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let repository = self.repository
         let destination = await repository.currentMediaDirectoryURL()
-        let preview = try await repository.planMediaOrganization(
-            tracks: tracks,
-            destinationRootURL: destination
-        ).restricted(to: trackIDs)
+        guard generation == storageGeneration else { throw CancellationError() }
+        let preview = try await previewMediaOrganization(destination: destination).restricted(to: trackIDs)
+        guard generation == storageGeneration else { throw CancellationError() }
         guard preview.unavailableCount == 0 else {
             throw MetadataEditError.mediaOrganizationUnavailable(preview.unavailableCount)
         }
@@ -2123,14 +2294,27 @@ final class LibraryStore: ObservableObject {
         _ preview: MediaOrganizationPreview,
         collisionPolicy: MediaOrganizationCollisionPolicy = .stop
     ) async throws -> MediaOrganizationSummary {
+        guard !isSwitchingLibrary, preview.storageIdentity == storageIdentity,
+              preview.contentRevision == contentRevision else { throw CancellationError() }
+        let identity = repository.rootURL.standardizedFileURL.path
+        guard !metadataWritingLibraries.contains(identity), !organizingLibraries.contains(identity) else {
+            throw MetadataEditError.mediaOrganizationBusy
+        }
+        organizingLibraries.insert(identity)
+        defer { organizingLibraries.remove(identity) }
+        let generation = storageGeneration
+        let repository = self.repository
+        let document = currentDocument()
         activity = .importing
         do {
             let result = try await repository.executeMediaOrganization(
-                document: currentDocument(),
+                document: document,
                 preview: preview,
                 collisionPolicy: collisionPolicy
             )
+            guard generation == storageGeneration else { throw CancellationError() }
             let persistedDocument = try await repository.load().document
+            guard generation == storageGeneration else { throw CancellationError() }
             let persistedTracksByID = Dictionary(
                 uniqueKeysWithValues: persistedDocument.tracks.map { ($0.id, $0) }
             )
@@ -2158,6 +2342,7 @@ final class LibraryStore: ObservableObject {
             ))
             return result.summary
         } catch {
+            guard generation == storageGeneration else { throw CancellationError() }
             activity = .failed(error.localizedDescription)
             throw error
         }
@@ -2215,7 +2400,7 @@ final class LibraryStore: ObservableObject {
     func registerMediaFolderInPlace(_ folderURL: URL) async -> AppleMusicImportSummary {
         await registerMediaFolderInPlace(
             folderURL,
-            excluding: [],
+            excluding: [PortableLibraryStorage(mediaURL: folderURL).rootURL],
             noFilesMessageKey: "status.folderNoFiles",
             successMessageKey: "status.folderRegistered"
         )
@@ -2227,6 +2412,9 @@ final class LibraryStore: ObservableObject {
         noFilesMessageKey: String,
         successMessageKey: String
     ) async -> AppleMusicImportSummary {
+        guard !isSwitchingLibrary else { return AppleMusicImportSummary(discovered: 0, imported: 0, relinked: 0, issues: 0) }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .importing
         lastIssues = []
         let sourceURLs = await Task.detached(priority: .userInitiated) {
@@ -2235,6 +2423,7 @@ final class LibraryStore: ObservableObject {
                 excluding: excludedDirectories
             )
         }.value
+        guard generation == storageGeneration else { return AppleMusicImportSummary(discovered: 0, imported: 0, relinked: 0, issues: 0) }
         guard !sourceURLs.isEmpty else {
             activity = .notice(L10n.text(noFilesMessageKey))
             return AppleMusicImportSummary(discovered: 0, imported: 0, relinked: 0, issues: 0)
@@ -2242,8 +2431,10 @@ final class LibraryStore: ObservableObject {
 
         let result = await repository.referenceFilesInPlace(
             sourceURLs,
-            existing: tracks
+            existing: tracks,
+            copyExternalFiles: true
         )
+        guard generation == storageGeneration else { return AppleMusicImportSummary(discovered: 0, imported: 0, relinked: 0, issues: 0) }
         var importedCount = 0
         var relinkedCount = 0
         for referencedTrack in result.imported {
@@ -2265,6 +2456,7 @@ final class LibraryStore: ObservableObject {
 
         do {
             try await repository.save(tracks: tracks)
+            guard generation == storageGeneration else { return AppleMusicImportSummary(discovered: 0, imported: 0, relinked: 0, issues: 0) }
             selectedTrackID = result.imported.first?.id ?? selectedTrackID
             scheduleSearchIndexSynchronization(document: currentDocument())
             activity =
@@ -2283,14 +2475,20 @@ final class LibraryStore: ObservableObject {
     }
 
     func verifyLibrary() async {
-        guard !tracks.isEmpty else { return }
+        guard !tracks.isEmpty, !isSwitchingLibrary else { return }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .verifying
-        tracks = await repository.verify(tracks)
+        let verified = await repository.verify(tracks)
+        guard generation == storageGeneration else { return }
+        tracks = verified
         let relinkResult = await repository.relinkMissingFiles(in: tracks)
+        guard generation == storageGeneration else { return }
         tracks = relinkResult.tracks
         contentRevision &+= 1
         do {
             try await repository.save(tracks: tracks)
+            guard generation == storageGeneration else { return }
             scheduleSearchIndexSynchronization(document: currentDocument())
             activity = relinkResult.relinkedTrackCount > 0
                 ? .notice(L10n.format(
@@ -2307,6 +2505,9 @@ final class LibraryStore: ObservableObject {
     /// keeps externally deleted or disconnected files visibly marked while the
     /// full Verify command remains responsible for content-integrity checks.
     func refreshFileAvailability(force: Bool = false) async {
+        guard !isSwitchingLibrary else { return }
+        let generation = storageGeneration
+        let repository = self.repository
         if !force, let lastFileAvailabilityScanAt,
            Date.now.timeIntervalSince(lastFileAvailabilityScanAt) < 5 {
             return
@@ -2330,6 +2531,7 @@ final class LibraryStore: ObservableObject {
             }
         }.value
 
+        guard generation == storageGeneration else { return }
         let availabilityByID = Dictionary(uniqueKeysWithValues: reconciled.map { ($0.id, $0) })
         let previous = tracks
         var newlyMissingCount = 0
@@ -2349,6 +2551,7 @@ final class LibraryStore: ObservableObject {
         contentRevision &+= 1
         do {
             try await repository.save(tracks: tracks)
+            guard generation == storageGeneration else { return }
             scheduleSearchIndexSynchronization(document: currentDocument())
             if newlyMissingCount > 0 {
                 activity = .notice(L10n.format(
@@ -2357,6 +2560,7 @@ final class LibraryStore: ObservableObject {
                 ))
             }
         } catch {
+            guard generation == storageGeneration else { return }
             tracks = previous
             contentRevision &+= 1
             activity = .failed(error.localizedDescription)
@@ -2365,18 +2569,24 @@ final class LibraryStore: ObservableObject {
 
     func relinkMissingFiles(searching roots: [URL]) async {
         guard !roots.isEmpty, tracks.contains(where: { $0.health == .missing }) else { return }
+        guard !isSwitchingLibrary else { return }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .relinking
         let result = await repository.relinkMissingFiles(in: tracks, searching: roots)
+        guard generation == storageGeneration else { return }
         do {
             if result.relinkedTrackCount > 0 {
                 try await persistRelinkedTracks(result.tracks)
             }
+            guard generation == storageGeneration else { return }
             activity = .notice(L10n.format(
                 "status.relinkSearchComplete",
                 result.relinkedTrackCount,
                 result.scannedFileCount
             ))
         } catch {
+            guard generation == storageGeneration else { return }
             activity = .failed(error.localizedDescription)
         }
     }
@@ -2386,13 +2596,19 @@ final class LibraryStore: ObservableObject {
             activity = .failed(MetadataEditError.trackNotFound.localizedDescription)
             return
         }
+        guard !isSwitchingLibrary else { return }
+        let generation = storageGeneration
+        let repository = self.repository
         activity = .relinking
         do {
             var updated = tracks
             updated[index] = try await repository.relink(updated[index], to: url)
+            guard generation == storageGeneration else { return }
             try await persistRelinkedTracks(updated)
+            guard generation == storageGeneration else { return }
             activity = .notice(L10n.text("status.relinkManualComplete"))
         } catch {
+            guard generation == storageGeneration else { return }
             activity = .failed(error.localizedDescription)
         }
     }
@@ -2422,7 +2638,10 @@ final class LibraryStore: ObservableObject {
     }
 
     private func persistRelinkedTracks(_ updated: [Track]) async throws {
+        let generation = storageGeneration
+        let repository = self.repository
         try await repository.save(tracks: updated)
+        guard generation == storageGeneration else { throw CancellationError() }
         tracks = updated
         contentRevision &+= 1
         scheduleSearchIndexSynchronization(document: currentDocument())
@@ -2434,13 +2653,15 @@ final class LibraryStore: ObservableObject {
 
     /// Validate and initialize the destination before replacing the active library.
     func openStorageDirectory(_ mediaURL: URL) async throws {
+        guard !isSwitchingLibrary else { throw CocoaError(.userCancelled) }
         isSwitchingLibrary = true
-        defer { isSwitchingLibrary = false }
+        defer { if isSwitchingLibrary { finishStorageSwitch() } }
         playbackQueueSaveTask?.cancel()
         if let playbackQueue { try await repository.save(playbackQueue: playbackQueue) }
         let layout = PortableLibraryStorage(mediaURL: mediaURL)
         let destination = LibraryRepository(rootURL: layout.rootURL, mediaURL: mediaURL)
         try await destination.restorePreservedLibraryIfEmpty()
+        try await destination.makeLibrarySelfContained()
         let loaded = try await destination.load()
         try await ArtworkResolver.shared.configure(libraryRootURL: layout.rootURL)
         await switchLibrary(catalogURL: layout.rootURL, mediaURL: mediaURL, preparedResult: loaded)
@@ -2480,7 +2701,11 @@ final class LibraryStore: ObservableObject {
         keeping keepID: Track.ID,
         moveManagedFilesToTrash: Bool
     ) async throws -> DuplicateResolutionResult {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let generation = storageGeneration
+        let repository = self.repository
         await waitForPresentation()
+        guard generation == storageGeneration else { throw CancellationError() }
         guard let group = duplicateGroups.first(where: { $0.id == groupID }),
               group.tracks.contains(where: { $0.id == keepID }) else {
             throw DuplicateResolutionError.invalidSelection
@@ -2532,6 +2757,7 @@ final class LibraryStore: ObservableObject {
         )
         do {
             try await repository.save(document: document)
+            guard generation == storageGeneration else { throw CancellationError() }
             tracks = updatedTracks
             playlists = updatedPlaylists
             playbackEvents = updatedEvents
@@ -2550,6 +2776,7 @@ final class LibraryStore: ObservableObject {
                     removedTracks: removedTracks,
                     retainedTracks: updatedTracks
                 )
+                guard generation == storageGeneration else { throw CancellationError() }
             }
             let result = DuplicateResolutionResult(
                 removedCount: removedTracks.count,
@@ -2565,6 +2792,7 @@ final class LibraryStore: ObservableObject {
                 ))
             return result
         } catch {
+            guard generation == storageGeneration else { throw CancellationError() }
             activity = .failed(error.localizedDescription)
             throw error
         }
@@ -2736,6 +2964,19 @@ final class LibraryStore: ObservableObject {
         artwork: AudioArtworkChange = .unchanged,
         lyrics: AudioLyricsChange = .unchanged
     ) async throws {
+        guard !isSwitchingLibrary else { throw CancellationError() }
+        let identity = repository.rootURL.standardizedFileURL.path
+        guard !organizingLibraries.contains(identity), !metadataWritingLibraries.contains(identity) else {
+            throw MetadataEditError.mediaOrganizationBusy
+        }
+        metadataWritingLibraries.insert(identity)
+        defer { metadataWritingLibraries.remove(identity) }
+        let generation = storageGeneration
+        let repository = self.repository
+#if DEBUG
+        if let metadataWriteTestGate { await metadataWriteTestGate() }
+#endif
+        guard generation == storageGeneration else { throw CancellationError() }
         var updated = proposed
         for index in updated.indices where changedTrackIDs.contains(updated[index].id) {
             let track = updated[index]
@@ -2759,11 +3000,13 @@ final class LibraryStore: ObservableObject {
         }
         do {
             try await repository.save(tracks: updated)
+            guard generation == storageGeneration else { throw CancellationError() }
             tracks = updated
             contentRevision &+= 1
             scheduleSearchIndexSynchronization(document: currentDocument())
             activity = .notice(L10n.text("status.metadataSaved"))
         } catch {
+            guard generation == storageGeneration else { throw CancellationError() }
             activity = .failed(error.localizedDescription)
             throw error
         }
@@ -2887,21 +3130,29 @@ final class LibraryStore: ObservableObject {
     }
 
     func recordPlaybackEvent(_ event: PlaybackEvent) async {
+        guard !isSwitchingLibrary else { return }
+        let generation = storageGeneration
+        let repository = self.repository
         playbackEvents.append(event)
         do {
             try await repository.recordPlaybackEvent(event)
         } catch {
+            guard generation == storageGeneration else { return }
             playbackEvents.removeAll { $0.id == event.id }
             activity = .failed(error.localizedDescription)
         }
     }
 
     func clearPlaybackHistory() async {
+        guard !isSwitchingLibrary else { return }
+        let generation = storageGeneration
+        let repository = self.repository
         let previous = playbackEvents
         playbackEvents.removeAll()
         do {
             try await repository.save(playbackEvents: [])
         } catch {
+            guard generation == storageGeneration else { return }
             playbackEvents = previous
             activity = .failed(error.localizedDescription)
         }

@@ -39,3 +39,7 @@ DerivedData/
 # 管理ファイル
 website/
 dontUpload/
+
+# prowave is other project
+Pro-Wave
+/Pro-Wave/

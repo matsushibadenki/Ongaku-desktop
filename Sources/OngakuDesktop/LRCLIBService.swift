@@ -1,5 +1,25 @@
 import Foundation
 
+/// Opens provider search pages only; no lyrics are imported or saved.
+enum ExternalLyricsSite: String, CaseIterable, Identifiable {
+    case genius, smule
+
+    var id: String { rawValue }
+    var name: String { self == .genius ? "Genius" : "Smule" }
+
+    func searchURL(query: String) -> URL? {
+        let query = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return nil }
+        var components = URLComponents(string: self == .genius
+            ? "https://genius.com/search" : "https://www.smule.com/search")!
+        components.queryItems = [URLQueryItem(name: "q", value: query)]
+        // Form-style decoders interpret literal plus signs as spaces.
+        components.percentEncodedQuery = components.percentEncodedQuery?
+            .replacingOccurrences(of: "+", with: "%2B")
+        return components.url
+    }
+}
+
 struct LRCLIBRecord: Codable, Identifiable, Equatable, Sendable {
     let id: Int
     let name: String?

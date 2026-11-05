@@ -619,6 +619,8 @@
 "lyrics.editor.empty" = "Saving an empty field removes the lyrics.";
 "lyrics.editor.invalidLRC" = "No valid LRC timestamps were found.";
 "lyrics.editor.lineCount" = "%d synchronized lines";
+"lyrics.web.open" = "Search %@ in your browser";
+"lyrics.web.detail" = "Opens the selected website and sends the search terms. Lyrics cannot be saved or synchronized in Ongaku from these websites.";
 "lrclib.search" = "Search LRCLIB";
 "lrclib.search.placeholder" = "Search by song title, artist, or album";
 "lrclib.search.currentSong" = "Search Current Song";
@@ -765,7 +767,7 @@
 "settings.storage.authorizeMusicMedia" = "Select this Music library’s media folder to allow access to its songs and create Ongaku Media.";
 "settings.storage.musicLibraryHelp" = "Choose an Apple Music .musiclibrary package";
 "settings.storage.importingMusicLibrary" = "Scanning and importing music from the selected library…";
-"settings.storage.musicLibraryImportResult" = "Library scan complete: %d audio files found, %d added, %d relinked to originals, %d could not be indexed.";
+"settings.storage.musicLibraryImportResult" = "Library scan complete: %d audio files found, %d added, %d storage paths updated, %d could not be indexed.";
 "settings.storage.dropFolderHint" = "Drop a music folder here to use it as storage and index tracks without changing its hierarchy";
 "settings.storage.registeringDroppedFolder" = "Indexing music in place while preserving the folder hierarchy…";
 "settings.storage.folderRegistrationResult" = "Folder registration complete: %d audio files found, %d added, %d references updated, %d could not be indexed.";
@@ -777,7 +779,7 @@
 "settings.storage.source.selectedAppleMusicLibrary" = "Loaded from the selected Apple Music library";
 "settings.storage.source.default" = "Using Ongaku's default Application Support location";
 "settings.storage.source.custom" = "Using your selected location";
-"settings.storage.safetyNote" = "A new folder gets its own library data. Selecting a previous folder restores its tracks and playlists without moving the other library. Selecting a Music library creates an Ongaku Media folder inside its media folder and registers the original songs without changing them.";
+"settings.storage.safetyNote" = "Music, library data, artwork and search data stay in the selected folder. Selecting a previous folder opens its library. Externally referenced songs are copied while originals are preserved, so free space is required.";
 "settings.storage.error.multiplePreservedLibraries" = "Multiple preserved libraries were found. Automatic recovery was stopped to avoid choosing the wrong library. Use library import to select the catalog to restore:\n%@";
 "settings.storage.error.invalidMusicLibrary" = "Choose a valid .musiclibrary package.";
 "settings.storage.error.mediaFolderNotFound" = "The Media folder associated with this Apple Music library could not be found.";
@@ -791,7 +793,7 @@
 "common.cancel" = "Cancel";
 "status.storageChanged" = "The library storage location was updated.";
 "status.appleMusicNoFiles" = "No supported audio files were found in the Apple Music Media folder.";
-"status.appleMusicImported" = "Indexed %d tracks and relinked %d tracks to their Apple Music originals.";
+"status.appleMusicImported" = "Registered %d tracks and updated %d storage paths. Original files are preserved.";
 "status.folderNoFiles" = "No supported audio files were found in the selected folder.";
 "status.folderRegistered" = "Indexed %d tracks and updated %d references to the selected folder.";
 "settings.sidebar.general" = "General";
@@ -1242,7 +1244,7 @@
 "storage.migration.recoveryFailed" = "Could not repair the library";
 
 "storage.migration.create.title" = "Create a new library?";
-"storage.migration.create.message" = "No Ongaku library files were found in the selected folder. Create a separate empty library in a new subfolder? Your previous library and existing files will be kept.";
+"storage.migration.create.message" = "No Ongaku library was found. Create one in this folder and register the audio files already in it? Existing files and the previous library will be kept.";
 
 // Pastel appearances shared with iPhone.
 "settings.appearance.pink" = "Pink";
@@ -1289,3 +1291,24 @@
 
 "effect.vocal_presence.name" = "Vocal Presence · Prototype";
 "effect.vocal_presence.description" = "Gently brings presence to the entire mix. Vocals are not isolated; start with a low amount.";
+
+"deviceSync.overlay.rollbackFailed" = "Sync changes could not be fully restored. Check the library and retry.";
+
+"storage.migration.volumeUnavailable" = "Cannot access the volume “%@”. Connect the drive or network volume, confirm it appears in Finder, then reopen Ongaku Desktop or select the library folder to retry.";
+
+"storage.migration.otherLibrary.title" = "Open a different library?";
+"storage.migration.otherLibrary.message" = "The selected folder contains a different Ongaku library with %d tracks. Open it as a separate library? The previous library remains registered.";
+"storage.migration.otherLibrary.open" = "Open Library";
+"storage.migration.searchedFolder" = "Searched folder: %@";
+
+"storage.migration.chooseExisting.title" = "Choose a library";
+"storage.migration.chooseExisting.message" = "Multiple libraries were found. Choose the one to open.";
+"storage.migration.registrationWarning" = "Some files could not be registered";
+
+"storage.migration.confirmExisting.title" = "Open this library?";
+"storage.migration.confirmExisting.message" = "The selected library contains %d tracks. Open it from this location? Other library registrations will be kept.";
+
+"storage.migration.authorizeMediaFolder" = "Select the media folder containing Ongaku Library Data so the app can access the audio files.";
+
+"library.error.staleOrganizedTrack" = "A song was moved during organization. Reload the library and try again.";
+"metadataEditor.error.mediaOrganizationBusy" = "Wait for song editing or media organization to finish, then try again.";

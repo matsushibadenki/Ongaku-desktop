@@ -392,6 +392,8 @@ actor ArtworkResolver {
 
     /// Selects the artwork directories belonging to the active portable
     /// library. Device-independent artwork then travels with the music folder.
+    private var storageGeneration = UUID()
+
     func configure(libraryRootURL: URL) throws {
         let newCacheDirectory = libraryRootURL
             .appendingPathComponent("Artwork/Downloaded", isDirectory: true)
@@ -405,6 +407,8 @@ actor ArtworkResolver {
             at: newCustomDirectory,
             withIntermediateDirectories: true
         )
+        storageGeneration = UUID()
+        isManualRefreshInProgress = false
         cacheDirectory = newCacheDirectory
         customDirectory = newCustomDirectory
         memoryCache.removeAll()
@@ -535,9 +539,11 @@ actor ArtworkResolver {
         guard !isManualRefreshInProgress else { return nil }
         if let task = inFlight[subject] { return await task.value }
 
+        let generation = storageGeneration
         let task = Task { await self.resolveAndCache(subject) }
         inFlight[subject] = task
         let result = await task.value
+        guard generation == storageGeneration else { return nil }
         inFlight[subject] = nil
         return result
     }
@@ -550,16 +556,18 @@ actor ArtworkResolver {
 
         // Drop queued automatic lookups so this explicit user action does not
         // sit behind every thumbnail that happened to appear in a lazy grid.
+        let generation = storageGeneration
         isManualRefreshInProgress = true
         for task in inFlight.values { task.cancel() }
         inFlight.removeAll()
         nextMusicBrainzRequest = ContinuousClock().now.advanced(by: .milliseconds(1_100))
-        defer { isManualRefreshInProgress = false }
+        defer { if generation == storageGeneration { isManualRefreshInProgress = false } }
 
         missing.remove(subject)
         guard let resolved = await resolveAlbum(name: name, artist: artist) else {
             return nil
         }
+        guard generation == storageGeneration, !Task.isCancelled else { return nil }
         memoryCache[subject] = resolved
         writeDiskCache(resolved, for: subject)
         return resolved
@@ -573,6 +581,7 @@ actor ArtworkResolver {
     }
 
     private func resolveAndCache(_ subject: ArtworkSubject) async -> Data? {
+        let generation = storageGeneration
         let resolved: Data?
         switch subject {
         case let .album(name, artist):
@@ -581,7 +590,7 @@ actor ArtworkResolver {
             resolved = await resolveArtist(name: name)
         }
 
-        guard !Task.isCancelled else { return nil }
+        guard !Task.isCancelled, generation == storageGeneration else { return nil }
         if let resolved {
             memoryCache[subject] = resolved
             writeDiskCache(resolved, for: subject)
