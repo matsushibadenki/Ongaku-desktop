@@ -992,6 +992,13 @@ final class PlaybackController: ObservableObject {
     private var graphConfigurationGeneration: UInt64 = 0
     private let primaryPlayerNode = AVAudioPlayerNode()
     private let secondaryPlayerNode = AVAudioPlayerNode()
+    private let playerNodeStopExecutor: PlayerNodeStopCoordinator.Execute?
+    private lazy var playerNodeStops: PlayerNodeStopCoordinator = {
+        let nodes = [primaryPlayerNode, secondaryPlayerNode]
+        if let playerNodeStopExecutor { return PlayerNodeStopCoordinator(nodes: nodes, execute: playerNodeStopExecutor) }
+        return PlayerNodeStopCoordinator(nodes: nodes)
+    }()
+    private var transportMutationID = UUID()
     private let sourceMixerNode = AVAudioMixerNode()
     private var activePlayerIndex = 0
     private var playerNode: AVAudioPlayerNode {
@@ -1035,7 +1042,8 @@ final class PlaybackController: ObservableObject {
     private lazy var effectParameterTransition = EffectParameterTransition(
         isAudible: { [weak self] in
             guard let self else { return false }
-            return self.primaryPlayerNode.isPlaying || self.secondaryPlayerNode.isPlaying
+            return (!self.playerNodeStops.isStopping(self.primaryPlayerNode) && self.primaryPlayerNode.isPlaying)
+                || (!self.playerNodeStops.isStopping(self.secondaryPlayerNode) && self.secondaryPlayerNode.isPlaying)
         },
         shouldDefer: { [weak self] in
             guard let prepared = self?.prerolledTrack,
@@ -1136,9 +1144,11 @@ final class PlaybackController: ObservableObject {
     init(
         audioFileOpener: @escaping (URL) throws -> AVAudioFile = {
             try AVAudioFile(forReading: $0)
-        }
+        },
+        playerNodeStopExecutor: PlayerNodeStopCoordinator.Execute? = nil
     ) {
         self.audioFileOpener = audioFileOpener
+        self.playerNodeStopExecutor = playerNodeStopExecutor
         let defaultSettings = AudioEffectModuleRegistry.makeDefaultSettings()
         effectPipeline = AudioEffectModuleRegistry.makePipeline()
         effectSettings = Self.loadEffectSettings(defaults: defaultSettings)
@@ -1583,22 +1593,28 @@ final class PlaybackController: ObservableObject {
             errorMessage = nil
             publishQueueState(force: true)
         } catch {
-            clearStoppedPlayback()
-            currentTrack = track
-            // Keep the persisted position even when a removable drive or network
-            // library is temporarily unavailable during process restoration.
-            elapsed = min(max(position, 0), max(track.duration, 0))
             isPlaying = false
-            if let readinessError = playbackReadinessMessage(for: track) {
-                errorMessage = readinessError
-            } else {
-                errorMessage = L10n.format(
-                    "player.playbackUnavailable",
-                    track.title,
-                    L10n.format("player.playback.reason.openFailed", error.localizedDescription)
-                )
+            let finishFailure = { [weak self] in
+                guard let self else { return }
+                self.clearStoppedPlayback()
+                self.currentTrack = track
+                // Keep the persisted position even when a removable drive or network
+                // library is temporarily unavailable during process restoration.
+                self.elapsed = min(max(position, 0), max(track.duration, 0))
+                self.isPlaying = false
+                if let readinessError = self.playbackReadinessMessage(for: track) {
+                    self.errorMessage = readinessError
+                } else {
+                    self.errorMessage = L10n.format(
+                        "player.playbackUnavailable",
+                        track.title,
+                        L10n.format("player.playback.reason.openFailed", error.localizedDescription)
+                    )
+                }
+                self.publishQueueState(force: true)
             }
-            publishQueueState(force: true)
+            if playerNodeStops.areStopped([primaryPlayerNode, secondaryPlayerNode]) { finishFailure() }
+            else { performTransportChange(finishFailure) }
         }
     }
 
@@ -1880,7 +1896,7 @@ final class PlaybackController: ObservableObject {
     }
 
     private func scheduleAudioEngineRecovery() {
-        guard !recoveryState.isSleeping, !transportEnvelope.isStopping,
+        guard !recoveryState.isSleeping, !transportEnvelope.isBusy, !playerNodeStops.isBusy,
               audioFile != nil,
               ProcessInfo.processInfo.systemUptime >= suppressConfigurationRecoveryUntil else {
             return
@@ -2044,6 +2060,7 @@ final class PlaybackController: ObservableObject {
         }
         let frameCount = AVAudioFrameCount(min(remaining, AVAudioFramePosition(UInt32.max)))
         playerNode.volume = normalizationResult(for: currentTrack).linearGain
+        playerNodeStops.willSchedule(playerNode)
         playerNode.scheduleSegment(
             audioFile,
             startingFrame: frame,
@@ -2066,7 +2083,7 @@ final class PlaybackController: ObservableObject {
         // The engine can stop or replace its render clock before the
         // configuration notification reaches MainActor. Prefer the last
         // published position whenever the current clock is unavailable.
-        guard let audioFile, engine.isRunning, playerNode.isPlaying,
+        guard !playerNodeStops.isStopping(playerNode), let audioFile, engine.isRunning, playerNode.isPlaying,
               let renderTime = playerNode.lastRenderTime,
               let playerTime = OngakuSafePlayerTime(playerNode, renderTime),
               playerTime.isSampleTimeValid,
@@ -2151,7 +2168,8 @@ final class PlaybackController: ObservableObject {
     }
 
     private func prepareNextTrackIfNeeded() {
-        guard isPlaying, !transportEnvelope.isBusy, let currentTrack, let audioFile else { return }
+        guard isPlaying, !transportEnvelope.isBusy, !playerNodeStops.isBusy,
+              let currentTrack, let audioFile else { return }
         let remaining = duration - currentElapsed()
         let preparationLeadTime = max(
             GaplessPrerollPolicy.leadTime,
@@ -2243,7 +2261,16 @@ final class PlaybackController: ObservableObject {
             // The regular playback tick retries preparation after the short protection ramp.
             guard !effectParameterTransition.isProtectingOutput else { return }
             targetNode = standbyPlayerNode
-            targetNode.stop()
+            if !playerNodeStops.areStopped([targetNode]) {
+                let requestGeneration = playbackGeneration
+                let trackID = currentTrack.id
+                playerNodeStops.stop([targetNode], engine: engine, retaining: [audioFile, nextFile]) { [weak self] in
+                    guard let self, self.playbackGeneration == requestGeneration,
+                          self.currentTrack?.id == trackID else { return }
+                    self.prepareNextTrackIfNeeded()
+                }
+                return
+            }
             targetNode.volume = 0
             crossfadeStartHostTime = mach_absolute_time()
                 + AVAudioTime.hostTime(
@@ -2275,6 +2302,7 @@ final class PlaybackController: ObservableObject {
             normalizationReference: incomingReference
         )
         let targetNodeID = ObjectIdentifier(targetNode)
+        playerNodeStops.willSchedule(targetNode)
         targetNode.scheduleSegment(
             nextFile,
             startingFrame: nextStartFrame,
@@ -2303,14 +2331,13 @@ final class PlaybackController: ObservableObject {
         activePlaybackEnded = false
         stopCrossfadeTimer()
         let outgoingNode = playerNode
+        let outgoingFile = audioFile
         let changesPlayerNode = prepared.playbackNode !== outgoingNode
         prerolledTrack = nil
         if changesPlayerNode {
-            outgoingNode.stop()
+            outgoingNode.volume = 0
             activePlayerIndex = activePlayerIndex == 0 ? 1 : 0
         }
-        primaryPlayerNode.volume = 1
-        secondaryPlayerNode.volume = 1
         audioFile = prepared.file
         currentTrack = prepared.track
         normalizationReferences = [prepared.track.id: prepared.normalizationReference]
@@ -2325,6 +2352,14 @@ final class PlaybackController: ObservableObject {
         beginPlaybackSessionIfNeeded()
         publishQueueState(force: true)
         logSignalPath(reason: "track-transition")
+        if changesPlayerNode {
+            let requestGeneration = playbackGeneration
+            playerNodeStops.stop([outgoingNode], engine: engine, retaining: [outgoingFile].compactMap { $0 }) { [weak self] in
+                guard let self, self.playbackGeneration == requestGeneration else { return }
+                if self.playerNodeStops.areStopped([outgoingNode]) { outgoingNode.volume = 1 }
+                self.prepareNextTrackIfNeeded()
+            }
+        }
         if prepared.hasReachedEnd {
             didFinishPlaying(generation: prepared.generation, scheduleID: prepared.scheduleID,
                              finishedTrackID: prepared.track.id,
@@ -2335,6 +2370,8 @@ final class PlaybackController: ObservableObject {
     }
 
     private func performTransportChange(_ completion: @escaping () -> Void) {
+        transportMutationID = UUID()
+        let request = transportMutationID
         recoveryTask?.cancel(); recoveryTask = nil
         playbackGeneration = UUID() // EOF cannot advance the queue during descent.
         stopTimer()
@@ -2349,9 +2386,16 @@ final class PlaybackController: ObservableObject {
         let drain = max(0.012, 2 * Double(engine.outputNode.auAudioUnit.maximumFramesToRender) / rate)
             + finalOutputProtection.latency + mixerDrain
         transportEnvelope.stop(running: engine.isRunning, drain: drain) { [weak self] in
-            guard let self else { return }
+            guard let self, self.transportMutationID == request else { return }
             self.engine.pause()
-            completion()
+            self.transportEnvelope.beginResourceRetirement()
+            let files = [self.audioFile, self.prerolledTrack?.file].compactMap { $0 }
+            self.playerNodeStops.stop([self.primaryPlayerNode, self.secondaryPlayerNode], engine: self.engine,
+                                      retaining: files) { [weak self] in
+                guard let self, self.transportMutationID == request else { return }
+                self.transportEnvelope.endResourceRetirement()
+                completion()
+            }
         }
     }
 
@@ -2374,11 +2418,14 @@ final class PlaybackController: ObservableObject {
             return Double(time.sampleTime - (baseline ?? time.sampleTime)) / rate >= minimum
         }, failed: { [weak self] in
             guard let self else { return }
-            self.stopPlayerNodes()
-            self.engine.pause()
             self.isPlaying = false
             self.stopTimer()
-            self.publishQueueState(force: true)
+            self.performTransportChange { [weak self] in
+                guard let self else { return }
+                self.stopPlayerNodes()
+                self.engine.pause()
+                self.publishQueueState(force: true)
+            }
         }, completion: { [weak self] in self?.prepareNextTrackIfNeeded() })
     }
 
@@ -2416,6 +2463,7 @@ final class PlaybackController: ObservableObject {
     }
 
     private func stopPlayerNodes(resetActivePlayer: Bool = false) {
+        precondition(playerNodeStops.areStopped([primaryPlayerNode, secondaryPlayerNode]))
         stopCrossfadeTimer()
         // Do not let queued lookahead PCM leak across pause, seek or stop. The
         // compatible gapless/crossfade path deliberately does not call this helper.
@@ -2425,8 +2473,6 @@ final class PlaybackController: ObservableObject {
             engine.pause()
             finalOutputProtection.resetWhileStopped(engine: engine)
         }
-        primaryPlayerNode.stop()
-        secondaryPlayerNode.stop()
         effectPipeline.forEach { $0.resetTailState() }
         applyEffectSettings(immediately: true)
         primaryPlayerNode.volume = 1
@@ -2437,7 +2483,8 @@ final class PlaybackController: ObservableObject {
     }
 
     private func updateCrossfadeVolumes() {
-        guard !transportEnvelope.isStopping, let prepared = prerolledTrack,
+        guard !transportEnvelope.isStopping, !transportEnvelope.isRetiringResources,
+              let prepared = prerolledTrack,
               prepared.crossfadeDuration > 0,
               let startHostTime = prepared.crossfadeStartHostTime else { return }
         let now = mach_absolute_time()
@@ -2542,7 +2589,8 @@ final class PlaybackController: ObservableObject {
                 prerolledTrack?.normalizationReference = captureNormalizationReference(for: prepared.track)
             }
         }
-        guard !transportEnvelope.isStopping, let currentTrack else { return }
+        guard !transportEnvelope.isStopping, !transportEnvelope.isRetiringResources,
+              !playerNodeStops.isStopping(playerNode), let currentTrack else { return }
         if prerolledTrack?.crossfadeDuration ?? 0 > 0 {
             updateCrossfadeVolumes()
         } else {
@@ -2585,7 +2633,7 @@ final class PlaybackController: ObservableObject {
     }
 
     private func applyEffectSettings(immediately: Bool = false, force: Bool = false) {
-        guard !transportEnvelope.isStopping else { return }
+        guard !transportEnvelope.isStopping, !transportEnvelope.isRetiringResources else { return }
         let effective = effectSettings.map { setting in
             var result = setting
             if effectsBypassed { result.isEnabled = false }

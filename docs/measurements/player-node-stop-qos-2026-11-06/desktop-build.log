@@ -1,0 +1,909 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild build -project OngakuDesktop.xcodeproj -scheme OngakuDesktop -configuration Debug -destination platform=macOS -derivedDataPath /private/tmp/OngakuDesktop-NodeStopBuild -jobs 2 CODE_SIGNING_ALLOWED=NO
+
+Build settings from command line:
+    CODE_SIGNING_ALLOWED = NO
+
+Resolve Package Graph
+
+
+Resolved source packages:
+  Sparkle: /Users/Shared/Program/Xcode/Ongaku-desktop/Vendor/Sparkle @ local
+
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00008132-001A65801199801C, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00008132-001A65801199801C, name:My Mac }
+Build Preparation
+Build task concurrency set to 2 via user default IDEBuildOperationMaxNumberOfConcurrentCompileTasks
+
+ComputePackagePrebuildTargetDependencyGraph
+
+Prepare packages
+
+CreateBuildRequest
+
+SendProjectDescription
+
+CreateBuildOperation
+
+ComputeTargetDependencyGraph
+note: Building targets in dependency order
+note: Target dependency graph (2 targets)
+    Target 'OngakuDesktop' in project 'OngakuDesktop'
+        ➜ Explicit dependency on target 'Sparkle-product' in project 'Sparkle'
+    Target 'Sparkle-product' in project 'Sparkle' (no dependencies)
+
+GatherProvisioningInputs
+
+CreateBuildDescription
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -x objective-c++ -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -v -E -dM -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -x c -c /dev/null
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/usr/bin/actool --version --output-format xml1
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc --version
+
+ExecuteExternalTool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/ld -version_details
+
+Build description signature: 05a83f32bb938abfba549711c1dc3aeb
+Build description path: /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/XCBuildData/05a83f32bb938abfba549711c1dc3aeb.xcbuilddata
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/CompilationCache.noindex
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/CompilationCache.noindex
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Products
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Products
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex
+
+ClangStatCache /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang-stat-cache /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -o /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop-bb67e9b638c0b5b847e8f9394af8fabc-VFS/all-product-headers.yaml
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop-bb67e9b638c0b5b847e8f9394af8fabc-VFS/all-product-headers.yaml
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/PrecompiledHeaders
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/PrecompiledHeaders
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/ExplicitPrecompiledModules
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/EagerLinkingTBDs/Debug
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/EagerLinkingTBDs/Debug
+
+CreateBuildDirectory /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/PackageFrameworks
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-create-build-directory /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/PackageFrameworks
+
+ProcessXCFramework /Users/Shared/Program/Xcode/Ongaku-desktop/Vendor/Sparkle/Sparkle.xcframework /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/Sparkle.framework macos
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop/OngakuDesktop.xcodeproj
+    builtin-process-xcframework --xcframework /Users/Shared/Program/Xcode/Ongaku-desktop/Vendor/Sparkle/Sparkle.xcframework --platform macos --library-identifier macos-arm64_x86_64 --target-path /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.hmap (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.hmap
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.DependencyStaticMetadataFileList (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.DependencyStaticMetadataFileList
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.DependencyMetadataFileList (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.DependencyMetadataFileList
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-project-headers.hmap (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-project-headers.hmap
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-own-target-headers.hmap (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-own-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-generated-files.hmap (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-generated-files.hmap
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-target-headers.hmap (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-non-framework-target-headers.hmap (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-non-framework-target-headers.hmap
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-DebugDylibPath-normal-arm64.txt (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-DebugDylibPath-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-DebugDylibInstallName-normal-arm64.txt (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-DebugDylibInstallName-normal-arm64.txt
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp
+'-std=c++20' -fobjc-arc -fobjc-weak -fmodules -fno-cxx-modules -gmodules '-fmodules-cache-path=/tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex' '-D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_DEBUG' -fpascal-strings -O0 -fno-common '-DOBJC_OLD_DISPATCH_PROTOTYPES=0' -g -fvisibility-inlines-hidden -fprofile-instr-generate -fcoverage-mapping -iquote /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-generated-files.hmap -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-own-target-headers.hmap -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-target-headers.hmap -iquote /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-project-headers.hmap -I/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/include -I/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/include -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources-normal/arm64 -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/arm64 -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources -F/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_const_extract_protocols.json (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_const_extract_protocols.json
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftFileList (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftFileList
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftConstValuesFileList (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftConstValuesFileList
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.LinkFileList (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.LinkFileList
+
+WriteAuxiliaryFile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-OutputFileMap.json (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    write-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-OutputFileMap.json
+
+MkDir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /bin/mkdir -p /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources
+
+MkDir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /bin/mkdir -p /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS
+
+MkDir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Frameworks (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /bin/mkdir -p /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Frameworks
+
+MkDir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /bin/mkdir -p /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents
+
+MkDir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /bin/mkdir -p /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app
+
+Ld /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/__preview.dylib normal (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -Xlinker -reproducible -target arm64-apple-macos14.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -F/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -install_name @rpath/OngakuDesktop.debug.dylib -Xlinker -dead_strip -rdynamic -Xlinker -no_deduplicate -Xlinker -debug_variant -Xlinker -dependency_info -Xlinker /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_dependency_info.dat -o /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/__preview.dylib
+
+MkDir /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/unthinned (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /bin/mkdir -p /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/unthinned
+
+MkDir /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/thinned (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /bin/mkdir -p /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/thinned
+
+GenerateAssetSymbols /Users/Shared/Program/Xcode/Ongaku-desktop/Packaging/Assets.xcassets (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/Shared/Program/Xcode/Ongaku-desktop/Packaging/Assets.xcassets --compile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources --output-format human-readable-text --notices --warnings --export-dependency-info /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_dependencies --output-partial-info-plist /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_generated_info.plist --app-icon AppIcon --enable-on-demand-resources NO --development-region en --target-device mac --minimum-deployment-target 14.0 --platform macosx --bundle-identifier com.ongaku.desktop --generate-swift-asset-symbol-extensions NO --generate-swift-asset-symbols /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols.swift --generate-objc-asset-symbols /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols.h --generate-asset-symbol-index /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/* com.apple.actool.compilation-results */
+/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols-Index.plist
+/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols.h
+/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols.swift
+
+
+CpResource /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/PrivacyInfo.xcprivacy /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/PrivacyInfo.xcprivacy (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/PrivacyInfo.xcprivacy /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources
+
+CopyStringsFile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/zh-Hans.lproj/Localizable.strings /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/zh-Hans.lproj/Localizable.strings (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copyStrings --validate --outputencoding UTF-16 --outfilename Localizable.strings --outdir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/zh-Hans.lproj -- /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/zh-Hans.lproj/Localizable.strings
+/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/zh-Hans.lproj/Localizable.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+CopyStringsFile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/zh-Hans.lproj/InfoPlist.strings /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/zh-Hans.lproj/InfoPlist.strings (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copyStrings --validate --outputencoding UTF-16 --outfilename InfoPlist.strings --outdir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/zh-Hans.lproj -- /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/zh-Hans.lproj/InfoPlist.strings
+/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/zh-Hans.lproj/InfoPlist.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+CopyStringsFile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/ja.lproj/Localizable.strings /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/ja.lproj/Localizable.strings (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copyStrings --validate --outputencoding UTF-16 --outfilename Localizable.strings --outdir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/ja.lproj -- /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/ja.lproj/Localizable.strings
+/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/ja.lproj/Localizable.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+CopyStringsFile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/ja.lproj/InfoPlist.strings /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/ja.lproj/InfoPlist.strings (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copyStrings --validate --outputencoding UTF-16 --outfilename InfoPlist.strings --outdir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/ja.lproj -- /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/ja.lproj/InfoPlist.strings
+/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/ja.lproj/InfoPlist.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+CopyStringsFile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/en.lproj/Localizable.strings /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/en.lproj/Localizable.strings (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copyStrings --validate --outputencoding UTF-16 --outfilename Localizable.strings --outdir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/en.lproj -- /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/en.lproj/Localizable.strings
+/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/en.lproj/Localizable.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+CopyStringsFile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/en.lproj/InfoPlist.strings /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/en.lproj/InfoPlist.strings (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copyStrings --validate --outputencoding UTF-16 --outfilename InfoPlist.strings --outdir /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/en.lproj -- /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/en.lproj/InfoPlist.strings
+/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Resources/en.lproj/InfoPlist.strings:1:1: note: detected encoding of input file as Unicode (UTF-8) (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+Copy /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Frameworks/Sparkle.framework /Users/Shared/Program/Xcode/Ongaku-desktop/Vendor/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -exclude Headers -exclude PrivateHeaders -exclude Modules -exclude \*.tbd -resolve-src-symlinks -remove-static-executable /Users/Shared/Program/Xcode/Ongaku-desktop/Vendor/Sparkle/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Frameworks
+
+CompileAssetCatalogVariant thinned /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources /Users/Shared/Program/Xcode/Ongaku-desktop/Packaging/Assets.xcassets (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /Applications/Xcode.app/Contents/Developer/usr/bin/actool /Users/Shared/Program/Xcode/Ongaku-desktop/Packaging/Assets.xcassets --compile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/thinned --output-format human-readable-text --notices --warnings --export-dependency-info /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_dependencies_thinned --output-partial-info-plist /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_generated_info.plist_thinned --app-icon AppIcon --enable-on-demand-resources NO --development-region en --target-device mac --minimum-deployment-target 14.0 --platform macosx
+/* com.apple.actool.compilation-results */
+/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_generated_info.plist_thinned
+/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/thinned/AppIcon.icns
+/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/thinned/Assets.car
+
+
+LinkAssetCatalog /Users/Shared/Program/Xcode/Ongaku-desktop/Packaging/Assets.xcassets (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-linkAssetCatalog --thinned /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/thinned --thinned-dependencies /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_dependencies_thinned --thinned-info-plist-content /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_generated_info.plist_thinned --unthinned /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_output/unthinned --unthinned-dependencies /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_dependencies_unthinned --unthinned-info-plist-content /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_generated_info.plist_unthinned --output /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources --plist-output /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_generated_info.plist
+note: Emplaced /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/AppIcon.icns (in target 'OngakuDesktop' from project 'OngakuDesktop')
+note: Emplaced /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources/Assets.car (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+ProcessInfoPlistFile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Info.plist /Users/Shared/Program/Xcode/Ongaku-desktop/Packaging/Info.plist (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-infoPlistUtility /Users/Shared/Program/Xcode/Ongaku-desktop/Packaging/Info.plist -producttype com.apple.product-type.application -genpkginfo /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/PkgInfo -expandbuildsettings -platform macosx -additionalcontentfile /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/assetcatalog_generated_info.plist -scanforprivacyfile /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Frameworks/Sparkle.framework -o /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Info.plist
+
+SwiftDriver OngakuDesktop normal arm64 com.apple.xcode.tools.swift.compiler (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftDriver -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name OngakuDesktop -Onone @/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftFileList -DDEBUG -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos14.0 -g -module-cache-path /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /tmp/OngakuDesktop-NodeStopBuild/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -F /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache -output-file-map /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex -sdk-module-cache-path /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-generated-files.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-own-target-headers.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-project-headers.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/include -Xcc -I/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/include -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources-normal/arm64 -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/arm64 -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-Swift.h -import-objc-header /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h -working-directory /Users/Shared/Program/Xcode/Ongaku-desktop -experimental-emit-module-separately -disable-cmo
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/DeveloperToolsSupport-4ZY4WDZ0PNCTOTSP195OPFFT.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/ptrauth-3DQO3FJ05XC2J6IARC0XXWRSX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_MusicKit_SwiftUI-9G1R2T6DFY9X7ZZYLW9Q2EX7N.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_stdarg-1YPD6DB4WKILKCSY9QUR91G76.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_SwiftConcurrencyShims-3P9HEKFRVWBXOQVF4CYN8SC09.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_stdbool-5I5H571GLQ9QLWPYHF0ZC0V44.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/ptrcheck-E26J15FFIF8MEYTQRZ03IISY4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_AvailabilityInternal-1OJNJLT3O0DN2DRR4J11U8OPR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/SwiftShims-1K7BBIHJCYM0BQRSFIRV5NPVM.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_stddef-2W2XKEA5MKCJHGTXPW3YWK15K.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_float-3PPRVJV6GTANKW2J0NORDWJ2Z.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_DarwinFoundation1-CDLYA5IVYB2P2YT4FG6178NCL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/SQLite3-CV3XJC0G6LC6HM04ZVO8F3I6Q.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_DarwinFoundation2-D1R5L4A2QXXDXNR8UU86NXDIK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_limits-804RSX918KAGTTQ9WDU69C0SA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/sys_types-37UBNK3IF5PA61F1AY7AQBVUR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/string_h-B1IKC5DLIVQZSKQKSHKIB93EN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_tgmath-5B505FV1C9TXGLUY1J8SSQATD.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_stdint-3VZVMGRQ4WTUKNT4TNUE2Q3FJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_DarwinFoundation3-ARCPI8432E91OOVT0SOUEV3BK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_stdatomic-PDA6E7GB1G4RFH6T9IHRK6HG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_intrinsics-2GPLN609YKYLRJ2WDFOQO6BSK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/libDER-8RRKC9VYCKM5I04GZRT6W73W9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/_Builtin_inttypes-1NHGK4R9PQ2Q4UMSFUA7S8N8I.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Darwin-BAEPNVVW39L5IQIUQWDABHBL5.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/simd-34XPVTWE8XQWWXU4DRPLVZHTF.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/launch-8WIDG8E82D8QG4LSDKILARYCL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/MachO-5G4LANNR77FBZKAFIYYCW9JKG.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CUPS-EE0ZI83Y5E3UXVNDX55VRCEJ7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Spatial-CZRJN2W3ETKCDTTRIF6CEVGGA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/libkern-FO2PPGMT2LPNV08KW5BKYHK4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/ObjectiveC-75VXRD4MMCID4NN14TZZ3VEIL.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/os_object-8UJ5HL7YFSPYZYVHTX1JEIBQR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/os_workgroup-D5FLC4QFO6JVGH5GFX31M7OOH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Dispatch-CTRQ55BUTN6L95HH72T3YKT83.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/notify-68164JRH335SQ6436Z5519B29.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreFoundation-D77RSLX19AKNVFQY5NYKKLVI4.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/XPC-2ZH38LS9JUDQ023KHU0R0WP1G.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/IOKit-AD4PYYPJSNMYGO5NJAAFQL396.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/ColorSync-D8ZQ6PKKJV8F3I7DUDG44GK6T.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Security-CFVLKIQ8JGKL4TA8K09WZKXCX.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/os-BN14QPZPMI92CE71TZGCW9FTP.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CFNetwork-BRZVDIJ5QQT53W2S50Q330KZ9.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/DiskArbitration-F1XAIH65M0A259U1RAUYR7U3M.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreGraphics-DLLX93FTPPEORLP66PC1UXPE8.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreAudioTypes-BJ8EPA1JCCV7GIJH1BVR00HSK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreServices-1FPHR0F7QX3TAOA99Y61D04LS.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/ImageIO-17OU1ER6HS57SQL8DRKM2U1QV.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreText-9Z70DV17TEG9I8W1N120BCCBJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Foundation-AA3EKJZH3LEVGBXSVEAEU2JY6.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreData-8R1JT86HWGU5CGUT6D5LC85MW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/DataDetection-9KPIQ4HAP2IYZTNI63SKZ69H7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreMIDI-DBIFKYODWZIXKER11W3JEJXXW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/ApplicationServices-78ZW504MB9E4T1KBBU5KID0WK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreTransferable-2AK0R6NM6LCBGAR6XNQ51ZNRE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/LocalAuthentication-DWWMDZ22HRHT4K75E7UI944ZN.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreAudio-4N2CWIYXM55UURUABJZLOEQ13.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Carbon-8IAEUL2PQDSYJC4DLI35QA1ZB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/OSLog-C8K85SZSSVA5M6N63YW8X0RU7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/UniformTypeIdentifiers-6QBVCA1WSLVMPFJDUI8H5S1DY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules/Sparkle-40N0FQEB9QYF38INSP8F08IOH.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Symbols-5MTPRK91ZCQ5GWUQ8NGZLECZ2.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/AudioToolbox-4RW3WVY21B25EDE22TM7PEY1A.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/IOSurface-BDLQ37J48PFDJ23IXO9KSQ4IA.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Accessibility-78TOWU9UJ0FVUKHGL4U3RYXE.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/OpenGL-AJQYJ99YQRYBBZ5JNN2XR6Z1A.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Metal-2W56R54UUW04MW3G4N7W44QKZ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreVideo-72I8ICXK2181UYBC111YNAXW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Accelerate-CDEXID19ZIUML48QBJBSNEE92.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreMedia-DN96HV6T2J8G19222LZAWIPOY.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/QuartzCore-96J9W29EMQNJY3BH1TPZ8P6O7.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/VideoToolbox-174711H2AQS33G4Q9W7ICE9PJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/MediaToolbox-DOE8LH83UI480IWKMLQQ964XR.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/AVFAudio-56U4GXD325BPR95UDITHGXNID.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/SwiftUICore-4OYQVNHNGN1EJR5RS1PUAVPPJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/CoreImage-2Y4XIXR88LU7B5ORKNX1UTKWJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/AVFoundation-7MVI8WZ6F4URY2AO3TE8AGXSJ.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/AppKit-2ZY0H9LS985X0GQK2JDTZMRSW.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/MediaPlayer-9ABGFQYE67AOXCRZCJ3AGQJHB.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/SwiftUI-114KL0365JHPYI99QNO0RY2V1.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/Cocoa-1UOUIB5KA4H97NZUP09SBXGHK.pcm
+
+SwiftExplicitDependencyGeneratePcm arm64 /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules/MultipeerConnectivity-4E67NMSC4H744HSQMUC0HD0AV.pcm
+
+SwiftGeneratePch normal arm64 Compiling\ bridging\ header (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftDriverJobDiscovery normal arm64 Compiling bridging header (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftEmitModule normal arm64 Emitting\ module\ for\ OngakuDesktop (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    
+
+SwiftCompile normal arm64 Compiling\ AudioProcessingPolicy.swift,\ AudioSourceFileInfo.swift,\ AudioThreadGainStage.swift,\ AudioSignalPath.swift,\ SocialPrivacySettings.swift,\ SocialPrivacySettingsView.swift,\ SystemNowPlayingController.swift,\ AudioOutputManager.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioProcessingPolicy.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioSourceFileInfo.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioThreadGainStage.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioSignalPath.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SocialPrivacySettings.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SocialPrivacySettingsView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SystemNowPlayingController.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioOutputManager.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioProcessingPolicy.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioProcessingPolicy.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioSourceFileInfo.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioSourceFileInfo.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioThreadGainStage.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioThreadGainStage.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioSignalPath.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioSignalPath.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SocialPrivacySettings.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SocialPrivacySettings.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SocialPrivacySettingsView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SocialPrivacySettingsView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SystemNowPlayingController.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SystemNowPlayingController.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioOutputManager.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioOutputManager.swift
+
+SwiftCompile normal arm64 Compiling\ LRCLIBService.swift,\ MusicBrainzService.swift,\ MusicBrainzCandidatePicker.swift,\ ArtistImageCandidatePicker.swift,\ AudioCDImportView.swift,\ URLAudioImportView.swift,\ LegacyLibraryMigrationView.swift,\ OngakuLibraryMigrationView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LRCLIBService.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MusicBrainzService.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MusicBrainzCandidatePicker.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ArtistImageCandidatePicker.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioCDImportView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/URLAudioImportView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LegacyLibraryMigrationView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuLibraryMigrationView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LRCLIBService.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LRCLIBService.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MusicBrainzService.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile MusicBrainzService.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MusicBrainzCandidatePicker.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile MusicBrainzCandidatePicker.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ArtistImageCandidatePicker.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile ArtistImageCandidatePicker.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioCDImportView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioCDImportView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/URLAudioImportView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile URLAudioImportView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LegacyLibraryMigrationView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LegacyLibraryMigrationView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuLibraryMigrationView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile OngakuLibraryMigrationView.swift
+
+SwiftDriverJobDiscovery normal arm64 Emitting module for OngakuDesktop (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftDriver\ Compilation\ Requirements OngakuDesktop normal arm64 com.apple.xcode.tools.swift.compiler (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-Swift-Compilation-Requirements -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name OngakuDesktop -Onone @/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftFileList -DDEBUG -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos14.0 -g -module-cache-path /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /tmp/OngakuDesktop-NodeStopBuild/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -F /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache -output-file-map /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex -sdk-module-cache-path /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-generated-files.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-own-target-headers.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-project-headers.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/include -Xcc -I/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/include -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources-normal/arm64 -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/arm64 -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-Swift.h -import-objc-header /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h -working-directory /Users/Shared/Program/Xcode/Ongaku-desktop -experimental-emit-module-separately -disable-cmo
+
+SwiftDriverJobDiscovery normal arm64 Compiling AudioProcessingPolicy.swift, AudioSourceFileInfo.swift, AudioThreadGainStage.swift, AudioSignalPath.swift, SocialPrivacySettings.swift, SocialPrivacySettingsView.swift, SystemNowPlayingController.swift, AudioOutputManager.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 Compiling\ LibraryModels.swift,\ SharedMusicModels.swift,\ AudioFeatureAnalysis.swift,\ LibraryRepository.swift,\ SQLiteCatalogPrototype.swift,\ LibraryStore.swift,\ LibraryPresentation.swift,\ PlaylistTransfer.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SharedMusicModels.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioFeatureAnalysis.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SQLiteCatalogPrototype.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryPresentation.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaylistTransfer.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryModels.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LibraryModels.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SharedMusicModels.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SharedMusicModels.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioFeatureAnalysis.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioFeatureAnalysis.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LibraryRepository.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SQLiteCatalogPrototype.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SQLiteCatalogPrototype.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LibraryStore.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryPresentation.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LibraryPresentation.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaylistTransfer.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PlaylistTransfer.swift
+
+SwiftMergeGeneratedHeaders /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/OngakuDesktop-Swift.h /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-Swift.h (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-swiftHeaderTool -arch arm64 /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-Swift.h -o /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/OngakuDesktop-Swift.h
+
+SwiftDriverJobDiscovery normal arm64 Compiling LRCLIBService.swift, MusicBrainzService.swift, MusicBrainzCandidatePicker.swift, ArtistImageCandidatePicker.swift, AudioCDImportView.swift, URLAudioImportView.swift, LegacyLibraryMigrationView.swift, OngakuLibraryMigrationView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+Copy /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/arm64-apple-macos.swiftmodule /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftmodule (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftmodule /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/arm64-apple-macos.swiftmodule
+
+Copy /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/arm64-apple-macos.swiftdoc /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftdoc (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftdoc /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/arm64-apple-macos.swiftdoc
+
+Copy /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/arm64-apple-macos.abi.json /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.abi.json (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.abi.json /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/arm64-apple-macos.abi.json
+
+Copy /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftsourceinfo (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-copy -exclude .DS_Store -exclude CVS -exclude .svn -exclude .git -exclude .hg -resolve-src-symlinks -rename /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftsourceinfo /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.swiftmodule/Project/arm64-apple-macos.swiftsourceinfo
+
+SwiftCompile normal arm64 Compiling\ SharedFolderMigrationView.swift,\ MediaOrganizationView.swift,\ DeviceSyncModels.swift,\ DeviceChunkTransfer.swift,\ DeviceChunkTransferWorker.swift,\ PhoneSyncController.swift,\ DeviceSyncView.swift,\ AppleMusicStoreView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SharedFolderMigrationView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MediaOrganizationView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceSyncModels.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceChunkTransfer.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceChunkTransferWorker.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PhoneSyncController.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceSyncView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppleMusicStoreView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SharedFolderMigrationView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SharedFolderMigrationView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MediaOrganizationView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile MediaOrganizationView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceSyncModels.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile DeviceSyncModels.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceChunkTransfer.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile DeviceChunkTransfer.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceChunkTransferWorker.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile DeviceChunkTransferWorker.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PhoneSyncController.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PhoneSyncController.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DeviceSyncView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile DeviceSyncView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppleMusicStoreView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AppleMusicStoreView.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling LibraryModels.swift, SharedMusicModels.swift, AudioFeatureAnalysis.swift, LibraryRepository.swift, SQLiteCatalogPrototype.swift, LibraryStore.swift, LibraryPresentation.swift, PlaylistTransfer.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 Compiling\ AppleMusicPlaybackController.swift,\ LibraryStorageSettings.swift,\ AppLanguageSettings.swift,\ AppAppearanceSettings.swift,\ PlayerMeterSettings.swift,\ WindowPresentationController.swift,\ PlaybackController.swift,\ IntegratedLoudnessMeter.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppleMusicPlaybackController.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppLanguageSettings.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppAppearanceSettings.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerMeterSettings.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/IntegratedLoudnessMeter.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppleMusicPlaybackController.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AppleMusicPlaybackController.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LibraryStorageSettings.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppLanguageSettings.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AppLanguageSettings.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AppAppearanceSettings.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AppAppearanceSettings.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerMeterSettings.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PlayerMeterSettings.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile WindowPresentationController.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PlaybackController.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/IntegratedLoudnessMeter.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile IntegratedLoudnessMeter.swift
+
+SwiftCompile normal arm64 Compiling\ EffectsRackView.swift,\ MiniToggleSwitch.swift,\ ContentView.swift,\ LibrarySidebar.swift,\ LibraryContent.swift,\ ArtworkResolver.swift,\ MetadataEditorView.swift,\ AudioFileMetadataWriter.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniToggleSwitch.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ArtworkResolver.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MetadataEditorView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioFileMetadataWriter.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile EffectsRackView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniToggleSwitch.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile MiniToggleSwitch.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ContentView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile ContentView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibrarySidebar.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LibrarySidebar.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile LibraryContent.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ArtworkResolver.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile ArtworkResolver.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MetadataEditorView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile MetadataEditorView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioFileMetadataWriter.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioFileMetadataWriter.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling AppleMusicPlaybackController.swift, LibraryStorageSettings.swift, AppLanguageSettings.swift, AppAppearanceSettings.swift, PlayerMeterSettings.swift, WindowPresentationController.swift, PlaybackController.swift, IntegratedLoudnessMeter.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 Compiling\ AudioEffectPreset.swift,\ AudioEffectNode.swift,\ AudioEffectModuleRegistry.swift,\ SimulationAudioEffect.swift,\ EqualizerAudioEffect.swift,\ BodyAudioEffect.swift,\ ExciterAudioEffect.swift,\ SpectralTransientAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectPreset.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectModuleRegistry.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpectralTransientAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectPreset.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioEffectPreset.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectNode.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioEffectNode.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/AudioEffectModuleRegistry.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile AudioEffectModuleRegistry.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SimulationAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SimulationAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EqualizerAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile EqualizerAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BodyAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile BodyAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/ExciterAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile ExciterAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpectralTransientAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SpectralTransientAudioEffect.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling SharedFolderMigrationView.swift, MediaOrganizationView.swift, DeviceSyncModels.swift, DeviceChunkTransfer.swift, DeviceChunkTransferWorker.swift, PhoneSyncController.swift, DeviceSyncView.swift, AppleMusicStoreView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 Compiling\ EffectParameterTransition.swift,\ TransportOutputEnvelope.swift,\ PlayerNodeStopCoordinator.swift,\ EffectTransitionPolicy.swift,\ FinalOutputProtection.swift,\ OngakuDesktopApp.swift,\ DesignTokens.swift,\ Localization.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectParameterTransition.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TransportOutputEnvelope.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectTransitionPolicy.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/FinalOutputProtection.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectParameterTransition.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile EffectParameterTransition.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TransportOutputEnvelope.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile TransportOutputEnvelope.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PlayerNodeStopCoordinator.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/EffectTransitionPolicy.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile EffectTransitionPolicy.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/FinalOutputProtection.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile FinalOutputProtection.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OngakuDesktopApp.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile OngakuDesktopApp.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/DesignTokens.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile DesignTokens.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/Localization.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile Localization.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling AudioEffectPreset.swift, AudioEffectNode.swift, AudioEffectModuleRegistry.swift, SimulationAudioEffect.swift, EqualizerAudioEffect.swift, BodyAudioEffect.swift, ExciterAudioEffect.swift, SpectralTransientAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 Compiling\ VocalPresenceAudioEffect.swift,\ OptoFETAudioEffect.swift,\ WarmAudioEffect.swift,\ GlossAudioEffect.swift,\ SpaceAudioEffect.swift,\ BBEAudioEffect.swift,\ HighQualityEnhancementAudioEffect.swift,\ RotaryKnob.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/VocalPresenceAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/RotaryKnob.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/VocalPresenceAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile VocalPresenceAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/OptoFETAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile OptoFETAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WarmAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile WarmAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/GlossAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile GlossAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/SpaceAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile SpaceAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/BBEAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile BBEAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile HighQualityEnhancementAudioEffect.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/RotaryKnob.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile RotaryKnob.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling EffectParameterTransition.swift, TransportOutputEnvelope.swift, PlayerNodeStopCoordinator.swift, EffectTransitionPolicy.swift, FinalOutputProtection.swift, OngakuDesktopApp.swift, DesignTokens.swift, Localization.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 Compiling\ TrackInspector.swift,\ PastelVUMeterScale.swift,\ PastelChannelVUMeter.swift,\ PlayerBar.swift,\ MiniPlayerView.swift,\ StorageSettingsView.swift,\ PreferencesView.swift,\ GeneratedAssetSymbols.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PastelVUMeterScale.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PastelChannelVUMeter.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniPlayerView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/TrackInspector.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile TrackInspector.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PastelVUMeterScale.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PastelVUMeterScale.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PastelChannelVUMeter.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PastelChannelVUMeter.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PlayerBar.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/MiniPlayerView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile MiniPlayerView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile StorageSettingsView.swift
+
+SwiftCompile normal arm64 /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/PreferencesView.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile PreferencesView.swift
+
+SwiftCompile normal arm64 /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/GeneratedAssetSymbols.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-SwiftPerFileCompile GeneratedAssetSymbols.swift
+
+SwiftDriverJobDiscovery normal arm64 Compiling VocalPresenceAudioEffect.swift, OptoFETAudioEffect.swift, WarmAudioEffect.swift, GlossAudioEffect.swift, SpaceAudioEffect.swift, BBEAudioEffect.swift, HighQualityEnhancementAudioEffect.swift, RotaryKnob.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftDriverJobDiscovery normal arm64 Compiling TrackInspector.swift, PastelVUMeterScale.swift, PastelChannelVUMeter.swift, PlayerBar.swift, MiniPlayerView.swift, StorageSettingsView.swift, PreferencesView.swift, GeneratedAssetSymbols.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+CompileC /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TruePeakAudioUnit.o /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/TruePeakAudioUnit.mm normal arm64 objective-c++ com.apple.compilers.llvm.clang.1_0.compiler (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    
+    Using response file: /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp
+    
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x objective-c++ -ivfsstatcache /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache -target arm64-apple-macos14.0 -fmessage-length\=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit\=0 -fno-color-diagnostics -fmodules-prune-interval\=86400 -fmodules-prune-after\=345600 -fbuild-session-file\=/tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex/Session.modulevalidation -fmodules-validate-once-per-build-session -Wnon-modular-include-in-framework-module -Werror\=non-modular-include-in-framework-module -Wno-trigraphs -Wno-missing-field-initializers -Wno-missing-prototypes -Wunreachable-code -Wquoted-include-in-framework-header -Wno-implicit-atomic-properties -Wno-objc-interface-ivars -Wno-arc-repeated-use-of-weak -Wimplicit-retain-self -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wduplicate-method-match -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wno-float-conversion -Wnon-literal-null-conversion -Wobjc-literal-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-selector -Wno-strict-selector-match -Wundeclared-selector -Wdeprecated-implementations -Wno-c++11-extensions -Wno-implicit-fallthrough -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -fstrict-aliasing -Wprotocol -Wdeprecated-declarations -Winvalid-offsetof -Wno-sign-conversion -Winfinite-recursion -Wmove -Wcomma -Wblock-capture-autoreleasing -Wstrict-prototypes -Wrange-loop-analysis -Wno-semicolon-before-method-body -index-store-path /tmp/OngakuDesktop-NodeStopBuild/Index.noindex/DataStore @/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp -MMD -MT dependencies -MF /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TruePeakAudioUnit.d --serialize-diagnostics /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TruePeakAudioUnit.dia -c /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/TruePeakAudioUnit.mm -o /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TruePeakAudioUnit.o -index-unit-output-path /OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/TruePeakAudioUnit.o
+
+CompileC /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpectralTransientAudioUnit.o /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm normal arm64 objective-c++ com.apple.compilers.llvm.clang.1_0.compiler (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    
+    Using response file: /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp
+    
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x objective-c++ -ivfsstatcache /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache -target arm64-apple-macos14.0 -fmessage-length\=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit\=0 -fno-color-diagnostics -fmodules-prune-interval\=86400 -fmodules-prune-after\=345600 -fbuild-session-file\=/tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex/Session.modulevalidation -fmodules-validate-once-per-build-session -Wnon-modular-include-in-framework-module -Werror\=non-modular-include-in-framework-module -Wno-trigraphs -Wno-missing-field-initializers -Wno-missing-prototypes -Wunreachable-code -Wquoted-include-in-framework-header -Wno-implicit-atomic-properties -Wno-objc-interface-ivars -Wno-arc-repeated-use-of-weak -Wimplicit-retain-self -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wduplicate-method-match -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wno-float-conversion -Wnon-literal-null-conversion -Wobjc-literal-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-selector -Wno-strict-selector-match -Wundeclared-selector -Wdeprecated-implementations -Wno-c++11-extensions -Wno-implicit-fallthrough -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -fstrict-aliasing -Wprotocol -Wdeprecated-declarations -Winvalid-offsetof -Wno-sign-conversion -Winfinite-recursion -Wmove -Wcomma -Wblock-capture-autoreleasing -Wstrict-prototypes -Wrange-loop-analysis -Wno-semicolon-before-method-body -index-store-path /tmp/OngakuDesktop-NodeStopBuild/Index.noindex/DataStore @/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp -MMD -MT dependencies -MF /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpectralTransientAudioUnit.d --serialize-diagnostics /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpectralTransientAudioUnit.dia -c /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm -o /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpectralTransientAudioUnit.o -index-unit-output-path /OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/SpectralTransientAudioUnit.o
+
+CompileC /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GainEnvelopeAudioUnit.o /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/GainEnvelopeAudioUnit.mm normal arm64 objective-c++ com.apple.compilers.llvm.clang.1_0.compiler (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    
+    Using response file: /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp
+    
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x objective-c++ -ivfsstatcache /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache -target arm64-apple-macos14.0 -fmessage-length\=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit\=0 -fno-color-diagnostics -fmodules-prune-interval\=86400 -fmodules-prune-after\=345600 -fbuild-session-file\=/tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex/Session.modulevalidation -fmodules-validate-once-per-build-session -Wnon-modular-include-in-framework-module -Werror\=non-modular-include-in-framework-module -Wno-trigraphs -Wno-missing-field-initializers -Wno-missing-prototypes -Wunreachable-code -Wquoted-include-in-framework-header -Wno-implicit-atomic-properties -Wno-objc-interface-ivars -Wno-arc-repeated-use-of-weak -Wimplicit-retain-self -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wduplicate-method-match -Wno-missing-braces -Wparentheses -Wswitch -Wunused-function -Wno-unused-label -Wno-unused-parameter -Wunused-variable -Wunused-value -Wempty-body -Wuninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wconstant-conversion -Wint-conversion -Wbool-conversion -Wenum-conversion -Wno-float-conversion -Wnon-literal-null-conversion -Wobjc-literal-conversion -Wshorten-64-to-32 -Wno-newline-eof -Wno-selector -Wno-strict-selector-match -Wundeclared-selector -Wdeprecated-implementations -Wno-c++11-extensions -Wno-implicit-fallthrough -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -fstrict-aliasing -Wprotocol -Wdeprecated-declarations -Winvalid-offsetof -Wno-sign-conversion -Winfinite-recursion -Wmove -Wcomma -Wblock-capture-autoreleasing -Wstrict-prototypes -Wrange-loop-analysis -Wno-semicolon-before-method-body -index-store-path /tmp/OngakuDesktop-NodeStopBuild/Index.noindex/DataStore @/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/af3fcb34312c57c0f52879cdce924b91-common-args.resp -MMD -MT dependencies -MF /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GainEnvelopeAudioUnit.d --serialize-diagnostics /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GainEnvelopeAudioUnit.dia -c /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/GainEnvelopeAudioUnit.mm -o /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GainEnvelopeAudioUnit.o -index-unit-output-path /OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/GainEnvelopeAudioUnit.o
+
+SwiftDriverJobDiscovery normal arm64 Compiling EffectsRackView.swift, MiniToggleSwitch.swift, ContentView.swift, LibrarySidebar.swift, LibraryContent.swift, ArtworkResolver.swift, MetadataEditorView.swift, AudioFileMetadataWriter.swift (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+SwiftDriver\ Compilation OngakuDesktop normal arm64 com.apple.xcode.tools.swift.compiler (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-Swift-Compilation -- /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -module-name OngakuDesktop -Onone @/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftFileList -DDEBUG -enable-experimental-feature DebugDescriptionMacro -sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -target arm64-apple-macos14.0 -g -module-cache-path /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex -Xfrontend -serialize-debugging-options -profile-coverage-mapping -profile-generate -enable-testing -index-store-path /tmp/OngakuDesktop-NodeStopBuild/Index.noindex/DataStore -Xcc -D_LIBCPP_HARDENING_MODE\=_LIBCPP_HARDENING_MODE_DEBUG -swift-version 6 -I /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -F /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -emit-localized-strings -emit-localized-strings-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64 -c -j10 -enable-batch-mode -incremental -Xcc -ivfsstatcache -Xcc /tmp/OngakuDesktop-NodeStopBuild/SDKStatCaches.noindex/macosx27.2-26B118-9aa026f88bf9ed31cff8761912ac5bd1a7ff82d74745d5ef33555b35c4238456.sdkstatcache -output-file-map /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-OutputFileMap.json -save-temps -no-color-diagnostics -explicit-module-build -module-cache-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules -clang-scanner-module-cache-path /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex -sdk-module-cache-path /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules -emit-dependencies -emit-module -emit-module-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftmodule -serialize-diagnostics -dependency-scan-serialize-diagnostics-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-dependency-scan.dia -validate-clang-modules-once -clang-build-session-file /tmp/OngakuDesktop-NodeStopBuild/ModuleCache.noindex/Session.modulevalidation -Xcc -fmodules-prune-interval\=86400 -Xcc -fmodules-prune-after\=345600 -emit-const-values -const-gather-protocols-list /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_const_extract_protocols.json -Xcc -iquote -Xcc /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-generated-files.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-own-target-headers.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-all-target-headers.hmap -Xcc -iquote -Xcc /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-project-headers.hmap -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/include -Xcc -I/Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/include -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources-normal/arm64 -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources/arm64 -Xcc -I/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/DerivedSources -emit-objc-header -emit-objc-header-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop-Swift.h -import-objc-header /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h -working-directory /Users/Shared/Program/Xcode/Ongaku-desktop -experimental-emit-module-separately -disable-cmo
+
+Ld /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop.debug.dylib normal (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ -Xlinker -reproducible -target arm64-apple-macos14.0 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -L/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -F/tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/EagerLinkingTBDs/Debug -F/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -filelist /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.LinkFileList -install_name @rpath/OngakuDesktop.debug.dylib -Xlinker -rpath -Xlinker /usr/lib/swift -Xlinker -rpath -Xlinker @executable_path/../Frameworks -Xlinker -dead_strip -Xlinker -object_path_lto -Xlinker /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_lto.o -rdynamic -Xlinker -no_deduplicate -Xlinker -debug_variant -Xlinker -dependency_info -Xlinker /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_dependency_info.dat -fobjc-arc -fobjc-link-runtime -fprofile-instr-generate -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx -L/usr/lib/swift -Xlinker -add_ast_path -Xlinker /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.swiftmodule -Xlinker -alias -Xlinker _main -Xlinker ___debug_main_executable_dylib_entry_point -framework Sparkle -o /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop.debug.dylib
+
+ConstructStubExecutorLinkFileList /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-ExecutorLinkFileList-normal-arm64.txt (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    construct-stub-executor-link-file-list /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop.debug.dylib /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor_no_swift_entry_point.a /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/usr/lib/libPreviewsJITStubExecutor.a --output /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-ExecutorLinkFileList-normal-arm64.txt
+note: Using stub executor library with Swift entry point. (in target 'OngakuDesktop' from project 'OngakuDesktop')
+
+Ld /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop normal (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ -Xlinker -reproducible -target arm64-apple-macos14.0 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk -O0 -Xlinker -no_warn_duplicate_libraries -L/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -F/tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug -Xlinker -rpath -Xlinker @executable_path -Xlinker -rpath -Xlinker @executable_path/../Frameworks -rdynamic -Xlinker -no_deduplicate -Xlinker -debug_variant -e ___debug_blank_executor_main -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_dylib -Xlinker /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-DebugDylibPath-normal-arm64.txt -Xlinker -sectcreate -Xlinker __TEXT -Xlinker __debug_instlnm -Xlinker /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-DebugDylibInstallName-normal-arm64.txt -Xlinker -filelist -Xlinker /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop-ExecutorLinkFileList-normal-arm64.txt /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop.debug.dylib -o /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop
+
+CopySwiftLibs /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop.debug.dylib --scan-folder /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Frameworks --scan-folder /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/PlugIns --scan-folder /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Library/SystemExtensions --scan-folder /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Extensions --platform macosx --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.2.47.0.YKkaYS/Metal.xctoolchain --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+ExtractAppIntentsMetadata (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/appintentsmetadataprocessor --toolchain-dir /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.2.47.0.YKkaYS/Metal.xctoolchain --module-name OngakuDesktop --sdk-root /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX27.2.sdk --xcode-version 27B52 --platform-family macOS --deployment-target 14.0 --bundle-identifier com.ongaku.desktop --output /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/Resources --target-triple arm64-apple-macos14.0 --binary-file /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app/Contents/MacOS/OngakuDesktop --dependency-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop_dependency_info.dat --stringsdata-file /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/ExtractedAppShortcutsMetadata.stringsdata --source-file-list /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftFileList --metadata-file-list /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.DependencyMetadataFileList --static-metadata-file-list /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/OngakuDesktop.DependencyStaticMetadataFileList --swift-const-vals-list /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/OngakuDesktop.build/Debug/OngakuDesktop.build/Objects-normal/arm64/OngakuDesktop.SwiftConstValuesFileList --compile-time-extraction --deployment-aware-processing --no-app-shortcuts-localization
+2026-11-06 18:13:27.632 appintentsmetadataprocessor[49659:1447993] Starting App Intents metadata extraction
+2026-11-06 18:13:27.635 appintentsmetadataprocessor[49659:1447993] warning: Metadata extraction skipped, no AppIntents.framework dependency found
+
+RegisterExecutionPolicyException /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-RegisterExecutionPolicyException /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app
+
+Validate /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-validationUtility /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app -no-validate-extension -infoplist-subpath Contents/Info.plist
+
+Touch /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    /usr/bin/touch -c /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app
+
+RegisterWithLaunchServices /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app (in target 'OngakuDesktop' from project 'OngakuDesktop')
+    cd /Users/Shared/Program/Xcode/Ongaku-desktop
+    builtin-lsregisterurl --record-path /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/XCBuildData/registered-launchservices.txt -- /System/Library/Frameworks/CoreServices.framework/Versions/Current/Frameworks/LaunchServices.framework/Versions/Current/Support/lsregister -f -R -trusted /tmp/OngakuDesktop-NodeStopBuild/Build/Products/Debug/OngakuDesktop.app
+
+PruneExplicitPrecompiledModules /tmp/OngakuDesktop-NodeStopBuild/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/OngakuDesktop-NodeStopBuild/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+** BUILD SUCCEEDED **
+

@@ -1,0 +1,53 @@
+Building for debugging...
+[1 / 1]
+[3 / 13] OngakuDesktop
+[6 / 19] OngakuDesktop-product
+[7 / 19] OngakuDesktop-product
+[10 / 22] OngakuDesktop
+[11 / 24] OngakuDesktop-product
+[13 / 24] OngakuDesktop-product
+[15 / 26] OngakuDesktop
+[19 / 29] OngakuDesktop
+[20 / 31] OngakuDesktop
+[22 / 33] OngakuDesktop-product
+[24 / 33] OngakuDesktop-product
+[24 / 33] OngakuDesktop
+[26 / 33] OngakuDesktop
+[27 / 32] OngakuDesktopTests-product
+[30 / 33] OngakuDesktopTests-product
+[34 / 36] OngakuDesktopTests-product
+Build complete! (20.93秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Device sync protocol" started.
+◇ Test "Manifest messages preserve Ongaku track overlays" started.
+◇ Test "Individual transfer requests preserve the stable item ID" started.
+◇ Test "Overlay identity matching tolerates display differences but rejects distant durations" started.
+◇ Test "Local copy index follows library replacement and duplicate hashes" started.
+◇ Test "SHA-256 verification accepts the original and rejects changed metadata" started.
+◇ Test "Manifest messages preserve independent playlist overlays" started.
+◇ Test "Overlay receipt survives message encoding" started.
+◇ Test "Overlay audit history persists and records conflict reasons" started.
+◇ Test "Playlist sync preserves order and can be safely undone" started.
+◇ Test "Bonjour discovery starts and stops at most once per lifecycle transition" started.
+◇ Test "Manifest messages preserve transfer metadata" started.
+◇ Test "Manifests from an older app remain compatible" started.
+◇ Test "Overlay application changes only selected fields" started.
+◇ Test "Selected overlays merge counters without replacing playback history" started.
+✔ Test "Bonjour discovery starts and stops at most once per lifecycle transition" passed after 0.001 seconds.
+✔ Test "Individual transfer requests preserve the stable item ID" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve independent playlist overlays" passed after 0.001 seconds.
+✔ Test "Overlay receipt survives message encoding" passed after 0.001 seconds.
+✔ Test "Manifests from an older app remain compatible" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve Ongaku track overlays" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve transfer metadata" passed after 0.001 seconds.
+✔ Test "Overlay identity matching tolerates display differences but rejects distant durations" passed after 0.001 seconds.
+✔ Test "SHA-256 verification accepts the original and rejects changed metadata" passed after 0.001 seconds.
+✔ Test "Overlay audit history persists and records conflict reasons" passed after 0.004 seconds.
+✔ Test "Local copy index follows library replacement and duplicate hashes" passed after 0.004 seconds.
+✔ Test "Selected overlays merge counters without replacing playback history" passed after 0.050 seconds.
+✔ Test "Overlay application changes only selected fields" passed after 0.053 seconds.
+✔ Test "Playlist sync preserves order and can be safely undone" passed after 0.059 seconds.
+✔ Suite "Device sync protocol" passed after 0.059 seconds.
+✔ Test run with 14 tests in 1 suite passed after 0.059 seconds.

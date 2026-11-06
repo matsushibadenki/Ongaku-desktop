@@ -157,6 +157,7 @@ actor LibraryRepository {
 
     private struct SchemaHeader: Decodable {
         var schemaVersion: Int?
+        var catalogGenerationEstablished: Bool?
     }
 
     /// Reuse the parser's container for the header and current document. Calling
@@ -489,7 +490,20 @@ actor LibraryRepository {
 
     private func persistentGeneration() throws -> GenerationToken {
         guard fileManager.fileExists(atPath: generationURL.path) else {
-            if fileManager.fileExists(atPath: generationMarkerURL.path) { throw RepositoryError.damagedGeneration }
+            if fileManager.fileExists(atPath: generationMarkerURL.path)
+                || fileManager.fileExists(atPath: catalogWriteJournalURL.path) {
+                throw RepositoryError.damagedGeneration
+            }
+            // A catalog witness survives loss of both generation sidecars.
+            // Old catalogs without the witness migrate through load's WAL.
+            for url in [manifestURL, backupURL] where fileManager.fileExists(atPath: url.path) {
+                if let header = try? decoder.decode(SchemaHeader.self, from: Data(contentsOf: url)) {
+                    if let version = header.schemaVersion, version > LibraryDocument.currentSchema {
+                        throw RepositoryError.unsupportedSchema(version)
+                    }
+                    if header.catalogGenerationEstablished == true { throw RepositoryError.damagedGeneration }
+                }
+            }
             return GenerationToken(value: 0, epoch: nil)
         }
         let data = try Data(contentsOf: generationURL)
@@ -980,6 +994,8 @@ actor LibraryRepository {
 
         try recoverOverlayJournal(using: decoded.document, recoveredFromBackup: recoveredFromBackup)
         var document = try applyingPlaybackSidecars(to: decoded.document)
+        let needsGenerationWitness = document.catalogGenerationEstablished != true
+        document.catalogGenerationEstablished = true
         try reconcileMediaOrganizationJournal(with: document.tracks)
         let recovery = try recoverImports(into: &document)
         let relocated = relocateFilesAfterPortableLibraryMove(in: document.tracks)
@@ -997,7 +1013,7 @@ actor LibraryRepository {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: false)
             try encoder.encode(document).write(to: backupURL, options: [.atomic])
-        } else if recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0
+        } else if needsGenerationWitness || recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0
             || !fileManager.fileExists(atPath: manifestURL.path) {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: !recoveredFromBackup)
@@ -2362,6 +2378,8 @@ actor LibraryRepository {
         }
         guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
         try reservePersistentGeneration()
+        var document = document
+        document.catalogGenerationEstablished = true
         let data = try encoder.encode(document)
         let previous: Data? = fileManager.fileExists(atPath: manifestURL.path) ? try Data(contentsOf: manifestURL) : nil
         let journal = CatalogWriteJournal(version: 1, previousManifestDigest: previous.map(digest),

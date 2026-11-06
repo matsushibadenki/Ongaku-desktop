@@ -85,6 +85,43 @@ import Testing
         #expect(!engine.isRunning && !primary.isPlaying)
     }
 
+    @Test("A delayed player stop keeps the UI responsive and only the latest load/pause commits")
+    func delayedPlayerStopOwnership() async throws {
+        let (root, tracks) = try fixture()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var work: [@Sendable () -> Void] = []
+        let player = PlaybackController(playerNodeStopExecutor: { work.append($0) })
+        configure(player); player.crossfadeDuration = 0
+        defer {
+            player.clearCurrentTrack()
+            for job in work { DispatchQueue.global(qos: .default).async(execute: job) }
+        }
+        player.play(tracks[0], queue: tracks)
+        try await settle(player)
+        player.seek(to: 4)
+        let deadline = ContinuousClock.now.advanced(by: .seconds(10))
+        while work.isEmpty && ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(5)) }
+        #expect(work.count == 1)
+        let envelope = try field(player, "transportEnvelope", TransportOutputEnvelope.self)
+        #expect(envelope.isRetiringResources && envelope.isBusy)
+        let file = try field(player, "audioFile", Optional<AVAudioFile>.self)
+        #expect(file != nil) // Source survives until stop actually returns.
+        player.play(tracks[1], queue: tracks)
+        player.togglePlayback() // Pause the latest selection while retirement is delayed.
+        #expect(player.currentTrack?.id == tracks[0].id && !player.isPlaying)
+        #expect(work.count == 1) // Superseding requests share the in-flight stop.
+        let job = work.removeFirst()
+        DispatchQueue.global(qos: .default).async(execute: job)
+        try await settle(player)
+        #expect(player.currentTrack?.id == tracks[1].id && !player.isPlaying)
+        #expect(abs(player.elapsed) < 0.01 && work.isEmpty)
+        player.clearCurrentTrack()
+        for job in work { DispatchQueue.global(qos: .default).async(execute: job) }
+        work.removeAll()
+        try await settle(player)
+        #expect(player.currentTrack == nil)
+    }
+
     @Test("A stopped render clock recovers from the last position and honors a later pause")
     func configurationRecoveryWithStoppedClock() async throws {
         let (root, tracks) = try fixture(); defer { try? FileManager.default.removeItem(at: root) }

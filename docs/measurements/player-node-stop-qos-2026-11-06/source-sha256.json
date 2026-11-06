@@ -1,0 +1,8 @@
+{
+  "Sources/OngakuDesktop/PlaybackController.swift": "89853e218a9875e8e226d3bdb9ce41faba39b69fe812c51b931502df6c97abe7",
+  "Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift": "afc28b9a445cd9f8c456cf88418a1abbaa11b509cdb3314216a6f45ea579e3b6",
+  "Sources/OngakuDesktop/TransportOutputEnvelope.swift": "d07ff4ab2148855192db284b4570e014d1e8a64ab6e84863b3a02c26d9f6152e",
+  "Tests/OngakuDesktopTests/PlayerNodeStopCoordinatorTests.swift": "f07ba40fcdd72ad307bf0124e8eb7394e3430efc25d9d79a2834c9a6216d1cf4",
+  "Tests/OngakuDesktopTests/PlaybackTransportIntegrationTests.swift": "7333d35b79a0035d7086341be521c24b8ddecd9c733e38802a31e9ec3e1b04f3",
+  "OngakuDesktop.xcodeproj/project.pbxproj": "96fc5ac56e417daa0ef523cbe339da1fec4b7a033e55520e0298fdca8bf74a6a"
+}

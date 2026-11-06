@@ -376,7 +376,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         connectionAttemptTimeoutWorkItem?.cancel()
         connectionState = .connecting(phone.name)
         let context = try? encoder.encode(["pairingCode": phone.pairingCode])
-        browser.invitePeer(peer, to: session, withContext: context, timeout: 30)
+        browser.invitePeer(peer, to: session, withContext: context, timeout: DeviceSyncService.invitationTimeout)
 
         let timeoutWorkItem = DispatchWorkItem { [weak self] in
             guard let self,
@@ -386,7 +386,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             connectionAttemptTimeoutWorkItem = nil
         }
         connectionAttemptTimeoutWorkItem = timeoutWorkItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 20, execute: timeoutWorkItem)
+        DispatchQueue.main.asyncAfter(deadline: .now() + DeviceSyncService.connectionAttemptTimeout, execute: timeoutWorkItem)
     }
 
     private func attemptAutomaticConnection(to phone: DiscoveredPhone) {

@@ -2967,6 +2967,12 @@ struct StorageDelayedFailureTests {
         let initial = LibraryRepository(rootURL: root)
         try await initial.save(document: LibraryDocument(playlists: [Playlist(name: "Original", description: "")]))
         let generationURL = root.appendingPathComponent("catalog-generation-v1")
+        // Produce an actual pre-witness catalog, rather than deleting metadata
+        // from a modern catalog and accidentally testing simultaneous loss.
+        let manifest = root.appendingPathComponent("library-v1.json")
+        var legacy = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: manifest)) as? [String: Any])
+        legacy.removeValue(forKey: "catalogGenerationEstablished")
+        try JSONSerialization.data(withJSONObject: legacy).write(to: manifest, options: .atomic)
         try FileManager.default.removeItem(at: generationURL)
         // A legacy catalog has neither a generation nor its establishment marker.
         try FileManager.default.removeItem(at: root.appendingPathComponent("catalog-generation-established-v1"))
@@ -2974,9 +2980,10 @@ struct StorageDelayedFailureTests {
         let stale = LibraryRepository(rootURL: root)
         #expect(try await writer.load().document.playlists.map(\.name) == ["Original"])
         _ = try await stale.load()
+        let beforeReservation = try #require(UInt64(try String(contentsOf: generationURL, encoding: .utf8)))
         await writer.setGenerationReservationTestHook { throw CocoaError(.fileWriteUnknown) }
         do { try await writer.save(playlists: []); Issue.record("Interrupted write succeeded") } catch { }
-        #expect(String(data: try Data(contentsOf: generationURL), encoding: .utf8) == "1")
+        #expect(String(data: try Data(contentsOf: generationURL), encoding: .utf8) == String(beforeReservation + 1))
         do { try await stale.save(playlists: []); Issue.record("Stale writer accepted") }
         catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
         await writer.setGenerationReservationTestHook(nil)

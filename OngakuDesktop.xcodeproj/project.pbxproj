@@ -97,7 +97,9 @@
 		A202610170000000000000052 /* Sources/OngakuDesktop/EffectParameterTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000041 /* Sources/OngakuDesktop/EffectParameterTransition.swift */; };
 		A202610170000000000000053 /* Sources/OngakuDesktop/EffectParameterTransition.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610170000000000000041 /* Sources/OngakuDesktop/EffectParameterTransition.swift */; };
 		A202610190000000000000002 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610190000000000000001 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift */; };
+		A202611060000000000000062 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202611060000000000000061 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift */; };
 		A202610190000000000000003 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202610190000000000000001 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift */; };
+		A202611060000000000000063 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A202611060000000000000061 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift */; };
 		D20000000000000000000001 /* OngakuMobileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* OngakuMobileApp.swift */; };
 		D20000000000000000000002 /* MobileContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* MobileContentView.swift */; };
 		D20000000000000000000003 /* MobileSyncController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000003 /* MobileSyncController.swift */; };
@@ -293,6 +295,7 @@
 		A202610170000000000000040 /* Sources/OngakuDesktop/EffectTransitionPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/EffectTransitionPolicy.swift; sourceTree = SOURCE_ROOT; };
 		A202610170000000000000041 /* Sources/OngakuDesktop/EffectParameterTransition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/EffectParameterTransition.swift; sourceTree = SOURCE_ROOT; };
 		A202610190000000000000001 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/TransportOutputEnvelope.swift; sourceTree = SOURCE_ROOT; };
+		A202611060000000000000061 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift; sourceTree = SOURCE_ROOT; };
 		D10000000000000000000001 /* OngakuMobileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuMobileApp.swift; sourceTree = "<group>"; };
 		D10000000000000000000002 /* MobileContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileContentView.swift; sourceTree = "<group>"; };
 		D10000000000000000000003 /* MobileSyncController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileSyncController.swift; sourceTree = "<group>"; };
@@ -406,6 +409,7 @@
 				A202610170000000000000040 /* Sources/OngakuDesktop/EffectTransitionPolicy.swift */,
 				A202610170000000000000041 /* Sources/OngakuDesktop/EffectParameterTransition.swift */,
 				A202610190000000000000001 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift */,
+				A202611060000000000000061 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift */,
 				A202610170000000000000001 /* AudioProcessingPolicy.swift */,
 				A202610210000000000000011 /* AudioSourceFileInfo.swift */,
 				A202610220000000000000041 /* AudioThreadGainStage.swift */,
@@ -677,6 +681,7 @@
 			files = (
 				A202610170000000000000052 /* Sources/OngakuDesktop/EffectParameterTransition.swift in Sources */,
 				A202610190000000000000002 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift in Sources */,
+				A202611060000000000000062 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift in Sources */,
 				A202610170000000000000050 /* Sources/OngakuDesktop/EffectTransitionPolicy.swift in Sources */,
 				A202610170000000000000022 /* Sources/OngakuAudioDSP/TruePeakAudioUnit.mm in Sources */,
 				A465E0087AAC540D6807918C0 /* Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm in Sources */,
@@ -782,6 +787,7 @@
 			files = (
 				A202610170000000000000053 /* Sources/OngakuDesktop/EffectParameterTransition.swift in Sources */,
 				A202610190000000000000003 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift in Sources */,
+				A202611060000000000000063 /* Sources/OngakuDesktop/PlayerNodeStopCoordinator.swift in Sources */,
 				A202610170000000000000051 /* Sources/OngakuDesktop/EffectTransitionPolicy.swift in Sources */,
 				E8F0E4B330873AEC00830963 /* IntegratedLoudnessMeter.swift in Sources */,
 				E8F0E4B430873AEC00830963 /* AudioProcessingPolicy.swift in Sources */,

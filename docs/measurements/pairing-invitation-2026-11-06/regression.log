@@ -1,0 +1,6 @@
+PASS: presentation dismissal before Allow does not reject; acceptance resolves once and shows connecting
+PASS: dismissal before explicit decline rejects exactly once
+PASS: hidden/expired requests are rejected; late actions cannot consume or dismiss a newer invitation
+PASS: a dismissed but unresolved invitation keeps its ownership against a duplicate invite
+PASS: late invitations after advertising stops are rejected without presenting permission
+PASS: iPhone decision, framework invitation and Mac UI deadlines have the same ordered policy

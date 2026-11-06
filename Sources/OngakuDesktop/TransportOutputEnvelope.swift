@@ -14,7 +14,11 @@ final class TransportOutputEnvelope {
     private(set) var gain: Float = 0
     private(set) var isStopping = false
     private(set) var isStarting = false
-    var isBusy: Bool { isStopping || isStarting }
+    private(set) var isRetiringResources = false
+    var isBusy: Bool { isStopping || isStarting || isRetiringResources }
+
+    func beginResourceRetirement() { isRetiringResources = true }
+    func endResourceRetirement() { isRetiringResources = false }
 
     init(schedule: @escaping Schedule = { delay, action in
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: action)

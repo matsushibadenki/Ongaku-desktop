@@ -30,7 +30,7 @@ Macの`.github/workflows/m0-quality-gate.yml`に定義されたSwiftの分離条
 
 - 🟢 [Done] [保存・復旧9節の実装／試験対応](ROADMAP_STORAGE_EVIDENCE_2026-11-06.md)と[機能表の矛盾修正](ROADMAP_FEATURE_RECONCILIATION_2026-11-06.md)を記録。
 - 🟠 [Next] その他のDone項目の一件ごとの意味的照合、変更済みソースに対する過去の性能測定の再確認、製品の実画面性能目標。
-- 🟠 [Next] 破損ジャーナルの自動救済と世代記録の同時消失。試験の成功だけで未実装を完了にしない。
+- 🟠 [Next] 破損ジャーナルの自動救済。世代記録の同時消失は[後続実装](GENERATION_WITNESS_2026-11-06.md)で対応。
 - ⭕️ [Pending] 署名済みMac/iPhone、Musicサービス／実資産、実機の切断・容量不足・電源断・長時間耐久・聴感と地域差。
 
 [実行ログと全対象ソースハッシュ](../measurements/roadmap-audit-2026-11-06/)を保存。これは全ROADMAPの意味的監査完了の宣言ではない。

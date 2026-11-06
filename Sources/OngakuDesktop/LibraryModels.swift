@@ -1681,6 +1681,10 @@ struct PlaybackQueueState: Codable, Equatable, Sendable {
 struct LibraryDocument: Codable, Sendable {
     static let currentSchema = 12
 
+    // Optional for old schema-12 catalogs; repository writes establish this
+    // witness atomically with the catalog rather than only in sidecar files.
+    var catalogGenerationEstablished: Bool? = nil
+
     var schemaVersion: Int = currentSchema
     var updatedAt: Date = .now
     var tracks: [Track] = []

@@ -1,0 +1,106 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Playback transport integration" started.
+◇ Test "CD rip formats retain local playback, real RMS/spectrum and effect response" started.
+CD availability PASS: alac, channels=1
+CD availability PASS: aiff, channels=1
+CD availability PASS: wav, channels=1
+CD availability PASS: aac, channels=1
+CD availability PASS: alac, channels=2
+CD availability PASS: aiff, channels=2
+CD availability PASS: wav, channels=2
+CD availability PASS: aac, channels=2
+✔ Test "CD rip formats retain local playback, real RMS/spectrum and effect response" passed after 18.390 seconds.
+◇ Test "Real controller retains sources during drain and latest pause/seek/load wins" started.
+2026-11-06 18:00:20.532 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:20.533 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Real controller retains sources during drain and latest pause/seek/load wins" passed after 2.760 seconds.
+◇ Test "A delayed player stop keeps the UI responsive and only the latest load/pause commits" started.
+2026-11-06 18:00:23.296 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:23.298 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "A delayed player stop keeps the UI responsive and only the latest load/pause commits" passed after 2.359 seconds.
+◇ Test "A stopped render clock recovers from the last position and honors a later pause" started.
+2026-11-06 18:00:25.714 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:25.718 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "A stopped render clock recovers from the last position and honors a later pause" passed after 8.122 seconds.
+◇ Test "Device-side output format wins over a previously negotiated engine input" started.
+2026-11-06 18:00:33.795 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:33.796 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Device-side output format wins over a previously negotiated engine input" passed after 2.198 seconds.
+◇ Test "Compatible file reload retains the graph but retires source, gain and tail ownership" started.
+2026-11-06 18:00:35.972 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:35.973 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Compatible file reload retains the graph but retires source, gain and tail ownership" passed after 6.898 seconds.
+◇ Test "Late track analysis survives pause/resume and changes only at new load" started.
+2026-11-06 18:00:42.873 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:42.875 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Late track analysis survives pause/resume and changes only at new load" passed after 2.619 seconds.
+◇ Test "Incoming analysis is frozen before overlap, including repeat-one" started.
+2026-11-06 18:00:45.503 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:45.504 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:258:13: Expectation failed: secondary.isPlaying
+↳ secondary.isPlaying → false
+↳   secondary → <AVAudioPlayerNode: 0x78332e0560>
+↳   isPlaying → false
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:265:13: Expectation failed: try field(player, "activePlayerIndex", Int.self) == 1
+↳ try field(player, "activePlayerIndex", Int.self) == 1 → <not evaluated>
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:267:13: Expectation failed: try field(player, "activePlayerIndex", Int.self) == 1
+↳ try field(player, "activePlayerIndex", Int.self) == 1 → <not evaluated>
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:268:13: Expectation failed: abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001
+↳ abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001 → false
+↳   abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) → 12.0
+2026-11-06 18:00:58.772 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:00:58.780 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:258:13: Expectation failed: secondary.isPlaying
+↳ secondary.isPlaying → false
+↳   secondary → <AVAudioPlayerNode: 0x78332e08e0>
+↳   isPlaying → false
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:265:13: Expectation failed: try field(player, "activePlayerIndex", Int.self) == 1
+↳ try field(player, "activePlayerIndex", Int.self) == 1 → <not evaluated>
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:267:13: Expectation failed: try field(player, "activePlayerIndex", Int.self) == 1
+↳ try field(player, "activePlayerIndex", Int.self) == 1 → <not evaluated>
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" recorded an issue at PlaybackTransportIntegrationTests.swift:268:13: Expectation failed: abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001
+↳ abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) < 0.001 → false
+↳   abs((player.signalPathSnapshot?.normalizationGainDB ?? 99) + 4) → 12.0
+✘ Test "Incoming analysis is frozen before overlap, including repeat-one" failed after 41.126 seconds with 8 issues.
+◇ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" started.
+2026-11-06 18:01:26.995 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:01:26.998 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Both crossfade schedules survive pause drain and incoming reference survives late analysis" passed after 16.294 seconds.
+◇ Test "An incoming EOF delivered before outgoing EOF is retained" started.
+◇ Test case passing 1 argument crossfade → false to "An incoming EOF delivered before outgoing EOF is retained" started.
+2026-11-06 18:01:44.811 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:01:44.878 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+◇ Test case passing 1 argument crossfade → true to "An incoming EOF delivered before outgoing EOF is retained" started.
+2026-11-06 18:02:09.126 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:02:09.130 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "An incoming EOF delivered before outgoing EOF is retained" with 2 test cases passed after 37.243 seconds.
+◇ Test "Repeated same-track schedules cannot consume an outgoing duplicate" started.
+2026-11-06 18:02:20.318 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:02:20.322 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Repeated same-track schedules cannot consume an outgoing duplicate" passed after 7.382 seconds.
+◇ Test "Pause at a queued EOF cannot start the next song" started.
+2026-11-06 18:02:27.691 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:02:27.694 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Pause at a queued EOF cannot start the next song" passed after 8.608 seconds.
+◇ Test "A delayed configuration recovery cannot rewind the next gapless song" started.
+2026-11-06 18:02:36.542 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:02:36.547 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "A delayed configuration recovery cannot rewind the next gapless song" passed after 8.999 seconds.
+◇ Test "Deferred and obsolete EOF cannot override pause, resume or selection" started.
+2026-11-06 18:02:45.269 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:02:45.271 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Deferred and obsolete EOF cannot override pause, resume or selection" passed after 8.069 seconds.
+◇ Test "Rejected preroll preserves the active EOF and falls back to a fresh load" started.
+2026-11-06 18:02:53.753 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:02:53.758 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Rejected preroll preserves the active EOF and falls back to a fresh load" passed after 9.635 seconds.
+◇ Test "Real 10 ms tails reach next, repeat-one, queue/album wrap and final stop" started.
+2026-11-06 18:03:03.024 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:03:03.032 swiftpm-testing-helper[40005:1371144] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Real 10 ms tails reach next, repeat-one, queue/album wrap and final stop" passed after 36.489 seconds.
+✘ Suite "Playback transport integration" failed after 217.199 seconds with 8 issues.
+✘ Test run with 16 tests in 1 suite failed after 217.200 seconds with 8 issues.
+Note: Some test targets reported failures:
+  - OngakuDesktopTests (Swift Testing)

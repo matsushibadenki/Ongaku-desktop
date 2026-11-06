@@ -1,0 +1,12 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Playback transport integration" started.
+◇ Test "Incoming analysis is frozen before overlap, including repeat-one" started.
+2026-11-06 18:04:32.766 swiftpm-testing-helper[43877:1404631] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:04:32.778 swiftpm-testing-helper[43877:1404631] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:04:41.142 swiftpm-testing-helper[43877:1404631] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-06 18:04:41.146 swiftpm-testing-helper[43877:1404631] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Incoming analysis is frozen before overlap, including repeat-one" passed after 16.427 seconds.
+✔ Suite "Playback transport integration" passed after 16.428 seconds.
+✔ Test run with 1 test in 1 suite passed after 16.428 seconds.
