@@ -1314,3 +1314,9 @@
 "metadataEditor.error.mediaOrganizationBusy" = "请等待歌曲信息保存或媒体整理完成后重试。";
 
 "library.error.importInProgress" = "请等待音乐导入完成后重试。";
+
+"library.error.recoveryRequiresAttention" = "无法自动完成资料库恢复。现有数据和恢复信息已保留。请检查存储设备连接和访问权限。";
+
+"library.error.sourceRecoveryRequired" = "所选资料库“%@”存在未完成的恢复。请先在原位置完成恢复，然后重试。";
+
+"library.error.storageLockTimedOut" = "资料库正被其他操作使用。请稍后重试，并检查外接或网络存储设备。";

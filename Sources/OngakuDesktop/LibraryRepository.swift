@@ -23,15 +23,35 @@ actor LibraryRepository {
         case installed
     }
 
+    private struct StorageRestoreJournal: Codable {
+        struct Entry: Codable {
+            let name: String
+            let hadOriginal: Bool
+            let hadPrepared: Bool
+        }
+        let version: Int
+        let transactionID: UUID
+        let entries: [Entry]
+    }
+    private var storageRestoreJournalURL: URL { rootURL.appendingPathComponent("storage-restore-journal-v1.json") }
+#if DEBUG
+    struct StorageRestoreInterruption: Error {}
+    enum StorageRestoreStep: Sendable { case afterBackup(String), afterInstall(String), beforeRollbackCopy(String) }
+    var storageRestoreTestHook: (@Sendable (StorageRestoreStep) throws -> Void)?
+    func setStorageRestoreTestHook(_ hook: (@Sendable (StorageRestoreStep) throws -> Void)?) { storageRestoreTestHook = hook }
+#endif
+
     private struct CatalogWriteJournal: Codable {
         let version: Int
         let previousManifestDigest: String?
         let manifest: Data
+        let manifestDigest: String?
         let backUpReadablePrimary: Bool
+        let clearsRegistrations: Bool?
     }
 
     struct CatalogWriteRecoveryRequired: LocalizedError {
-        var errorDescription: String? { L10n.text("library.error.staleOrganizedTrack") }
+        var errorDescription: String? { L10n.text("library.error.recoveryRequiresAttention") }
     }
 #if DEBUG
     enum CatalogWriteStep: Sendable { case journal, queue, events, manifest }
@@ -39,6 +59,62 @@ actor LibraryRepository {
     func setCatalogWriteTestHook(_ hook: (@Sendable (CatalogWriteStep) throws -> Void)?) { catalogWriteTestHook = hook }
 #endif
     private var catalogWriteJournalURL: URL { rootURL.appendingPathComponent("catalog-write-journal-v1.json") }
+
+    private struct SelfContainmentJournal: Codable {
+        let version: Int
+        let transactionID: UUID
+    }
+    private var selfContainmentJournalURL: URL {
+        rootURL.appendingPathComponent("self-containment-journal-v1.json")
+    }
+    private func selfContainmentStagingURL(_ id: UUID) -> URL {
+        incomingURL.appendingPathComponent("self-containment-\(id.uuidString)", isDirectory: true)
+    }
+
+    /// This journal only identifies disposable staging, never a catalog update.
+    /// Quarantine an untrusted record without touching any unrecognized files.
+    private func preserveUnusableSelfContainmentJournal() throws {
+        let backup = rootURL.appendingPathComponent("Recovery Backups/Self-Containment-\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: backup, withIntermediateDirectories: true)
+        try fileManager.moveItem(at: selfContainmentJournalURL,
+                                 to: backup.appendingPathComponent("self-containment-journal-v1.json"))
+    }
+
+    /// Only remove UUID-named regular staging files under the recorded directory.
+    /// Installed media is deliberately retained and verified/reused on retry.
+    private func recoverSelfContainmentStaging() throws {
+        guard fileManager.fileExists(atPath: selfContainmentJournalURL.path) else { return }
+        let bytes = try Data(contentsOf: selfContainmentJournalURL)
+        guard let journal = try? decoder.decode(SelfContainmentJournal.self, from: bytes),
+              journal.version == 1 else {
+            try preserveUnusableSelfContainmentJournal()
+            return
+        }
+        let directory = selfContainmentStagingURL(journal.transactionID)
+        var info = stat()
+        let status = directory.path.withCString { lstat($0, &info) }
+        if status == 0 {
+            guard (info.st_mode & S_IFMT) == S_IFDIR else {
+                try preserveUnusableSelfContainmentJournal()
+                return
+            }
+            let entries = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            for entry in entries {
+                var item = stat()
+                guard UUID(uuidString: entry.lastPathComponent) != nil,
+                      entry.path.withCString({ lstat($0, &item) }) == 0,
+                      (item.st_mode & S_IFMT) == S_IFREG else {
+                    try preserveUnusableSelfContainmentJournal()
+                    return
+                }
+            }
+            for entry in entries { try fileManager.removeItem(at: entry) }
+            try fileManager.removeItem(at: directory)
+        } else if errno != ENOENT {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        try fileManager.removeItem(at: selfContainmentJournalURL)
+    }
 
     private struct ImportJournalEntry: Codable {
         let id: UUID
@@ -48,6 +124,7 @@ actor LibraryRepository {
         var destinationPath: String?
         var track: Track?
         var phase: ImportPhase
+        var previousManagedPath: String? = nil
     }
 
     private struct ImportJournal: Codable {
@@ -218,6 +295,8 @@ actor LibraryRepository {
         case mediaOrganizationAmbiguousConflict(String)
         case staleOrganizedTrack
         case importInProgress
+        case storageLockTimedOut
+        case sourceRecoveryRequired(String)
         case multiplePreservedLibraries(String)
 
         var errorDescription: String? {
@@ -238,6 +317,10 @@ actor LibraryRepository {
                 L10n.text("library.error.staleOrganizedTrack")
             case .importInProgress:
                 L10n.text("library.error.importInProgress")
+            case .storageLockTimedOut:
+                L10n.text("library.error.storageLockTimedOut")
+            case .sourceRecoveryRequired(let path):
+                L10n.format("library.error.sourceRecoveryRequired", path)
             case .multiplePreservedLibraries(let paths):
                 L10n.format("settings.storage.error.multiplePreservedLibraries", paths)
             }
@@ -246,6 +329,7 @@ actor LibraryRepository {
 
     let rootURL: URL
     private let fileManager: FileManager
+    private let lockWaitTimeout: TimeInterval
     private var mediaURL: URL
     private var currentDocument: LibraryDocument?
     private struct ManifestStamp: Equatable {
@@ -266,11 +350,31 @@ actor LibraryRepository {
     private var importLockDepth = 0
     private var importInProgress = false
 #if DEBUG
+    enum ImportWriteStep: Sendable { case copying, installing, installed }
+    var importWriteTestHook: (@Sendable (ImportWriteStep) throws -> Void)?
+    func setImportWriteTestHook(_ hook: (@Sendable (ImportWriteStep) throws -> Void)?) { importWriteTestHook = hook }
     var importStagedTestGate: (@Sendable () async -> Void)?
     var generationReservationTestHook: (@Sendable () throws -> Void)?
     func setGenerationReservationTestHook(_ hook: (@Sendable () throws -> Void)?) { generationReservationTestHook = hook }
     func setImportStagedTestGate(_ gate: (@Sendable () async -> Void)?) { importStagedTestGate = gate }
 #endif
+
+    private func acquireExclusiveLock(_ descriptor: Int32) throws {
+        let started = DispatchTime.now().uptimeNanoseconds
+        let limit = UInt64(lockWaitTimeout * 1_000_000_000)
+        while true {
+            if Task<Never, Never>.isCancelled { throw CancellationError() }
+            if flock(descriptor, LOCK_EX | LOCK_NB) == 0 { return }
+            let code = errno
+            guard code == EINTR || code == EWOULDBLOCK || code == EAGAIN else {
+                throw POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
+            }
+            if DispatchTime.now().uptimeNanoseconds &- started >= limit {
+                throw RepositoryError.storageLockTimedOut
+            }
+            if code != EINTR { usleep(10_000) }
+        }
+    }
 
     private func beginImportJournalTransaction() throws {
         if importLockDepth > 0 { importLockDepth += 1; return }
@@ -278,14 +382,34 @@ actor LibraryRepository {
         let path = rootURL.appendingPathComponent(".import-transaction-v1.lock").path
         let descriptor = path.withCString { open($0, O_CREAT | O_RDWR | O_CLOEXEC, 0o600) }
         guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
-        while flock(descriptor, LOCK_EX) != 0 {
-            if errno == EINTR { continue }
-            let code = errno
-            close(descriptor)
-            throw POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
-        }
+        do { try acquireExclusiveLock(descriptor) }
+        catch { close(descriptor); throw error }
         importLockDescriptor = descriptor
         importLockDepth = 1
+    }
+
+    /// Lock in catalog → import order, then reserve a generation before the
+    /// first journal or file change. Never hold the catalog lock across await.
+    private func beginImportOperation() throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
+        try beginImportJournalTransaction()
+        do {
+            guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path),
+                  !fileManager.fileExists(atPath: storageRestoreJournalURL.path),
+                  !fileManager.fileExists(atPath: selfContainmentJournalURL.path) else {
+                throw CatalogWriteRecoveryRequired()
+            }
+            guard !fileManager.fileExists(atPath: overlayJournalURL.path) else {
+                throw OverlayRecoveryRequired()
+            }
+            try verifyObservedStamps()
+            try reservePersistentGeneration()
+            importInProgress = true
+        } catch {
+            endImportJournalTransaction()
+            throw error
+        }
     }
 
     private func endImportJournalTransaction() {
@@ -308,12 +432,8 @@ actor LibraryRepository {
         let lockURL = rootURL.appendingPathComponent(".catalog-transaction-v1.lock")
         let descriptor = lockURL.path.withCString { open($0, O_CREAT | O_RDWR | O_CLOEXEC, 0o600) }
         guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
-        while flock(descriptor, LOCK_EX) != 0 {
-            if errno == EINTR { continue }
-            let code = errno
-            close(descriptor)
-            throw POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
-        }
+        do { try acquireExclusiveLock(descriptor) }
+        catch { close(descriptor); throw error }
         catalogLockDescriptor = descriptor
         catalogLockDepth = 1
     }
@@ -396,8 +516,10 @@ actor LibraryRepository {
     // pre-move track arrays even after the actor finishes the transaction.
     private var organizedPreviousPaths: [Track.ID: Set<String>] = [:]
 
-    init(rootURL: URL? = nil, mediaURL: URL? = nil, fileManager: FileManager = .default) {
+    init(rootURL: URL? = nil, mediaURL: URL? = nil, fileManager: FileManager = .default,
+         lockWaitTimeout: TimeInterval = 5) {
         self.fileManager = fileManager
+        self.lockWaitTimeout = lockWaitTimeout.isFinite ? min(max(lockWaitTimeout, 0), 30) : 5
         let resolvedMedia: URL
         if let mediaURL {
             resolvedMedia = mediaURL
@@ -457,7 +579,9 @@ actor LibraryRepository {
         try beginImportJournalTransaction()
         defer { endImportJournalTransaction() }
         if fileManager.fileExists(atPath: overlayJournalURL.path)
-            || fileManager.fileExists(atPath: catalogWriteJournalURL.path) {
+            || fileManager.fileExists(atPath: catalogWriteJournalURL.path)
+            || fileManager.fileExists(atPath: storageRestoreJournalURL.path)
+            || fileManager.fileExists(atPath: importJournalURL.path) {
             _ = try load()
             return
         }
@@ -504,11 +628,18 @@ actor LibraryRepository {
             )
         }
 
+        // These journals can contain paths rooted in the source catalog. Do
+        // not transplant a stale primary or replay them under a different root.
+        let sourceRecoveryJournals = ["catalog-write-journal-v1.json", "storage-restore-journal-v1.json", "import-journal-v1.json", "self-containment-journal-v1.json"]
+        guard !sourceRecoveryJournals.contains(where: {
+            fileManager.fileExists(atPath: candidate.directory.appendingPathComponent($0).path)
+        }) else { throw RepositoryError.sourceRecoveryRequired(candidate.directory.path) }
         if fileManager.fileExists(atPath: candidate.directory.appendingPathComponent("device-sync-overlay-journal-v1.json").path),
            candidate.manifest.lastPathComponent != "library-v1.json" {
             throw OverlayRecoveryRequired()
         }
-        let recovery = rootURL.appendingPathComponent("Recovery Backups/\(UUID().uuidString)")
+        let transactionID = UUID()
+        let recovery = rootURL.appendingPathComponent("Recovery Backups/\(transactionID.uuidString)")
         let prepared = recovery.appendingPathComponent("Prepared")
         let previous = recovery.appendingPathComponent("Previous")
         try fileManager.createDirectory(at: prepared, withIntermediateDirectories: true)
@@ -538,33 +669,101 @@ actor LibraryRepository {
         )
         try encoder.encode(candidate.document.libraryID)
             .write(to: prepared.appendingPathComponent(storageRecoveryReceiptURL.lastPathComponent), options: .atomic)
-        // Commit the primary last: interrupted preparation cannot hide the preserved source.
+        // Invalidate stale readers before replacing any part of the catalog.
+        try reservePersistentGeneration()
         names += [storageRecoveryReceiptURL.lastPathComponent, "library-v1.json"]
-        var installed: [String] = []
-        var backedUp: [String] = []
+        let entries = names.map { name in
+            StorageRestoreJournal.Entry(
+                name: name,
+                hadOriginal: fileManager.fileExists(atPath: rootURL.appendingPathComponent(name).path),
+                hadPrepared: fileManager.fileExists(atPath: prepared.appendingPathComponent(name).path)
+            )
+        }
+        let journal = StorageRestoreJournal(version: 1, transactionID: transactionID, entries: entries)
+        try encoder.encode(journal).write(to: storageRestoreJournalURL, options: [.atomic])
+        try synchronizeOverlayFile(storageRestoreJournalURL)
         do {
-            for name in names {
-                let destination = rootURL.appendingPathComponent(name)
-                if fileManager.fileExists(atPath: destination.path) {
-                    try fileManager.moveItem(at: destination, to: previous.appendingPathComponent(name))
-                    backedUp.append(name)
+            for entry in entries {
+                let destination = rootURL.appendingPathComponent(entry.name)
+                if entry.hadOriginal {
+                    try fileManager.moveItem(at: destination, to: previous.appendingPathComponent(entry.name))
+#if DEBUG
+                    try storageRestoreTestHook?(.afterBackup(entry.name))
+#endif
                 }
-                let staged = prepared.appendingPathComponent(name)
-                if fileManager.fileExists(atPath: staged.path) {
-                    try fileManager.moveItem(at: staged, to: destination)
-                    installed.append(name)
+                if entry.hadPrepared {
+                    try fileManager.moveItem(at: prepared.appendingPathComponent(entry.name), to: destination)
+#if DEBUG
+                    try storageRestoreTestHook?(.afterInstall(entry.name))
+#endif
                 }
             }
+            try fileManager.removeItem(at: storageRestoreJournalURL)
         } catch {
-            for name in installed.reversed() {
-                try fileManager.removeItem(at: rootURL.appendingPathComponent(name))
-            }
-            for name in backedUp.reversed() {
-                try fileManager.moveItem(at: previous.appendingPathComponent(name), to: rootURL.appendingPathComponent(name))
-            }
+#if DEBUG
+            if error is StorageRestoreInterruption { throw error }
+#endif
+            do { try rollbackStorageRestore(journal) }
+            catch { throw CatalogWriteRecoveryRequired() }
             throw error
         }
         currentDocument = nil
+    }
+
+    private func rollbackStorageRestore(_ journal: StorageRestoreJournal) throws {
+        let allowed: Set<String> = [
+            "library-v1.json", "library-v1.backup.json", "playback-queue-v1.json", "playback-queue-v1.backup.json",
+            "playback-events-v1.json", "playback-events-v1.backup.json", "device-sync-tags-v1.json",
+            "device-sync-overlay-journal-v1.json", "audio-features-v1.json", "Artwork", "Playlist Artwork",
+            "storage-recovery-v1.json"
+        ]
+        guard journal.version == 1, Set(journal.entries.map(\.name)).count == journal.entries.count,
+              journal.entries.allSatisfy({ allowed.contains($0.name) }) else {
+            throw CatalogWriteRecoveryRequired()
+        }
+        let root = rootURL.appendingPathComponent("Recovery Backups/\(journal.transactionID.uuidString)")
+        let previous = root.appendingPathComponent("Previous")
+        let prepared = root.appendingPathComponent("Prepared")
+        let preserved = root.appendingPathComponent("Interrupted")
+        for entry in journal.entries.reversed() {
+            let destination = rootURL.appendingPathComponent(entry.name)
+            let backup = previous.appendingPathComponent(entry.name)
+            let staged = prepared.appendingPathComponent(entry.name)
+            let backupExists = fileManager.fileExists(atPath: backup.path)
+            let destinationExists = fileManager.fileExists(atPath: destination.path)
+            let stagedExists = fileManager.fileExists(atPath: staged.path)
+            if entry.hadOriginal && backupExists {
+                if destinationExists {
+                    let holding = preserved.appendingPathComponent(UUID().uuidString, isDirectory: true)
+                    try fileManager.createDirectory(at: holding, withIntermediateDirectories: true)
+                    try fileManager.moveItem(at: destination, to: holding.appendingPathComponent(entry.name))
+                }
+                // Copy rather than move: another interruption during rollback can retry.
+#if DEBUG
+                try storageRestoreTestHook?(.beforeRollbackCopy(entry.name))
+#endif
+                try fileManager.copyItem(at: backup, to: destination)
+            } else if entry.hadOriginal {
+                guard destinationExists, !entry.hadPrepared || stagedExists else {
+                    throw CatalogWriteRecoveryRequired()
+                }
+            } else if entry.hadPrepared && !stagedExists && destinationExists {
+                let holding = preserved.appendingPathComponent(UUID().uuidString, isDirectory: true)
+                try fileManager.createDirectory(at: holding, withIntermediateDirectories: true)
+                try fileManager.moveItem(at: destination, to: holding.appendingPathComponent(entry.name))
+            }
+        }
+        try fileManager.removeItem(at: storageRestoreJournalURL)
+        currentDocument = nil
+    }
+
+    private func recoverStorageRestoreJournal() throws {
+        guard fileManager.fileExists(atPath: storageRestoreJournalURL.path) else { return }
+        let data = try Data(contentsOf: storageRestoreJournalURL)
+        guard let journal = try? decoder.decode(StorageRestoreJournal.self, from: data) else {
+            throw CatalogWriteRecoveryRequired()
+        }
+        try rollbackStorageRestore(journal)
     }
 
     private func hasLibraryContent(_ document: LibraryDocument) -> Bool {
@@ -592,6 +791,12 @@ actor LibraryRepository {
         try beginCatalogTransaction()
         defer { endCatalogTransaction() }
         var document = try load().document
+        let journal = SelfContainmentJournal(version: 1, transactionID: UUID())
+        try encoder.encode(journal).write(to: selfContainmentJournalURL, options: .atomic)
+        try synchronizeOverlayFile(selfContainmentJournalURL)
+        let staging = selfContainmentStagingURL(journal.transactionID)
+        defer { try? recoverSelfContainmentStaging() }
+        try fileManager.createDirectory(at: staging, withIntermediateDirectories: false)
         let root = mediaURL.resolvingSymlinksInPath().standardizedFileURL
         var changed = false
         for index in document.tracks.indices {
@@ -604,7 +809,7 @@ actor LibraryRepository {
             guard values.isRegularFile == true else { throw CocoaError(.fileReadUnsupportedScheme) }
             let hash = try Self.sha256(of: source)
             let track = document.tracks[index]
-            let destination = try copyIntoMedia(source, artist: track.artist, album: track.album, hash: hash)
+            let destination = try copyIntoMedia(source, artist: track.artist, album: track.album, hash: hash, staging: staging)
             document.tracks[index].managedPath = destination.path
             changed = true
         }
@@ -615,7 +820,7 @@ actor LibraryRepository {
         }
     }
 
-    private func copyIntoMedia(_ source: URL, artist: String, album: String, hash: String) throws -> URL {
+    private func copyIntoMedia(_ source: URL, artist: String, album: String, hash: String, staging: URL) throws -> URL {
         try prepareDirectories()
         let root = mediaURL.resolvingSymlinksInPath().standardizedFileURL
         let destination = try destinationURL(artist: artist, album: album,
@@ -625,7 +830,7 @@ actor LibraryRepository {
         }
         try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         if !fileManager.fileExists(atPath: destination.path) {
-            let staged = incomingURL.appendingPathComponent(UUID().uuidString)
+            let staged = staging.appendingPathComponent(UUID().uuidString)
             defer { try? fileManager.removeItem(at: staged) }
             try fileManager.copyItem(at: source, to: staged)
             guard try Self.sha256(of: staged) == hash else {
@@ -648,7 +853,9 @@ actor LibraryRepository {
         try prepareDirectories()
         // Loading explicitly refreshes the caller's baseline under the lock.
         observedPersistentGeneration = try persistentGeneration()
+        try recoverStorageRestoreJournal()
         try recoverCatalogWriteJournal()
+        try recoverSelfContainmentStaging()
         var recoveredFromBackup = false
         var decoded: DecodedLibraryDocument
         var decodedSourceURL: URL?
@@ -1087,7 +1294,8 @@ actor LibraryRepository {
             throw RepositoryError.staleOrganizedTrack
         }
         try verifyObservedStamps()
-        guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
+        guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path),
+              !fileManager.fileExists(atPath: storageRestoreJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
         if let expectedDocument {
             let current = try documentForMutation()
             guard current.libraryID == expectedDocument.libraryID,
@@ -1264,18 +1472,9 @@ actor LibraryRepository {
         }
         emptyDocument.playbackEvents.removeAll { removedTrackIDs.contains($0.trackID) }
         emptyDocument.playbackQueue = PlaybackQueueState()
-        let data = try encoder.encode(emptyDocument)
-
-        try reservePersistentGeneration()
-        // Clear recovery metadata first. If the operation is interrupted before
-        // the primary manifest is replaced, the previous catalog remains valid.
-        // Once the primary becomes empty, neither recovery path can re-register
-        // tracks. Incoming audio files themselves are deliberately left untouched.
-        try persistImportJournal(ImportJournal())
-        try encoder.encode(emptyDocument.libraryID).write(to: storageRecoveryReceiptURL, options: .atomic)
-        try replacePlaybackSidecarsForClear(emptyDocument)
-        try data.write(to: backupURL, options: [.atomic])
-        try data.write(to: manifestURL, options: [.atomic])
+        // The durable catalog journal owns the reset, including recovery
+        // metadata and empty backups, until every file has been published.
+        try persistDocument(emptyDocument, backUpReadablePrimary: false, clearsRegistrations: true)
         try refreshObservedStamps()
         currentDocument = emptyDocument
     }
@@ -1289,8 +1488,7 @@ actor LibraryRepository {
     ) async -> ImportResult {
         do {
             guard !importInProgress else { throw RepositoryError.importInProgress }
-            try beginImportJournalTransaction()
-            importInProgress = true
+            try beginImportOperation()
         } catch {
             return ImportResult(imported: [], issues: sourceURLs.map {
                 ImportIssue(fileName: $0.lastPathComponent, message: error.localizedDescription)
@@ -1339,6 +1537,9 @@ actor LibraryRepository {
                     phase: .copying
                 )
                 try upsertJournalEntry(journalEntry)
+#if DEBUG
+                try importWriteTestHook?(.copying)
+#endif
                 try fileManager.copyItem(at: source, to: staged)
 
                 let stagedHash = try Self.sha256(of: staged)
@@ -1417,7 +1618,9 @@ actor LibraryRepository {
                 journalEntry.track = track
                 journalEntry.phase = .installing
                 try upsertJournalEntry(journalEntry)
-
+#if DEBUG
+                try importWriteTestHook?(.installing)
+#endif
                 if fileManager.fileExists(atPath: destination.path) {
                     guard try Self.sha256(of: destination) == stagedHash else {
                         throw RepositoryError.copyVerificationFailed(source.lastPathComponent)
@@ -1432,7 +1635,9 @@ actor LibraryRepository {
                 }
                 journalEntry.phase = .installed
                 try upsertJournalEntry(journalEntry)
-
+#if DEBUG
+                try importWriteTestHook?(.installed)
+#endif
                 imported.append(track)
                 knownHashes.insert(sourceHash)
             } catch {
@@ -1450,8 +1655,7 @@ actor LibraryRepository {
     ) async -> ImportResult {
         do {
             guard !importInProgress else { throw RepositoryError.importInProgress }
-            try beginImportJournalTransaction()
-            importInProgress = true
+            try beginImportOperation()
         } catch {
             return ImportResult(imported: [], issues: sourceURLs.map {
                 ImportIssue(fileName: $0.lastPathComponent, message: error.localizedDescription)
@@ -1488,25 +1692,32 @@ actor LibraryRepository {
                     fallbackName: source.deletingPathExtension().lastPathComponent
                 )
 
+                let mustCopy = copyExternalFiles && !isInside(
+                    source.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()
+                )
                 let destination: URL
-                if copyExternalFiles && !isInside(source.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()) {
-                    destination = try copyIntoMedia(source, artist: metadata.artist, album: metadata.album, hash: hash)
+                if mustCopy {
+                    let root = mediaURL.resolvingSymlinksInPath().standardizedFileURL
+                    destination = try destinationURL(artist: metadata.artist, album: metadata.album,
+                                                     originalName: source.lastPathComponent, hash: hash)
+                    guard isInside(destination.resolvingSymlinksInPath(), directory: root) else {
+                        throw CocoaError(.fileWriteNoPermission)
+                    }
                 } else {
                     destination = source.standardizedFileURL
                 }
 
-                if var track = existingByHash[hash] {
-                    track.managedPath = destination.path
-                    track.fileSize = Int64(values.fileSize ?? 0)
-                    track.lastVerifiedAt = .now
-                    track.health = .verified
-                    referenced.append(track)
+                let originalTrack = existingByHash[hash]
+                var track: Track
+                if var existingTrack = originalTrack {
+                    existingTrack.managedPath = destination.path
+                    existingTrack.fileSize = Int64(values.fileSize ?? 0)
+                    existingTrack.lastVerifiedAt = .now
+                    existingTrack.health = .verified
+                    track = existingTrack
                 } else {
-                    let identities = identityIndex.identities(
-                        artist: metadata.artist,
-                        album: metadata.album
-                    )
-                    referenced.append(Track(
+                    let identities = identityIndex.identities(artist: metadata.artist, album: metadata.album)
+                    track = Track(
                         id: UUID(),
                         title: metadata.title,
                         artist: metadata.artist,
@@ -1542,8 +1753,13 @@ actor LibraryRepository {
                         health: .verified,
                         artistID: identities.artistID,
                         albumID: identities.albumID
-                    ))
+                    )
                 }
+                if mustCopy {
+                    try copyManagedReference(source, track: track, hash: hash,
+                                             previousPath: originalTrack?.managedPath)
+                }
+                referenced.append(track)
             } catch {
                 issues.append(ImportIssue(
                     fileName: source.lastPathComponent,
@@ -1552,6 +1768,46 @@ actor LibraryRepository {
             }
         }
         return ImportResult(imported: referenced, issues: issues)
+    }
+
+    private func copyManagedReference(_ source: URL, track: Track, hash: String, previousPath: String?) throws {
+        let destination = track.fileURL.standardizedFileURL
+        if fileManager.fileExists(atPath: destination.path) {
+            guard try Self.sha256(of: destination) == hash else {
+                throw RepositoryError.copyVerificationFailed(source.lastPathComponent)
+            }
+            return
+        }
+        let staged = incomingURL.appendingPathComponent(UUID().uuidString).appendingPathExtension(source.pathExtension)
+        var entry = ImportJournalEntry(id: UUID(), fileName: source.lastPathComponent, expectedSHA256: hash,
+                                       stagedPath: staged.path, destinationPath: nil, track: nil, phase: .copying)
+        try upsertJournalEntry(entry)
+#if DEBUG
+        try importWriteTestHook?(.copying)
+#endif
+        try fileManager.copyItem(at: source, to: staged)
+        guard try Self.sha256(of: staged) == hash else { throw RepositoryError.copyVerificationFailed(source.lastPathComponent) }
+        entry.destinationPath = destination.path
+        entry.track = track
+        entry.previousManagedPath = previousPath
+        entry.phase = .installing
+        try upsertJournalEntry(entry)
+#if DEBUG
+        try importWriteTestHook?(.installing)
+#endif
+        try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if fileManager.fileExists(atPath: destination.path) {
+            guard try Self.sha256(of: destination) == hash else { throw RepositoryError.copyVerificationFailed(source.lastPathComponent) }
+            try fileManager.removeItem(at: staged)
+        } else {
+            try fileManager.moveItem(at: staged, to: destination)
+        }
+        guard try Self.sha256(of: destination) == hash else { throw RepositoryError.copyVerificationFailed(source.lastPathComponent) }
+        entry.phase = .installed
+        try upsertJournalEntry(entry)
+#if DEBUG
+        try importWriteTestHook?(.installed)
+#endif
     }
 
     func verify(_ tracks: [Track]) -> [Track] {
@@ -1961,16 +2217,35 @@ actor LibraryRepository {
 
     private func recoverCatalogWriteJournal() throws {
         guard fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { return }
-        let journal = try decoder.decode(CatalogWriteJournal.self, from: Data(contentsOf: catalogWriteJournalURL))
-        guard journal.version == 1 else { throw CatalogWriteRecoveryRequired() }
-        let document = try decoder.decode(LibraryDocument.self, from: journal.manifest)
+        let data = try Data(contentsOf: catalogWriteJournalURL)
+        guard let journal = try? decoder.decode(CatalogWriteJournal.self, from: data),
+              journal.version == 1,
+              let document = try? decoder.decode(LibraryDocument.self, from: journal.manifest) else {
+            throw CatalogWriteRecoveryRequired()
+        }
         let current: Data? = fileManager.fileExists(atPath: manifestURL.path) ? try Data(contentsOf: manifestURL) : nil
         let currentDigest = current.map(digest)
         let targetDigest = digest(journal.manifest)
+        if let recordedDigest = journal.manifestDigest, recordedDigest != targetDigest {
+            throw CatalogWriteRecoveryRequired()
+        }
         guard currentDigest == journal.previousManifestDigest || currentDigest == targetDigest else {
             throw CatalogWriteRecoveryRequired()
         }
+        if journal.clearsRegistrations == true {
+            guard document.tracks.isEmpty,
+                  document.playlists.allSatisfy({ $0.entries.isEmpty }) else {
+                throw CatalogWriteRecoveryRequired()
+            }
+            try persistImportJournal(ImportJournal())
+            try encoder.encode(document.libraryID).write(to: storageRecoveryReceiptURL, options: .atomic)
+        }
         try persistPlaybackSidecars(document)
+        if journal.clearsRegistrations == true {
+            try Data(contentsOf: playbackQueueURL).write(to: playbackQueueBackupURL, options: [.atomic])
+            try Data(contentsOf: playbackEventsURL).write(to: playbackEventsBackupURL, options: [.atomic])
+            try journal.manifest.write(to: backupURL, options: [.atomic])
+        }
         if currentDigest != targetDigest {
             if journal.backUpReadablePrimary, let current,
                (try? decodeDocument(at: manifestURL)) != nil {
@@ -1984,7 +2259,8 @@ actor LibraryRepository {
 
     private func persistDocument(
         _ document: LibraryDocument,
-        backUpReadablePrimary: Bool
+        backUpReadablePrimary: Bool,
+        clearsRegistrations: Bool = false
     ) throws {
         if !performingOverlayMutation && fileManager.fileExists(atPath: overlayJournalURL.path) {
             throw OverlayRecoveryRequired()
@@ -1994,12 +2270,18 @@ actor LibraryRepository {
         let data = try encoder.encode(document)
         let previous: Data? = fileManager.fileExists(atPath: manifestURL.path) ? try Data(contentsOf: manifestURL) : nil
         let journal = CatalogWriteJournal(version: 1, previousManifestDigest: previous.map(digest),
-                                          manifest: data, backUpReadablePrimary: backUpReadablePrimary)
+                                          manifest: data, manifestDigest: digest(data),
+                                          backUpReadablePrimary: backUpReadablePrimary,
+                                          clearsRegistrations: clearsRegistrations)
         try encoder.encode(journal).write(to: catalogWriteJournalURL, options: [.atomic])
         try synchronizeOverlayFile(catalogWriteJournalURL)
 #if DEBUG
         try catalogWriteTestHook?(.journal)
 #endif
+        if clearsRegistrations {
+            try persistImportJournal(ImportJournal())
+            try encoder.encode(document.libraryID).write(to: storageRecoveryReceiptURL, options: .atomic)
+        }
         try persistPlaybackQueue(document)
 #if DEBUG
         try catalogWriteTestHook?(.queue)
@@ -2008,6 +2290,11 @@ actor LibraryRepository {
 #if DEBUG
         try catalogWriteTestHook?(.events)
 #endif
+        if clearsRegistrations {
+            try Data(contentsOf: playbackQueueURL).write(to: playbackQueueBackupURL, options: [.atomic])
+            try Data(contentsOf: playbackEventsURL).write(to: playbackEventsBackupURL, options: [.atomic])
+            try data.write(to: backupURL, options: [.atomic])
+        }
         if backUpReadablePrimary, let previous,
            (try? decodeDocument(at: manifestURL)) != nil {
             try previous.write(to: backupURL, options: [.atomic])
@@ -2158,7 +2445,8 @@ actor LibraryRepository {
     private var performingOverlayMutation = false
 
     private func documentForMutation() throws -> LibraryDocument {
-        guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
+        guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path),
+              !fileManager.fileExists(atPath: storageRestoreJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
         if !performingOverlayMutation && fileManager.fileExists(atPath: overlayJournalURL.path) {
             throw OverlayRecoveryRequired()
         }
@@ -2240,6 +2528,25 @@ actor LibraryRepository {
             if fileManager.fileExists(atPath: staged.path) {
                 try? fileManager.removeItem(at: staged)
             }
+            if let previousPath = entry.previousManagedPath,
+               let index = document.tracks.firstIndex(where: { $0.id == storedTrack.id }) {
+                let current = document.tracks[index]
+                if current.fileURL.standardizedFileURL.path == destination.standardizedFileURL.path {
+                    continue
+                }
+                guard current.fileURL.standardizedFileURL.path == URL(fileURLWithPath: previousPath).standardizedFileURL.path,
+                      current.sha256 == entry.expectedSHA256 else {
+                    retained.append(entry)
+                    unresolvedCount += 1
+                    continue
+                }
+                document.tracks[index].managedPath = destination.path
+                document.tracks[index].fileSize = storedTrack.fileSize
+                document.tracks[index].health = .verified
+                document.tracks[index].lastVerifiedAt = .now
+                recoveredCount += 1
+                continue
+            }
             if !knownHashes.contains(entry.expectedSHA256) {
                 var recoveredTrack = storedTrack
                 let identities = identityIndex.identities(
@@ -2280,6 +2587,11 @@ actor LibraryRepository {
                   ids.contains(track.id) || hashes.contains(entry.expectedSHA256) else {
                 return false
             }
+            if entry.previousManagedPath != nil {
+                guard tracks.contains(where: {
+                    $0.id == track.id && $0.fileURL.standardizedFileURL.path == track.fileURL.standardizedFileURL.path
+                }) else { return false }
+            }
             let staged = URL(fileURLWithPath: entry.stagedPath)
             if isInside(staged, directory: incomingURL), fileManager.fileExists(atPath: staged.path) {
                 try? fileManager.removeItem(at: staged)
@@ -2313,6 +2625,7 @@ actor LibraryRepository {
         var updated = journal
         updated.updatedAt = .now
         try encoder.encode(updated).write(to: importJournalURL, options: [.atomic])
+        try synchronizeOverlayFile(importJournalURL)
     }
 
     private func isInside(_ candidate: URL, directory: URL) -> Bool {

@@ -40,6 +40,77 @@ struct LibraryRepositoryTests {
         #expect(try Data(contentsOf: archived.appendingPathComponent("library-v1.json")) == archivedBytes)
     }
 
+#if DEBUG
+    @Test("Interrupted storage restore rolls back without deleting files", arguments: [0, 1, 2, 3])
+    func interruptedStorageRestore(step: Int) async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let original = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let old = try await original.load().document
+        let oldManifest = try Data(contentsOf: catalog.appendingPathComponent("library-v1.json"))
+        let oldQueue = try Data(contentsOf: catalog.appendingPathComponent("playback-queue-v1.json"))
+        let archived = catalog.appendingPathComponent("Legacy Imports/original")
+        let preserved = LibraryRepository(rootURL: archived, mediaURL: media)
+        try await preserved.save(playlists: [Playlist(name: "Preserved", description: "")])
+        let archiveBytes = try Data(contentsOf: archived.appendingPathComponent("library-v1.json"))
+        let restoring = LibraryRepository(rootURL: catalog, mediaURL: media)
+        await restoring.setStorageRestoreTestHook { point in
+            let shouldStop: Bool
+            switch point {
+            case .afterBackup(let name): shouldStop = (step == 0 && name == "playback-queue-v1.json") || (step == 2 && name == "library-v1.json")
+            case .afterInstall(let name): shouldStop = (step == 1 && name == "playback-queue-v1.json") || (step == 3 && name == "library-v1.json")
+            case .beforeRollbackCopy: shouldStop = false
+            }
+            if shouldStop { throw LibraryRepository.StorageRestoreInterruption() }
+        }
+        do { try await restoring.restorePreservedLibraryIfEmpty(); Issue.record("Expected interruption") }
+        catch is LibraryRepository.StorageRestoreInterruption { }
+        let journal = catalog.appendingPathComponent("storage-restore-journal-v1.json")
+        #expect(FileManager.default.fileExists(atPath: journal.path))
+        let restarted = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let recovered = try await restarted.load().document
+        #expect(recovered.libraryID == old.libraryID)
+        #expect(recovered.playlists.isEmpty)
+        #expect(try Data(contentsOf: catalog.appendingPathComponent("library-v1.json")) == oldManifest)
+        #expect(try Data(contentsOf: catalog.appendingPathComponent("playback-queue-v1.json")) == oldQueue)
+        #expect(try Data(contentsOf: archived.appendingPathComponent("library-v1.json")) == archiveBytes)
+        #expect(!FileManager.default.fileExists(atPath: journal.path))
+        try await restarted.restorePreservedLibraryIfEmpty()
+        let retried = try await restarted.load().document
+        #expect(retried.playlists.map(\.name) == ["Preserved"])
+    }
+
+    @Test("Interrupted rollback can be retried without losing the prior catalog")
+    func interruptedStorageRollbackRetries() async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let original = LibraryRepository(rootURL: catalog, mediaURL: media)
+        _ = try await original.load()
+        let oldManifest = try Data(contentsOf: catalog.appendingPathComponent("library-v1.json"))
+        let archived = catalog.appendingPathComponent("Legacy Imports/original")
+        try await LibraryRepository(rootURL: archived, mediaURL: media).save(playlists: [Playlist(name: "Preserved", description: "")])
+        let restoring = LibraryRepository(rootURL: catalog, mediaURL: media)
+        await restoring.setStorageRestoreTestHook { point in
+            if case .afterInstall("library-v1.json") = point { throw LibraryRepository.StorageRestoreInterruption() }
+        }
+        do { try await restoring.restorePreservedLibraryIfEmpty(); Issue.record("Expected interruption") }
+        catch is LibraryRepository.StorageRestoreInterruption { }
+        let recovering = LibraryRepository(rootURL: catalog, mediaURL: media)
+        await recovering.setStorageRestoreTestHook { point in
+            if case .beforeRollbackCopy("library-v1.json") = point { throw LibraryRepository.StorageRestoreInterruption() }
+        }
+        do { _ = try await recovering.load(); Issue.record("Expected second interruption") }
+        catch is LibraryRepository.StorageRestoreInterruption { }
+        #expect(FileManager.default.fileExists(atPath: catalog.appendingPathComponent("storage-restore-journal-v1.json").path))
+        let recovered = try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document
+        #expect(recovered.playlists.isEmpty)
+        #expect(try Data(contentsOf: catalog.appendingPathComponent("library-v1.json")) == oldManifest)
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("storage-restore-journal-v1.json").path))
+    }
+#endif
+
     @Test("Storage selection recovers preserved catalogs without moving originals", arguments: [
         "Ongaku Library Data/Legacy Imports/preserved",
         "Ongaku Desktop/Ongaku Media/Ongaku Library Data",
@@ -96,6 +167,140 @@ struct LibraryRepositoryTests {
         try await store.openStorageDirectory(media)
         #expect(store.tracks.count == 1)
         #expect(try FileManager.default.contentsOfDirectory(atPath: catalog.appendingPathComponent("Recovery Backups").path).count == 1)
+    }
+
+    @Test("Restoring a preserved library invalidates other repositories")
+    func preservedRecoveryInvalidatesStaleWriter() async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let original = LibraryRepository(rootURL: catalog, mediaURL: media)
+        _ = try await original.load()
+        let stale = LibraryRepository(rootURL: catalog, mediaURL: media)
+        _ = try await stale.load()
+        let generationURL = catalog.appendingPathComponent("catalog-generation-v1")
+        let before = try #require(UInt64(try String(contentsOf: generationURL, encoding: .utf8)))
+        let archive = catalog.appendingPathComponent("Legacy Imports/preserved")
+        let preserved = LibraryRepository(rootURL: archive, mediaURL: media)
+        try await preserved.save(playlists: [Playlist(name: "Preserved", description: "")])
+        try await original.restorePreservedLibraryIfEmpty()
+        let after = try #require(UInt64(try String(contentsOf: generationURL, encoding: .utf8)))
+        #expect(after > before)
+        do { try await stale.save(playlists: []); Issue.record("Stale writer overwrote restored library") }
+        catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        let actual = try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document
+        #expect(actual.playlists.map(\.name) == ["Preserved"])
+    }
+
+    @Test("Damaged recovery journals preserve catalog and stop writes", arguments: ["storage-restore-journal-v1.json", "catalog-write-journal-v1.json"])
+    func damagedRecoveryJournalIsRetained(name: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(playlists: [Playlist(name: "Original", description: "")])
+        let names = ["library-v1.json", "playback-queue-v1.json", "playback-events-v1.json"]
+        let originals = try names.map { try Data(contentsOf: root.appendingPathComponent($0)) }
+        let damaged = Data("invalid journal".utf8)
+        let journal = root.appendingPathComponent(name)
+        try damaged.write(to: journal)
+        let reopened = LibraryRepository(rootURL: root)
+        do { _ = try await reopened.load(); Issue.record("Damaged journal accepted") }
+        catch is LibraryRepository.CatalogWriteRecoveryRequired { }
+        do { try await reopened.save(playlists: []); Issue.record("Write bypassed damaged journal") }
+        catch is LibraryRepository.CatalogWriteRecoveryRequired { }
+        let source = root.appendingPathComponent("source.mp3")
+        try Data("audio".utf8).write(to: source)
+        let attempted = await reopened.importFiles([source], existing: [])
+        #expect(attempted.imported.isEmpty)
+        #expect(attempted.issues.count == 1)
+        #expect(try Data(contentsOf: journal) == damaged)
+        for (file, data) in zip(names, originals) {
+            #expect(try Data(contentsOf: root.appendingPathComponent(file)) == data)
+        }
+    }
+
+#if DEBUG
+    @Test("A modified but decodable journal payload cannot replace the catalog")
+    func changedJournalPayloadIsRejected() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(playlists: [Playlist(name: "Original", description: "")])
+        let baseline = try await repository.load().document
+        var pending = baseline
+        pending.playlists = [Playlist(name: "Pending", description: "")]
+        await repository.setCatalogWriteTestHook { stage in
+            if case .journal = stage { throw CocoaError(.fileWriteUnknown) }
+        }
+        do { try await repository.save(document: pending, expectedDocument: baseline); Issue.record("Expected interruption") } catch { }
+        let journalURL = root.appendingPathComponent("catalog-write-journal-v1.json")
+        var object = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: journalURL)) as? [String: Any])
+        var altered = baseline
+        altered.playlists = [Playlist(name: "Altered", description: "")]
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        object["manifest"] = try encoder.encode(altered).base64EncodedString()
+        let corruptJournal = try JSONSerialization.data(withJSONObject: object)
+        try corruptJournal.write(to: journalURL, options: .atomic)
+        let manifestURL = root.appendingPathComponent("library-v1.json")
+        let original = try Data(contentsOf: manifestURL)
+        do { _ = try await LibraryRepository(rootURL: root).load(); Issue.record("Altered journal accepted") }
+        catch is LibraryRepository.CatalogWriteRecoveryRequired { }
+        #expect(try Data(contentsOf: manifestURL) == original)
+        #expect(try Data(contentsOf: journalURL) == corruptJournal)
+    }
+#endif
+
+    @Test("A preserved catalog with pending recovery is never transplanted", arguments: ["catalog-write-journal-v1.json", "storage-restore-journal-v1.json", "import-journal-v1.json", "self-containment-journal-v1.json"])
+    func preservedCatalogPendingRecoveryIsRejected(name: String) async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let active = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let original = try await active.load().document
+        let activeURL = catalog.appendingPathComponent("library-v1.json")
+        let originalBytes = try Data(contentsOf: activeURL)
+        let archive = catalog.appendingPathComponent("Legacy Imports/preserved")
+        let candidate = LibraryRepository(rootURL: archive, mediaURL: media)
+        try await candidate.save(playlists: [Playlist(name: "Preserved", description: "")])
+        let archivedURL = archive.appendingPathComponent("library-v1.json")
+        let archivedBytes = try Data(contentsOf: archivedURL)
+        let journalURL = archive.appendingPathComponent(name)
+        let journalBytes = Data("pending".utf8)
+        try journalBytes.write(to: journalURL)
+        do { try await active.restorePreservedLibraryIfEmpty(); Issue.record("Pending recovery was ignored") }
+        catch LibraryRepository.RepositoryError.sourceRecoveryRequired(let path) {
+            #expect(URL(fileURLWithPath: path).resolvingSymlinksInPath() == archive.resolvingSymlinksInPath())
+        }
+        #expect(try Data(contentsOf: activeURL) == originalBytes)
+        #expect(try Data(contentsOf: archivedURL) == archivedBytes)
+        #expect(try Data(contentsOf: journalURL) == journalBytes)
+        #expect(try await active.load().document.libraryID == original.libraryID)
+    }
+
+    @Test("Pending imports in the active library recover before selecting a preserved catalog")
+    func activePendingImportRecoversBeforePreservedSelection() async throws {
+        let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: media) }
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let active = LibraryRepository(rootURL: catalog, mediaURL: media)
+        _ = try await active.load()
+        let source = media.appendingPathComponent("source.mp3")
+        let bytes = Data([0x49, 0x44, 0x33, 5, 6, 7])
+        try bytes.write(to: source)
+        let imported = await active.importFiles([source], existing: [])
+        let track = try #require(imported.imported.first)
+        let archive = catalog.appendingPathComponent("Legacy Imports/preserved")
+        let candidate = LibraryRepository(rootURL: archive, mediaURL: media)
+        try await candidate.save(playlists: [Playlist(name: "Preserved", description: "")])
+        let archivedURL = archive.appendingPathComponent("library-v1.json")
+        let archivedBytes = try Data(contentsOf: archivedURL)
+        try await active.restorePreservedLibraryIfEmpty()
+        let recovered = try await active.load().document
+        #expect(recovered.tracks.map(\.id) == [track.id])
+        #expect(recovered.playlists.isEmpty)
+        #expect(try Data(contentsOf: track.fileURL) == bytes)
+        #expect(try Data(contentsOf: archivedURL) == archivedBytes)
     }
 
     @Test("Recovery never replaces a populated catalog or revives intentionally cleared songs")
@@ -198,6 +403,150 @@ struct LibraryRepositoryTests {
         #expect(reopened.tracks.first?.id == song.id)
         #expect(try Data(contentsOf: #require(reopened.tracks.first).fileURL) == bytes)
     }
+
+    private final class FullDiskCopyFileManager: FileManager, @unchecked Sendable {
+        let failingSource: URL
+        init(failingSource: URL) { self.failingSource = failingSource; super.init() }
+        override func copyItem(at source: URL, to destination: URL) throws {
+            if source.standardizedFileURL == failingSource.standardizedFileURL {
+                // Simulate a partially written staging file followed by ENOSPC.
+                try Data("partial".utf8).write(to: destination)
+                throw POSIXError(.ENOSPC)
+            }
+            try super.copyItem(at: source, to: destination)
+        }
+    }
+
+    @Test("Self-contained copy retains both originals and catalog on a full disk")
+    func selfContainedCopyOutOfSpace() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let media = root.appendingPathComponent("Media")
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let urls = [root.appendingPathComponent("one.mp3"), root.appendingPathComponent("two.mp3")]
+        let contents = [Data("first original".utf8), Data("second original".utf8)]
+        for (url, data) in zip(urls, contents) { try data.write(to: url) }
+        let tracks = try zip(urls, contents).enumerated().map { index, entry in
+            Track(id: UUID(), title: "Track \(index)", artist: "Artist", album: "Album",
+                  duration: 1, fileSize: Int64(entry.1.count), managedPath: entry.0.path,
+                  sha256: try LibraryRepository.sha256(of: entry.0), addedAt: .now, health: .verified)
+        }
+        let normal = LibraryRepository(rootURL: catalog, mediaURL: media)
+        try await normal.save(tracks: tracks)
+        let failing = LibraryRepository(rootURL: catalog, mediaURL: media,
+                                        fileManager: FullDiskCopyFileManager(failingSource: urls[1]))
+        do {
+            try await failing.makeLibrarySelfContained()
+            Issue.record("The simulated full disk must be reported")
+        } catch let error as POSIXError {
+            #expect(error.code == .ENOSPC)
+        }
+        let reopened = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let beforeRetry = try await reopened.load().document
+        #expect(beforeRetry.tracks.map(\.managedPath) == tracks.map(\.managedPath))
+        for (url, data) in zip(urls, contents) { #expect(try Data(contentsOf: url) == data) }
+        let incoming = catalog.appendingPathComponent("Incoming")
+        #expect(try FileManager.default.contentsOfDirectory(atPath: incoming.path).isEmpty)
+        try await reopened.makeLibrarySelfContained()
+        let afterRetry = try await reopened.load().document
+        #expect(afterRetry.tracks.count == tracks.count)
+        for (track, data) in zip(afterRetry.tracks, contents) {
+            #expect(track.fileURL.path.hasPrefix(media.path + "/"))
+            #expect(try Data(contentsOf: track.fileURL) == data)
+        }
+        for (url, data) in zip(urls, contents) { #expect(try Data(contentsOf: url) == data) }
+    }
+
+    @Test("Interrupted self-containment cleans only its recorded staging directory", arguments: [false, true])
+    func interruptedSelfContainmentStaging(stagedFileExists: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let baseline = try await repository.load().document
+        let incoming = root.appendingPathComponent("Incoming")
+        let transaction = UUID()
+        let staging = incoming.appendingPathComponent("self-containment-\(transaction.uuidString)")
+        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+        if stagedFileExists { try Data("partial".utf8).write(to: staging.appendingPathComponent(UUID().uuidString)) }
+        let unrelated = incoming.appendingPathComponent("unrelated")
+        try Data("keep".utf8).write(to: unrelated)
+        let journal = root.appendingPathComponent("self-containment-journal-v1.json")
+        let bytes = try JSONSerialization.data(withJSONObject: ["version": 1, "transactionID": transaction.uuidString])
+        try bytes.write(to: journal)
+        let actual = try await LibraryRepository(rootURL: root).load().document
+        #expect(actual.libraryID == baseline.libraryID)
+        #expect(!FileManager.default.fileExists(atPath: staging.path))
+        #expect(!FileManager.default.fileExists(atPath: journal.path))
+        #expect(try Data(contentsOf: unrelated) == Data("keep".utf8))
+        #expect(try await LibraryRepository(rootURL: root).load().document.libraryID == baseline.libraryID)
+    }
+
+    @Test("Unsafe self-containment recovery preserves files and quarantines its journal", arguments: [false, true])
+    func unsafeSelfContainmentRecovery(corruptJournal: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        _ = try await repository.load()
+        let catalog = root.appendingPathComponent("library-v1.json")
+        let originalCatalog = try Data(contentsOf: catalog)
+        let transaction = UUID()
+        let staging = root.appendingPathComponent("Incoming/self-containment-\(transaction.uuidString)")
+        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+        let unexpected = staging.appendingPathComponent("do-not-delete")
+        try Data("keep".utf8).write(to: unexpected)
+        let journal = root.appendingPathComponent("self-containment-journal-v1.json")
+        let bytes = corruptJournal ? Data("broken".utf8) : try JSONSerialization.data(withJSONObject: ["version": 1, "transactionID": transaction.uuidString])
+        try bytes.write(to: journal)
+        _ = try await LibraryRepository(rootURL: root).load()
+        #expect(try Data(contentsOf: unexpected) == Data("keep".utf8))
+        #expect(!FileManager.default.fileExists(atPath: journal.path))
+        let backups = root.appendingPathComponent("Recovery Backups")
+        let entries = try FileManager.default.contentsOfDirectory(at: backups, includingPropertiesForKeys: nil)
+        let preserved = try #require(entries.first { $0.lastPathComponent.hasPrefix("Self-Containment-") })
+        #expect(try Data(contentsOf: preserved.appendingPathComponent("self-containment-journal-v1.json")) == bytes)
+        #expect(try Data(contentsOf: catalog) == originalCatalog)
+    }
+
+#if DEBUG
+    @Test("Self-containment staging recovery follows interrupted catalog commit")
+    func selfContainmentRecoversWithCatalogJournal() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let original = root.appendingPathComponent("source.mp3")
+        let bytes = Data("source audio".utf8)
+        try bytes.write(to: original)
+        let media = root.appendingPathComponent("Media")
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let track = Track(id: UUID(), title: "Song", artist: "Artist", album: "Album", duration: 1,
+                          fileSize: Int64(bytes.count), managedPath: original.path,
+                          sha256: try LibraryRepository.sha256(of: original), addedAt: .now, health: .verified)
+        try await repository.save(tracks: [track])
+        await repository.setCatalogWriteTestHook { step in
+            if case .journal = step { throw POSIXError(.ENOSPC) }
+        }
+        do { try await repository.makeLibrarySelfContained(); Issue.record("Expected interruption") }
+        catch let error as POSIXError { #expect(error.code == .ENOSPC) }
+        #expect(FileManager.default.fileExists(atPath: catalog.appendingPathComponent("catalog-write-journal-v1.json").path))
+        // Recreate the staging state left by a process termination before defer runs.
+        let id = UUID()
+        let staging = catalog.appendingPathComponent("Incoming/self-containment-\(id.uuidString)")
+        try FileManager.default.createDirectory(at: staging, withIntermediateDirectories: true)
+        try Data("partial".utf8).write(to: staging.appendingPathComponent(UUID().uuidString))
+        let journal = catalog.appendingPathComponent("self-containment-journal-v1.json")
+        try JSONSerialization.data(withJSONObject: ["version": 1, "transactionID": id.uuidString]).write(to: journal)
+        let reopened = try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document
+        let recovered = try #require(reopened.tracks.first)
+        #expect(recovered.id == track.id)
+        #expect(recovered.fileURL.path.hasPrefix(media.path + "/"))
+        #expect(try Data(contentsOf: recovered.fileURL) == bytes)
+        #expect(try Data(contentsOf: original) == bytes)
+        #expect(!FileManager.default.fileExists(atPath: staging.path))
+        #expect(!FileManager.default.fileExists(atPath: journal.path))
+    }
+#endif
 
     @Test("Missing external originals do not commit a partially localized catalog")
     func missingExternalCopyPreservesCatalog() async throws {
@@ -1257,6 +1606,122 @@ struct LibraryRepositoryTests {
         #expect(secondLoad.document.tracks.count == 1)
         try? FileManager.default.removeItem(at: root)
     }
+
+#if DEBUG
+    @Test("Import journal recovers at each installation boundary", arguments: [0, 1, 2])
+    func importWriteRecoveryBoundaries(step: Int) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.mp3")
+        let bytes = Data([0x49, 0x44, 0x33, 2, 3, 4])
+        try bytes.write(to: source)
+        let catalog = root.appendingPathComponent("Catalog")
+        let repository = LibraryRepository(rootURL: catalog)
+        _ = try await repository.load()
+        await repository.setImportWriteTestHook { stage in
+            let match: Bool
+            switch stage {
+            case .copying: match = step == 0
+            case .installing: match = step == 1
+            case .installed: match = step == 2
+            }
+            if match { throw CocoaError(.fileWriteUnknown) }
+        }
+        let result = await repository.importFiles([source], existing: [])
+        #expect(result.imported.isEmpty)
+        #expect(result.issues.count == 1)
+        #expect(try Data(contentsOf: source) == bytes)
+        let recovered = try await LibraryRepository(rootURL: catalog).load()
+        if step == 0 {
+            #expect(recovered.document.tracks.isEmpty)
+        } else {
+            #expect(recovered.document.tracks.count == 1)
+            let track = try #require(recovered.document.tracks.first)
+            #expect(try Data(contentsOf: track.fileURL) == bytes)
+        }
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("import-journal-v1.json").path))
+        let again = try await LibraryRepository(rootURL: catalog).load().document
+        #expect(again.tracks.count == (step == 0 ? 0 : 1))
+        #expect(try Data(contentsOf: source) == bytes)
+    }
+#endif
+
+#if DEBUG
+    @Test("External reference copying recovers new and existing tracks at each boundary", arguments: [false, true], [0, 1, 2])
+    func referenceCopyRecoveryBoundaries(existing: Bool, step: Int) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.mp3")
+        let bytes = Data([0x49, 0x44, 0x33, 5, 6, 7])
+        try bytes.write(to: source)
+        let catalog = root.appendingPathComponent("Catalog")
+        let media = root.appendingPathComponent("Media")
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let original = Track(id: UUID(), title: "Existing", artist: "A", album: "B", duration: 1,
+                             fileSize: Int64(bytes.count), managedPath: source.path,
+                             sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        try await repository.save(tracks: existing ? [original] : [])
+        await repository.setImportWriteTestHook { stage in
+            let match: Bool
+            switch stage {
+            case .copying: match = step == 0
+            case .installing: match = step == 1
+            case .installed: match = step == 2
+            }
+            if match { throw CocoaError(.fileWriteUnknown) }
+        }
+        let result = await repository.referenceFilesInPlace([source], existing: existing ? [original] : [], copyExternalFiles: true)
+        #expect(result.imported.isEmpty)
+        #expect(result.issues.count == 1)
+        #expect(try Data(contentsOf: source) == bytes)
+        let recovered = try await LibraryRepository(rootURL: catalog, mediaURL: media).load()
+        #expect(recovered.document.tracks.count == ((existing || step != 0) ? 1 : 0))
+        if let track = recovered.document.tracks.first {
+            if existing { #expect(track.id == original.id); #expect(track.title == original.title) }
+            if step == 0 { #expect(track.managedPath == source.path) }
+            else { #expect(track.managedPath != source.path); #expect(try Data(contentsOf: track.fileURL) == bytes) }
+        }
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("import-journal-v1.json").path))
+        let again = try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document
+        #expect(again.tracks.count == recovered.document.tracks.count)
+        #expect(try Data(contentsOf: source) == bytes)
+    }
+
+    @Test("Reference recovery retains the journal when the existing track was relinked elsewhere")
+    func referenceCopyRecoveryPreservesNewerRelink() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.mp3")
+        let alternative = root.appendingPathComponent("alternative.mp3")
+        let bytes = Data([0x49, 0x44, 0x33, 5, 6, 7])
+        try bytes.write(to: source); try bytes.write(to: alternative)
+        let catalog = root.appendingPathComponent("Catalog")
+        let media = root.appendingPathComponent("Media")
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let original = Track(id: UUID(), title: "Existing", artist: "A", album: "B", duration: 1,
+                             fileSize: Int64(bytes.count), managedPath: source.path,
+                             sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        try await repository.save(tracks: [original])
+        let baseline = try await repository.load().document
+        await repository.setImportWriteTestHook { stage in
+            if case .installed = stage { throw CocoaError(.fileWriteUnknown) }
+        }
+        _ = await repository.referenceFilesInPlace([source], existing: [original], copyExternalFiles: true)
+        var changed = baseline
+        changed.tracks[0].managedPath = alternative.path
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(changed).write(to: catalog.appendingPathComponent("library-v1.json"), options: .atomic)
+        let recovered = try await LibraryRepository(rootURL: catalog, mediaURL: media).load()
+        #expect(recovered.unresolvedImportCount == 1)
+        #expect(recovered.document.tracks.first?.managedPath == alternative.path)
+        #expect(FileManager.default.fileExists(atPath: catalog.appendingPathComponent("import-journal-v1.json").path))
+        #expect(try Data(contentsOf: source) == bytes)
+        #expect(try Data(contentsOf: alternative) == bytes)
+    }
+#endif
 
     @Test("A configured media directory receives new managed files")
     func importsIntoConfiguredMediaDirectory() async throws {
@@ -2397,8 +2862,8 @@ struct StorageDelayedFailureTests {
     }
 
 #if DEBUG
-    @Test("Catalog, history and queue recover together at each write boundary", arguments: [0, 1, 2, 3])
-    func catalogWriteRecoveryBoundaries(step: Int) async throws {
+    @Test("Catalog, history and queue recover together at each write boundary", arguments: [0, 1, 2, 3], [false, true])
+    func catalogWriteRecoveryBoundaries(step: Int, diskFull: Bool) async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         let repository = LibraryRepository(rootURL: root)
@@ -2426,7 +2891,10 @@ struct StorageDelayedFailureTests {
             case .events: match = step == 2
             case .manifest: match = step == 3
             }
-            if match { throw CocoaError(.fileWriteUnknown) }
+            if match {
+                if diskFull { throw POSIXError(.ENOSPC) }
+                throw CocoaError(.fileWriteUnknown)
+            }
         }
         do { try await repository.save(document: updated, expectedDocument: baseline); Issue.record("Expected interruption") } catch { }
         let journal = root.appendingPathComponent("catalog-write-journal-v1.json")
@@ -2524,6 +2992,88 @@ struct StorageDelayedFailureTests {
     }
 #endif
 
+#if DEBUG
+    @Test("Clearing registrations recovers safely at every catalog write boundary", arguments: [0, 1, 2, 3])
+    func clearRegistrationRecoveryBoundaries(step: Int) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("pending.mp3")
+        let pendingBytes = Data([0x49, 0x44, 0x33, 1, 2, 3])
+        try pendingBytes.write(to: source)
+        let catalog = root.appendingPathComponent("Catalog")
+        let media = root.appendingPathComponent("Media")
+        try FileManager.default.createDirectory(at: media, withIntermediateDirectories: true)
+        let audio = media.appendingPathComponent("existing.mp3")
+        let originalBytes = Data("existing".utf8)
+        try originalBytes.write(to: audio)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: Int64(originalBytes.count), managedPath: audio.path,
+                          sha256: try LibraryRepository.sha256(of: audio), addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        var initial = LibraryDocument(tracks: [track])
+        initial.playlists = [Playlist(name: "Keep", entries: [PlaylistEntry(trackID: track.id)])]
+        initial.playbackEvents = [PlaybackEvent(trackID: track.id, kind: .started)]
+        initial.playbackQueue = PlaybackQueueState(trackIDs: [track.id], currentTrackID: track.id, position: 1)
+        try await repository.save(document: initial)
+        let imported = await repository.importFiles([source], existing: [track])
+        let pending = try #require(imported.imported.first)
+        await repository.setCatalogWriteTestHook { stage in
+            let match: Bool
+            switch stage {
+            case .journal: match = step == 0
+            case .queue: match = step == 1
+            case .events: match = step == 2
+            case .manifest: match = step == 3
+            }
+            if match { throw CocoaError(.fileWriteUnknown) }
+        }
+        do { try await repository.clearAllRegistrations(); Issue.record("Expected interruption") } catch { }
+        #expect(FileManager.default.fileExists(atPath: catalog.appendingPathComponent("catalog-write-journal-v1.json").path))
+        let restarted = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let recovered = try await restarted.load().document
+        #expect(recovered.tracks.isEmpty)
+        #expect(recovered.playlists.first?.entries.isEmpty == true)
+        #expect(recovered.playbackEvents.isEmpty)
+        #expect(recovered.playbackQueue == PlaybackQueueState())
+        #expect(try Data(contentsOf: audio) == originalBytes)
+        #expect(try Data(contentsOf: pending.fileURL) == pendingBytes)
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("import-journal-v1.json").path))
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("catalog-write-journal-v1.json").path))
+        try Data("corrupt".utf8).write(to: catalog.appendingPathComponent("library-v1.json"))
+        let backup = try await LibraryRepository(rootURL: catalog, mediaURL: media).load()
+        #expect(backup.recoveredFromBackup)
+        #expect(backup.document.tracks.isEmpty)
+        #expect(try Data(contentsOf: audio) == originalBytes)
+    }
+#endif
+
+    @Test("Starting an import reserves a generation before catalog publication")
+    func importReservationInvalidatesOlderRepository() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let catalog = root.appendingPathComponent("Catalog")
+        let source = root.appendingPathComponent("source.mp3")
+        let bytes = Data([0x49, 0x44, 0x33, 4, 5, 6])
+        try bytes.write(to: source)
+        let importer = LibraryRepository(rootURL: catalog)
+        _ = try await importer.load()
+        let stale = LibraryRepository(rootURL: catalog)
+        _ = try await stale.load()
+        let generationURL = catalog.appendingPathComponent("catalog-generation-v1")
+        let before = try #require(UInt64(try String(contentsOf: generationURL, encoding: .utf8)))
+        let result = await importer.importFiles([source], existing: [])
+        let track = try #require(result.imported.first)
+        let after = try #require(UInt64(try String(contentsOf: generationURL, encoding: .utf8)))
+        #expect(after > before)
+        do { try await stale.save(playlists: []); Issue.record("Stale writer accepted after import") }
+        catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        let recovered = try await stale.load().document
+        #expect(recovered.tracks.map(\.id) == [track.id])
+        #expect(try Data(contentsOf: track.fileURL) == bytes)
+    }
+
     @Test("An unobserved repository cannot replace an existing catalog")
     func fullReplacementRequiresBaseline() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -2575,6 +3125,61 @@ struct StorageDelayedFailureTests {
         case "history": #expect(actual.playbackEvents.count == 1)
         default: #expect(actual.playbackQueue?.currentTrackID == track.id)
         }
+    }
+
+    @Test("Storage locks time out without modifying data and can be retried", arguments: [".catalog-transaction-v1.lock", ".import-transaction-v1.lock"])
+    func storageLockTimeoutAndRetry(name: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let seed = LibraryRepository(rootURL: root)
+        try await seed.save(playlists: [Playlist(name: "Original", description: "")])
+        let manifest = root.appendingPathComponent("library-v1.json")
+        let original = try Data(contentsOf: manifest)
+        let lockURL = root.appendingPathComponent(name)
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+        process.arguments = ["-u", "-c", "import fcntl,sys; f=open(sys.argv[1], 'a+'); fcntl.flock(f, fcntl.LOCK_EX); print('ready',flush=True); sys.stdin.buffer.read(1)", lockURL.path]
+        let input = Pipe(); let output = Pipe()
+        process.standardInput = input; process.standardOutput = output
+        try process.run()
+        defer { if process.isRunning { try? input.fileHandleForWriting.close(); process.terminate() } }
+        let ready = try #require(try output.fileHandleForReading.read(upToCount: 6))
+        #expect(String(data: ready, encoding: .utf8) == "ready\n")
+        let blocked = LibraryRepository(rootURL: root, lockWaitTimeout: 0.15)
+        do { _ = try await blocked.load(); Issue.record("Lock wait did not time out") }
+        catch LibraryRepository.RepositoryError.storageLockTimedOut { }
+        #expect(try Data(contentsOf: manifest) == original)
+        try input.fileHandleForWriting.write(contentsOf: Data([1]))
+        process.waitUntilExit()
+        #expect(process.terminationStatus == 0)
+        #expect(try await blocked.load().document.playlists.map(\.name) == ["Original"])
+    }
+
+    @Test("Storage lock waits can be cancelled", arguments: [".catalog-transaction-v1.lock", ".import-transaction-v1.lock"])
+    func storageLockCancellation(name: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let seed = LibraryRepository(rootURL: root)
+        _ = try await seed.load()
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+        process.arguments = ["-u", "-c", "import fcntl,sys; f=open(sys.argv[1], 'a+'); fcntl.flock(f, fcntl.LOCK_EX); print('ready',flush=True); sys.stdin.buffer.read(1)", root.appendingPathComponent(name).path]
+        let input = Pipe(); let output = Pipe()
+        process.standardInput = input; process.standardOutput = output
+        try process.run()
+        defer { if process.isRunning { try? input.fileHandleForWriting.close(); process.terminate() } }
+        let ready = try #require(try output.fileHandleForReading.read(upToCount: 6))
+        #expect(String(data: ready, encoding: .utf8) == "ready\n")
+        let blocked = LibraryRepository(rootURL: root, lockWaitTimeout: 3)
+        let loading = Task { try await blocked.load() }
+        try await Task.sleep(for: .milliseconds(100))
+        loading.cancel()
+        do { _ = try await loading.value; Issue.record("Cancelled lock wait succeeded") }
+        catch is CancellationError { }
+        try input.fileHandleForWriting.write(contentsOf: Data([1]))
+        process.waitUntilExit()
+        #expect(process.terminationStatus == 0)
+        _ = try await blocked.load()
     }
 
     @Test("A separate process holding the catalog lock blocks repository writes")

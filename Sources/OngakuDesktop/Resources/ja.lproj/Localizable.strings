@@ -1314,3 +1314,9 @@
 "metadataEditor.error.mediaOrganizationBusy" = "楽曲情報の保存またはファイルの整理が完了してから、もう一度操作してください。";
 
 "library.error.importInProgress" = "曲の読み込みが完了してから、もう一度操作してください。";
+
+"library.error.recoveryRequiresAttention" = "ライブラリの復旧を自動で完了できませんでした。既存のデータと復旧情報は保持されています。保存先の接続とアクセス権を確認してください。";
+
+"library.error.sourceRecoveryRequired" = "選択したライブラリ「%@」には未完了の復旧があります。元の保存先で復旧を完了してから、もう一度お試しください。";
+
+"library.error.storageLockTimedOut" = "ライブラリが別の処理で使用中です。しばらくしてから再試行してください。外付け・ネットワークの保存先も確認してください。";

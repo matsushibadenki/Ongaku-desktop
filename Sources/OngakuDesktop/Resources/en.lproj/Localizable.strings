@@ -1314,3 +1314,9 @@
 "metadataEditor.error.mediaOrganizationBusy" = "Wait for song editing or media organization to finish, then try again.";
 
 "library.error.importInProgress" = "Wait for the music import to finish, then try again.";
+
+"library.error.recoveryRequiresAttention" = "The library could not be recovered automatically. Existing data and recovery information have been kept. Check the storage connection and access permissions.";
+
+"library.error.sourceRecoveryRequired" = "The selected library at “%@” has unfinished recovery. Complete recovery at its original location, then try again.";
+
+"library.error.storageLockTimedOut" = "The library is busy with another operation. Try again shortly and check any external or network storage.";
