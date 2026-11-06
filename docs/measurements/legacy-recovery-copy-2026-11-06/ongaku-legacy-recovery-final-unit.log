@@ -1,0 +1,1467 @@
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 1]
+[1 / 4] OngakuDesktop-product
+[1 / 7] OngakuDesktop
+[1 / 15] OngakuDesktopTests-product
+[1 / 8] OngakuDesktop-product
+[1 / 9] OngakuDesktop-product
+Build complete! (2.85秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "M2 playlist organization milestone" started.
+◇ Suite "M5 local complete milestone" started.
+◇ Suite "Smart playlists" started.
+◇ Suite "Library repository integrity" started.
+◇ Suite "M3 library management milestone" started.
+◇ Suite "Actual worker to Published delivery" started.
+◇ Suite "Playback recovery state" started.
+◇ Suite "Audio fidelity policy" started.
+◇ Suite "Track value semantics" started.
+◇ Suite "Playback queue navigation" started.
+◇ Suite "Album title initial grouping" started.
+◇ Suite "M6 Apple Music foundation milestone" started.
+◇ Suite "Overlay journal recovery" started.
+◇ Suite "System Now Playing" started.
+◇ Suite "SQLite catalog prototype" started.
+◇ Suite ChunkRequestCursorTests started.
+◇ Suite "Gapless playback planning" started.
+◇ Suite "Transport output continuity" started.
+◇ Suite "Effect rack input ownership" started.
+◇ Suite "Final output true-peak" started.
+◇ Suite "M0 UI, accessibility, localization, and privacy gate" started.
+◇ Suite "Effect parameter continuity" started.
+◇ Suite "Matched startup cost" started.
+◇ Suite "Standard library views" started.
+◇ Suite "Playlist transfer" started.
+◇ Suite "Catalog generation witness" started.
+◇ Suite "M7 discovery and sharing milestone" started.
+◇ Suite "Spectral Transient startup fallback" started.
+◇ Suite "Large chunk transfer load" started.
+◇ Suite "Pastel appearance" started.
+◇ Suite "External lyrics search" started.
+◇ Suite "Read-only legacy recovery copies" started.
+◇ Suite ChunkReceiptBitmapTests started.
+◇ Suite "Library recovery relaunch" started.
+◇ Suite "Spectral transient prototype" started.
+◇ Suite "Transfer history projection performance" started.
+◇ Suite "Damaged catalog journal rescue" started.
+◇ Suite "Stereo level meter" started.
+◇ Suite "Checkpoint persistence cost" started.
+◇ Suite "Audio feature analysis" started.
+◇ Suite "Catalog metadata editing" started.
+◇ Suite "Storage restore recovery copy" started.
+◇ Suite "Apple Music Store integration" started.
+◇ Suite "Audio effect presets" started.
+◇ Suite "Actor-owned chunk transfer" started.
+◇ Suite "Library search routing" started.
+◇ Suite "M4 audio quality and output milestone" started.
+◇ Suite "Playback history" started.
+◇ Suite "Device sync protocol" started.
+◇ Suite "M8 transfer resilience milestone" started.
+◇ Suite ArtworkResolverTests started.
+◇ Suite "Custom audio unit sandbox registration" started.
+◇ Suite "M1 playback parity milestone" started.
+◇ Suite "Automatic output sample rate" started.
+◇ Suite "Application settings" started.
+◇ Suite "Effect signal audit" started.
+◇ Test "Every playlist organization operation supports Undo and Redo" started.
+◇ Test "Playlist references survive file relocation, metadata edits, and restart" started.
+◇ Test "A smart playlist updates live and survives restart" started.
+◇ Suite "Effect rack rendering boundaries" started.
+◇ Test "Schema 1 migrates once with stable library, artist, and album IDs" started.
+◇ Test "A committed organization retains recovery data while the destination is missing" started.
+◇ Test "Schema 4 migrates playback attributes with safe defaults and preserves the queue" started.
+◇ Test "Playlist folders preserve membership and sidebar order" started.
+◇ Test "Song deletion keeps catalog relationships consistent and honors both file choices" started.
+◇ Test "An installed file is recovered when import was interrupted before catalog save" started.
+◇ Test "Recovery never replaces a populated catalog or revives intentionally cleared songs" started.
+◇ Test "Managed duplicate files are recoverable while external references remain untouched" started.
+◇ Test "Measure actual checkpoint, mailbox and controller publication" started.
+◇ Test "Duplicate deletion explains the exact target and recovery policy in every language" started.
+◇ Test "Changing the media directory redirects the next import immediately" started.
+◇ Test "A recovery commit failure restores the active catalog and its sidecars" started.
+◇ Test "An interrupted Media organization journal rolls files back on next launch" started.
+◇ Test "Verification detects changed content" started.
+◇ Test "Playback queue order, current track, and position survive restart" started.
+◇ Test "Shared folder migration previews, verifies, copies, and remains idempotent" started.
+◇ Test "Music XML migration copies originals, restores metadata and playlists, and is idempotent" started.
+◇ Test "URL audio response requires a compatible MIME type, extension, and size" started.
+◇ Test "Dropping files and folders imports supported audio into artist and album folders" started.
+◇ Test "Self-contained copy retains both originals and catalog on a full disk" started.
+◇ Test "Import copies data and rejects duplicate content" started.
+◇ Test "A copied portable library relinks managed tracks on the new Mac" started.
+◇ Test "Import journal recovers at each installation boundary" started.
+◇ Test "Self-containment staging recovery follows interrupted catalog commit" started.
+◇ Test "External libraries survive a mount-path change and reject the wrong library" started.
+◇ Test "A full export destination never changes the damaged source and can be retried" started.
+◇ Test "CD ripper creates verified AIFF, WAV, ALAC, and AAC files" started.
+◇ Test "A playback sidecar is ignored when it belongs to another library" started.
+◇ Test "Interrupted storage restore rolls back without deleting files" started.
+◇ Test "A failed replacement restores both source and overwritten destination files" started.
+◇ Test "URL audio import accepts only public standard-port HTTPS URLs" started.
+◇ Test "Apple Music media-folder-url is decoded" started.
+◇ Test "A missing primary catalog recovers the existing library from its backup" started.
+◇ Test "A paused track remains paused after wake" started.
+◇ Test "Resolving duplicates transfers catalog references without deleting files" started.
+◇ Test "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test "Restoring a preserved library invalidates other repositories" started.
+◇ Test "Missing files are automatically and manually relinked only by checksum" started.
+◇ Test "Playlist entries and playback events survive track-only saves and restart" started.
+◇ Test "Playlist order can be changed and restored with Undo and Redo" started.
+◇ Test "A corrupt playback queue sidecar recovers its previous valid state" started.
+◇ Test "Audio engine configuration notifications safely reach the main actor" started.
+◇ Test "Manifest round-trips atomically" started.
+◇ Test "Organization preserves a playlist written after the UI snapshot" started.
+◇ Test "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test "A future schema is never replaced with an older backup" started.
+◇ Test "Interrupted self-containment cleans only its recorded staging directory" started.
+◇ Test "Schema 3 migrates to a queue-capable catalog without inventing queue state" started.
+◇ Test "Queue positions and playback events do not rewrite the track catalog" started.
+◇ Test "Generation backup capacity failure retains the damaged original" started.
+◇ Test "Another Ongaku library merges metadata, smart playlists, folders, and audio non-destructively" started.
+◇ Test "Media organization preserves its journal and replacement backup when rollback is interrupted" started.
+◇ Test "Music and iTunes XML migration previews songs, metadata, and user playlists" started.
+◇ Test "A configured media directory receives new managed files" started.
+◇ Test "URL audio import validates the downloaded audio contents" started.
+◇ Test "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test "Secure CD reads require two consecutive matching checksums" started.
+◇ Test "Media organization dry-runs and transactionally moves only managed files" started.
+◇ Test "Nested all and any rules evaluate metadata, statistics, and limits" started.
+◇ Test "Schema 2 preserves stable identities while adding playlists and playback events" started.
+◇ Test "CD import metadata organizes verified copies by artist and album" started.
+◇ Test "MusicBrainz Disc ID and lookup URLs follow the CD TOC specification" started.
+◇ Test "Selecting an Apple Music library keeps originals and stores portable copies" started.
+◇ Test "Missing external originals do not commit a partially localized catalog" started.
+◇ Test "Damaged recovery journals preserve catalog and stop writes" started.
+◇ Test "Full-track stereo loudness survives opposite polarity and includes audio after 60 seconds" started.
+◇ Test "Schema 5 preserves playlist order while adding folders" started.
+◇ Test "Interrupted rollback can be retried without losing the prior catalog" started.
+◇ Test "Reference recovery retains the journal when the existing track was relinked elsewhere" started.
+◇ Test "Registering a dropped folder preserves its hierarchy and every audio file" started.
+◇ Test "A modified but decodable journal payload cannot replace the catalog" started.
+◇ Test "Multiple preserved catalogs are reported without modifying any catalog" started.
+◇ Test "Pending imports in the active library recover before selecting a preserved catalog" started.
+◇ Test "External songs become portable without changing metadata or deleting originals" started.
+◇ Test "Media organization rolls back completed moves when a later checksum changes" started.
+◇ Test "Key-path writes preserve independent values and the existing JSON format" started.
+◇ Test "Nested lyrics edits detach both the track and its timed lines" started.
+◇ Test "Concurrent snapshot edits do not modify a shared catalog" started.
+◇ Test "Repeat one returns the current track" started.
+◇ Test "Editing a copied track leaves catalog arrays, dictionaries and hash sets unchanged" started.
+◇ Test "Previous navigation follows playback mode boundaries" started.
+◇ Test "Playlist membership preserves order, ignores duplicates, removes, and persists" started.
+◇ Test "Queue edits preserve order and can be undone" started.
+◇ Test "Japanese album titles prefer their reading initial" started.
+◇ Test "Repeat all wraps to the first track" started.
+◇ Test "Latin titles are normalized across case, accents, and character width" started.
+◇ Test "Sequential playback stops at the end" started.
+◇ Test "Repeat album skips other albums and wraps" started.
+◇ Test "Japanese and Simplified Chinese titles preserve their first character" started.
+◇ Test "The miscellaneous section is ordered after named initials" started.
+◇ Test "Numbers, symbols, and empty titles use the miscellaneous group" started.
+◇ Test "Non-subscribers receive a subscription path but no catalog playback" started.
+◇ Test "Albums with the same title keep a deterministic artist order" started.
+◇ Test "Bulk queue editing preserves the playing entry" started.
+◇ Test "Service failures are rejected for authorization, region, conflict, rate, and server cases" started.
+◇ Test "Playlist create, edit, artwork, duplicate, delete, and restart are transactional" started.
+◇ Test "An unversioned track-array fixture migrates to the current schema" started.
+◇ Test "Permission states disable remote capabilities without disabling local music" started.
+◇ Test "Automatic navigation skips excluded tracks" started.
+◇ Test "Damaged generation and journals can be exported without changing the source" started.
+◇ Test "Elapsed time is clamped and paused playback reports zero rate" started.
+◇ Test "Metadata contains the track, position, state, and queue location" started.
+◇ Test "Clearing registrations leaves every audio file untouched" started.
+◇ Test "Restart recovers each write boundary" started.
+◇ Test "The automatic Ongaku Media directory is created only by a managed import" started.
+◇ Test sparseResumeAndRepeatedRequests() started.
+◇ Test "Ongaku Mix aligns compatible, nearby tempos on beat boundaries" started.
+◇ Test "Crossfade duration is clamped and disabled for album playback" started.
+◇ Test "Crossfade uses equal-power gains" started.
+◇ Test "Audio analyzer detects leading and trailing silence in a PCM file" started.
+◇ Test "Crossfade headroom prevents normalized sources from summing above unity" started.
+◇ Test "Preroll begins only once inside the five-second window" started.
+◇ Test "Ongaku Mix falls back safely when tempo or harmony is incompatible" started.
+◇ Test "Equivalent processing formats can share one player node" started.
+◇ Test "Rate, channel, encoding, and interleave differences require safe rebuild" started.
+◇ Test "Silence policy preserves a safety margin around audible content" started.
+◇ Test "Render gating, fade and drain keep sources alive until zero" started.
+◇ Test "Build condition controls activation and diagnostics" started.
+◇ Test "EQ sections preserve every parameter exactly once and keep band controls together" started.
+◇ Test "Localized format arguments remain compatible" started.
+◇ Test "English, Japanese, and Simplified Chinese localization keys stay in parity" started.
+◇ Test "Every song table uses its primary action to play a double-clicked row" started.
+◇ Test "Album and artist details become vertically scrollable in short windows" started.
+◇ Test "Offline or regional failures expose retry while preserving local playback" started.
+◇ Test "The sidebar toggle stays leading while other toolbar actions stay trailing" started.
+◇ Test "Music and local-network usage descriptions exist in all supported languages" started.
+◇ Test "Privacy manifest declares no tracking and approved required-reason APIs" started.
+◇ Test "Unsafe self-containment recovery preserves files and quarantines its journal" started.
+◇ Test "Missing managed files remain prominent in every song table" started.
+◇ Test "Subscribers receive playback and cloud-library capabilities independently" started.
+◇ Test "Device sync callbacks bridge UI updates without isolating transfer workers" started.
+◇ Test legacyCapabilitiesPreserveFullLists() started.
+◇ Test "The persistent player reserves space outside scrollable library content" started.
+◇ Test "Critical windows expose automation hooks and keyboard escape routes" started.
+◇ Test "Shuffle does not immediately replay the current track" started.
+◇ Test "The toolbar import and relink actions use reliable native open panels" started.
+◇ Test "Combine delivery enters MainActor explicitly" started.
+◇ Test "The settings scene passes crash-critical social state explicitly" started.
+◇ Test "Localized headings avoid forced line breaks and fit their layout budgets" started.
+◇ Test "Batched parity preserves multilingual metadata matches and reports every stale query" started.
+◇ Test "Continuous changes coalesce into eight steps and settle at the latest target" started.
+◇ Test "A short window always reserves the complete persistent player height" started.
+◇ Test matchedStartup() started.
+◇ Test optionalWireFieldsRemainCompatible() started.
+◇ Test "Ongaku Mix uses the most recently played song as its seed" started.
+◇ Test "Detailed filters combine metadata, rating, favorite, and file state" started.
+◇ Test "Ongaku Mix excludes the seed and songs that cannot be played" started.
+◇ Test "Playback starts from the selected track in the visible list" started.
+◇ Test "A new row selection replaces the previous focused song" started.
+◇ Test "Ongaku Mix uses cached PCM loudness and timbre features" started.
+◇ Test "Sidebar symbols follow the light and dark appearance" started.
+◇ Test "M3U export includes extended metadata and ordered absolute paths" started.
+◇ Test "Full metadata search includes lyrics, credits, work, and identifiers" started.
+◇ Test "M3U resolves relative paths and previews duplicates and missing files" started.
+◇ Test "Ongaku JSON preserves metadata and stable IDs across export and import" started.
+◇ Test "Audit history is bounded and complete deletion restores the private default" started.
+◇ Test "Blocking a profile revokes its pending invitations and rejects new ones" started.
+◇ Test "Invitations expire and cannot be accepted after their deadline" started.
+◇ Test "Profile visibility and history consent persist independently" started.
+◇ Test "Playback falls back to the first track when the selection is outside the list" started.
+◇ Test "Unavailable custom audio unit remains a connectable bypass" started.
+◇ Test measureLoad() started.
+◇ Test "Catalog or backup survives simultaneous generation-sidecar loss" started.
+◇ Test "Duplicate analysis separates checksum matches from metadata candidates" started.
+◇ Test "Ongaku Mix exposes compatible harmony as a selection reason" started.
+◇ Test "Pinned and favorite views include only matching songs" started.
+◇ Test "Social features start private with listening-history sharing disabled" started.
+◇ Test "Playback history updates do not restore the playing row over a new selection" started.
+◇ Test "Recently added and recently played views keep their newest-first order" started.
+◇ Test "Four persisted palettes match iPhone and restore after reload" started.
+◇ Test "Provider URLs preserve Unicode and special characters" started.
+◇ Test "All old broken journal types can be escaped without source mutation" started.
+◇ Test projectionPreservesOrderAndTerminalUpdates() started.
+◇ Test copyIsolationAndRestoreValidation() started.
+◇ Test "Frequently played ranks completed plays and catalog play counts" started.
+◇ Test receiptModelAgreement(count:) started.
+◇ Test "Exit waits for replacement launch and duplicate requests are ignored" started.
+◇ Test "Failed launch keeps current app alive and allows retry without repairing again" started.
+◇ Test defaultOffAndStateRestoration() started.
+◇ Test "Indexed projections preserve updates, ordering and invalidated lookups" started.
+◇ Test "Measure Published progress projection with large histories" started.
+◇ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" started.
+◇ Test "Ongaku Mix recognizes relative, parallel, and fifth-related keys" started.
+◇ Test "A full-scale signal reaches the top of the meter" started.
+◇ Test "The audio tap runs without inheriting MainActor isolation" started.
+◇ Test "VU ballistics preserve small changes and release more gently" started.
+◇ Test "Silence stays at the bottom of the meter" started.
+◇ Test "UI qualification mode is restricted to temporary library roots" started.
+◇ Test "VU needle exposes its position to SwiftUI animation" started.
+◇ Test "Left and right spectra resolve different frequency bands" started.
+◇ Test "VU needle settles slowly after playback stops" started.
+◇ Test "Spectrum smoothing attacks faster than it releases" started.
+◇ Test "A quieter signal produces a lower reading" started.
+◇ Test "VU readings are sampled densely enough for fine motion" started.
+◇ Test "VU meter renders at the player-slot size" started.
+◇ Test "Spectrum presentation uses the full meter height for musical peaks" started.
+◇ Test "Split checkpoint encoding and atomic replacement cost" started.
+◇ Test "Song normalization reaches its target and respects measured peak headroom" started.
+◇ Test "Measure checkpoint resume and summary loading" started.
+◇ Test "A C major chord resolves its pitch class and mode" started.
+◇ Test "Pruning keeps fresh summaries and removes only stale files" started.
+◇ Test "Audio analysis pauses for low power and elevated thermal pressure" started.
+◇ Test "The cache preserves current fingerprints and rejects changed files" started.
+◇ Test "A sine wave produces stable loudness and spectral centroid estimates" started.
+◇ Test "Version-one feature JSON remains decodable before invalidation" started.
+◇ Test "Album normalization applies one energy-averaged gain to album members" started.
+◇ Test "A periodic pulse train reports tempo with confidence" started.
+◇ Test "Album and artist moves persist every destination path across reloads" started.
+◇ Test "LRCLIB synchronized results retain source identity" started.
+◇ Test "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test "Schema 10 catalogs migrate to empty MusicBrainz identity" started.
+◇ Test "A same-name destination requires confirmation before replacing the file" started.
+◇ Test "Synced lyrics select the latest line at the playback position" started.
+◇ Test "Lyrics and artwork rank title plus album matches before title-only matches" started.
+◇ Test "Lightweight file availability marks missing files without claiming restored files are verified" started.
+◇ Test "Selected MusicBrainz identity persists with edited song metadata" started.
+◇ Test "Schema 8 catalogs migrate to unpinned standard-view defaults" started.
+◇ Test "Schema 7 catalogs migrate to Music-style metadata defaults" started.
+◇ Test "LRCLIB URLs preserve structured metadata and duration" started.
+◇ Test "Album references retain release identity without assigning one recording to every song" started.
+◇ Test "Missing managed files cannot be reported as a successful metadata move" started.
+◇ Test "Bulk edits change only checked metadata fields" started.
+◇ Test "Song, album, and artist edits persist without changing unsupported files" started.
+◇ Test "Schema 9 catalogs migrate to empty lyrics" started.
+◇ Test "The Pro effects rack reserves clearance above the persistent player" started.
+◇ Test legacyJSONAndInvalidIndexes() started.
+◇ Test "Music-style album edits preserve each song title and track number" started.
+◇ Test "Manual and synchronized lyrics persist with the song" started.
+◇ Test "Schema 11 catalogs migrate to empty extended credits and work metadata" started.
+◇ Test "VU calibration maps -18 dBFS RMS to the 0 VU mark" started.
+◇ Test "Music-style song metadata persists and seeds playback statistics" started.
+◇ Test "Player transport starts a newly selected track instead of resuming the loaded track" started.
+◇ Test "Bulk artist edits preserve distinct album identities" started.
+◇ Test "Only lossless passthrough containers are selected for embedding" started.
+◇ Test "Playlist track body identifies catalog and library songs" started.
+◇ Test "Subscription guidance uses the official secure Apple page" started.
+◇ Test "VU meter uses a shallow arc and keeps both needle extremes visible" started.
+◇ Test "MusicBrainz builds an escaped recording search and release artwork URL" started.
+◇ Test "Chart labels preserve the chart name and one-based rank" started.
+◇ Test "Favorite rating body uses Apple Music's positive rating value" started.
+◇ Test "Library paging appends only previously unseen resources" started.
+◇ Test "Replay guidance uses Apple's official secure site" started.
+◇ Test "Ongaku Mix favors matching genre and a nearby tempo" started.
+◇ Test "Catalog playback state preserves the selected song while paused" started.
+◇ Test "Apple Music playlist conversion classifies matches without changing files" started.
+◇ Test "Catalog queue moves upcoming items but protects the current item" started.
+◇ Test "MusicKit transport failures can be injected without network playback" started.
+◇ Test "Stopping catalog playback clears its ownership of playback" started.
+◇ Test "iTunes Store response preserves purchase URL and localized price" started.
+◇ Test "LRC parsing supports offsets, fractions, and repeated timestamps" started.
+◇ Test "Apple Music HTTP failures are rejected while expected statuses pass" started.
+◇ Test "Playlist creation body is private and preserves localized text" started.
+◇ Test "Catalog kinds expose playback and queue capabilities accurately" started.
+◇ Test "Confirmed artist and album edits move only affected managed files" started.
+◇ Test "Ongaku playlist export preserves order and classifies unsafe matches" started.
+◇ Test "Enabled counts include only the selected effect mode" started.
+◇ Test "Library filters include only their matching catalog kind" started.
+◇ Test settingsRoundTripForPersistentRestoration() started.
+◇ Test "Playlist export audit history survives controller recreation" started.
+◇ Test defaultSettingsContainEveryDeclaredParameter() started.
+◇ Test "City chart filtering keeps complete pages and stable city names" started.
+◇ Test "Search switches to SQLite after parity verification and resynchronizes after edits" started.
+◇ Test "LRCLIB confidence rewards matching metadata and duration" started.
+◇ Test "Idle refresh prunes stale checkpoints and publishes retained progress" started.
+◇ Test "The diagnostic record explains format, DSP, normalization, output, and source safety" started.
+◇ Test "Overlay identity matching tolerates display differences but rejects distant durations" started.
+◇ Test "The active library selector uses a visible button and dedicated popover" started.
+◇ Test "Bonjour discovery starts and stops at most once per lifecycle transition" started.
+◇ Test "Manifests from an older app remain compatible" started.
+◇ Test "Overlay application changes only selected fields" started.
+◇ Test "Overlay audit history persists and records conflict reasons" started.
+◇ Test "Overlay receipt survives message encoding" started.
+◇ Test "Selected overlays merge counters without replacing playback history" started.
+◇ Test "Individual transfer requests preserve the stable item ID" started.
+◇ Test registryBuildsCompleteOrderedPipeline() started.
+◇ Test "Manifest messages preserve transfer metadata" started.
+◇ Test "Manifest messages preserve Ongaku track overlays" started.
+◇ Test "SHA-256 verification accepts the original and rejects changed metadata" started.
+◇ Test "Local copy index follows library replacement and duplicate hashes" started.
+◇ Test "Playback statistics count completions and skips and keep the latest activity" started.
+◇ Test "Pause and resume reuse one playback session" started.
+◇ Test "Catalog queue resolves the current entry and safely falls back" started.
+◇ Test "Automatic artwork consent is disabled by default and persists" started.
+◇ Test "Artist artwork attribution survives persistence encoding" started.
+◇ Test "Artwork matching ignores case, accents, width, and punctuation" started.
+◇ Test "Artist image candidates prefer exact matches and Apple Music" started.
+◇ Test "Disabled automatic artwork never sends an external request" started.
+◇ Test "All custom units are registered sandbox safe" started.
+◇ Test "Artwork follows the active storage and remains available when returning" started.
+◇ Test "A 1,000-track queue and position survive process replacement" started.
+◇ Test "A missing current file does not erase the persisted queue position" started.
+◇ Test "Removing one row from a multiple selection keeps the focused song when possible" started.
+◇ Test "Starting a stale library entry reports its missing file" started.
+◇ Test "Playback file opening failures are injectable and remain user-visible" started.
+◇ Test "A 1,000-track shuffle run always selects a playable non-current song" started.
+◇ Test "The policy never exceeds 384 kHz" started.
+◇ Test "44.1 kHz sources stay in the 44.1 kHz family" started.
+◇ Test "48 kHz sources rise to 384 kHz" started.
+◇ Test "A device with limited rates falls back safely" started.
+◇ Test "Bulk artist and album edits reconcile shared catalog identities" started.
+◇ Test "Discovery paging replaces matching shelves and appends new shelves" started.
+◇ Test "Manifest messages preserve independent playlist overlays" started.
+◇ Test "Legacy profiles decode without external-volume metadata" started.
+◇ Test "History keeps the latest state for each session in reverse chronological order" started.
+◇ Test "Playlist sync preserves order and can be safely undone" started.
+◇ Test "A 1,000-track sequential queue completes in exact order" started.
+◇ Test "iTunes Store search URL is regional, music-only, and safely encoded" started.
+◇ Test "A playing track resumes from its saved position after wake" started.
+◇ Test "Discovery keeps unique recent releases in newest-first order" started.
+◇ Test "Catalog queue removes multiple upcoming items but protects the current item" started.
+◇ Test "Playlist export request preserves selected Apple Music song order" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Import journal recovers at each installation boundary" started.
+◇ Test "Migration recovery discovers moved libraries and rejects ambiguous or missing data" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test "Existing portable data is never overwritten by legacy migration" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Import journal recovers at each installation boundary" started.
+◇ Test "App Store versions use numeric semantic comparison" started.
+◇ Test "Mini Player restores the original window frame" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Import journal recovers at each installation boundary" started.
+◇ Test "Missing recovery grants never create an empty replacement library" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test "Multiple existing libraries can be enumerated, while an exact selection stays exact" started.
+◇ Test case passing 2 arguments step → 3, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test "Startup migrates legacy catalogs, retries failure, and creates portable libraries" started.
+◇ Test "Unavailable volume is distinguished from a missing folder on an accessible volume" started.
+◇ Test "Resolved recovery bookmarks reconnect only the same library inside the new root" started.
+◇ Test "Profile reconnection reports the actual storage location category" started.
+◇ Test "Legacy catalog and artwork move beside managed music" started.
+◇ Test "Storage activation creates a catalog, reopens it, and preserves the old library on failure" started.
+◇ Test case passing 2 arguments step → 3, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test "A different existing library can be selected without replacing the missing profile" started.
+◇ Test "A selected Apple Music library resolves and persists its Media folder" started.
+◇ Test "Song list columns and sorting persist" started.
+◇ Test "Disconnected saved volume does not trigger migration or create a replacement" started.
+◇ Test "Appearance selection persists and system mode clears the override" started.
+◇ Test "A new Ongaku Media folder does not automatically inherit the old catalog" started.
+◇ Test "Existing sidecars prevent a new library from overwriting recoverable data" started.
+◇ Test "A user-selected storage directory is used directly" started.
+◇ Test "Multiple libraries create, rename, switch, archive, and restore" started.
+◇ Test "Switching libraries isolates tracks and playback state" started.
+◇ Test "UI qualification accepts only process or runner temporary roots" started.
+◇ Test "A completely fresh install stores managed music under the Music directory" started.
+◇ Test "Player presentation settings persist and the player defaults to the bottom" started.
+◇ Test "Title-bar dragging excludes content and window controls" started.
+◇ Test "Title-bar dragging uses screen coordinates across window movement" started.
+◇ Test "Selecting another Music library opens its own Ongaku storage and persists it" started.
+◇ Test "Imported Music songs reopen from Ongaku without the Music package or original audio" started.
+◇ Test "The main window keeps all columns below the title bar" started.
+◇ Test "New selected media folder registers its audio in place and survives restart" started.
+◇ Test "App Store lookup response decodes the release destination" started.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 1 argument name → "self-containment-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 2 arguments existing → false, step → 0 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 1 argument stagedFileExists → false to "Interrupted self-containment cleans only its recorded staging directory" started.
+◇ Test case passing 1 argument stagedFileExists → true to "Interrupted self-containment cleans only its recorded staging directory" started.
+◇ Test case passing 2 arguments existing → false, step → 1 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → false, step → 2 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → true, step → 0 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → true, step → 1 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → true, step → 2 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 1 argument relativePath → "Ongaku Library Data/Legacy Imports/preserved" to "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test case passing 1 argument relativePath → "Ongaku Desktop/Ongaku Media/Ongaku Library Data" to "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test case passing 1 argument relativePath → "Ongaku Desktop" to "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Damaged recovery journals preserve catalog and stop writes" started.
+2026-11-06 22:49:13.405 swiftpm-testing-helper[47352:986335] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "Damaged recovery journals preserve catalog and stop writes" started.
+ONGAKU_TRACK_VALUE stride=8
+◇ Test case passing 1 argument authorization → .notDetermined to "Permission states disable remote capabilities without disabling local music" started.
+◇ Test case passing 1 argument authorization → .denied to "Permission states disable remote capabilities without disabling local music" started.
+◇ Test case passing 1 argument name → "catalog-generation-v1" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 1 argument authorization → .restricted to "Permission states disable remote capabilities without disabling local music" started.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 1 argument step → 0 to "Restart recovers each write boundary" started.
+◇ Test case passing 1 argument corruptJournal → false to "Unsafe self-containment recovery preserves files and quarantines its journal" started.
+◇ Test case passing 1 argument corruptJournal → true to "Unsafe self-containment recovery preserves files and quarantines its journal" started.
+◇ Test "A persisted checkpoint requests only missing chunks after restart" started.
+◇ Test "Chunk offer, request, payload, and completion survive protocol encoding" started.
+◇ Test "Only resumable in-session phases remain active" started.
+◇ Test "Pause, resume, cancel, and capacity controls survive protocol encoding" started.
+◇ Test "A manifest failure rolls back the received copy and remains retryable" started.
+◇ Test "Checkpoint summaries report retained bytes and stale data is removable" started.
+◇ Test "Capacity preflight keeps a safety reserve" started.
+◇ Test "Opt-in repeated chunk preparation comparison" started.
+◇ Test "Validated resumed sessions retain chunks but reject an old transfer ID" started.
+◇ Test "A corrupt chunk is rejected without advancing the checkpoint" started.
+◇ Test "Validated chunk snapshots preserve wire values and byte-exact payloads" started.
+◇ Test "Pause and deferred request state changes atomically" started.
+◇ Test "Reported transfer progress is bounded by the file size" started.
+◇ Test "Validated receive still rejects corruption, wrong sessions and checkpoint shape" started.
+◇ Test "Received files become visible only after their manifest is durable" started.
+◇ Test "Retry after a durable commit does not create a duplicate" started.
+◇ Test "A corrupt primary manifest is preserved and restored from its backup" started.
+◇ Test "Untrusted or edited descriptors cannot acquire validated status" started.
+◇ Test case passing 1 argument backupOnly → false to "Catalog or backup survives simultaneous generation-sidecar loss" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 1 argument count → 0 to receiptModelAgreement(count:) started.
+◇ Test case passing 1 argument count → 1 to receiptModelAgreement(count:) started.
+◇ Test case passing 1 argument count → 7 to receiptModelAgreement(count:) started.
+◇ Test case passing 1 argument count → 8 to receiptModelAgreement(count:) started.
+◇ Test case passing 1 argument count → 9 to receiptModelAgreement(count:) started.
+◇ Test case passing 1 argument count → 4096 to receiptModelAgreement(count:) started.
+◇ Test case passing 1 argument count → 16385 to receiptModelAgreement(count:) started.
+◇ Test case passing 1 argument count → 65537 to receiptModelAgreement(count:) started.
+◇ Test auditEveryEffect() started.
+◇ Test case passing 2 arguments step → 0, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test "Unchanged cards ignore unrelated controller changes; parameter and enable edits propagate" started.
+✔ Test "Duplicate deletion explains the exact target and recovery policy in every language" passed after 2.260 seconds.
+✔ Test "A committed organization retains recovery data while the destination is missing" passed after 2.260 seconds.
+✔ Test "Schema 4 migrates playback attributes with safe defaults and preserves the queue" passed after 2.260 seconds.
+✔ Test "URL audio response requires a compatible MIME type, extension, and size" passed after 2.260 seconds.
+✔ Test "Verification detects changed content" passed after 2.260 seconds.
+✔ Test "Playback queue order, current track, and position survive restart" passed after 2.264 seconds.
+✔ Test "Managed duplicate files are recoverable while external references remain untouched" passed after 2.264 seconds.
+✔ Test "Schema 1 migrates once with stable library, artist, and album IDs" passed after 2.265 seconds.
+✔ Test "A full export destination never changes the damaged source and can be retried" passed after 2.264 seconds.
+✔ Test "Recovery never replaces a populated catalog or revives intentionally cleared songs" passed after 2.265 seconds.
+✔ Test "A copied portable library relinks managed tracks on the new Mac" passed after 2.266 seconds.
+✔ Test "Self-containment staging recovery follows interrupted catalog commit" passed after 2.274 seconds.
+✔ Test "A recovery commit failure restores the active catalog and its sidecars" passed after 2.275 seconds.
+✔ Test "An interrupted Media organization journal rolls files back on next launch" passed after 2.275 seconds.
+✔ Test "URL audio import accepts only public standard-port HTTPS URLs" passed after 2.274 seconds.
+✔ Test "Self-contained copy retains both originals and catalog on a full disk" passed after 2.274 seconds.
+✔ Test "A playback sidecar is ignored when it belongs to another library" passed after 2.275 seconds.
+✔ Test "Apple Music media-folder-url is decoded" passed after 2.275 seconds.
+✔ Test "A paused track remains paused after wake" passed after 2.275 seconds.
+✔ Test "CD ripper creates verified AIFF, WAV, ALAC, and AAC files" passed after 2.294 seconds.
+✔ Test "A missing primary catalog recovers the existing library from its backup" passed after 2.298 seconds.
+✔ Test "Interrupted storage restore rolls back without deleting files" with 8 test cases passed after 2.298 seconds.
+✔ Test "Missing files are automatically and manually relinked only by checksum" passed after 2.298 seconds.
+✔ Test "Restoring a preserved library invalidates other repositories" passed after 2.299 seconds.
+✔ Test "A preserved catalog with pending recovery is never transplanted" with 4 test cases passed after 2.299 seconds.
+✔ Test "Manifest round-trips atomically" passed after 2.299 seconds.
+✔ Test "Interrupted self-containment cleans only its recorded staging directory" with 2 test cases passed after 2.300 seconds.
+✔ Test "A corrupt playback queue sidecar recovers its previous valid state" passed after 2.300 seconds.
+✔ Test "Schema 3 migrates to a queue-capable catalog without inventing queue state" passed after 2.300 seconds.
+✔ Test "A future schema is never replaced with an older backup" passed after 2.301 seconds.
+✔ Test "URL audio import validates the downloaded audio contents" passed after 2.300 seconds.
+✔ Test "Generation backup capacity failure retains the damaged original" passed after 2.300 seconds.
+✔ Test "MusicBrainz Disc ID and lookup URLs follow the CD TOC specification" passed after 2.300 seconds.
+✔ Test "Secure CD reads require two consecutive matching checksums" passed after 2.300 seconds.
+✔ Test "Queue positions and playback events do not rewrite the track catalog" passed after 2.301 seconds.
+✔ Test "Schema 2 preserves stable identities while adding playlists and playback events" passed after 2.300 seconds.
+✔ Test "Organization preserves a playlist written after the UI snapshot" passed after 2.301 seconds.
+✔ Test "Nested all and any rules evaluate metadata, statistics, and limits" passed after 2.302 seconds.
+✔ Test "Damaged recovery journals preserve catalog and stop writes" with 2 test cases passed after 2.301 seconds.
+✔ Test "Playlist entries and playback events survive track-only saves and restart" passed after 2.301 seconds.
+✔ Test "Media organization preserves its journal and replacement backup when rollback is interrupted" passed after 2.302 seconds.
+✔ Test "A modified but decodable journal payload cannot replace the catalog" passed after 2.301 seconds.
+✔ Test "Key-path writes preserve independent values and the existing JSON format" passed after 2.301 seconds.
+✔ Test "Repeat one returns the current track" passed after 2.301 seconds.
+✔ Test "Editing a copied track leaves catalog arrays, dictionaries and hash sets unchanged" passed after 2.301 seconds.
+✔ Test "Nested lyrics edits detach both the track and its timed lines" passed after 2.301 seconds.
+✔ Test "Previous navigation follows playback mode boundaries" passed after 2.301 seconds.
+✔ Test "Repeat all wraps to the first track" passed after 2.301 seconds.
+✔ Test "Latin titles are normalized across case, accents, and character width" passed after 2.301 seconds.
+✔ Test "Sequential playback stops at the end" passed after 2.301 seconds.
+✔ Test "Repeat album skips other albums and wraps" passed after 2.301 seconds.
+✔ Test "The miscellaneous section is ordered after named initials" passed after 2.301 seconds.
+✔ Test "Numbers, symbols, and empty titles use the miscellaneous group" passed after 2.301 seconds.
+✔ Test "Albums with the same title keep a deterministic artist order" passed after 2.301 seconds.
+✔ Test "Non-subscribers receive a subscription path but no catalog playback" passed after 2.301 seconds.
+✔ Test "Japanese and Simplified Chinese titles preserve their first character" passed after 2.301 seconds.
+✔ Test "Service failures are rejected for authorization, region, conflict, rate, and server cases" passed after 2.301 seconds.
+✔ Test "Music and iTunes XML migration previews songs, metadata, and user playlists" passed after 2.302 seconds.
+✔ Test "Bulk queue editing preserves the playing entry" passed after 2.301 seconds.
+✔ Test "Automatic navigation skips excluded tracks" passed after 2.301 seconds.
+✔ Test "Permission states disable remote capabilities without disabling local music" with 3 test cases passed after 2.301 seconds.
+✔ Test "Schema 5 preserves playlist order while adding folders" passed after 2.302 seconds.
+✔ Test "Elapsed time is clamped and paused playback reports zero rate" passed after 2.301 seconds.
+✔ Test "An unversioned track-array fixture migrates to the current schema" passed after 2.302 seconds.
+✔ Test "Japanese album titles prefer their reading initial" passed after 2.302 seconds.
+✔ Test "Damaged generation and journals can be exported without changing the source" with 4 test cases passed after 2.302 seconds.
+✔ Test "Metadata contains the track, position, state, and queue location" passed after 2.302 seconds.
+✔ Test "Multiple preserved catalogs are reported without modifying any catalog" passed after 2.302 seconds.
+✔ Test "Missing external originals do not commit a partially localized catalog" passed after 2.302 seconds.
+✔ Test "Ongaku Mix aligns compatible, nearby tempos on beat boundaries" passed after 2.302 seconds.
+✔ Test "Crossfade duration is clamped and disabled for album playback" passed after 2.302 seconds.
+✔ Test "Crossfade uses equal-power gains" passed after 2.302 seconds.
+✔ Test "Interrupted rollback can be retried without losing the prior catalog" passed after 2.303 seconds.
+✔ Test "Crossfade headroom prevents normalized sources from summing above unity" passed after 2.302 seconds.
+✔ Test "Preroll begins only once inside the five-second window" passed after 2.302 seconds.
+✔ Test "Ongaku Mix falls back safely when tempo or harmony is incompatible" passed after 2.302 seconds.
+✔ Test "Equivalent processing formats can share one player node" passed after 2.302 seconds.
+✔ Test "Rate, channel, encoding, and interleave differences require safe rebuild" passed after 2.302 seconds.
+✔ Test "Silence policy preserves a safety margin around audible content" passed after 2.302 seconds.
+✔ Test "Build condition controls activation and diagnostics" passed after 2.302 seconds.
+✔ Test "Audio analyzer detects leading and trailing silence in a PCM file" passed after 2.302 seconds.
+✔ Test "Offline or regional failures expose retry while preserving local playback" passed after 2.302 seconds.
+✔ Test "The sidebar toggle stays leading while other toolbar actions stay trailing" passed after 2.302 seconds.
+✔ Test "Music and local-network usage descriptions exist in all supported languages" passed after 2.303 seconds.
+✔ Test "Privacy manifest declares no tracking and approved required-reason APIs" passed after 2.303 seconds.
+✔ Test "Missing managed files remain prominent in every song table" passed after 2.303 seconds.
+✔ Test "Subscribers receive playback and cloud-library capabilities independently" passed after 2.303 seconds.
+✔ Test "Album and artist details become vertically scrollable in short windows" passed after 2.303 seconds.
+✔ Test "External songs become portable without changing metadata or deleting originals" passed after 2.304 seconds.
+✔ Test legacyCapabilitiesPreserveFullLists() passed after 2.303 seconds.
+✔ Test "Unsafe self-containment recovery preserves files and quarantines its journal" with 2 test cases passed after 2.303 seconds.
+✔ Test "The persistent player reserves space outside scrollable library content" passed after 2.303 seconds.
+✔ Test "Shuffle does not immediately replay the current track" passed after 2.303 seconds.
+✔ Test "Clearing registrations leaves every audio file untouched" passed after 2.304 seconds.
+✔ Test "The settings scene passes crash-critical social state explicitly" passed after 2.303 seconds.
+✔ Test "Every song table uses its primary action to play a double-clicked row" passed after 2.442 seconds.
+✔ Test "A short window always reserves the complete persistent player height" passed after 2.540 seconds.
+✔ Test "Ongaku Mix uses the most recently played song as its seed" passed after 2.811 seconds.
+✔ Test "Detailed filters combine metadata, rating, favorite, and file state" passed after 2.811 seconds.
+✔ Test optionalWireFieldsRemainCompatible() passed after 2.811 seconds.
+✔ Test "Ongaku Mix excludes the seed and songs that cannot be played" passed after 3.210 seconds.
+✔ Test "Playback starts from the selected track in the visible list" passed after 3.288 seconds.
+✔ Test "A new row selection replaces the previous focused song" passed after 3.289 seconds.
+✔ Test "Ongaku Mix uses cached PCM loudness and timbre features" passed after 3.289 seconds.
+✔ Test "The toolbar import and relink actions use reliable native open panels" passed after 3.289 seconds.
+✔ Test "M3U export includes extended metadata and ordered absolute paths" passed after 3.289 seconds.
+✔ Test "Full metadata search includes lyrics, credits, work, and identifiers" passed after 3.289 seconds.
+✔ Test "M3U resolves relative paths and previews duplicates and missing files" passed after 3.289 seconds.
+✔ Test "Ongaku JSON preserves metadata and stable IDs across export and import" passed after 3.289 seconds.
+✔ Test "Playback falls back to the first track when the selection is outside the list" passed after 3.289 seconds.
+✔ Test sparseResumeAndRepeatedRequests() passed after 3.289 seconds.
+✔ Test measureLoad() passed after 3.289 seconds.
+✔ Test "Device sync callbacks bridge UI updates without isolating transfer workers" passed after 3.289 seconds.
+✔ Test "Sidebar symbols follow the light and dark appearance" passed after 3.289 seconds.
+✔ Test "Ongaku Mix exposes compatible harmony as a selection reason" passed after 3.289 seconds.
+✔ Test "Pinned and favorite views include only matching songs" passed after 3.289 seconds.
+✔ Test "Recently added and recently played views keep their newest-first order" passed after 3.289 seconds.
+✔ Test "Provider URLs preserve Unicode and special characters" passed after 3.289 seconds.
+✔ Test projectionPreservesOrderAndTerminalUpdates() passed after 3.289 seconds.
+✔ Test "Duplicate analysis separates checksum matches from metadata candidates" passed after 3.289 seconds.
+✔ Test copyIsolationAndRestoreValidation() passed after 3.289 seconds.
+✔ Test "Frequently played ranks completed plays and catalog play counts" passed after 3.289 seconds.
+✔ Test "English, Japanese, and Simplified Chinese localization keys stay in parity" passed after 3.290 seconds.
+✔ Test "Critical windows expose automation hooks and keyboard escape routes" passed after 3.289 seconds.
+✔ Test "Indexed projections preserve updates, ordering and invalidated lookups" passed after 3.289 seconds.
+✔ Test "Localized headings avoid forced line breaks and fit their layout budgets" passed after 3.289 seconds.
+✔ Test "Ongaku Mix recognizes relative, parallel, and fifth-related keys" passed after 3.289 seconds.
+✔ Test "A full-scale signal reaches the top of the meter" passed after 3.289 seconds.
+✔ Test "The audio tap runs without inheriting MainActor isolation" passed after 3.289 seconds.
+✔ Test "VU ballistics preserve small changes and release more gently" passed after 3.289 seconds.
+✔ Test "Silence stays at the bottom of the meter" passed after 3.289 seconds.
+✔ Test "UI qualification mode is restricted to temporary library roots" passed after 3.289 seconds.
+✔ Test "Left and right spectra resolve different frequency bands" passed after 3.289 seconds.
+✔ Test "Spectrum smoothing attacks faster than it releases" passed after 3.289 seconds.
+✔ Test "VU needle settles slowly after playback stops" passed after 3.289 seconds.
+✔ Test "A quieter signal produces a lower reading" passed after 3.289 seconds.
+✔ Test "VU readings are sampled densely enough for fine motion" passed after 3.289 seconds.
+✔ Test "Spectrum presentation uses the full meter height for musical peaks" passed after 3.289 seconds.
+✔ Test "Measure checkpoint resume and summary loading" passed after 3.289 seconds.
+✔ Test "Song normalization reaches its target and respects measured peak headroom" passed after 3.289 seconds.
+✔ Test "Split checkpoint encoding and atomic replacement cost" passed after 3.289 seconds.
+✔ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" passed after 3.290 seconds.
+✔ Test "Pruning keeps fresh summaries and removes only stale files" passed after 3.290 seconds.
+✔ Test "Audio analysis pauses for low power and elevated thermal pressure" passed after 3.290 seconds.
+✔ Test "The cache preserves current fingerprints and rejects changed files" passed after 3.290 seconds.
+✔ Test "Version-one feature JSON remains decodable before invalidation" passed after 3.290 seconds.
+✔ Test "Album normalization applies one energy-averaged gain to album members" passed after 3.290 seconds.
+✔ Test "Unavailable custom audio unit remains a connectable bypass" passed after 3.291 seconds.
+✔ Test "LRCLIB synchronized results retain source identity" passed after 3.290 seconds.
+✔ Test "Schema 10 catalogs migrate to empty MusicBrainz identity" passed after 3.290 seconds.
+✔ Test "Synced lyrics select the latest line at the playback position" passed after 3.290 seconds.
+✔ Test "Lyrics and artwork rank title plus album matches before title-only matches" passed after 3.291 seconds.
+✔ Test "Localized format arguments remain compatible" passed after 3.292 seconds.
+✔ Test "Lightweight file availability marks missing files without claiming restored files are verified" passed after 3.291 seconds.
+✔ Test "LRCLIB URLs preserve structured metadata and duration" passed after 3.291 seconds.
+✔ Test "Album references retain release identity without assigning one recording to every song" passed after 3.291 seconds.
+✔ Test "Schema 8 catalogs migrate to unpinned standard-view defaults" passed after 3.291 seconds.
+✔ Test "The Pro effects rack reserves clearance above the persistent player" passed after 3.292 seconds.
+✔ Test "Schema 7 catalogs migrate to Music-style metadata defaults" passed after 3.291 seconds.
+✔ Test legacyJSONAndInvalidIndexes() passed after 3.292 seconds.
+✔ Test "VU calibration maps -18 dBFS RMS to the 0 VU mark" passed after 3.291 seconds.
+✔ Test "Player transport starts a newly selected track instead of resuming the loaded track" passed after 3.291 seconds.
+✔ Test "Only lossless passthrough containers are selected for embedding" passed after 3.291 seconds.
+✔ Test "Playlist track body identifies catalog and library songs" passed after 3.291 seconds.
+✔ Test "Subscription guidance uses the official secure Apple page" passed after 3.291 seconds.
+✔ Test "VU meter uses a shallow arc and keeps both needle extremes visible" passed after 3.291 seconds.
+✔ Test "MusicBrainz builds an escaped recording search and release artwork URL" passed after 3.291 seconds.
+✔ Test "Chart labels preserve the chart name and one-based rank" passed after 3.291 seconds.
+✔ Test "Favorite rating body uses Apple Music's positive rating value" passed after 3.291 seconds.
+✔ Test "Library paging appends only previously unseen resources" passed after 3.291 seconds.
+✔ Test "Replay guidance uses Apple's official secure site" passed after 3.291 seconds.
+✔ Test "Ongaku Mix favors matching genre and a nearby tempo" passed after 3.291 seconds.
+✔ Test "Catalog playback state preserves the selected song while paused" passed after 3.291 seconds.
+✔ Test "Apple Music playlist conversion classifies matches without changing files" passed after 3.291 seconds.
+✔ Test "Catalog queue moves upcoming items but protects the current item" passed after 3.291 seconds.
+✔ Test "Stopping catalog playback clears its ownership of playback" passed after 3.291 seconds.
+✔ Test "iTunes Store response preserves purchase URL and localized price" passed after 3.291 seconds.
+✔ Test "LRC parsing supports offsets, fractions, and repeated timestamps" passed after 3.291 seconds.
+✔ Test "Apple Music HTTP failures are rejected while expected statuses pass" passed after 3.291 seconds.
+✔ Test "Playlist creation body is private and preserves localized text" passed after 3.291 seconds.
+✔ Test "Catalog kinds expose playback and queue capabilities accurately" passed after 3.291 seconds.
+✔ Test "Ongaku playlist export preserves order and classifies unsafe matches" passed after 3.291 seconds.
+✔ Test "Library filters include only their matching catalog kind" passed after 3.291 seconds.
+✔ Test "City chart filtering keeps complete pages and stable city names" passed after 3.291 seconds.
+✔ Test "LRCLIB confidence rewards matching metadata and duration" passed after 3.292 seconds.
+✔ Test "Schema 9 catalogs migrate to empty lyrics" passed after 3.293 seconds.
+✔ Test "The diagnostic record explains format, DSP, normalization, output, and source safety" passed after 3.292 seconds.
+✔ Test "Overlay identity matching tolerates display differences but rejects distant durations" passed after 3.292 seconds.
+✔ Test "Schema 11 catalogs migrate to empty extended credits and work metadata" passed after 3.293 seconds.
+✔ Test "Bonjour discovery starts and stops at most once per lifecycle transition" passed after 3.292 seconds.
+✔ Test "Manifests from an older app remain compatible" passed after 3.292 seconds.
+✔ Test "Overlay receipt survives message encoding" passed after 3.291 seconds.
+✔ Test "Individual transfer requests preserve the stable item ID" passed after 3.291 seconds.
+✔ Test "Manifest messages preserve transfer metadata" passed after 3.291 seconds.
+✔ Test "Manifest messages preserve Ongaku track overlays" passed after 3.291 seconds.
+✔ Test "SHA-256 verification accepts the original and rejects changed metadata" passed after 3.291 seconds.
+✔ Test "Playback statistics count completions and skips and keep the latest activity" passed after 3.291 seconds.
+✔ Test "Pause and resume reuse one playback session" passed after 3.291 seconds.
+✔ Test "Catalog queue resolves the current entry and safely falls back" passed after 3.291 seconds.
+✔ Test "Artist artwork attribution survives persistence encoding" passed after 3.291 seconds.
+✔ Test "Artwork matching ignores case, accents, width, and punctuation" passed after 3.291 seconds.
+✔ Test "Artist image candidates prefer exact matches and Apple Music" passed after 3.291 seconds.
+✔ Test "The active library selector uses a visible button and dedicated popover" passed after 3.293 seconds.
+✔ Test "All custom units are registered sandbox safe" passed after 3.291 seconds.
+✔ Test "Artwork follows the active storage and remains available when returning" passed after 3.291 seconds.
+✔ Test "Removing one row from a multiple selection keeps the focused song when possible" passed after 3.295 seconds.
+✔ Test "Disabled automatic artwork never sends an external request" passed after 3.291 seconds.
+✔ Test "The policy never exceeds 384 kHz" passed after 3.305 seconds.
+✔ Test "44.1 kHz sources stay in the 44.1 kHz family" passed after 3.305 seconds.
+✔ Test "48 kHz sources rise to 384 kHz" passed after 3.305 seconds.
+✔ Test "A device with limited rates falls back safely" passed after 3.306 seconds.
+✔ Test "Discovery paging replaces matching shelves and appends new shelves" passed after 3.305 seconds.
+✔ Test "Manifest messages preserve independent playlist overlays" passed after 3.305 seconds.
+✔ Test "Legacy profiles decode without external-volume metadata" passed after 3.304 seconds.
+✔ Test "History keeps the latest state for each session in reverse chronological order" passed after 3.304 seconds.
+✔ Test "iTunes Store search URL is regional, music-only, and safely encoded" passed after 3.310 seconds.
+✔ Test "A playing track resumes from its saved position after wake" passed after 3.304 seconds.
+✔ Test "Discovery keeps unique recent releases in newest-first order" passed after 3.310 seconds.
+✔ Test "Catalog queue removes multiple upcoming items but protects the current item" passed after 3.310 seconds.
+✔ Test "Playlist export request preserves selected Apple Music song order" passed after 3.303 seconds.
+✔ Test "A sine wave produces stable loudness and spectral centroid estimates" passed after 3.311 seconds.
+✔ Test "A periodic pulse train reports tempo with confidence" passed after 3.311 seconds.
+✔ Test "Measure actual checkpoint, mailbox and controller publication" passed after 3.314 seconds.
+✔ Test "App Store versions use numeric semantic comparison" passed after 2.914 seconds.
+✔ Test "External libraries survive a mount-path change and reject the wrong library" passed after 3.323 seconds.
+✔ Test "Unavailable volume is distinguished from a missing folder on an accessible volume" passed after 2.732 seconds.
+✔ Test "Multiple existing libraries can be enumerated, while an exact selection stays exact" passed after 2.742 seconds.
+✔ Test "Existing portable data is never overwritten by legacy migration" passed after 2.922 seconds.
+✔ Test "Legacy catalog and artwork move beside managed music" passed after 2.732 seconds.
+✔ Test "A new Ongaku Media folder does not automatically inherit the old catalog" passed after 2.724 seconds.
+✔ Test "Title-bar dragging uses screen coordinates across window movement" passed after 2.723 seconds.
+✔ Test "UI qualification accepts only process or runner temporary roots" passed after 2.723 seconds.
+✔ Test "App Store lookup response decodes the release destination" passed after 2.723 seconds.
+✔ Test "Resolved recovery bookmarks reconnect only the same library inside the new root" passed after 2.732 seconds.
+◇ Test case passing 1 argument step → 1 to "Restart recovers each write boundary" started.
+✔ Test "Only resumable in-session phases remain active" passed after 1.855 seconds.
+✔ Test "Pause, resume, cancel, and capacity controls survive protocol encoding" passed after 1.855 seconds.
+✔ Test "Chunk offer, request, payload, and completion survive protocol encoding" passed after 1.927 seconds.
+✔ Test "Capacity preflight keeps a safety reserve" passed after 1.884 seconds.
+✔ Test "Opt-in repeated chunk preparation comparison" passed after 1.884 seconds.
+✔ Test "A manifest failure rolls back the received copy and remains retryable" passed after 1.884 seconds.
+✔ Test "Checkpoint summaries report retained bytes and stale data is removable" passed after 1.884 seconds.
+✔ Test "Validated resumed sessions retain chunks but reject an old transfer ID" passed after 1.884 seconds.
+✔ Test "Pause and deferred request state changes atomically" passed after 1.884 seconds.
+✔ Test "Reported transfer progress is bounded by the file size" passed after 1.884 seconds.
+✔ Test "Validated receive still rejects corruption, wrong sessions and checkpoint shape" passed after 1.884 seconds.
+✔ Test "Validated chunk snapshots preserve wire values and byte-exact payloads" passed after 1.884 seconds.
+✔ Test "A C major chord resolves its pitch class and mode" passed after 3.448 seconds.
+✔ Test "A persisted checkpoint requests only missing chunks after restart" passed after 1.932 seconds.
+✔ Test "A corrupt primary manifest is preserved and restored from its backup" passed after 1.881 seconds.
+◇ Test case passing 1 argument backupOnly → true to "Catalog or backup survives simultaneous generation-sidecar loss" started.
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 2 arguments step → 0, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+✔ Test "Concurrent snapshot edits do not modify a shared catalog" passed after 3.562 seconds.
+✔ Suite "Album title initial grouping" passed after 3.567 seconds.
+✔ Suite "M6 Apple Music foundation milestone" passed after 3.567 seconds.
+✔ Suite "Gapless playback planning" passed after 3.567 seconds.
+✔ Suite "M0 UI, accessibility, localization, and privacy gate" passed after 3.568 seconds.
+✔ Test "A corrupt chunk is rejected without advancing the checkpoint" passed after 1.998 seconds.
+✔ Suite ChunkRequestCursorTests passed after 3.568 seconds.
+✔ Test "Queue edits preserve order and can be undone" passed after 3.564 seconds.
+✔ Test matchedStartup() passed after 3.572 seconds.
+✔ Suite "Playlist transfer" passed after 3.578 seconds.
+✔ Suite "External lyrics search" passed after 3.578 seconds.
+✔ Suite "Checkpoint persistence cost" passed after 3.581 seconds.
+✔ Suite "Audio feature analysis" passed after 3.581 seconds.
+✔ Test "Retry after a durable commit does not create a duplicate" passed after 2.008 seconds.
+✔ Suite "Spectral Transient startup fallback" passed after 3.581 seconds.
+✔ Test "Batched parity preserves multilingual metadata matches and reports every stale query" passed after 3.577 seconds.
+✔ Test "Received files become visible only after their manifest is durable" passed after 2.008 seconds.
+✔ Suite "Playback history" passed after 3.581 seconds.
+✔ Suite "Custom audio unit sandbox registration" passed after 3.581 seconds.
+✔ Suite "Automatic output sample rate" passed after 3.581 seconds.
+✔ Suite "M5 local complete milestone" passed after 3.586 seconds.
+✔ Suite "Actual worker to Published delivery" passed after 3.585 seconds.
+✔ Test "Changing the media directory redirects the next import immediately" passed after 3.600 seconds.
+◇ Test case passing 1 argument step → 2 to "Restart recovers each write boundary" started.
+✔ Test "Import copies data and rejects duplicate content" passed after 3.827 seconds.
+✔ Test "Untrusted or edited descriptors cannot acquire validated status" passed after 2.257 seconds.
+✔ Test "An installed file is recovered when import was interrupted before catalog save" passed after 3.827 seconds.
+✔ Test "Import journal recovers at each installation boundary" with 6 test cases passed after 3.827 seconds.
+✔ Test "Catalog or backup survives simultaneous generation-sidecar loss" with 2 test cases passed after 3.825 seconds.
+✔ Suite "Track value semantics" passed after 3.831 seconds.
+◇ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" started.
+✔ Test "CD import metadata organizes verified copies by artist and album" passed after 3.827 seconds.
+✔ Test "A configured media directory receives new managed files" passed after 3.827 seconds.
+✔ Suite "Playback queue navigation" passed after 3.831 seconds.
+✔ Test "Reference recovery retains the journal when the existing track was relinked elsewhere" passed after 3.826 seconds.
+✔ Suite "Matched startup cost" passed after 3.831 seconds.
+◇ Test compactProgressRecovery() started.
+✔ Test "The automatic Ongaku Media directory is created only by a managed import" passed after 3.826 seconds.
+◇ Test "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test "Loading and processing a real file leaves every source byte unchanged" started.
+◇ Test case passing 2 arguments step → 1, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Suite "M8 transfer resilience milestone" passed after 3.940 seconds.
+✔ Test compactProgressRecovery() passed after 0.110 seconds.
+✔ Test "Pending imports in the active library recover before selecting a preserved catalog" passed after 3.938 seconds.
+◇ Test "Cancellation interrupts SQLite before its first result and removes the handler" started.
+◇ Test case passing 1 argument step → 3 to "Restart recovers each write boundary" started.
+◇ Test case passing 2 arguments step → 1, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test "A legacy schema-12 catalog gains a witness exactly once" started.
+✔ Test "External reference copying recovers new and existing tracks at each boundary" with 6 test cases passed after 4.114 seconds.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Idle refresh prunes stale checkpoints and publishes retained progress" passed after 4.159 seconds.
+◇ Test corruptProgressIsRejected() started.
+✔ Test "Cancellation interrupts SQLite before its first result and removes the handler" passed after 0.224 seconds.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 2 arguments step → 2, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+✔ Test "A legacy schema-12 catalog gains a witness exactly once" passed after 0.070 seconds.
+✔ Test corruptProgressIsRejected() passed after 0.022 seconds.
+✔ Test "Restart recovers each write boundary" with 4 test cases passed after 4.184 seconds.
+◇ Test "Pause preparation, resume once, then cancel without reviving the source" started.
+◇ Test "Cancelled searches throw cancellation and subsequent multilingual searches work" started.
+◇ Test "Witness migration recovers after ENOSPC and simultaneous sidecar loss" started.
+◇ Test largeSparseCheckpointResumesShortFinalChunk() started.
+◇ Test "Full disk during overlay publication keeps a recoverable consistent state" started.
+◇ Test case passing 1 argument afterQueue → false to "Witness migration recovers after ENOSPC and simultaneous sidecar loss" started.
+◇ Test case passing 1 argument step → 0 to "Full disk during overlay publication keeps a recoverable consistent state" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 1 argument afterQueue → true to "Witness migration recovers after ENOSPC and simultaneous sidecar loss" started.
+◇ Test case passing 2 arguments step → 2, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test case passing 1 argument step → 1 to "Full disk during overlay publication keeps a recoverable consistent state" started.
+✔ Test "Audit history is bounded and complete deletion restores the private default" passed after 4.884 seconds.
+✔ Test "Blocking a profile revokes its pending invitations and rejects new ones" passed after 4.884 seconds.
+✔ Test "All old broken journal types can be escaped without source mutation" with 5 test cases passed after 4.892 seconds.
+2026-11-06 22:49:17.121 swiftpm-testing-helper[47352:986317] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Witness migration recovers after ENOSPC and simultaneous sidecar loss" with 2 test cases passed after 0.670 seconds.
+✔ Test "Invitations expire and cannot be accepted after their deadline" passed after 4.953 seconds.
+✔ Test "Profile visibility and history consent persist independently" passed after 4.954 seconds.
+✔ Test "Social features start private with listening-history sharing disabled" passed after 4.954 seconds.
+✔ Test "Failed launch keeps current app alive and allows retry without repairing again" passed after 4.956 seconds.
+✔ Test "Measure Published progress projection with large histories" passed after 4.956 seconds.
+✔ Test "VU needle exposes its position to SwiftUI animation" passed after 4.956 seconds.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "VU meter renders at the player-slot size" passed after 4.959 seconds.
+✔ Test "MusicKit transport failures can be injected without network playback" passed after 5.003 seconds.
+✔ Test "Enabled counts include only the selected effect mode" passed after 5.002 seconds.
+✔ Test settingsRoundTripForPersistentRestoration() passed after 5.002 seconds.
+✔ Test "Playlist export audit history survives controller recreation" passed after 5.002 seconds.
+◇ Test case passing 1 argument step → 2 to "Full disk during overlay publication keeps a recoverable consistent state" started.
+✔ Test defaultSettingsContainEveryDeclaredParameter() passed after 5.004 seconds.
+◇ Test case passing 2 arguments step → 3, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+✔ Test registryBuildsCompleteOrderedPipeline() passed after 5.040 seconds.
+✔ Test "Automatic artwork consent is disabled by default and persists" passed after 5.040 seconds.
+✔ Suite "Catalog generation witness" passed after 5.050 seconds.
+✔ Test "Full disk during overlay publication keeps a recoverable consistent state" with 3 test cases passed after 0.774 seconds.
+✔ Suite "M7 discovery and sharing milestone" passed after 5.050 seconds.
+✔ Suite "Transfer history projection performance" passed after 5.050 seconds.
+✔ Suite "Stereo level meter" passed after 5.050 seconds.
+✔ Suite "Apple Music Store integration" passed after 5.050 seconds.
+✔ Suite "Audio effect presets" passed after 5.050 seconds.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test "Moved media is recovered by hash when an old organization record cannot be decoded" started.
+✔ Suite ArtworkResolverTests passed after 5.102 seconds.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test "Failed recovery retains journal, blocks writes and retries" started.
+✔ Test "Rescue interruption and disk exhaustion retain a retryable transaction" with 6 test cases passed after 1.325 seconds.
+◇ Test case passing 2 arguments step → 3, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+✔ Test "Moved media is recovered by hash when an old organization record cannot be decoded" passed after 0.132 seconds.
+◇ Test "A failed sidecar write after rescue journal publication can recover on restart" started.
+✔ Test "Failed recovery retains journal, blocks writes and retries" passed after 0.096 seconds.
+✔ Test "Cancelled searches throw cancellation and subsequent multilingual searches work" passed after 1.072 seconds.
+◇ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Malformed or decodable altered primary is recovered at every move boundary" with 8 test cases passed after 5.310 seconds.
+◇ Test "Ambiguous backup never consumes the journal" started.
+◇ Test "JSON migrates transactionally, supports indexed search, and rolls back" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Ambiguous backup never consumes the journal" passed after 0.052 seconds.
+◇ Test "Recovery record publication failure occurs before any catalog move" started.
+✔ Test "Pause preparation, resume once, then cancel without reviving the source" passed after 1.180 seconds.
+◇ Test case passing 1 argument afterPrimary → false to "Recovery record publication failure occurs before any catalog move" started.
+✔ Suite "Overlay journal recovery" passed after 5.376 seconds.
+✔ Test "A failed sidecar write after rescue journal publication can recover on restart" passed after 0.140 seconds.
+◇ Test "Cancel during descriptor I/O never offers and calls completion exactly once" started.
+◇ Test "A healthy interrupted transaction is never discarded by rescue" started.
+✔ Test "JSON migrates transactionally, supports indexed search, and rolls back" passed after 0.095 seconds.
+◇ Test case passing 1 argument afterPrimary → true to "Recovery record publication failure occurs before any catalog move" started.
+✔ Test largeSparseCheckpointResumesShortFinalChunk() passed after 1.169 seconds.
+✔ Suite "Large chunk transfer load" passed after 5.446 seconds.
+◇ Test "A dangling playlist reference aborts without installing SQLite" started.
+✔ Test "Cancel during descriptor I/O never offers and calls completion exactly once" passed after 0.077 seconds.
+◇ Test "A paused read is deferred and rechecked against source bytes on resume" started.
+✔ Test "A healthy interrupted transaction is never discarded by rescue" passed after 0.070 seconds.
+◇ Test "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "A dangling playlist reference aborts without installing SQLite" passed after 0.041 seconds.
+◇ Test "Search metadata updates only changed SQLite rows" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "Search metadata updates only changed SQLite rows" passed after 0.027 seconds.
+✔ Suite "SQLite catalog prototype" passed after 5.515 seconds.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "A paused read is deferred and rechecked against source bytes on resume" passed after 0.073 seconds.
+◇ Test "Cancel during checkpoint I/O deletes only the cancelled session's partial" started.
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "Cancel during checkpoint I/O deletes only the cancelled session's partial" passed after 0.049 seconds.
+◇ Test "Pause can persist one requested in-flight chunk but sends no next request" started.
+◇ Test case passing 1 argument name → "self-containment-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "Recovery record publication failure occurs before any catalog move" with 2 test cases passed after 0.224 seconds.
+◇ Test "A recovery copy without an active journal cannot roll back a completed restore" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Other pending recovery prevents rescue without changing any catalog" with 5 test cases passed after 0.164 seconds.
+◇ Test "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 0 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "A 1,000-track sequential queue completes in exact order" passed after 5.657 seconds.
+✔ Test "Pause can persist one requested in-flight chunk but sends no next request" passed after 0.108 seconds.
+◇ Test "Pause at verification retains staged data until resume" started.
+◇ Test case passing 1 argument kind → 1 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "A missing current file does not erase the persisted queue position" passed after 5.705 seconds.
+✔ Test "Pause at verification retains staged data until resume" passed after 0.040 seconds.
+◇ Test "Cancellation before the commit claim never installs a received file" started.
+✔ Test "A recovery copy without an active journal cannot roll back a completed restore" passed after 0.143 seconds.
+◇ Test "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+◇ Test case passing 1 argument kind → 0 to "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+◇ Test case passing 1 argument kind → 2 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "Cancellation before the commit claim never installs a received file" passed after 0.024 seconds.
+◇ Test "A claimed durable commit wins over late cancel and publishes only once" started.
+◇ Test case passing 1 argument kind → 3 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "A claimed durable commit wins over late cancel and publishes only once" passed after 0.032 seconds.
+◇ Test "Disconnect retains checkpoint; restart resumes under a new ID and ignores old packets" started.
+◇ Test case passing 1 argument kind → 1 to "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+◇ Test case passing 1 argument kind → 4 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "No primary, invalid primary, future journal, and future primary fail closed" with 5 test cases passed after 0.185 seconds.
+◇ Test "Store rescue reloads published metadata and discards queued in-memory edits" started.
+◇ Test case passing 1 argument kind → 2 to "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+✔ Test "Wrong generation, damaged copy and future version retain all recovery inputs" with 3 test cases passed after 0.176 seconds.
+◇ Test "A failed backup of either damaged bytes or the good copy preserves inputs and retries" started.
+◇ Test case passing 1 argument failingCopy → false to "A failed backup of either damaged bytes or the good copy preserves inputs and retries" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Disconnect retains checkpoint; restart resumes under a new ID and ignores old packets" passed after 0.179 seconds.
+◇ Test "Disconnect while final commit runs keeps the local commit and suppresses old-link acknowledgement" started.
+✔ Test "Disconnect while final commit runs keeps the local commit and suppresses old-link acknowledgement" passed after 0.021 seconds.
+◇ Test "Finalization failure retains a complete checkpoint for retry" started.
+◇ Test case passing 1 argument failingCopy → true to "A failed backup of either damaged bytes or the good copy preserves inputs and retries" started.
+✔ Test "Finalization failure retains a complete checkpoint for retry" passed after 0.031 seconds.
+◇ Test "Cancel and immediate reopen do not let stale I/O delete or revive the new session" started.
+✔ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" with 6 test cases passed after 0.773 seconds.
+◇ Test "Already verified copies finish without the original medium after a crash" started.
+✔ Test "A failed backup of either damaged bytes or the good copy preserves inputs and retries" with 2 test cases passed after 0.129 seconds.
+◇ Test "A second interruption after primary repair preserves the copy for another restart" started.
+✔ Test "Cancel and immediate reopen do not let stale I/O delete or revive the new session" passed after 0.096 seconds.
+◇ Test "Duplicate offers cannot take an active SHA checkpoint from its owner" started.
+✔ Test "Already verified copies finish without the original medium after a crash" passed after 0.082 seconds.
+◇ Test "Moving an unfinished copy stops old-path writes and resumes at its new location" started.
+◇ Test case passing 1 argument step → 0 to "Moving an unfinished copy stops old-path writes and resumes at its new location" started.
+✔ Test "A second interruption after primary repair preserves the copy for another restart" passed after 0.085 seconds.
+◇ Test "An empty legacy restore plan cannot discard a partially completed restore" started.
+✔ Test "An empty legacy restore plan cannot discard a partially completed restore" passed after 0.053 seconds.
+◇ Test "Legacy records without a recovery copy still roll back" started.
+✔ Test "Duplicate offers cannot take an active SHA checkpoint from its owner" passed after 0.086 seconds.
+◇ Test "Disconnect during preparation invalidates old callbacks even when an ID is reused" started.
+◇ Test case passing 1 argument step → 1 to "Moving an unfinished copy stops old-path writes and resumes at its new location" started.
+✔ Test "Legacy records without a recovery copy still roll back" passed after 0.079 seconds.
+✔ Suite "Storage restore recovery copy" passed after 6.262 seconds.
+✔ Test "Disconnect during preparation invalidates old callbacks even when an ID is reused" passed after 0.069 seconds.
+◇ Test "Capacity rejection does not request payload or discard retryable checkpoint data" started.
+✔ Test "Capacity rejection does not request payload or discard retryable checkpoint data" passed after 0.062 seconds.
+◇ Test "Send failures finish an outgoing callback once and cannot revive on completion replay" started.
+✔ Test "Send failures finish an outgoing callback once and cannot revive on completion replay" passed after 0.060 seconds.
+◇ Test "A failed old-connection commit cannot cancel a new link" started.
+◇ Test case passing 1 argument step → 2 to "Moving an unfinished copy stops old-path writes and resumes at its new location" started.
+✔ Test "A failed old-connection commit cannot cancel a new link" passed after 0.031 seconds.
+◇ Test "Shutdown drains blocked work and finishes callbacks without reviving offers" started.
+✔ Test "Starting a stale library entry reports its missing file" passed after 6.437 seconds.
+✔ Test "Shutdown drains blocked work and finishes callbacks without reviving offers" passed after 0.069 seconds.
+◇ Test "Legacy offers retain full requests and sender progress stays compatible" started.
+✔ Test "Moving an unfinished copy stops old-path writes and resumes at its new location" with 3 test cases passed after 0.412 seconds.
+◇ Test "A completed recovery library can move and rename with audio and playlist artwork intact" started.
+✔ Test "Legacy offers retain full requests and sender progress stays compatible" passed after 0.076 seconds.
+◇ Test "Compact remaining count preserves sender progress and rejects invalid counts" started.
+✔ Test "A completed recovery library can move and rename with audio and playlist artwork intact" passed after 0.135 seconds.
+◇ Test "A missing or wrong-identity recovery target cannot open as an empty library" started.
+✔ Test "A 1,000-track shuffle run always selects a playable non-current song" passed after 6.734 seconds.
+✔ Test "Compact remaining count preserves sender progress and rejects invalid counts" passed after 0.189 seconds.
+◇ Test "Whole-file verification cooperates with cancellation without changing the default digest" started.
+✔ Test "Playback file opening failures are injectable and remain user-visible" passed after 7.088 seconds.
+✔ Test "Missing recovery grants never create an empty replacement library" passed after 6.814 seconds.
+✔ Test "Whole-file verification cooperates with cancellation without changing the default digest" passed after 0.570 seconds.
+◇ Test "Encoded loopback completes Mac-directory and mobile durable-library destinations" started.
+✔ Test "Startup migrates legacy catalogs, retries failure, and creates portable libraries" passed after 6.786 seconds.
+✔ Test "Profile reconnection reports the actual storage location category" passed after 6.796 seconds.
+✔ Test "A selected Apple Music library resolves and persists its Media folder" passed after 6.816 seconds.
+✔ Test "Song list columns and sorting persist" passed after 6.823 seconds.
+✔ Test "Disconnected saved volume does not trigger migration or create a replacement" passed after 6.830 seconds.
+✔ Test "Appearance selection persists and system mode clears the override" passed after 6.834 seconds.
+✔ Test "Existing sidecars prevent a new library from overwriting recoverable data" passed after 6.845 seconds.
+✔ Test "A user-selected storage directory is used directly" passed after 6.862 seconds.
+✔ Test "Multiple libraries create, rename, switch, archive, and restore" passed after 6.876 seconds.
+✔ Test "A completely fresh install stores managed music under the Music directory" passed after 6.882 seconds.
+✔ Test "Player presentation settings persist and the player defaults to the bottom" passed after 6.889 seconds.
+✔ Test "Title-bar dragging excludes content and window controls" passed after 6.906 seconds.
+✔ Test "The main window keeps all columns below the title bar" passed after 6.972 seconds.
+2026-11-06 22:49:19.866 swiftpm-testing-helper[47352:986317] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Encoded loopback completes Mac-directory and mobile durable-library destinations" passed after 0.980 seconds.
+✔ Suite "Actor-owned chunk transfer" passed after 8.313 seconds.
+✔ Test receiptModelAgreement(count:) with 8 test cases passed after 8.740 seconds.
+✔ Suite ChunkReceiptBitmapTests passed after 8.746 seconds.
+✔ Test "Final conversion, user volume, latency and reset survive rate/channel rebuilds" passed after 6.929 seconds.
+◇ Test "Paused render resources reset queued true-peak audio before restart" started.
+✔ Test "Paused render resources reset queued true-peak audio before restart" passed after 0.477 seconds.
+◇ Test "Invalid output format fails instead of bypassing protection" started.
+✔ Test "Invalid output format fails instead of bypassing protection" passed after 0.007 seconds.
+◇ Test "Transition envelope multiplies the latest user volume before final protection" started.
+✔ Test "Transition envelope multiplies the latest user volume before final protection" passed after 0.056 seconds.
+✔ Suite "Final output true-peak" passed after 11.302 seconds.
+✔ Test "Loading and processing a real file leaves every source byte unchanged" passed after 9.878 seconds.
+✔ Suite "M4 audio quality and output milestone" passed after 13.709 seconds.
+✔ Test "Playback history updates do not restore the playing row over a new selection" passed after 13.711 seconds.
+✔ Suite "Standard library views" passed after 13.717 seconds.
+✔ Test "Migration recovery discovers moved libraries and rejects ambiguous or missing data" passed after 13.337 seconds.
+✔ Test "Mini Player restores the original window frame" passed after 13.332 seconds.
+BYPASS simulation 44100.0: 0.07071067789367086
+ACTIVE simulation 44100.0: peak 0.05938408
+BYPASS equalizer 44100.0: 0.07071067789367086
+ACTIVE equalizer 44100.0: peak 0.09999937
+BYPASS body 44100.0: 0.07071067789367086
+ACTIVE body 44100.0: peak 0.121135026
+BYPASS exciter 44100.0: 0.07071067789367086
+✔ Test "Full-track stereo loudness survives opposite polarity and includes audio after 60 seconds" passed after 14.181 seconds.
+◇ Test "Missing or old LUFS never reuses legacy RMS as loudness" started.
+✔ Test "Missing or old LUFS never reuses legacy RMS as loudness" passed after 0.001 seconds.
+◇ Test "192kHz files use the shared effect rate and keep Space enabled" started.
+ACTIVE exciter 44100.0: peak 0.100074105
+BYPASS spectralTransient 44100.0: 0.07071067789367086
+ACTIVE spectralTransient 44100.0: peak 0.10061334
+BYPASS vocalPresence 44100.0: 0.07071067789367086
+ACTIVE vocalPresence 44100.0: peak 0.100804105
+BYPASS optoFET 44100.0: 0.07071067789367086
+ACTIVE optoFET 44100.0: peak 0.11052622
+BYPASS warm 44100.0: 0.07071067789367086
+ACTIVE warm 44100.0: peak 0.11474879
+BYPASS gloss 44100.0: 0.07071067789367086
+ACTIVE gloss 44100.0: peak 0.100170866
+BYPASS space 44100.0: 0.07071067789367086
+ACTIVE space 44100.0: peak 0.1088185
+BYPASS bbe 44100.0: 0.07071067789367086
+ACTIVE bbe 44100.0: peak 0.1056535
+BYPASS highQualityEnhancement 44100.0: 0.07071067789367086
+ACTIVE highQualityEnhancement 44100.0: peak 0.07519239
+BYPASS simulation 48000.0: 0.07071067816015678
+ACTIVE simulation 48000.0: peak 0.059319854
+BYPASS equalizer 48000.0: 0.07071067816015678
+ACTIVE equalizer 48000.0: peak 0.1
+BYPASS body 48000.0: 0.07071067816015678
+ACTIVE body 48000.0: peak 0.12117135
+BYPASS exciter 48000.0: 0.07071067816015678
+ACTIVE exciter 48000.0: peak 0.10007465
+BYPASS spectralTransient 48000.0: 0.07071067816015678
+ACTIVE spectralTransient 48000.0: peak 0.100614265
+BYPASS vocalPresence 48000.0: 0.07071067816015678
+ACTIVE vocalPresence 48000.0: peak 0.10079554
+BYPASS optoFET 48000.0: 0.07071067816015678
+ACTIVE optoFET 48000.0: peak 0.11043471
+BYPASS warm 48000.0: 0.07071067816015678
+ACTIVE warm 48000.0: peak 0.114666134
+BYPASS gloss 48000.0: 0.07071067816015678
+ACTIVE gloss 48000.0: peak 0.09984636
+BYPASS space 48000.0: 0.07071067816015678
+ACTIVE space 48000.0: peak 0.102662325
+BYPASS bbe 48000.0: 0.07071067816015678
+ACTIVE bbe 48000.0: peak 0.10575763
+BYPASS highQualityEnhancement 48000.0: 0.07071067816015678
+ACTIVE highQualityEnhancement 48000.0: peak 0.07512649
+BYPASS simulation 96000.0: 0.07071067804118145
+ACTIVE simulation 96000.0: peak 0.059338816
+BYPASS equalizer 96000.0: 0.07071067804118145
+ACTIVE equalizer 96000.0: peak 0.1
+BYPASS body 96000.0: 0.07071067804118145
+ACTIVE body 96000.0: peak 0.12120314
+BYPASS exciter 96000.0: 0.07071067804118145
+ACTIVE exciter 96000.0: peak 0.10007349
+BYPASS spectralTransient 96000.0: 0.07071067804118145
+ACTIVE spectralTransient 96000.0: peak 0.100618
+BYPASS vocalPresence 96000.0: 0.07071067804118145
+ACTIVE vocalPresence 96000.0: peak 0.10078816
+BYPASS optoFET 96000.0: 0.07071067804118145
+ACTIVE optoFET 96000.0: peak 0.110547066
+BYPASS warm 96000.0: 0.07071067804118145
+ACTIVE warm 96000.0: peak 0.1133823
+BYPASS gloss 96000.0: 0.07071067804118145
+ACTIVE gloss 96000.0: peak 0.09809437
+BYPASS space 96000.0: 0.07071067804118145
+ACTIVE space 96000.0: peak 0.101002894
+BYPASS bbe 96000.0: 0.07071067804118145
+ACTIVE bbe 96000.0: peak 0.10564245
+BYPASS highQualityEnhancement 96000.0: 0.07071067804118145
+ACTIVE highQualityEnhancement 96000.0: peak 0.07509933
+✔ Test "EQ sections preserve every parameter exactly once and keep band controls together" passed after 18.825 seconds.
+✔ Test "Render gating, fade and drain keep sources alive until zero" passed after 18.825 seconds.
+◇ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" started.
+◇ Test "Repeated stop and superseding seek/load commit only the newest action" started.
+✔ Test "Audio engine configuration notifications safely reach the main actor" passed after 18.848 seconds.
+✔ Test "Continuous changes coalesce into eight steps and settle at the latest target" passed after 18.846 seconds.
+◇ Test "OFF, restart and graph rebuild reject older queued writes" started.
+✔ Suite "Playback recovery state" passed after 18.852 seconds.
+✔ Test "Combine delivery enters MainActor explicitly" passed after 18.857 seconds.
+✔ Suite "System Now Playing" passed after 18.863 seconds.
+✔ Test defaultOffAndStateRestoration() passed after 18.857 seconds.
+✔ Test "Four persisted palettes match iPhone and restore after reload" passed after 18.857 seconds.
+◇ Test impulseLatencyAndProtectedOverload() started.
+◇ Test "All dial marks and needle levels share the -18 dBFS reference" started.
+✔ Test "Registering a dropped folder preserves its hierarchy and every audio file" passed after 18.873 seconds.
+✔ Test "A different existing library can be selected without replacing the missing profile" passed after 18.276 seconds.
+✔ Test "A 1,000-track queue and position survive process replacement" passed after 21.543 seconds.
+✔ Suite "M1 playback parity milestone" passed after 21.552 seconds.
+2026-11-06 22:49:33.765 swiftpm-testing-helper[47352:986317] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "192kHz files use the shared effect rate and keep Space enabled" passed after 10.233 seconds.
+◇ Test "File-rate source mixer feeds audible spatial processing at every final rate" started.
+✔ Test "Unchanged cards ignore unrelated controller changes; parameter and enable edits propagate" passed after 22.204 seconds.
+◇ Test "Page boundary ignores transport updates but tracks settings, bypass and tab snapshots" started.
+✔ Test auditEveryEffect() passed after 22.424 seconds.
+◇ Test dynamicsUseSecondsAndDisableExpansion() started.
+✔ Test "Exit waits for replacement launch and duplicate requests are ignored" passed after 24.417 seconds.
+✔ Suite "Library recovery relaunch" passed after 24.423 seconds.
+✔ Test "Local copy index follows library replacement and duplicate hashes" passed after 24.506 seconds.
+TRANSIENT APPLE PROTECTION rate=44100.0 impulse=false peak=0.4817925
+TRANSIENT APPLE PROTECTION rate=44100.0 impulse=true peak=0.48402575
+TRANSIENT APPLE PROTECTION rate=48000.0 impulse=false peak=0.49948594
+TRANSIENT APPLE PROTECTION rate=48000.0 impulse=true peak=0.5124483
+✔ Test "File-rate source mixer feeds audible spatial processing at every final rate" passed after 0.592 seconds.
+◇ Test "Late album analysis retains current gain; explicit changes adopt the newest revision" started.
+TRANSIENT APPLE PROTECTION rate=96000.0 impulse=false peak=0.6920022
+TRANSIENT APPLE PROTECTION rate=96000.0 impulse=true peak=0.6979295
+TRANSIENT APPLE PROTECTION rate=192000.0 impulse=false peak=0.7870587
+TRANSIENT APPLE PROTECTION rate=192000.0 impulse=true peak=0.7940415
+✔ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" passed after 7.129 seconds.
+✔ Test "Repeated stop and superseding seek/load commit only the newest action" passed after 7.129 seconds.
+✔ Test "OFF, restart and graph rebuild reject older queued writes" passed after 7.107 seconds.
+◇ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" started.
+◇ Test "Stop cancels startup and late callbacks; render timeout remains silent" started.
+◇ Test "Disabled-only edits never rewrite unchanged audible modules" started.
+2026-11-06 22:49:38.223 swiftpm-testing-helper[47352:986317] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test impulseLatencyAndProtectedOverload() passed after 10.062 seconds.
+◇ Test switchingPreservesUpstreamReverb() started.
+✔ Test "All dial marks and needle levels share the -18 dBFS reference" passed after 10.062 seconds.
+◇ Test "Production desktop meters and transport render in every color" started.
+✔ Test "Page boundary ignores transport updates but tracks settings, bypass and tab snapshots" passed after 4.636 seconds.
+✔ Test dynamicsUseSecondsAndDisableExpansion() passed after 4.636 seconds.
+TRANSIENT TAIL switch=0.256 energy=0.00258241179617791 boundaryJump=0.0010697183
+TRANSIENT TAIL switch=0.4266666666666667 energy=0.00046222742128730713 boundaryJump=0.00014436466
+TRANSIENT TAIL switch=0.5973333333333334 energy=0.00016183785739076802 boundaryJump=2.5160349e-05
+✔ Test "Dropping files and folders imports supported audio into artist and album folders" passed after 29.075 seconds.
+◇ Test "Repeated size/place proposals reuse exact geometry; resize and invalidation remeasure" started.
+◇ Test frequencyAndLevelMatrix() started.
+✔ Test "Resolving duplicates transfers catalog references without deleting files" passed after 29.648 seconds.
+✔ Test "A failed replacement restores both source and overwritten destination files" passed after 29.652 seconds.
+✔ Test "Media organization rolls back completed moves when a later checksum changes" passed after 29.655 seconds.
+✔ Test "Overlay audit history persists and records conflict reasons" passed after 29.757 seconds.
+✔ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" passed after 3.811 seconds.
+✔ Test "Disabled-only edits never rewrite unchanged audible modules" passed after 3.811 seconds.
+◇ Test "Wheel scroll over a control reaches the scroll view, never the control" started.
+✔ Test "Stop cancels startup and late callbacks; render timeout remains silent" passed after 3.811 seconds.
+◇ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" started.
+◇ Test "Transport, user volume and bypass gains remain independent in both output paths" started.
+✔ Test switchingPreservesUpstreamReverb() passed after 0.851 seconds.
+✔ Suite "Spectral transient prototype" passed after 29.777 seconds.
+✔ Test "Production desktop meters and transport render in every color" passed after 0.863 seconds.
+✔ Test "Selected overlays merge counters without replacing playback history" passed after 29.782 seconds.
+✔ Suite "Pastel appearance" passed after 29.790 seconds.
+✔ Test "Late album analysis retains current gain; explicit changes adopt the newest revision" passed after 4.800 seconds.
+✔ Suite "Audio fidelity policy" passed after 29.812 seconds.
+✔ Test "Overlay application changes only selected fields" passed after 29.805 seconds.
+✔ Test "A missing or wrong-identity recovery target cannot open as an empty library" passed after 23.149 seconds.
+◇ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" started.
+✔ Test "Media organization dry-runs and transactionally moves only managed files" passed after 29.861 seconds.
+✔ Test "Selected MusicBrainz identity persists with edited song metadata" passed after 29.859 seconds.
+✔ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" passed after 0.074 seconds.
+◇ Test "An explicitly selected Previous catalog works even when the primary has been moved away" started.
+✔ Test "An explicitly selected Previous catalog works even when the primary has been moved away" passed after 0.037 seconds.
+◇ Test "Changed original bytes cannot be copied under their old fingerprint" started.
+✔ Test "Changed original bytes cannot be copied under their old fingerprint" passed after 0.025 seconds.
+◇ Test "Unknown old fingerprints are derived only from an existing exact file path" started.
+✔ Test "Unknown old fingerprints are derived only from an existing exact file path" passed after 0.034 seconds.
+◇ Test "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 1 argument future → false to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 1 argument future → true to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+✔ Test "A tampered plan and an unsupported catalog fail without modifying the source" with 2 test cases passed after 0.054 seconds.
+◇ Test "A client ignoring the pending marker still cannot read an unfinished copy as an empty catalog" started.
+MATRIX 44100.0 simulation max=false peak=1.706148
+✔ Test "A client ignoring the pending marker still cannot read an unfinished copy as an empty catalog" passed after 0.045 seconds.
+◇ Test "A cancelled creation never publishes a recovery folder" started.
+MATRIX 44100.0 equalizer max=false peak=0.8999998
+MATRIX 44100.0 body max=false peak=1.6613425
+MATRIX 44100.0 exciter max=false peak=0.9855795
+MATRIX 44100.0 spectralTransient max=false peak=0.9055201
+MATRIX 44100.0 vocalPresence max=false peak=0.9083401
+MATRIX 44100.0 optoFET max=false peak=0.38945484
+MATRIX 44100.0 warm max=false peak=1.0464338
+MATRIX 44100.0 gloss max=false peak=1.5233355
+MATRIX 44100.0 space max=false peak=0.9793665
+MATRIX 44100.0 bbe max=false peak=1.4956111
+MATRIX 44100.0 highQualityEnhancement max=false peak=1.1202371
+FINAL 44100.0 max=false Hz=80.0 peak=0.33189
+FINAL 44100.0 max=false Hz=250.0 peak=0.3259177
+FINAL 44100.0 max=false Hz=1000.0 peak=0.34341916
+FINAL 44100.0 max=false Hz=6000.0 peak=0.5986377
+FINAL 44100.0 max=false Hz=12000.0 peak=0.3257419
+MATRIX 44100.0 simulation max=true peak=1.4518659
+MATRIX 44100.0 equalizer max=true peak=2.8946931
+MATRIX 44100.0 body max=true peak=2.3339915
+MATRIX 44100.0 exciter max=true peak=0.9857037
+MATRIX 44100.0 spectralTransient max=true peak=0.92762315
+MATRIX 44100.0 vocalPresence max=true peak=0.93150854
+MATRIX 44100.0 optoFET max=true peak=0.32518312
+MATRIX 44100.0 warm max=true peak=1.1007408
+MATRIX 44100.0 gloss max=true peak=2.0070662
+MATRIX 44100.0 space max=true peak=1.4793113
+MATRIX 44100.0 bbe max=true peak=3.3249393
+MATRIX 44100.0 highQualityEnhancement max=true peak=1.5258446
+FINAL 44100.0 max=true Hz=80.0 peak=0.699482
+FINAL 44100.0 max=true Hz=250.0 peak=0.4672795
+FINAL 44100.0 max=true Hz=1000.0 peak=0.8897647
+FINAL 44100.0 max=true Hz=6000.0 peak=0.6622863
+FINAL 44100.0 max=true Hz=12000.0 peak=0.87877154
+MATRIX 48000.0 simulation max=false peak=1.7308524
+MATRIX 48000.0 equalizer max=false peak=0.9
+MATRIX 48000.0 body max=false peak=1.6608363
+MATRIX 48000.0 exciter max=false peak=0.9956733
+MATRIX 48000.0 spectralTransient max=false peak=0.90552837
+MATRIX 48000.0 vocalPresence max=false peak=0.91562504
+MATRIX 48000.0 optoFET max=false peak=0.4003162
+MATRIX 48000.0 warm max=false peak=1.045238
+MATRIX 48000.0 gloss max=false peak=1.4564015
+MATRIX 48000.0 space max=false peak=0.98905426
+MATRIX 48000.0 bbe max=false peak=1.4911971
+MATRIX 48000.0 highQualityEnhancement max=false peak=1.1202269
+FINAL 48000.0 max=false Hz=80.0 peak=0.3243628
+FINAL 48000.0 max=false Hz=250.0 peak=0.32056323
+FINAL 48000.0 max=false Hz=1000.0 peak=0.34267098
+FINAL 48000.0 max=false Hz=6000.0 peak=0.60547453
+FINAL 48000.0 max=false Hz=12000.0 peak=0.324605
+MATRIX 48000.0 simulation max=true peak=1.2844354
+MATRIX 48000.0 equalizer max=true peak=2.894892
+MATRIX 48000.0 body max=true peak=2.3341255
+MATRIX 48000.0 exciter max=true peak=0.974744
+MATRIX 48000.0 spectralTransient max=true peak=0.9276419
+MATRIX 48000.0 vocalPresence max=true peak=0.9447541
+MATRIX 48000.0 optoFET max=true peak=0.33657944
+MATRIX 48000.0 warm max=true peak=1.098543
+MATRIX 48000.0 gloss max=true peak=1.7948079
+MATRIX 48000.0 space max=true peak=1.3956294
+MATRIX 48000.0 bbe max=true peak=2.8340328
+MATRIX 48000.0 highQualityEnhancement max=true peak=1.469077
+FINAL 48000.0 max=true Hz=80.0 peak=0.64387923
+FINAL 48000.0 max=true Hz=250.0 peak=0.46332133
+FINAL 48000.0 max=true Hz=1000.0 peak=0.87691104
+FINAL 48000.0 max=true Hz=6000.0 peak=0.6756237
+FINAL 48000.0 max=true Hz=12000.0 peak=0.8895901
+MATRIX 96000.0 simulation max=false peak=1.7243559
+MATRIX 96000.0 equalizer max=false peak=0.9
+MATRIX 96000.0 body max=false peak=1.661335
+MATRIX 96000.0 exciter max=false peak=0.99476653
+MATRIX 96000.0 spectralTransient max=false peak=0.9055619
+MATRIX 96000.0 vocalPresence max=false peak=0.9162426
+MATRIX 96000.0 optoFET max=false peak=0.39459988
+MATRIX 96000.0 warm max=false peak=1.033394
+MATRIX 96000.0 gloss max=false peak=1.4736828
+MATRIX 96000.0 space max=false peak=0.93306047
+MATRIX 96000.0 bbe max=false peak=1.549903
+MATRIX 96000.0 highQualityEnhancement max=false peak=1.1202315
+FINAL 96000.0 max=false Hz=80.0 peak=0.3094958
+FINAL 96000.0 max=false Hz=250.0 peak=0.2731742
+FINAL 96000.0 max=false Hz=1000.0 peak=0.31165832
+FINAL 96000.0 max=false Hz=6000.0 peak=0.59832346
+FINAL 96000.0 max=false Hz=12000.0 peak=0.40196705
+MATRIX 96000.0 simulation max=true peak=1.4505668
+MATRIX 96000.0 equalizer max=true peak=2.8979454
+MATRIX 96000.0 body max=true peak=2.3340118
+MATRIX 96000.0 exciter max=true peak=0.9700924
+MATRIX 96000.0 spectralTransient max=true peak=0.9278098
+MATRIX 96000.0 vocalPresence max=true peak=0.94653183
+MATRIX 96000.0 optoFET max=true peak=0.3300141
+MATRIX 96000.0 warm max=true peak=1.1102586
+MATRIX 96000.0 gloss max=true peak=1.9327449
+MATRIX 96000.0 space max=true peak=1.1848593
+MATRIX 96000.0 bbe max=true peak=3.0928347
+MATRIX 96000.0 highQualityEnhancement max=true peak=1.5334202
+FINAL 96000.0 max=true Hz=80.0 peak=0.5759473
+FINAL 96000.0 max=true Hz=250.0 peak=0.43986493
+FINAL 96000.0 max=true Hz=1000.0 peak=0.8900622
+FINAL 96000.0 max=true Hz=6000.0 peak=0.78927094
+FINAL 96000.0 max=true Hz=12000.0 peak=0.85458076
+MATRIX 192000.0 simulation max=false peak=1.1708328
+MATRIX 192000.0 equalizer max=false peak=0.9
+MATRIX 192000.0 body max=false peak=1.6391777
+MATRIX 192000.0 exciter max=false peak=0.98970383
+MATRIX 192000.0 spectralTransient max=false peak=0.90557814
+MATRIX 192000.0 vocalPresence max=false peak=0.9163947
+MATRIX 192000.0 optoFET max=false peak=0.38450444
+MATRIX 192000.0 warm max=false peak=1.0129434
+MATRIX 192000.0 gloss max=false peak=1.4362426
+MATRIX 192000.0 space max=false peak=0.9
+MATRIX 192000.0 bbe max=false peak=1.5465237
+MATRIX 192000.0 highQualityEnhancement max=false peak=1.120231
+FINAL 192000.0 max=false Hz=80.0 peak=0.269874
+FINAL 192000.0 max=false Hz=250.0 peak=0.25118318
+FINAL 192000.0 max=false Hz=1000.0 peak=0.28961587
+FINAL 192000.0 max=false Hz=6000.0 peak=0.5887644
+FINAL 192000.0 max=false Hz=12000.0 peak=0.4397018
+MATRIX 192000.0 simulation max=true peak=1.5138355
+MATRIX 192000.0 equalizer max=true peak=2.6254168
+MATRIX 192000.0 body max=true peak=2.3339846
+MATRIX 192000.0 exciter max=true peak=0.96753573
+MATRIX 192000.0 spectralTransient max=true peak=0.92789066
+MATRIX 192000.0 vocalPresence max=true peak=0.94696987
+MATRIX 192000.0 optoFET max=true peak=0.32045794
+MATRIX 192000.0 warm max=true peak=1.130774
+MATRIX 192000.0 gloss max=true peak=1.9345585
+MATRIX 192000.0 space max=true peak=0.9
+MATRIX 192000.0 bbe max=true peak=3.1071665
+MATRIX 192000.0 highQualityEnhancement max=true peak=1.5377164
+FINAL 192000.0 max=true Hz=80.0 peak=0.53412753
+FINAL 192000.0 max=true Hz=250.0 peak=0.30766854
+FINAL 192000.0 max=true Hz=1000.0 peak=0.888476
+FINAL 192000.0 max=true Hz=6000.0 peak=0.84294283
+FINAL 192000.0 max=true Hz=12000.0 peak=0.8677198
+✔ Test "Music-style song metadata persists and seeds playback statistics" passed after 248.414 seconds.
+✔ Test "Manual and synchronized lyrics persist with the song" passed after 248.425 seconds.
+✔ Test "Missing managed files cannot be reported as a successful metadata move" passed after 248.583 seconds.
+✔ Test "Repeated size/place proposals reuse exact geometry; resize and invalidation remeasure" passed after 219.509 seconds.
+✔ Suite "Effect rack rendering boundaries" passed after 248.591 seconds.
+✔ Test frequencyAndLevelMatrix() passed after 219.518 seconds.
+◇ Test limiterHandlesOverloadAndBypass() started.
+✔ Test "Playlist membership preserves order, ignores duplicates, removes, and persists" passed after 248.610 seconds.
+✔ Test "Bulk artist and album edits reconcile shared catalog identities" passed after 248.670 seconds.
+✔ Test "Bulk edits change only checked metadata fields" passed after 248.673 seconds.
+✔ Test "Music-style album edits preserve each song title and track number" passed after 248.675 seconds.
+✔ Test "Bulk artist edits preserve distinct album identities" passed after 248.675 seconds.
+✔ Test "New selected media folder registers its audio in place and survives restart" passed after 248.079 seconds.
+✔ Test "Playlist sync preserves order and can be safely undone" passed after 248.683 seconds.
+✔ Test "Wheel scroll over a control reaches the scroll view, never the control" passed after 218.924 seconds.
+✔ Test "Continuous changes hold during overlap, retain the newest target and settle after pause" passed after 218.924 seconds.
+✔ Test "Transport, user volume and bypass gains remain independent in both output paths" passed after 218.924 seconds.
+✔ Suite "Device sync protocol" passed after 248.696 seconds.
+◇ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" started.
+◇ Test "Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits" started.
+◇ Test "Ordinary and true-peak PCM fade/drain satisfy iPhone step and silence criteria" started.
+✔ Test "A cancelled creation never publishes a recovery folder" passed after 218.634 seconds.
+◇ Test "Audio retained only in organization backups is rescued without replaying its broken journal" started.
+✔ Test "Shared folder migration previews, verifies, copies, and remains idempotent" passed after 248.771 seconds.
+✔ Test "Song deletion keeps catalog relationships consistent and honors both file choices" passed after 248.775 seconds.
+✔ Suite "M3 library management milestone" passed after 248.779 seconds.
+LIMITER 44100.0 impulse=false peak=0.42734215
+✔ Test "Audio retained only in organization backups is rescued without replaying its broken journal" passed after 0.156 seconds.
+◇ Test "Missing audio stays as explicit unavailable metadata only with opt-in" started.
+◇ Test case passing 1 argument unknownHash → false to "Missing audio stays as explicit unavailable metadata only with opt-in" started.
+LIMITER 44100.0 impulse=true peak=0.40212017
+◇ Test case passing 1 argument unknownHash → true to "Missing audio stays as explicit unavailable metadata only with opt-in" started.
+LIMITER 48000.0 impulse=false peak=0.45739666
+✔ Test "Missing audio stays as explicit unavailable metadata only with opt-in" with 2 test cases passed after 0.231 seconds.
+◇ Test "Unreadable audio can remain metadata only after explicit consent" started.
+LIMITER 48000.0 impulse=true peak=0.4329898
+✔ Test "Unreadable audio can remain metadata only after explicit consent" passed after 0.104 seconds.
+◇ Test "Strict failed copies can resume with explicit missing-audio consent" started.
+✔ Test "Strict failed copies can resume with explicit missing-audio consent" passed after 0.116 seconds.
+◇ Test "Readable read-only audio is copied without changing original permissions" started.
+LIMITER 96000.0 impulse=false peak=0.6609779
+✔ Test "Readable read-only audio is copied without changing original permissions" passed after 0.107 seconds.
+◇ Test "Unknown files appearing at a copy destination are never overwritten" started.
+✔ Test "Unknown files appearing at a copy destination are never overwritten" passed after 0.102 seconds.
+◇ Test "A later profile switch wins over an in-flight recovery-copy open" started.
+LIMITER 96000.0 impulse=true peak=0.6472719
+LIMITER 192000.0 impulse=false peak=0.7732839
+LIMITER 192000.0 impulse=true peak=0.7661259
+✔ Test "Confirmed artist and album edits move only affected managed files" passed after 250.313 seconds.
+✔ Test "Music XML migration copies originals, restores metadata and playlists, and is idempotent" passed after 250.415 seconds.
+MAC_TRANSPORT_PCM candidate=false rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=false rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=44100.0 maxStep=0.0003629923 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=48000.0 maxStep=0.00033335388 tailPeak=0.0
+MAC_TRANSPORT_PCM candidate=true rate=96000.0 maxStep=0.00016669929 tailPeak=0.0
+✔ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" passed after 3.569 seconds.
+◇ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" started.
+✔ Test limiterHandlesOverloadAndBypass() passed after 3.719 seconds.
+✔ Test "Bypass commits at zero, restores latest user gain and coalesces rapid OFF edits" passed after 3.649 seconds.
+✔ Test "Another Ongaku library merges metadata, smart playlists, folders, and audio non-destructively" passed after 252.351 seconds.
+✔ Test "Switching libraries isolates tracks and playback state" passed after 251.750 seconds.
+✔ Test "Ordinary and true-peak PCM fade/drain satisfy iPhone step and silence criteria" passed after 3.649 seconds.
+◇ Test warmAndExciterFiltersAreActiveAndWarmHasFourDistinctInputs() started.
+✔ Suite "Transport output continuity" passed after 252.356 seconds.
+◇ Test "Active and unexpectedly late overlaps never freeze the output muted" started.
+✔ Test "Selecting an Apple Music library keeps originals and stores portable copies" passed after 252.408 seconds.
+✔ Test "Playlist order can be changed and restored with Undo and Redo" passed after 252.420 seconds.
+✔ Test "Store rescue reloads published metadata and discards queued in-memory edits" passed after 246.615 seconds.
+◇ Test "Damaged import rescue retains staging and resumes after every publication boundary" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+✔ Test "Song, album, and artist edits persist without changing unsupported files" passed after 252.555 seconds.
+✔ Test "A same-name destination requires confirmation before replacing the file" passed after 252.563 seconds.
+✔ Test "Imported Music songs reopen from Ongaku without the Music package or original audio" passed after 251.987 seconds.
+✔ Test "Active and unexpectedly late overlaps never freeze the output muted" passed after 0.237 seconds.
+✔ Test warmAndExciterFiltersAreActiveAndWarmHasFourDistinctInputs() passed after 0.237 seconds.
+◇ Test "Stop or rebuild in either envelope phase cancels callbacks before resume" started.
+◇ Test silenceAndOutputVolume() started.
+✔ Test "Playlist references survive file relocation, metadata edits, and restart" passed after 252.617 seconds.
+✔ Test "Playlist create, edit, artwork, duplicate, delete, and restart are transactional" passed after 252.638 seconds.
+✔ Test "A smart playlist updates live and survives restart" passed after 252.642 seconds.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+✔ Suite "Smart playlists" passed after 252.646 seconds.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+✔ Test "Damaged import rescue retains staging and resumes after every publication boundary" with 6 test cases passed after 0.608 seconds.
+◇ Test "Recovery refuses a replaced import record instead of deleting another transaction" started.
+✔ Test "Recovery refuses a replaced import record instead of deleting another transaction" passed after 0.062 seconds.
+◇ Test "Invalid rescue flags or future target schema cannot mutate any recovery input" started.
+◇ Test case passing 1 argument futureSchema → false to "Invalid rescue flags or future target schema cannot mutate any recovery input" started.
+◇ Test case passing 1 argument futureSchema → true to "Invalid rescue flags or future target schema cannot mutate any recovery input" started.
+✔ Test "Invalid rescue flags or future target schema cannot mutate any recovery input" with 2 test cases passed after 0.095 seconds.
+◇ Test "Checksum damage can restore primary without trusting the altered target" started.
+✔ Test "Checksum damage can restore primary without trusting the altered target" passed after 0.065 seconds.
+◇ Test "Valid and future import records cannot be discarded" started.
+◇ Test case passing 1 argument version → 1 to "Valid and future import records cannot be discarded" started.
+◇ Test case passing 1 argument version → 2 to "Valid and future import records cannot be discarded" started.
+✔ Test "Valid and future import records cannot be discarded" with 2 test cases passed after 0.056 seconds.
+◇ Test "Actual backup copy failure retains source bytes and can retry" started.
+✔ Test "Actual backup copy failure retains source bytes and can retry" passed after 0.065 seconds.
+✔ Suite "Damaged catalog journal rescue" passed after 253.400 seconds.
+✔ Test "Stop or rebuild in either envelope phase cancels callbacks before resume" passed after 9.913 seconds.
+✔ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" passed after 10.231 seconds.
+◇ Test "Transport becoming inaudible without an explicit cancel restores the envelope" started.
+◇ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" started.
+✔ Test silenceAndOutputVolume() passed after 9.925 seconds.
+✔ Suite "Effect signal audit" passed after 262.519 seconds.
+✔ Test "Playlist folders preserve membership and sidebar order" passed after 262.525 seconds.
+✔ Test "Transport becoming inaudible without an explicit cancel restores the envelope" passed after 0.053 seconds.
+◇ Test "Changed latency drains at zero and rejects stale restore after transport" started.
+✔ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" passed after 0.053 seconds.
+◇ Test "Two-finger scroll can start on a partially clipped control to reveal it" started.
+✔ Test "Storage selection recovers preserved catalogs without moving originals" with 3 test cases passed after 262.609 seconds.
+✔ Suite "Library repository integrity" passed after 262.614 seconds.
+✔ Test "Album and artist moves persist every destination path across reloads" passed after 262.629 seconds.
+✔ Suite "Catalog metadata editing" passed after 262.635 seconds.
+✔ Test "Two-finger scroll can start on a partially clipped control to reveal it" passed after 0.078 seconds.
+✔ Test "Changed latency drains at zero and rejects stale restore after transport" passed after 0.078 seconds.
+◇ Test "Momentum produced during a control drag cannot move the rack after mouse-up" started.
+◇ Test "Zero strength and Space amount are bypass boundaries despite an ON switch" started.
+✔ Test "Storage activation creates a catalog, reopens it, and preserves the old library on failure" passed after 262.054 seconds.
+✔ Test "Momentum produced during a control drag cannot move the rack after mouse-up" passed after 0.071 seconds.
+◇ Test "Detaching the rack releases ownership and position protection" started.
+✔ Test "Zero strength and Space amount are bypass boundaries despite an ON switch" passed after 0.083 seconds.
+✔ Suite "Effect parameter continuity" passed after 262.723 seconds.
+✔ Test "A later profile switch wins over an in-flight recovery-copy open" passed after 13.192 seconds.
+◇ Test "Opening a recovered library does not flush the broken original's pending queue" started.
+✔ Test "Search switches to SQLite after parity verification and resynchronizes after edits" passed after 262.755 seconds.
+◇ Test "SQLite setup failure retains JSON search" started.
+✔ Test "Detaching the rack releases ownership and position protection" passed after 0.051 seconds.
+◇ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" started.
+✔ Test "Selecting another Music library opens its own Ongaku storage and persists it" passed after 262.292 seconds.
+✔ Suite "Application settings" passed after 262.897 seconds.
+✔ Test "SQLite setup failure retains JSON search" passed after 0.163 seconds.
+◇ Test "Changing a query never performs the JSON fallback inline on MainActor" started.
+✔ Test "Opening a recovered library does not flush the broken original's pending queue" passed after 0.347 seconds.
+✔ Suite "Read-only legacy recovery copies" passed after 263.088 seconds.
+✔ Test "Every playlist organization operation supports Undo and Redo" passed after 264.064 seconds.
+✔ Suite "M2 playlist organization milestone" passed after 264.068 seconds.
+✔ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" passed after 1.466 seconds.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Changing a query never performs the JSON fallback inline on MainActor" passed after 3.151 seconds.
+◇ Test "A failed edit restores searchable results without waiting for a new query" started.
+✔ Test "A failed edit restores searchable results without waiting for a new query" passed after 0.060 seconds.
+◇ Test "Recovering SQLite releases fallback memory and preserves multilingual results" started.
+✔ Test "Recovering SQLite releases fallback memory and preserves multilingual results" passed after 0.226 seconds.
+✔ Suite "Library search routing" passed after 266.365 seconds.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 51.012 seconds.
+◇ Test "Effect mode survives leaving and returning; OFF remains authoritative" started.
+✔ Test "Effect mode survives leaving and returning; OFF remains authoritative" passed after 2.253 seconds.
+◇ Test "SwiftUI region connects to the actual ancestor scroll view" started.
+✔ Test "SwiftUI region connects to the actual ancestor scroll view" passed after 0.139 seconds.
+✔ Suite "Effect rack input ownership" passed after 317.638 seconds.
+✔ Test run with 491 tests in 57 suites passed after 317.639 seconds.

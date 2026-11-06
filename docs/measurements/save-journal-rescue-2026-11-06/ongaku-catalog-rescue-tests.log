@@ -1,0 +1,93 @@
+Building for debugging...
+[Planning 1 / 186]
+[Planning deferred tasks]
+[1 / 1]
+[5 / 42] OngakuDesktop-product
+[12 / 44] OngakuDesktop-product
+[18 / 44] OngakuDesktop-product
+[19 / 46] OngakuDesktop-product
+[21 / 59] OngakuDesktop-product
+[25 / 60] OngakuDesktop-product
+[27 / 60] OngakuDesktop-product
+[28 / 60] OngakuDesktop-product
+[29 / 60] OngakuDesktop-product
+[30 / 60] OngakuDesktop-product
+[31 / 60] OngakuDesktop-product
+[32 / 60] OngakuDesktop-product
+[33 / 60] OngakuDesktop-product
+[34 / 60] OngakuDesktop-product
+[35 / 60] OngakuDesktop-product
+[36 / 60] OngakuDesktop
+[37 / 61] OngakuDesktopTests-product
+[38 / 59] OngakuDesktopTests-product
+[41 / 69] OngakuDesktop
+[42 / 69] OngakuDesktop
+[43 / 69] OngakuDesktop
+[44 / 69] OngakuDesktop
+[45 / 69] OngakuDesktop
+[46 / 69] OngakuDesktop
+[47 / 69] OngakuDesktop
+[48 / 69] OngakuDesktop
+[49 / 69] OngakuDesktop
+[50 / 69] OngakuDesktop
+[50 / 69] OngakuAudioDSP
+[52 / 71] OngakuDesktop
+[53 / 72] OngakuDesktop
+[55 / 72] OngakuDesktop
+[55 / 72] OngakuDesktop-product
+[60 / 71] OngakuDesktopTests-product
+[63 / 82] OngakuDesktopTests-product
+[64 / 82] OngakuDesktopTests-product
+[66 / 81] OngakuDesktopTests-product
+[72 / 81] OngakuDesktopTests-product
+[74 / 81] OngakuDesktopTests-product
+[75 / 81] OngakuDesktopTests-product
+[77 / 81] OngakuDesktopTests-product
+[79 / 81] OngakuDesktopTests-product
+Build complete! (56.28秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Damaged catalog journal rescue" started.
+◇ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" started.
+✔ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" passed after 0.024 seconds.
+◇ Test "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Rescue interruption and disk exhaustion retain a retryable transaction" with 6 test cases passed after 0.097 seconds.
+◇ Test "A failed sidecar write after rescue journal publication can recover on restart" started.
+✔ Test "A failed sidecar write after rescue journal publication can recover on restart" passed after 0.013 seconds.
+◇ Test "A healthy interrupted transaction is never discarded by rescue" started.
+✔ Test "A healthy interrupted transaction is never discarded by rescue" passed after 0.011 seconds.
+◇ Test "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "self-containment-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "Other pending recovery prevents rescue without changing any catalog" with 5 test cases passed after 0.035 seconds.
+◇ Test "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 0 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 1 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 2 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 3 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 4 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "No primary, invalid primary, future journal, and future primary fail closed" with 5 test cases passed after 0.036 seconds.
+◇ Test "Store rescue reloads published metadata and discards queued in-memory edits" started.
+✘ Test "Store rescue reloads published metadata and discards queued in-memory edits" recorded an issue at CatalogRescueTests.swift:156:71: Issue recorded
+↳ An old queued editor accepted
+✘ Test "Store rescue reloads published metadata and discards queued in-memory edits" recorded an issue at CatalogRescueTests.swift:38:9: Expectation failed: actual.playlists == expected.playlists
+↳ actual.playlists == expected.playlists → false
+↳   actual.playlists → []
+↳   expected.playlists → [OngakuDesktop.Playlist(id: E127C362-0545-4DD5-AA98-23E0A06E1A9D, name: "Published", description: "", artworkPath: nil, folderID: nil, sortOrder: 0, smartDefinition: nil, entries: [], createdAt: 2026-11-06 11:29:05 +0000, updatedAt: 2026-11-06 11:29:05 +0000)]
+✘ Test "Store rescue reloads published metadata and discards queued in-memory edits" failed after 0.024 seconds with 2 issues.
+◇ Test "Actual backup copy failure retains source bytes and can retry" started.
+✔ Test "Actual backup copy failure retains source bytes and can retry" passed after 0.012 seconds.
+✘ Suite "Damaged catalog journal rescue" failed after 0.255 seconds with 2 issues.
+✘ Test run with 8 tests in 1 suite failed after 0.256 seconds with 2 issues.
+Note: Some test targets reported failures:
+  - OngakuDesktopTests (Swift Testing)

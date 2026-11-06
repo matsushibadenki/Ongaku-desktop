@@ -71,3 +71,19 @@ nonisolated struct AudioGraphConfiguration: Equatable {
         return reusable
     }
 }
+
+/// Reserve SRC headroom before the mixer allocates render resources. This is
+/// capacity, not the device I/O buffer size or an added signal delay.
+nonisolated enum AudioMixerCapacity {
+    static let minimumFrames: AUAudioFrameCount = 4096
+    static func reserve(_ mixer: AVAudioMixerNode) {
+        let unit = mixer.auAudioUnit
+        guard !unit.renderResourcesAllocated else { return }
+        unit.maximumFramesToRender = max(unit.maximumFramesToRender, minimumFrames)
+    }
+    static func makeMixer() -> AVAudioMixerNode {
+        let mixer = AVAudioMixerNode()
+        reserve(mixer)
+        return mixer
+    }
+}

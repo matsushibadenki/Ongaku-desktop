@@ -1,0 +1,7 @@
+tests/SpectralTransientFallbackRegression.swift:43:140: error: extra argument 'parameters' in call
+41 |         for block in 0..<16 {
+42 |             if let effect {
+43 |                 effect.apply(setting: RealtimeAudioEffectSetting(kind: .spectralTransient, isEnabled: block.isMultiple(of: 2), parameters: ["intensity": 1]))
+   |                                                                                                                                            `- error: extra argument 'parameters' in call
+44 |                 effect.resetTailState()
+45 |                 try require(!effect.isEnabled && effect.estimatedGainBoostDB == 0, "Unavailable unit claimed active gain")

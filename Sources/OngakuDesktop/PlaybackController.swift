@@ -999,7 +999,7 @@ final class PlaybackController: ObservableObject {
         return PlayerNodeStopCoordinator(nodes: nodes)
     }()
     private var transportMutationID = UUID()
-    private let sourceMixerNode = AVAudioMixerNode()
+    private let sourceMixerNode = AudioMixerCapacity.makeMixer()
     private var activePlayerIndex = 0
     private var playerNode: AVAudioPlayerNode {
         activePlayerIndex == 0 ? primaryPlayerNode : secondaryPlayerNode
@@ -1175,6 +1175,7 @@ final class PlaybackController: ObservableObject {
         preventsClipping = UserDefaults.standard.object(
             forKey: Self.preventsClippingKey
         ) as? Bool ?? true
+        AudioMixerCapacity.reserve(engine.mainMixerNode)
         engine.attach(primaryPlayerNode)
         engine.attach(secondaryPlayerNode)
         engine.attach(sourceMixerNode)

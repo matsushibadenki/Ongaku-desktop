@@ -303,7 +303,11 @@ final class EffectRackInputRouter: @MainActor ObservableObject {
         guard clip.bounds.origin != target else { return }
         restoringBounds = true
         clip.scroll(to: target)
-        scrollView.reflectScrolledClipView(clip)
+        // Preserve click ownership immediately; defer only scroller layout.
+        DispatchQueue.main.async { [weak scrollView, weak clip] in
+            guard let scrollView, let clip, scrollView.contentView === clip else { return }
+            scrollView.reflectScrolledClipView(clip)
+        }
         restoringBounds = false
     }
 

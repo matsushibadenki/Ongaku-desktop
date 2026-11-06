@@ -104,12 +104,17 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private var browserLifecycle = NearbyBrowserLifecycle()
     private var isStarted = false
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, chunkWorker: DeviceChunkTransferWorker? = nil) {
         self.defaults = defaults
         super.init()
-        let sender = DeviceChunkSessionSender(session)
-        let worker = DeviceChunkTransferWorker(checkpointDirectory: Self.checkpointDirectory,
-            destination: .directory(FileManager.default.temporaryDirectory.appendingPathComponent("OngakuIncoming", isDirectory: true)), send: sender.send)
+        let worker: DeviceChunkTransferWorker
+        if let chunkWorker {
+            worker = chunkWorker
+        } else {
+            let sender = DeviceChunkSessionSender(session)
+            worker = DeviceChunkTransferWorker(checkpointDirectory: Self.checkpointDirectory,
+                destination: .directory(FileManager.default.temporaryDirectory.appendingPathComponent("OngakuIncoming", isDirectory: true)), send: sender.send)
+        }
         chunkTransfers = worker
         chunkEventTask = Task { @MainActor [weak self, events = worker.events] in
             for await event in events {
@@ -961,7 +966,9 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         chunkTransfers.client.submit(.refresh(removingStale: removingStale))
     }
 
-    @MainActor private func applyChunkEvent(_ event: DeviceChunkTransferWorker.Event) {
+    // Internal so end-to-end audits can seed existing history through this same
+    // reducer; the worker task and UI both retain MainActor ownership.
+    @MainActor func applyChunkEvent(_ event: DeviceChunkTransferWorker.Event) {
         switch event {
         case .state(let connection, let state):
             guard chunkTransfers.client.isCurrent(connection) else { return }

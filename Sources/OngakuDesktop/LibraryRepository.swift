@@ -34,9 +34,21 @@ actor LibraryRepository {
         let entries: [Entry]
     }
     private var storageRestoreJournalURL: URL { rootURL.appendingPathComponent("storage-restore-journal-v1.json") }
+    private struct StorageRestoreRecoveryRecord: Codable {
+        let version: Int
+        let generation: GenerationToken
+        let payload: Data
+        let sha256: String
+    }
+    private var storageRestoreRecoveryURL: URL {
+        rootURL.appendingPathComponent("storage-restore-journal-v1.recovery.json")
+    }
 #if DEBUG
     struct StorageRestoreInterruption: Error {}
     enum StorageRestoreStep: Sendable { case afterBackup(String), afterInstall(String), beforeRollbackCopy(String) }
+    enum StorageRestoreRecordStep: Sendable { case mirror, primary }
+    var storageRestoreRecordTestHook: (@Sendable (StorageRestoreRecordStep) throws -> Void)?
+    func setStorageRestoreRecordTestHook(_ hook: (@Sendable (StorageRestoreRecordStep) throws -> Void)?) { storageRestoreRecordTestHook = hook }
     var storageRestoreTestHook: (@Sendable (StorageRestoreStep) throws -> Void)?
     func setStorageRestoreTestHook(_ hook: (@Sendable (StorageRestoreStep) throws -> Void)?) { storageRestoreTestHook = hook }
 #endif
@@ -48,6 +60,7 @@ actor LibraryRepository {
         let manifestDigest: String?
         let backUpReadablePrimary: Bool
         let clearsRegistrations: Bool?
+        var discardedImportJournalDigest: String? = nil
     }
 
     struct CatalogWriteRecoveryRequired: LocalizedError {
@@ -353,7 +366,7 @@ actor LibraryRepository {
     private var hasObservedManifest = false
     private var observedQueueStamp: ManifestStamp?
     private var observedEventsStamp: ManifestStamp?
-    private struct GenerationToken: Equatable {
+    private struct GenerationToken: Equatable, Codable {
         let value: UInt64
         let epoch: UUID?
     }
@@ -754,8 +767,20 @@ actor LibraryRepository {
             )
         }
         let journal = StorageRestoreJournal(version: 1, transactionID: transactionID, entries: entries)
-        try encoder.encode(journal).write(to: storageRestoreJournalURL, options: [.atomic])
+        let payload = try encoder.encode(journal)
+        let record = StorageRestoreRecoveryRecord(version: 1, generation: try persistentGeneration(),
+                                                   payload: payload, sha256: digest(payload))
+        // Publish a complete, generation-bound recovery copy before any move.
+        try encoder.encode(record).write(to: storageRestoreRecoveryURL, options: .atomic)
+        try synchronizeOverlayFile(storageRestoreRecoveryURL)
+#if DEBUG
+        try storageRestoreRecordTestHook?(.mirror)
+#endif
+        try payload.write(to: storageRestoreJournalURL, options: .atomic)
         try synchronizeOverlayFile(storageRestoreJournalURL)
+#if DEBUG
+        try storageRestoreRecordTestHook?(.primary)
+#endif
         do {
             for entry in entries {
                 let destination = rootURL.appendingPathComponent(entry.name)
@@ -772,7 +797,7 @@ actor LibraryRepository {
 #endif
                 }
             }
-            try fileManager.removeItem(at: storageRestoreJournalURL)
+            try finishStorageRestoreJournal()
         } catch {
 #if DEBUG
             if error is StorageRestoreInterruption { throw error }
@@ -784,7 +809,7 @@ actor LibraryRepository {
         currentDocument = nil
     }
 
-    private func rollbackStorageRestore(_ journal: StorageRestoreJournal) throws {
+    private func validateStorageRestoreJournal(_ journal: StorageRestoreJournal) throws {
         let allowed: Set<String> = [
             "library-v1.json", "library-v1.backup.json", "playback-queue-v1.json", "playback-queue-v1.backup.json",
             "playback-events-v1.json", "playback-events-v1.backup.json", "device-sync-tags-v1.json",
@@ -792,9 +817,14 @@ actor LibraryRepository {
             "storage-recovery-v1.json"
         ]
         guard journal.version == 1, Set(journal.entries.map(\.name)).count == journal.entries.count,
+              journal.entries.contains(where: { $0.name == "library-v1.json" && $0.hadPrepared }),
               journal.entries.allSatisfy({ allowed.contains($0.name) }) else {
             throw CatalogWriteRecoveryRequired()
         }
+    }
+
+    private func rollbackStorageRestore(_ journal: StorageRestoreJournal) throws {
+        try validateStorageRestoreJournal(journal)
         let root = rootURL.appendingPathComponent("Recovery Backups/\(journal.transactionID.uuidString)")
         let previous = root.appendingPathComponent("Previous")
         let prepared = root.appendingPathComponent("Prepared")
@@ -827,14 +857,50 @@ actor LibraryRepository {
                 try fileManager.moveItem(at: destination, to: holding.appendingPathComponent(entry.name))
             }
         }
-        try fileManager.removeItem(at: storageRestoreJournalURL)
+        try finishStorageRestoreJournal()
         currentDocument = nil
+    }
+
+    private func finishStorageRestoreJournal() throws {
+        if fileManager.fileExists(atPath: storageRestoreRecoveryURL.path) {
+            try fileManager.removeItem(at: storageRestoreRecoveryURL)
+        }
+        try fileManager.removeItem(at: storageRestoreJournalURL)
     }
 
     private func recoverStorageRestoreJournal() throws {
         guard fileManager.fileExists(atPath: storageRestoreJournalURL.path) else { return }
         let data = try Data(contentsOf: storageRestoreJournalURL)
-        guard let journal = try? decoder.decode(StorageRestoreJournal.self, from: data) else {
+        // A future writer's format must not be replaced by an older recovery copy.
+        if let header = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let version = header["version"] as? Int, version != 1 {
+            throw CatalogWriteRecoveryRequired()
+        }
+        var payload = data
+        if let copy = try? Data(contentsOf: storageRestoreRecoveryURL),
+           let record = try? decoder.decode(StorageRestoreRecoveryRecord.self, from: copy),
+           record.version == 1, record.sha256 == digest(record.payload),
+           let candidate = try? decoder.decode(StorageRestoreJournal.self, from: record.payload) {
+            try validateStorageRestoreJournal(candidate)
+            if record.payload != data {
+                guard record.generation == (try persistentGeneration()) else {
+                    throw CatalogWriteRecoveryRequired()
+                }
+                // Back up the exact damaged bytes; ENOSPC leaves both inputs intact.
+                let backup = rootURL.appendingPathComponent("Recovery Backups/Storage-Journal-\(UUID().uuidString)", isDirectory: true)
+                try fileManager.createDirectory(at: backup, withIntermediateDirectories: true)
+                let preserved = backup.appendingPathComponent(storageRestoreJournalURL.lastPathComponent)
+                try fileManager.copyItem(at: storageRestoreJournalURL, to: preserved)
+                try synchronizeOverlayFile(preserved)
+                let savedCopy = backup.appendingPathComponent(storageRestoreRecoveryURL.lastPathComponent)
+                try fileManager.copyItem(at: storageRestoreRecoveryURL, to: savedCopy)
+                try synchronizeOverlayFile(savedCopy)
+                try record.payload.write(to: storageRestoreJournalURL, options: .atomic)
+                try synchronizeOverlayFile(storageRestoreJournalURL)
+            }
+            payload = record.payload
+        }
+        guard let journal = try? decoder.decode(StorageRestoreJournal.self, from: payload) else {
             throw CatalogWriteRecoveryRequired()
         }
         try rollbackStorageRestore(journal)
@@ -877,7 +943,7 @@ actor LibraryRepository {
                      "playback-queue-v1.json", "playback-queue-v1.backup.json",
                      "playback-events-v1.json", "playback-events-v1.backup.json",
                      "catalog-write-journal-v1.json", "storage-restore-journal-v1.json",
-                     "import-journal-v1.json", "media-organization-journal-v1.json",
+                     "storage-restore-journal-v1.recovery.json", "import-journal-v1.json", "media-organization-journal-v1.json",
                      "device-sync-overlay-journal-v1.json", "device-sync-tags-v1.json",
                      "self-containment-journal-v1.json", "storage-recovery-v1.json",
                      "Recovery Backups"]
@@ -890,6 +956,529 @@ actor LibraryRepository {
         }
         try fileManager.moveItem(at: partial, to: completed)
         return completed
+    }
+
+    struct CatalogRescueUnavailable: LocalizedError {
+        var errorDescription: String? { L10n.text("library.error.catalogRescueUnavailable") }
+    }
+#if DEBUG
+    enum CatalogRescueStep: Sendable { case backup, generation, journal }
+    var catalogRescueTestHook: (@Sendable (CatalogRescueStep) throws -> Void)?
+    func setCatalogRescueTestHook(_ hook: (@Sendable (CatalogRescueStep) throws -> Void)?) { catalogRescueTestHook = hook }
+#endif
+
+    /// Explicit rollback to the readable primary, never an automatic discard of
+    /// recovery intent. Preserve every affected byte before replacing the broken
+    /// record with a normal, restartable catalog transaction.
+    func rescueDamagedCatalogWriteJournal() throws -> URL {
+        try rescueDamagedSaveJournal(importOnly: false)
+    }
+
+    func rescueDamagedImportJournal() throws -> URL {
+        try rescueDamagedSaveJournal(importOnly: true)
+    }
+
+    func rescueDamagedLibraryJournal() throws -> URL {
+        try rescueDamagedSaveJournal(importOnly: nil)
+    }
+
+    private func rescueDamagedSaveJournal(importOnly: Bool?) throws -> URL {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
+        let isImport = importOnly ?? !fileManager.fileExists(atPath: catalogWriteJournalURL.path)
+        let damagedURL = isImport ? importJournalURL : catalogWriteJournalURL
+        let otherJournals = [storageRestoreJournalURL, importJournalURL, overlayJournalURL,
+                             mediaOrganizationJournalURL, selfContainmentJournalURL, catalogWriteJournalURL]
+            .filter { $0 != damagedURL }
+        guard !otherJournals.contains(where: { fileManager.fileExists(atPath: $0.path) }),
+              fileManager.fileExists(atPath: damagedURL.path) else { throw CatalogRescueUnavailable() }
+        let broken = try Data(contentsOf: damagedURL)
+        // Future versions and valid transactions must use their own recovery.
+        if let header = try? JSONSerialization.jsonObject(with: broken) as? [String: Any],
+           let version = header[isImport ? "schemaVersion" : "version"] as? Int,
+           version != 1 { throw CatalogRescueUnavailable() }
+        if isImport {
+            guard (try? decoder.decode(ImportJournal.self, from: broken)) == nil else { throw CatalogRescueUnavailable() }
+        } else if let journal = try? decoder.decode(CatalogWriteJournal.self, from: broken) {
+            guard journal.version == 1 else { throw CatalogRescueUnavailable() }
+            if let document = try? decoder.decode(LibraryDocument.self, from: journal.manifest) {
+                guard document.schemaVersion == LibraryDocument.currentSchema else { throw CatalogRescueUnavailable() }
+                if journal.manifestDigest == nil || journal.manifestDigest == digest(journal.manifest) {
+                    throw CatalogRescueUnavailable()
+                }
+            }
+        }
+        let primary = try Data(contentsOf: manifestURL)
+        var document = try decoder.decode(LibraryDocument.self, from: primary)
+        guard document.schemaVersion == LibraryDocument.currentSchema else { throw CatalogRescueUnavailable() }
+        let name = "Catalog-\(UUID().uuidString)"
+        let backup = rootURL.appendingPathComponent("Recovery Backups/" + name, isDirectory: true)
+        let partial = rootURL.appendingPathComponent("Recovery Backups/" + name + ".partial", isDirectory: true)
+        try fileManager.createDirectory(at: partial, withIntermediateDirectories: true)
+        for source in [manifestURL, backupURL, damagedURL, generationURL, generationMarkerURL,
+                       playbackQueueURL, playbackQueueBackupURL, playbackEventsURL, playbackEventsBackupURL,
+                       overlayTagsURL] where fileManager.fileExists(atPath: source.path) {
+            var info = stat()
+            guard source.path.withCString({ lstat($0, &info) }) == 0,
+                  (info.st_mode & S_IFMT) == S_IFREG else { throw CatalogRescueUnavailable() }
+            let target = partial.appendingPathComponent(source.lastPathComponent)
+            try fileManager.copyItem(at: source, to: target)
+            try synchronizeOverlayFile(target)
+        }
+        try fileManager.moveItem(at: partial, to: backup)
+#if DEBUG
+        try catalogRescueTestHook?(.backup)
+#endif
+        try Task.checkCancellation()
+        try recoverDamagedGeneration()
+        observedPersistentGeneration = try persistentGeneration()
+        try reservePersistentGeneration()
+#if DEBUG
+        try catalogRescueTestHook?(.generation)
+#endif
+        document.catalogGenerationEstablished = true
+        let data = try encoder.encode(document)
+        let replacement = CatalogWriteJournal(version: 1, previousManifestDigest: digest(primary),
+            manifest: data, manifestDigest: digest(data), backUpReadablePrimary: false, clearsRegistrations: false,
+            discardedImportJournalDigest: isImport ? digest(broken) : nil)
+        try encoder.encode(replacement).write(to: catalogWriteJournalURL, options: .atomic)
+        try synchronizeOverlayFile(catalogWriteJournalURL)
+#if DEBUG
+        try catalogRescueTestHook?(.journal)
+#endif
+        try recoverCatalogWriteJournal()
+        currentDocument = nil
+        try refreshObservedStamps()
+        return backup
+    }
+
+    struct RecoveryCopyIncomplete: LocalizedError {
+        var errorDescription: String? { L10n.text("library.error.recoveryCopyIncomplete") }
+    }
+    struct RecoveryCopyResult: Sendable {
+        let mediaURL: URL
+        let trackCount: Int
+        let derivedHashCount: Int
+        let missingTrackCount: Int
+        let libraryID: UUID
+    }
+    private struct RecoveryCopyPlan: Codable {
+        let id: UUID
+        var document: LibraryDocument
+        let sourceRoots: [String]
+        let tags: [UUID: [String]]?
+        var derivedHashCount: Int
+        var allowMissing: Bool? = nil
+        var publishedDigest: String? = nil
+    }
+    private struct RecoveryCopyCatalogHeader: Decodable {
+        let schemaVersion: Int
+        let libraryID: UUID
+        let recoveryCopyPending: UUID?
+    }
+    private struct RecoveryCopyEnvelope: Codable {
+        let version: Int
+        let payload: Data
+        let sha256: String
+    }
+    private var recoveryCopyURL: URL { rootURL.appendingPathComponent("recovery-copy-v1.json") }
+#if DEBUG
+    enum RecoveryCopyStep: Sendable { case installed(Int), catalog, ready }
+    var recoveryCopyTestHook: (@Sendable (RecoveryCopyStep) throws -> Void)?
+    func setRecoveryCopyTestHook(_ hook: (@Sendable (RecoveryCopyStep) throws -> Void)?) { recoveryCopyTestHook = hook }
+#endif
+
+    /// Read-only salvage of an explicitly selected catalog. Do not load/replay
+    /// the broken source or acquire locks which could create files in it.
+    func prepareRecoveryCopy(from manifest: URL, in parent: URL, allowMissing: Bool = false) throws -> URL {
+        try Task.checkCancellation()
+        let info = try manifest.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+        guard info.isRegularFile == true, info.isSymbolicLink != true,
+              (info.fileSize ?? 0) <= 512 * 1024 * 1024 else { throw RecoveryCopyIncomplete() }
+        let bytes = try Data(contentsOf: manifest)
+        guard bytes.count <= 512 * 1024 * 1024 else { throw CocoaError(.fileReadTooLarge) }
+        var document = try decodeDocument(data: bytes).document
+        guard Set(document.tracks.map(\.id)).count == document.tracks.count,
+              Set(document.playlists.map(\.id)).count == document.playlists.count else { throw RecoveryCopyIncomplete() }
+        for i in document.tracks.indices { document.tracks[i].sha256 = document.tracks[i].sha256.lowercased() }
+        var derived = 0
+        for i in document.tracks.indices where !Self.validRecoveryHash(document.tracks[i].sha256) {
+            try Task.checkCancellation()
+            let source = document.tracks[i].fileURL
+            if (try? regularRecoveryAudio(source)) == true, let hash = try Self.readableRecoveryHash(source) {
+                document.tracks[i].sha256 = hash
+                derived += 1
+            } else {
+                guard allowMissing else { throw RecoveryCopyIncomplete() }
+                document.tracks[i].health = .missing
+            }
+        }
+        var metadataRoot = rootURL
+        var knownMetadataRoot = isInside(manifest.resolvingSymlinksInPath(), directory: rootURL.resolvingSymlinksInPath())
+        var ancestor = manifest.deletingLastPathComponent()
+        while ancestor.path != "/" {
+            if ancestor.lastPathComponent == PortableLibraryStorage.directoryName { metadataRoot = ancestor; knownMetadataRoot = true; break }
+            ancestor.deleteLastPathComponent()
+        }
+        let resolvedParent = parent.resolvingSymlinksInPath().standardizedFileURL
+        guard !isInside(resolvedParent, directory: rootURL.resolvingSymlinksInPath()),
+              (!knownMetadataRoot || !isInside(resolvedParent, directory: metadataRoot.resolvingSymlinksInPath())) else { throw RecoveryCopyIncomplete() }
+        try Task.checkCancellation()
+        let id = UUID()
+        let media = resolvedParent.appendingPathComponent("Ongaku-Recovered-" + id.uuidString, isDirectory: true)
+        let preparing = resolvedParent.appendingPathComponent(".Ongaku-Recovery-Preparing-" + id.uuidString, isDirectory: true)
+        let catalog = PortableLibraryStorage(mediaURL: preparing).rootURL
+        try fileManager.createDirectory(at: preparing, withIntermediateDirectories: false)
+        var published = false
+        defer { if !published { try? fileManager.removeItem(at: preparing) } }
+        try fileManager.createDirectory(at: catalog, withIntermediateDirectories: false)
+        let sourceSnapshot = catalog.appendingPathComponent("Recovery Backups/Selected Catalog", isDirectory: true)
+        try fileManager.createDirectory(at: sourceSnapshot, withIntermediateDirectories: true)
+        try bytes.write(to: sourceSnapshot.appendingPathComponent("library-source.json"), options: .atomic)
+        try synchronizeOverlayFile(sourceSnapshot.appendingPathComponent("library-source.json"))
+        let tagURL = metadataRoot.appendingPathComponent("device-sync-tags-v1.json")
+        var tags: [UUID: [String]]?
+        if knownMetadataRoot, let info = try? tagURL.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]),
+           info.isRegularFile == true, info.isSymbolicLink != true, (info.fileSize ?? 0) <= 64 * 1024 * 1024,
+           let raw = try? Data(contentsOf: tagURL) {
+            try raw.write(to: sourceSnapshot.appendingPathComponent(tagURL.lastPathComponent), options: .atomic)
+            let ids = Set(document.tracks.map(\.id))
+            tags = (try? JSONDecoder().decode([UUID: [String]].self, from: raw))?.filter { ids.contains($0.key) }
+        }
+        let finalCatalog = PortableLibraryStorage(mediaURL: media).rootURL
+        var copiedImages: [String: String] = [:]
+        let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "heic", "heif", "tif", "tiff", "gif", "webp"]
+        func copyImage(_ source: URL, relativePath: String) throws {
+            guard imageExtensions.contains(source.pathExtension.lowercased()),
+                  let values = try? source.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]),
+                  values.isRegularFile == true, values.isSymbolicLink != true,
+                  (values.fileSize ?? 0) <= 64 * 1024 * 1024 else { return }
+            try Task.checkCancellation()
+            let destination = catalog.appendingPathComponent(relativePath)
+            guard isInside(destination.resolvingSymlinksInPath(), directory: catalog) else { throw RecoveryCopyIncomplete() }
+            try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try fileManager.copyItem(at: source, to: destination)
+            copiedImages[source.standardizedFileURL.path] = finalCatalog.appendingPathComponent(relativePath).path
+        }
+        for name in ["Artwork", "Playlist Artwork"] where knownMetadataRoot {
+            let source = metadataRoot.appendingPathComponent(name)
+            guard let info = try? source.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
+                  info.isDirectory == true, info.isSymbolicLink != true else { continue }
+            guard let walk = fileManager.enumerator(at: source, includingPropertiesForKeys: [.isSymbolicLinkKey], options: [.skipsHiddenFiles]) else { continue }
+            for case let image as URL in walk {
+                try Task.checkCancellation()
+                if (try? image.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) == true { walk.skipDescendants(); continue }
+                try copyImage(image, relativePath: name + "/" + String(image.path.dropFirst(source.path.count + 1)))
+            }
+        }
+        for i in document.playlists.indices {
+            guard let path = document.playlists[i].artworkPath else { continue }
+            let source = URL(fileURLWithPath: path).standardizedFileURL
+            if copiedImages[source.path] == nil {
+                try copyImage(source, relativePath: "Playlist Artwork/" + document.playlists[i].id.uuidString + "." + source.pathExtension)
+            }
+            if let updated = copiedImages[source.path] { document.playlists[i].artworkPath = updated }
+        }
+        // A new library identity fences sync/history ownership from the broken original.
+        document.libraryID = UUID()
+        let selectedMedia = metadataRoot.lastPathComponent == PortableLibraryStorage.directoryName
+            ? metadataRoot.deletingLastPathComponent() : metadataRoot
+        let roots = Set([mediaURL.standardizedFileURL.path] + (knownMetadataRoot ? [selectedMedia.path,
+                         metadataRoot.appendingPathComponent("Media Organization Backups").path] : []))
+        let plan = RecoveryCopyPlan(id: id, document: document, sourceRoots: Array(roots).sorted(), tags: tags, derivedHashCount: derived, allowMissing: allowMissing)
+        let payload = try encoder.encode(plan)
+        let envelope = RecoveryCopyEnvelope(version: 1, payload: payload, sha256: digest(payload))
+        let marker = catalog.appendingPathComponent(recoveryCopyURL.lastPathComponent)
+        try encoder.encode(envelope).write(to: marker, options: .atomic)
+        try synchronizeOverlayFile(marker)
+        // Initialize this new catalog's generation before the deliberately
+        // unsupported pending header. Normal generation validation must not
+        // mistake our owned compatibility sentinel for a foreign future catalog.
+        for (name, value) in [("catalog-generation-v1", "0"), ("catalog-generation-established-v1", "1")] {
+            let url = catalog.appendingPathComponent(name)
+            try Data(value.utf8).write(to: url, options: .atomic)
+            try synchronizeOverlayFile(url)
+        }
+        // Older clients do not know our pending marker. An intentionally
+        // unsupported header also prevents their normal empty-library fallback.
+        let pending = try JSONSerialization.data(withJSONObject: [
+            "schemaVersion": LibraryDocument.currentSchema + 1,
+            "libraryID": document.libraryID.uuidString,
+            "recoveryCopyPending": id.uuidString
+        ], options: [.sortedKeys])
+        let pendingManifest = catalog.appendingPathComponent("library-v1.json")
+        try pending.write(to: pendingManifest, options: .atomic)
+        try synchronizeOverlayFile(pendingManifest)
+        try Task.checkCancellation()
+        try fileManager.moveItem(at: preparing, to: media)
+        published = true
+        return media
+    }
+
+    private nonisolated static func validRecoveryHash(_ value: String) -> Bool {
+        value.utf8.count == 64 && value.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) }
+    }
+
+    private nonisolated static func readableRecoveryHash(_ url: URL) throws -> String? {
+        do { return try DeviceSyncFileIntegrity.sha256(of: url, checkCancellation: { try Task.checkCancellation() }) }
+        catch is CancellationError { throw CancellationError() }
+        catch { return nil }
+    }
+
+    private func readRecoveryCopyPlan() throws -> RecoveryCopyPlan {
+        let raw = try Data(contentsOf: recoveryCopyURL)
+        guard let wrapper = try? decoder.decode(RecoveryCopyEnvelope.self, from: raw), wrapper.version == 1,
+              wrapper.sha256 == digest(wrapper.payload),
+              let plan = try? decoder.decode(RecoveryCopyPlan.self, from: wrapper.payload),
+              plan.document.schemaVersion == LibraryDocument.currentSchema,
+              mediaURL.lastPathComponent == "Ongaku-Recovered-" + plan.id.uuidString,
+              Set(plan.document.tracks.map(\.id)).count == plan.document.tracks.count,
+              plan.document.tracks.allSatisfy({ Self.validRecoveryHash($0.sha256) || $0.health == .missing }) else { throw RecoveryCopyIncomplete() }
+        return plan
+    }
+
+    private func writeRecoveryCopyPlan(_ plan: RecoveryCopyPlan) throws {
+        let payload = try encoder.encode(plan)
+        try encoder.encode(RecoveryCopyEnvelope(version: 1, payload: payload, sha256: digest(payload))).write(to: recoveryCopyURL, options: .atomic)
+        try synchronizeOverlayFile(recoveryCopyURL)
+    }
+
+    private func rebasedRecoveryPath(_ path: String, id: UUID) throws -> String {
+        let token = "/Ongaku-Recovered-" + id.uuidString + "/"
+        guard let range = path.range(of: token) else { return path }
+        let result = mediaURL.appendingPathComponent(String(path[range.upperBound...]))
+        guard isInside(result.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()) else { throw RecoveryCopyIncomplete() }
+        return result.path
+    }
+
+    private func regularRecoveryAudio(_ url: URL) throws -> Bool {
+        guard Self.isSupportedAudioFile(url) else { return false }
+        let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+        return values.isRegularFile == true && values.isSymbolicLink != true
+    }
+
+    /// An incomplete copy is not a valid empty library. After a crash at the
+    /// final marker, verify only this new volume before publishing it.
+    private func finishReadyRecoveryCopyIfPresent() throws {
+        guard fileManager.fileExists(atPath: recoveryCopyURL.path) else { return }
+        let plan = try readRecoveryCopyPlan()
+        guard let expected = plan.publishedDigest else { throw RecoveryCopyIncomplete() }
+        let published = try Data(contentsOf: manifestURL)
+        let actual = try decodeDocument(data: published).document
+        guard digest(published) == expected,
+              actual.libraryID == plan.document.libraryID,
+              actual.tracks.map(\.id) == plan.document.tracks.map(\.id) else { throw RecoveryCopyIncomplete() }
+        for track in actual.tracks {
+            try Task.checkCancellation()
+            guard isInside(track.fileURL.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()) else { throw RecoveryCopyIncomplete() }
+            if track.health == .missing {
+                guard !fileManager.fileExists(atPath: track.managedPath) else { throw RecoveryCopyIncomplete() }
+                continue
+            }
+            guard try regularRecoveryAudio(track.fileURL),
+                  try DeviceSyncFileIntegrity.sha256(of: track.fileURL, checkCancellation: { try Task.checkCancellation() }) == track.sha256
+            else { throw RecoveryCopyIncomplete() }
+        }
+        try fileManager.removeItem(at: recoveryCopyURL)
+    }
+
+    /// Copy only verified audio into a fresh library. Existing installed copies
+    /// are reused by SHA-256; neither original audio nor unknown target files are removed.
+    func resumeRecoveryCopy(allowMissing: Bool? = nil) throws -> RecoveryCopyResult {
+        try Task.checkCancellation()
+        guard fileManager.fileExists(atPath: recoveryCopyURL.path) else { throw RecoveryCopyIncomplete() }
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
+        var plan = try readRecoveryCopyPlan()
+        if let allowMissing { plan.allowMissing = allowMissing }
+        var moved = false
+        for i in plan.document.playlists.indices {
+            if let old = plan.document.playlists[i].artworkPath {
+                let new = try rebasedRecoveryPath(old, id: plan.id)
+                moved = moved || new != old
+                plan.document.playlists[i].artworkPath = new
+            }
+        }
+        if let expected = plan.publishedDigest {
+            let bytes = try Data(contentsOf: manifestURL)
+            guard digest(bytes) == expected else { throw RecoveryCopyIncomplete() }
+            for i in plan.document.tracks.indices {
+                let old = plan.document.tracks[i].managedPath
+                let new = try rebasedRecoveryPath(old, id: plan.id)
+                moved = moved || new != old
+                plan.document.tracks[i].managedPath = new
+            }
+            if moved {
+                // Reopen the owned plan before rewriting paths: another crash
+                // can replay the normal catalog journal rather than lose the receipt.
+                plan.publishedDigest = nil
+                try writeRecoveryCopyPlan(plan)
+            }
+        }
+        if plan.publishedDigest != nil {
+            try finishReadyRecoveryCopyIfPresent()
+            return RecoveryCopyResult(mediaURL: mediaURL, trackCount: plan.document.tracks.count, derivedHashCount: plan.derivedHashCount, missingTrackCount: plan.document.tracks.filter { $0.health == .missing }.count, libraryID: plan.document.libraryID)
+        }
+        let markerStamp = try fileStamp(recoveryCopyURL)
+        func checkCopyLocation() throws {
+            guard markerStamp != nil, try fileStamp(recoveryCopyURL) == markerStamp else { throw RecoveryCopyIncomplete() }
+        }
+        try recoverDamagedGeneration()
+        observedPersistentGeneration = try persistentGeneration()
+        try recoverCatalogWriteJournal()
+        if fileManager.fileExists(atPath: manifestURL.path) {
+            let raw = try Data(contentsOf: manifestURL)
+            let header = try decoder.decode(RecoveryCopyCatalogHeader.self, from: raw)
+            guard header.libraryID == plan.document.libraryID,
+                  header.schemaVersion == LibraryDocument.currentSchema
+                    || (header.schemaVersion == LibraryDocument.currentSchema + 1 && header.recoveryCopyPending == plan.id)
+            else { throw RecoveryCopyIncomplete() }
+            // Most copies already have fingerprints. Avoid decoding a second
+            // complete catalog merely to check its identity on restart.
+            if plan.document.tracks.contains(where: { !Self.validRecoveryHash($0.sha256) }) {
+                let committed = header.schemaVersion == LibraryDocument.currentSchema ? try decodeDocument(data: raw).document : plan.document
+                let existing = Dictionary(committed.tracks.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+                for i in plan.document.tracks.indices where !Self.validRecoveryHash(plan.document.tracks[i].sha256) {
+                    if let track = existing[plan.document.tracks[i].id], Self.validRecoveryHash(track.sha256),
+                       isInside(track.fileURL.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()),
+                       (try? regularRecoveryAudio(track.fileURL)) == true,
+                       try DeviceSyncFileIntegrity.sha256(of: track.fileURL, checkCancellation: { try Task.checkCancellation() }) == track.sha256 {
+                        plan.document.tracks[i].sha256 = track.sha256
+                        plan.derivedHashCount += 1
+                    }
+                }
+            }
+        }
+        try recoverSelfContainmentStaging()
+        let transaction = SelfContainmentJournal(version: 1, transactionID: UUID())
+        try encoder.encode(transaction).write(to: selfContainmentJournalURL, options: .atomic)
+        try synchronizeOverlayFile(selfContainmentJournalURL)
+        let staging = selfContainmentStagingURL(transaction.transactionID)
+        try fileManager.createDirectory(at: staging, withIntermediateDirectories: true)
+        defer { try? recoverSelfContainmentStaging() }
+        var candidates: [Int64: [URL]]?
+        var hashes: [String: String] = [:]
+        func fingerprint(_ url: URL) throws -> String {
+            if let value = hashes[url.path] { return value }
+            let value = try DeviceSyncFileIntegrity.sha256(of: url, checkCancellation: { try Task.checkCancellation() })
+            hashes[url.path] = value; return value
+        }
+        func markMissing(_ i: Int) throws {
+            guard plan.allowMissing == true else { throw RecoveryCopyIncomplete() }
+            let ext = plan.document.tracks[i].fileURL.pathExtension
+            let placeholder = mediaURL.appendingPathComponent("Unavailable").appendingPathComponent(plan.document.tracks[i].id.uuidString + "." + (ext.isEmpty ? "audio" : ext))
+            guard isInside(placeholder.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()),
+                  !fileManager.fileExists(atPath: placeholder.path) else { throw RecoveryCopyIncomplete() }
+            plan.document.tracks[i].managedPath = placeholder.path
+            plan.document.tracks[i].health = .missing
+        }
+        var unreadable = Set<String>()
+        func sourceFingerprint(_ url: URL) throws -> String? {
+            if let value = hashes[url.path] { return value }
+            if unreadable.contains(url.path) { return nil }
+            if let value = try Self.readableRecoveryHash(url) { hashes[url.path] = value; return value }
+            unreadable.insert(url.path); return nil
+        }
+        for i in plan.document.tracks.indices {
+            try Task.checkCancellation()
+            try checkCopyLocation()
+            if !Self.validRecoveryHash(plan.document.tracks[i].sha256) {
+                let file = plan.document.tracks[i].fileURL
+                if (try? regularRecoveryAudio(file)) == true, let hash = try sourceFingerprint(file) {
+                    plan.document.tracks[i].sha256 = hash
+                    plan.derivedHashCount += 1
+                } else { try markMissing(i); continue }
+            }
+            let track = plan.document.tracks[i]
+            var source: URL?
+            // Deterministic names let a restart reuse verified copies before
+            // depending on the original medium becoming available again.
+            let destination = try destinationURL(artist: track.artist, album: track.album,
+                                                originalName: track.fileURL.lastPathComponent, hash: track.sha256)
+            guard isInside(destination.resolvingSymlinksInPath(), directory: mediaURL.resolvingSymlinksInPath()) else { throw RecoveryCopyIncomplete() }
+            if fileManager.fileExists(atPath: destination.path), try regularRecoveryAudio(destination), try fingerprint(destination) == track.sha256 {
+                source = destination
+            } else if fileManager.fileExists(atPath: track.fileURL.path), (try? regularRecoveryAudio(track.fileURL)) == true,
+                      try sourceFingerprint(track.fileURL) == track.sha256 {
+                source = track.fileURL
+            } else {
+                if candidates == nil {
+                    var index: [Int64: [URL]] = [:]
+                    for root in [mediaURL] + plan.sourceRoots.map({ URL(fileURLWithPath: $0) }) {
+                        guard let walk = fileManager.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey],
+                            options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { continue }
+                        for case let file as URL in walk {
+                            try Task.checkCancellation()
+                            if file.lastPathComponent == PortableLibraryStorage.directoryName { walk.skipDescendants(); continue }
+                            if (try? regularRecoveryAudio(file)) == true,
+                               let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                                index[Int64(size), default: []].append(file)
+                            }
+                        }
+                    }
+                    candidates = index
+                }
+                for candidate in candidates?[track.fileSize] ?? [] {
+                    if try sourceFingerprint(candidate) == track.sha256 { source = candidate; break }
+                }
+            }
+            guard let source else { try markMissing(i); continue }
+            if source.standardizedFileURL != destination.standardizedFileURL {
+                try checkCopyLocation()
+                try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+                let temporary = staging.appendingPathComponent(UUID().uuidString)
+                try fileManager.copyItem(at: source, to: temporary)
+                guard try fingerprint(temporary) == track.sha256 else { throw RepositoryError.copyVerificationFailed(source.lastPathComponent) }
+                // copyItem preserves read-only source permissions. Sync the owned
+                // staged copy through a read handle without changing the source's mode.
+                let stagedInfo = try temporary.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+                guard stagedInfo.isRegularFile == true, stagedInfo.isSymbolicLink != true else { throw RecoveryCopyIncomplete() }
+                let stagedFile = try FileHandle(forReadingFrom: temporary)
+                do { try stagedFile.synchronize(); try stagedFile.close() }
+                catch { try? stagedFile.close(); throw error }
+                try checkCopyLocation()
+                try fileManager.moveItem(at: temporary, to: destination)
+            }
+            plan.document.tracks[i].managedPath = destination.path
+            plan.document.tracks[i].fileSize = Int64(try destination.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0)
+            plan.document.tracks[i].health = .verified
+            plan.document.tracks[i].lastVerifiedAt = .now
+#if DEBUG
+            try recoveryCopyTestHook?(.installed(i))
+#endif
+        }
+        try Task.checkCancellation()
+        try checkCopyLocation()
+        var verified = Set<String>()
+        for track in plan.document.tracks where track.health != .missing && verified.insert(track.managedPath).inserted {
+            guard try DeviceSyncFileIntegrity.sha256(of: track.fileURL, checkCancellation: { try Task.checkCancellation() }) == track.sha256 else {
+                throw RecoveryCopyIncomplete()
+            }
+        }
+        if let tags = plan.tags {
+            try JSONEncoder().encode(tags).write(to: overlayTagsURL, options: .atomic)
+            try synchronizeOverlayFile(overlayTagsURL)
+        }
+        plan.document.updatedAt = .now
+        try checkCopyLocation()
+        try persistDocument(plan.document, backUpReadablePrimary: false)
+#if DEBUG
+        try recoveryCopyTestHook?(.catalog)
+#endif
+        try checkCopyLocation()
+        plan.publishedDigest = digest(try Data(contentsOf: manifestURL))
+        try writeRecoveryCopyPlan(plan)
+#if DEBUG
+        try recoveryCopyTestHook?(.ready)
+#endif
+        try fileManager.removeItem(at: recoveryCopyURL)
+        currentDocument = nil
+        try refreshObservedStamps()
+        return RecoveryCopyResult(mediaURL: mediaURL, trackCount: plan.document.tracks.count, derivedHashCount: plan.derivedHashCount, missingTrackCount: plan.document.tracks.filter { $0.health == .missing }.count, libraryID: plan.document.libraryID)
     }
 
     /// Copy external references into this volume without changing IDs or metadata.
@@ -958,6 +1547,7 @@ actor LibraryRepository {
         try beginImportJournalTransaction()
         defer { endImportJournalTransaction() }
         try prepareDirectories()
+        try finishReadyRecoveryCopyIfPresent()
         // Loading explicitly refreshes the caller's baseline under the lock.
         try recoverDamagedGeneration()
         observedPersistentGeneration = try persistentGeneration()
@@ -994,6 +1584,7 @@ actor LibraryRepository {
 
         try recoverOverlayJournal(using: decoded.document, recoveredFromBackup: recoveredFromBackup)
         var document = try applyingPlaybackSidecars(to: decoded.document)
+        let relocatedArtwork = relocatePlaylistArtworkAfterMove(in: &document)
         let needsGenerationWitness = document.catalogGenerationEstablished != true
         document.catalogGenerationEstablished = true
         try reconcileMediaOrganizationJournal(with: document.tracks)
@@ -1013,7 +1604,7 @@ actor LibraryRepository {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: false)
             try encoder.encode(document).write(to: backupURL, options: [.atomic])
-        } else if needsGenerationWitness || recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0
+        } else if needsGenerationWitness || recovery.recovered > 0 || recoveredFromBackup || relocated.relinkedTrackCount > 0 || relocatedArtwork
             || !fileManager.fileExists(atPath: manifestURL.path) {
             document.updatedAt = .now
             try persistDocument(document, backUpReadablePrimary: !recoveredFromBackup)
@@ -2055,6 +2646,24 @@ actor LibraryRepository {
     /// portable folder has been copied, resolve only missing entries against
     /// the new media root and require the original size and SHA-256 before
     /// changing a path.
+    private func relocatePlaylistArtworkAfterMove(in document: inout LibraryDocument) -> Bool {
+        var changed = false
+        let token = "/" + PortableLibraryStorage.directoryName + "/Playlist Artwork/"
+        for i in document.playlists.indices {
+            guard let old = document.playlists[i].artworkPath,
+                  let range = old.range(of: token, options: .backwards) else { continue }
+            let candidate = playlistArtworkDirectoryURL.appendingPathComponent(String(old[range.upperBound...]))
+            guard candidate.path != old,
+                  isInside(candidate.resolvingSymlinksInPath(), directory: playlistArtworkDirectoryURL.resolvingSymlinksInPath()),
+                  let info = try? candidate.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]),
+                  info.isRegularFile == true, info.isSymbolicLink != true,
+                  !fileManager.fileExists(atPath: old) else { continue }
+            document.playlists[i].artworkPath = candidate.path
+            changed = true
+        }
+        return changed
+    }
+
     private func relocateFilesAfterPortableLibraryMove(in tracks: [Track]) -> FileRelinkResult {
         var candidates = tracks
         var hasMissingPath = false
@@ -2100,7 +2709,10 @@ actor LibraryRepository {
     }
 
     private func decodeDocument(at url: URL) throws -> DecodedLibraryDocument {
-        let data = try Data(contentsOf: url)
+        try decodeDocument(data: Data(contentsOf: url))
+    }
+
+    private func decodeDocument(data: Data) throws -> DecodedLibraryDocument {
         if let envelope = try? decoder.decode(CatalogEnvelope.self, from: data) {
             let header = envelope.header
             switch header.schemaVersion ?? 0 {
@@ -2331,7 +2943,8 @@ actor LibraryRepository {
         let data = try Data(contentsOf: catalogWriteJournalURL)
         guard let journal = try? decoder.decode(CatalogWriteJournal.self, from: data),
               journal.version == 1,
-              let document = try? decoder.decode(LibraryDocument.self, from: journal.manifest) else {
+              let document = try? decoder.decode(LibraryDocument.self, from: journal.manifest),
+              document.schemaVersion == LibraryDocument.currentSchema else {
             throw CatalogWriteRecoveryRequired()
         }
         let current: Data? = fileManager.fileExists(atPath: manifestURL.path) ? try Data(contentsOf: manifestURL) : nil
@@ -2344,10 +2957,21 @@ actor LibraryRepository {
             throw CatalogWriteRecoveryRequired()
         }
         if journal.clearsRegistrations == true {
-            guard document.tracks.isEmpty,
+            guard journal.discardedImportJournalDigest == nil, document.tracks.isEmpty,
                   document.playlists.allSatisfy({ $0.entries.isEmpty }) else {
                 throw CatalogWriteRecoveryRequired()
             }
+        }
+        if let expectedImportDigest = journal.discardedImportJournalDigest,
+           fileManager.fileExists(atPath: importJournalURL.path) {
+            // The explicit rescue authorizes discarding exactly the backed-up
+            // broken record. Never consume a different or newly replaced import.
+            guard digest(try Data(contentsOf: importJournalURL)) == expectedImportDigest else {
+                throw CatalogWriteRecoveryRequired()
+            }
+            try persistImportJournal(ImportJournal())
+        }
+        if journal.clearsRegistrations == true {
             try persistImportJournal(ImportJournal())
             try encoder.encode(document.libraryID).write(to: storageRecoveryReceiptURL, options: .atomic)
         }

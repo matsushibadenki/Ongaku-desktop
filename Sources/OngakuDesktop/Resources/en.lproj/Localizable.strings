@@ -1329,3 +1329,21 @@
 "library.error.damagedImportJournal" = "The import recovery record cannot be read. Keep the original data and use Export Recovery Information in Settings.";
 
 "library.error.unsupportedGenerationFormat" = "This library uses a newer generation format. Update the app to continue.";
+
+/* Explicit recovery of a damaged catalog save record. */
+"settings.storage.rescueCatalog" = "Restore Last Catalog…";
+"settings.storage.rescueCatalog.confirm" = "Restore Catalog";
+"settings.storage.rescueCatalog.message" = "For a damaged catalog save or import record only. Restore the last readable catalog, including its queue and history. Changes not saved in that catalog may be lost. Unregistered import copies are retained for manual recovery. Existing metadata and the damaged record will be backed up first; audio files are kept.";
+"settings.storage.rescueCatalog.success" = "Catalog restored. Recovery information: %@";
+"library.error.catalogRescueUnavailable" = "This recovery needs a damaged catalog save or import record and a readable current-format primary catalog, with no other pending recovery. Keep the original data and export recovery information.";
+
+/* Read-only salvage to a new library. */
+"settings.storage.recoveryCopy.create" = "Create Recovery Copy…";
+"settings.storage.recoveryCopy.resume" = "Resume Recovery Copy…";
+"settings.storage.recoveryCopy.source" = "Select a readable catalog or catalog backup. The original library and its damaged recovery records are kept. Unsaved changes may not be recovered.";
+"settings.storage.recoveryCopy.help" = "Choose a parent folder. A new library will copy verified audio and readable catalog metadata, then open. Unregistered copies and unreadable data remain at the original location. Select the created folder to resume after interruption.";
+"settings.storage.recoveryCopy.resumeHelp" = "Select the unfinished Ongaku-Recovered folder. Only verified copies are reused; the original library is kept.";
+"settings.storage.recoveryCopy.success" = "Saved %d track records; audio missing for %d. Recreated %d fingerprints. Folder: %@";
+"library.error.recoveryCopyIncomplete" = "This recovery copy is incomplete or could not be verified. Keep it and the original data. Use Resume Recovery Copy in Storage settings.";
+"settings.storage.recoveryCopy.notOpened" = "Recovery copy created: %@. The active library changed while copying, so it was kept selected.";
+"settings.storage.recoveryCopy.keepMissing" = "Keep track information when audio cannot be found";

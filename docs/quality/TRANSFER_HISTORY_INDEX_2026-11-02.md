@@ -22,3 +22,7 @@ These are local Debug-build component measurements for a deliberately unfavorabl
 - 🟢 [Done] Mac test build and arm64 iOS Simulator companion Debug build succeeded.
 - 🟠 [Next] Measure actual worker event delivery, real SwiftUI histories and initial metadata decode independently; assess memory use and optimization only with recovery semantics intact.
 - ⭕️ [Pending] Physical Mac/iPhone MCSession throughput, MainActor contention, real-device SwiftUI frame cadence, background/sleep, connection loss, large libraries, CPU, memory and energy. The independent iPhone app's bulk-resource transfer is not affected.
+
+## Follow-up — 2026-11-06
+
+[Actual worker to Published delivery](WORKER_PUBLISHED_DELIVERY_2026-11-06.md) now measures receiver checkpoint I/O and controller publication with 50/500/5000 history rows. The earlier component numbers remain historical; actual SwiftUI frames, larger descriptors/chunk counts and physical transport still need qualification.

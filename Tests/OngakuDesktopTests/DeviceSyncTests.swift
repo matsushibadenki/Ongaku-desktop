@@ -4,10 +4,26 @@ import Testing
 
 @Suite("Device sync protocol")
 struct DeviceSyncTests {
+    private func isolatedWorker(_ root: URL) -> DeviceChunkTransferWorker {
+        DeviceChunkTransferWorker(checkpointDirectory: root.appendingPathComponent("checkpoints"),
+            destination: .directory(root.appendingPathComponent("received")), send: { _ in })
+    }
+
+    @MainActor private func flush(_ worker: DeviceChunkTransferWorker) async {
+        await withCheckedContinuation { continuation in worker.client.submit(.flush { continuation.resume() }) }
+    }
     @Test("Local copy index follows library replacement and duplicate hashes")
     @MainActor
-    func localCopyIndexFollowsLibraryReplacement() {
-        let controller = PhoneSyncController()
+    func localCopyIndexFollowsLibraryReplacement() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("OngakuDeviceSync-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
+        let suite = "OngakuDeviceSync-\(UUID())"
+        let defaults = try #require(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let worker = isolatedWorker(root)
+        defer { worker.client.shutdown() }
+        let controller = PhoneSyncController(defaults: defaults, chunkWorker: worker)
+        await flush(worker)
         let item = makeItem()
         let first = Track(
             id: UUID(), title: item.title, artist: item.artist, album: item.album,
@@ -356,7 +372,9 @@ struct DeviceSyncTests {
 
     @Test("Overlay audit history persists and records conflict reasons")
     @MainActor
-    func persistsOverlayAuditHistory() {
+    func persistsOverlayAuditHistory() async {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("OngakuDeviceSync-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: root) }
         let suiteName = "DeviceSyncTests.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suiteName) else {
             Issue.record("Unable to create isolated defaults")
@@ -376,9 +394,14 @@ struct DeviceSyncTests {
             isUndone: false
         )
 
-        let writer = PhoneSyncController(defaults: defaults)
+        let writerWorker = isolatedWorker(root.appendingPathComponent("writer"))
+        let readerWorker = isolatedWorker(root.appendingPathComponent("reader"))
+        defer { writerWorker.client.shutdown(); readerWorker.client.shutdown() }
+        let writer = PhoneSyncController(defaults: defaults, chunkWorker: writerWorker)
+        await flush(writerWorker)
         writer.recordOverlayAudit(entry)
-        let reader = PhoneSyncController(defaults: defaults)
+        let reader = PhoneSyncController(defaults: defaults, chunkWorker: readerWorker)
+        await flush(readerWorker)
 
         #expect(reader.overlayAuditHistory == [entry])
     }

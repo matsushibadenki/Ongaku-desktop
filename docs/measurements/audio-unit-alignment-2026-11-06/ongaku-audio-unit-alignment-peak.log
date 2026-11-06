@@ -1,0 +1,2 @@
+PASS: latency-exact quiet PCM, stereo linking, chunk invariance, reset, invalid/nonfinite inputs and zero render allocations
+PASS: real AU format/resource lifecycle, latency, null buffers, PCM, block and bus errors

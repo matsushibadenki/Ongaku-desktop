@@ -1,0 +1,19 @@
+Building for debugging...
+[Provisioning 2 / 8]
+[1 / 1]
+[2 / 7] OngakuDesktopTests-product
+[4 / 9] OngakuDesktopTests-product
+[9 / 13] OngakuDesktopTests-product
+[11 / 13] OngakuDesktopTests-product
+Build complete! (6.03秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Actual worker to Published delivery" started.
+◇ Test "Measure actual checkpoint, mailbox and controller publication" started.
+WORKER_DELIVERY rows=50 round=0 files=4 bytes=16777216 chunks=256 publications=280 wall_ms=122.552542 cpu_ms=197.548 receipt_to_published_p50_ms=1.127708 receipt_to_published_p95_ms=1.413917 max_ms=2.9495 process_peak_rss_bytes=95567872
+WORKER_DELIVERY rows=50 round=1 files=4 bytes=16777216 chunks=256 publications=280 wall_ms=130.318834 cpu_ms=206.34300000000002 receipt_to_published_p50_ms=1.188958 receipt_to_published_p95_ms=2.192875 max_ms=3.014333 process_peak_rss_bytes=96075776
+WORKER_DELIVERY rows=50 round=2 files=4 bytes=16777216 chunks=256 publications=280 wall_ms=136.148417 cpu_ms=210.03999999999996 receipt_to_published_p50_ms=1.209125 receipt_to_published_p95_ms=2.470375 max_ms=4.211875 process_peak_rss_bytes=97484800
+✔ Test "Measure actual checkpoint, mailbox and controller publication" passed after 0.612 seconds.
+✔ Suite "Actual worker to Published delivery" passed after 0.612 seconds.
+✔ Test run with 1 test in 1 suite passed after 0.612 seconds.

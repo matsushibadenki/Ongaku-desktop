@@ -1,0 +1,6 @@
+PASS: fallback rate=44100 wrongType=false maxDifference=0.0 toggles/reset=16
+PASS: fallback rate=44100 wrongType=true maxDifference=0.0 toggles/reset=16
+PASS: fallback rate=48000 wrongType=false maxDifference=0.0 toggles/reset=16
+PASS: fallback rate=48000 wrongType=true maxDifference=0.0 toggles/reset=16
+PASS: fallback rate=96000 wrongType=false maxDifference=0.0 toggles/reset=16
+PASS: fallback rate=96000 wrongType=true maxDifference=0.0 toggles/reset=16

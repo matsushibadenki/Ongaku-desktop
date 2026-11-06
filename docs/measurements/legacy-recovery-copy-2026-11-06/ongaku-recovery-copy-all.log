@@ -1,0 +1,620 @@
+Building for debugging...
+[Computing dependencies]
+[Using on-disk description]
+[1 / 1]
+[1 / 18]
+[3 / 13] OngakuDesktop
+[6 / 21] OngakuDesktop-product
+[8 / 21] OngakuDesktop-product
+[10 / 33] OngakuDesktop
+[11 / 34] OngakuDesktop-product
+[13 / 37] OngakuDesktop-product
+[18 / 37] OngakuDesktop-product
+[19 / 37] OngakuDesktop-product
+[20 / 37] OngakuDesktop-product
+[21 / 37] OngakuDesktop-product
+[22 / 37] OngakuDesktop-product
+[23 / 37] OngakuDesktop-product
+[24 / 37] OngakuDesktop-product
+[25 / 37] OngakuDesktop-product
+[26 / 37] OngakuDesktop
+[27 / 37] OngakuDesktop
+[29 / 38] OngakuDesktopTests-product
+[29 / 42] OngakuDesktop
+[29 / 54] OngakuDesktop
+[32 / 56] OngakuDesktop_OngakuDesktop
+[34 / 57] OngakuDesktop
+[36 / 57] OngakuDesktop
+[37 / 57] OngakuDesktop
+[39 / 57] OngakuDesktop
+[40 / 57] OngakuDesktop
+[41 / 57] OngakuDesktop
+[42 / 57] OngakuDesktop
+[43 / 57] OngakuDesktop
+[43 / 57]
+[45 / 57] OngakuDesktop-product
+[46 / 57] OngakuDesktop-product
+[47 / 57] OngakuDesktop
+[49 / 57] OngakuDesktop
+[52 / 63]
+[52 / 63] OngakuDesktopTests-product
+[54 / 74] OngakuDesktopTests-product
+[56 / 74] OngakuDesktopTests-product
+[57 / 73] OngakuDesktopTests-product
+[62 / 73] OngakuDesktopTests-product
+[63 / 73] OngakuDesktopTests-product
+[65 / 73] OngakuDesktopTests-product
+[67 / 73] OngakuDesktopTests-product
+[69 / 73] OngakuDesktopTests-product
+[70 / 73] OngakuDesktopTests-product
+[71 / 73] OngakuDesktopTests-product
+Build complete! (571.55秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Overlay journal recovery" started.
+◇ Suite "Storage delayed failure isolation" started.
+◇ Suite "M0 UI, accessibility, localization, and privacy gate" started.
+◇ Suite "Library repository integrity" started.
+◇ Suite "Storage restore recovery copy" started.
+◇ Suite "Application settings" started.
+◇ Suite "Damaged catalog journal rescue" started.
+◇ Test "Restart recovers each write boundary" started.
+◇ Suite "Read-only legacy recovery copies" started.
+◇ Test "The Pro effects rack reserves clearance above the persistent player" started.
+◇ Test "A short window always reserves the complete persistent player height" started.
+◇ Test "Sidebar symbols follow the light and dark appearance" started.
+◇ Test "The toolbar import and relink actions use reliable native open panels" started.
+◇ Test "Localized format arguments remain compatible" started.
+◇ Test "Every song table uses its primary action to play a double-clicked row" started.
+◇ Test "Missing managed files remain prominent in every song table" started.
+◇ Test "Localized headings avoid forced line breaks and fit their layout budgets" started.
+◇ Test "The sidebar toggle stays leading while other toolbar actions stay trailing" started.
+◇ Test "Music and local-network usage descriptions exist in all supported languages" started.
+◇ Test "Device sync callbacks bridge UI updates without isolating transfer workers" started.
+◇ Test "UI qualification mode is restricted to temporary library roots" started.
+◇ Test "The settings scene passes crash-critical social state explicitly" started.
+◇ Test "A recovery commit failure restores the active catalog and its sidecars" started.
+◇ Test "URL audio response requires a compatible MIME type, extension, and size" started.
+◇ Test "Interrupted self-containment cleans only its recorded staging directory" started.
+◇ Test "Privacy manifest declares no tracking and approved required-reason APIs" started.
+◇ Test "English, Japanese, and Simplified Chinese localization keys stay in parity" started.
+◇ Test "The active library selector uses a visible button and dedicated popover" started.
+◇ Test "Music XML migration copies originals, restores metadata and playlists, and is idempotent" started.
+◇ Test "Album and artist details become vertically scrollable in short windows" started.
+◇ Test "Multiple preserved catalogs are reported without modifying any catalog" started.
+◇ Test "Critical windows expose automation hooks and keyboard escape routes" started.
+◇ Test "Registering a dropped folder preserves its hierarchy and every audio file" started.
+◇ Test "Self-contained copy retains both originals and catalog on a full disk" started.
+◇ Test "An installed file is recovered when import was interrupted before catalog save" started.
+◇ Test "CD ripper creates verified AIFF, WAV, ALAC, and AAC files" started.
+◇ Test "A future schema is never replaced with an older backup" started.
+◇ Test "Organization preserves a playlist written after the UI snapshot" started.
+◇ Test "Apple Music media-folder-url is decoded" started.
+◇ Test "Music and iTunes XML migration previews songs, metadata, and user playlists" started.
+◇ Test "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test "An unversioned track-array fixture migrates to the current schema" started.
+◇ Test "Mini Player restores the original window frame" started.
+◇ Test "The automatic Ongaku Media directory is created only by a managed import" started.
+◇ Test "Title-bar dragging excludes content and window controls" started.
+◇ Test "MusicBrainz Disc ID and lookup URLs follow the CD TOC specification" started.
+◇ Test "Unsafe self-containment recovery preserves files and quarantines its journal" started.
+◇ Test "Existing portable data is never overwritten by legacy migration" started.
+◇ Test "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test "Multiple existing libraries can be enumerated, while an exact selection stays exact" started.
+◇ Test "Missing files are automatically and manually relinked only by checksum" started.
+◇ Test "Selecting another Music library opens its own Ongaku storage and persists it" started.
+◇ Test "A modified but decodable journal payload cannot replace the catalog" started.
+◇ Test "Self-containment staging recovery follows interrupted catalog commit" started.
+◇ Test "A completely fresh install stores managed music under the Music directory" started.
+◇ Test "Migration recovery discovers moved libraries and rejects ambiguous or missing data" started.
+◇ Test "Profile reconnection reports the actual storage location category" started.
+◇ Test "Existing sidecars prevent a new library from overwriting recoverable data" started.
+◇ Test "CD import metadata organizes verified copies by artist and album" started.
+◇ Test "Secure CD reads require two consecutive matching checksums" started.
+◇ Test "Interrupted storage restore rolls back without deleting files" started.
+◇ Test "Clearing registrations leaves every audio file untouched" started.
+◇ Test "Resolved recovery bookmarks reconnect only the same library inside the new root" started.
+◇ Test "Reference recovery retains the journal when the existing track was relinked elsewhere" started.
+◇ Test "A user-selected storage directory is used directly" started.
+◇ Test "Startup migrates legacy catalogs, retries failure, and creates portable libraries" started.
+◇ Test "A missing primary catalog recovers the existing library from its backup" started.
+◇ Test case passing 1 argument step → 0 to "Restart recovers each write boundary" started.
+◇ Test "A new Ongaku Media folder does not automatically inherit the old catalog" started.
+◇ Test "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test "Playlist create, edit, artwork, duplicate, delete, and restart are transactional" started.
+◇ Test "Verification detects changed content" started.
+◇ Test "Media organization preserves its journal and replacement backup when rollback is interrupted" started.
+◇ Test "The persistent player reserves space outside scrollable library content" started.
+◇ Test "Damaged generation and journals can be exported without changing the source" started.
+◇ Test "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test "A selected Apple Music library resolves and persists its Media folder" started.
+◇ Test "App Store lookup response decodes the release destination" started.
+◇ Test "Title-bar dragging uses screen coordinates across window movement" started.
+◇ Test "Switching libraries isolates tracks and playback state" started.
+◇ Test "Song list columns and sorting persist" started.
+◇ Test "Legacy catalog and artwork move beside managed music" started.
+◇ Test "Imported Music songs reopen from Ongaku without the Music package or original audio" started.
+◇ Test "Disconnected saved volume does not trigger migration or create a replacement" started.
+◇ Test "Missing recovery grants never create an empty replacement library" started.
+◇ Test "New selected media folder registers its audio in place and survives restart" started.
+◇ Test "Appearance selection persists and system mode clears the override" started.
+◇ Test "UI qualification accepts only process or runner temporary roots" started.
+◇ Test "The main window keeps all columns below the title bar" started.
+◇ Test "Storage activation creates a catalog, reopens it, and preserves the old library on failure" started.
+◇ Test "Multiple libraries create, rename, switch, archive, and restore" started.
+◇ Test "App Store versions use numeric semantic comparison" started.
+◇ Test "A different existing library can be selected without replacing the missing profile" started.
+◇ Test "Player presentation settings persist and the player defaults to the bottom" started.
+◇ Test "An interrupted Media organization journal rolls files back on next launch" started.
+◇ Test "Unavailable volume is distinguished from a missing folder on an accessible volume" started.
+◇ Test "Queue positions and playback events do not rewrite the track catalog" started.
+◇ Test "A copied portable library relinks managed tracks on the new Mac" started.
+◇ Test "Missing external originals do not commit a partially localized catalog" started.
+◇ Test "Restoring a preserved library invalidates other repositories" started.
+◇ Test "Changing the media directory redirects the next import immediately" started.
+◇ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" started.
+◇ Test "Import journal recovers at each installation boundary" started.
+◇ Test "Schema 4 migrates playback attributes with safe defaults and preserves the queue" started.
+◇ Test "Playlist membership preserves order, ignores duplicates, removes, and persists" started.
+◇ Test "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test "URL audio import accepts only public standard-port HTTPS URLs" started.
+◇ Test "Schema 3 migrates to a queue-capable catalog without inventing queue state" started.
+◇ Test "Recovery never replaces a populated catalog or revives intentionally cleared songs" started.
+◇ Test "Schema 5 preserves playlist order while adding folders" started.
+◇ Test case passing 1 argument stagedFileExists → false to "Interrupted self-containment cleans only its recorded staging directory" started.
+◇ Test "Damaged recovery journals preserve catalog and stop writes" started.
+◇ Test "Playlist order can be changed and restored with Undo and Redo" started.
+◇ Test "Pending imports in the active library recover before selecting a preserved catalog" started.
+◇ Test case passing 1 argument stagedFileExists → true to "Interrupted self-containment cleans only its recorded staging directory" started.
+◇ Test "Selecting an Apple Music library keeps originals and stores portable copies" started.
+◇ Test "Shared folder migration previews, verifies, copies, and remains idempotent" started.
+◇ Test "Another Ongaku library merges metadata, smart playlists, folders, and audio non-destructively" started.
+◇ Test "A playback sidecar is ignored when it belongs to another library" started.
+◇ Test "A full export destination never changes the damaged source and can be retried" started.
+◇ Test "A committed organization retains recovery data while the destination is missing" started.
+◇ Test "Import copies data and rejects duplicate content" started.
+◇ Test "Dropping files and folders imports supported audio into artist and album folders" started.
+◇ Test "Generation backup capacity failure retains the damaged original" started.
+◇ Test "Media organization rolls back completed moves when a later checksum changes" started.
+◇ Test "Manifest round-trips atomically" started.
+◇ Test "Schema 2 preserves stable identities while adding playlists and playback events" started.
+◇ Test "A corrupt playback queue sidecar recovers its previous valid state" started.
+◇ Test "Resolving duplicates transfers catalog references without deleting files" started.
+◇ Test "Schema 1 migrates once with stable library, artist, and album IDs" started.
+◇ Test "Media organization dry-runs and transactionally moves only managed files" started.
+◇ Test "External songs become portable without changing metadata or deleting originals" started.
+◇ Test "URL audio import validates the downloaded audio contents" started.
+◇ Test "A configured media directory receives new managed files" started.
+◇ Test "A failed replacement restores both source and overwritten destination files" started.
+◇ Test "Playlist entries and playback events survive track-only saves and restart" started.
+◇ Test "Playback queue order, current track, and position survive restart" started.
+◇ Test "Playlist folders preserve membership and sidebar order" started.
+◇ Test "Interrupted rollback can be retried without losing the prior catalog" started.
+◇ Test case passing 2 arguments step → 0, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test case passing 1 argument corruptJournal → false to "Unsafe self-containment recovery preserves files and quarantines its journal" started.
+◇ Test case passing 1 argument relativePath → "Ongaku Library Data/Legacy Imports/preserved" to "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test case passing 1 argument corruptJournal → true to "Unsafe self-containment recovery preserves files and quarantines its journal" started.
+◇ Test case passing 1 argument relativePath → "Ongaku Desktop/Ongaku Media/Ongaku Library Data" to "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test case passing 1 argument relativePath → "Ongaku Desktop" to "Storage selection recovers preserved catalogs without moving originals" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 1 argument name → "self-containment-journal-v1.json" to "A preserved catalog with pending recovery is never transplanted" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 1 argument name → "catalog-generation-v1" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "Damaged generation and journals can be exported without changing the source" started.
+◇ Test case passing 2 arguments step → 3, diskFull → false to "Interrupted storage restore rolls back without deleting files" started.
+◇ Test case passing 2 arguments operation → "favorite", writeFails → false to "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test case passing 2 arguments step → 3, diskFull → true to "Interrupted storage restore rolls back without deleting files" started.
+✔ Test "A short window always reserves the complete persistent player height" passed after 0.269 seconds.
+✔ Test "The Pro effects rack reserves clearance above the persistent player" passed after 0.278 seconds.
+✔ Test "Music and local-network usage descriptions exist in all supported languages" passed after 0.293 seconds.
+✔ Test "The sidebar toggle stays leading while other toolbar actions stay trailing" passed after 0.293 seconds.
+✔ Test "Missing managed files remain prominent in every song table" passed after 0.303 seconds.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Import journal recovers at each installation boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Import journal recovers at each installation boundary" started.
+✔ Test "The toolbar import and relink actions use reliable native open panels" passed after 0.342 seconds.
+✔ Test "The settings scene passes crash-critical social state explicitly" passed after 0.345 seconds.
+◇ Test case passing 2 arguments existing → false, step → 0 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → false, step → 1 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → false, step → 2 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → true, step → 0 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → true, step → 1 to "External reference copying recovers new and existing tracks at each boundary" started.
+◇ Test case passing 2 arguments existing → true, step → 2 to "External reference copying recovers new and existing tracks at each boundary" started.
+✔ Test "UI qualification mode is restricted to temporary library roots" passed after 0.372 seconds.
+✔ Test "Sidebar symbols follow the light and dark appearance" passed after 0.372 seconds.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Damaged recovery journals preserve catalog and stop writes" started.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "Damaged recovery journals preserve catalog and stop writes" started.
+✔ Test "Privacy manifest declares no tracking and approved required-reason APIs" passed after 0.390 seconds.
+✔ Test "URL audio response requires a compatible MIME type, extension, and size" passed after 0.395 seconds.
+✔ Test "Device sync callbacks bridge UI updates without isolating transfer workers" passed after 0.396 seconds.
+✔ Test "Every song table uses its primary action to play a double-clicked row" passed after 0.401 seconds.
+✔ Test "The active library selector uses a visible button and dedicated popover" passed after 0.404 seconds.
+✔ Test "Interrupted self-containment cleans only its recorded staging directory" with 2 test cases passed after 0.403 seconds.
+✔ Test "Album and artist details become vertically scrollable in short windows" passed after 0.405 seconds.
+✔ Test "Critical windows expose automation hooks and keyboard escape routes" passed after 0.409 seconds.
+✔ Test "English, Japanese, and Simplified Chinese localization keys stay in parity" passed after 0.450 seconds.
+✔ Test "A recovery commit failure restores the active catalog and its sidecars" passed after 0.466 seconds.
+✔ Test "Apple Music media-folder-url is decoded" passed after 0.466 seconds.
+✔ Test "A future schema is never replaced with an older backup" passed after 0.466 seconds.
+✔ Test "Multiple preserved catalogs are reported without modifying any catalog" passed after 0.466 seconds.
+✔ Test "Self-contained copy retains both originals and catalog on a full disk" passed after 0.466 seconds.
+✔ Test "MusicBrainz Disc ID and lookup URLs follow the CD TOC specification" passed after 0.466 seconds.
+✔ Test "Music and iTunes XML migration previews songs, metadata, and user playlists" passed after 0.475 seconds.
+✔ Test "Multiple existing libraries can be enumerated, while an exact selection stays exact" passed after 0.475 seconds.
+✔ Test "Existing portable data is never overwritten by legacy migration" passed after 0.475 seconds.
+✔ Test "Missing files are automatically and manually relinked only by checksum" passed after 0.475 seconds.
+✔ Test "An unversioned track-array fixture migrates to the current schema" passed after 0.475 seconds.
+✔ Test "Unsafe self-containment recovery preserves files and quarantines its journal" with 2 test cases passed after 0.475 seconds.
+✔ Test "Secure CD reads require two consecutive matching checksums" passed after 0.475 seconds.
+✔ Test "Organization preserves a playlist written after the UI snapshot" passed after 0.476 seconds.
+✔ Test "A modified but decodable journal payload cannot replace the catalog" passed after 0.476 seconds.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✔ Test "Localized headings avoid forced line breaks and fit their layout budgets" passed after 0.479 seconds.
+✔ Test "CD ripper creates verified AIFF, WAV, ALAC, and AAC files" passed after 0.479 seconds.
+✔ Test "A new Ongaku Media folder does not automatically inherit the old catalog" passed after 0.478 seconds.
+✔ Test "Verification detects changed content" passed after 0.479 seconds.
+✔ Test "Resolved recovery bookmarks reconnect only the same library inside the new root" passed after 0.479 seconds.
+✔ Test "Clearing registrations leaves every audio file untouched" passed after 0.479 seconds.
+✔ Test "A preserved catalog with pending recovery is never transplanted" with 4 test cases passed after 0.479 seconds.
+✔ Test "A missing primary catalog recovers the existing library from its backup" passed after 0.479 seconds.
+✔ Test "Self-containment staging recovery follows interrupted catalog commit" passed after 0.479 seconds.
+✔ Test "The persistent player reserves space outside scrollable library content" passed after 0.479 seconds.
+✔ Test "Media organization preserves its journal and replacement backup when rollback is interrupted" passed after 0.479 seconds.
+✔ Test "Interrupted storage restore rolls back without deleting files" with 8 test cases passed after 0.479 seconds.
+✔ Test "Title-bar dragging uses screen coordinates across window movement" passed after 0.479 seconds.
+✔ Test "Damaged generation and journals can be exported without changing the source" with 4 test cases passed after 0.479 seconds.
+✔ Test "App Store lookup response decodes the release destination" passed after 0.479 seconds.
+✔ Test "UI qualification accepts only process or runner temporary roots" passed after 0.479 seconds.
+✔ Test "App Store versions use numeric semantic comparison" passed after 0.479 seconds.
+✔ Test "Unavailable volume is distinguished from a missing folder on an accessible volume" passed after 0.479 seconds.
+✔ Test "Legacy catalog and artwork move beside managed music" passed after 0.479 seconds.
+✔ Test "An interrupted Media organization journal rolls files back on next launch" passed after 0.479 seconds.
+✔ Test "Queue positions and playback events do not rewrite the track catalog" passed after 0.478 seconds.
+✔ Test "Missing external originals do not commit a partially localized catalog" passed after 0.478 seconds.
+✔ Test "Restoring a preserved library invalidates other repositories" passed after 0.479 seconds.
+✔ Test "A copied portable library relinks managed tracks on the new Mac" passed after 0.479 seconds.
+✔ Test "URL audio import accepts only public standard-port HTTPS URLs" passed after 0.481 seconds.
+✔ Test "Localized format arguments remain compatible" passed after 0.488 seconds.
+✔ Test "Schema 5 preserves playlist order while adding folders" passed after 0.511 seconds.
+✔ Test "Damaged recovery journals preserve catalog and stop writes" with 2 test cases passed after 0.509 seconds.
+✔ Test "Schema 4 migrates playback attributes with safe defaults and preserves the queue" passed after 0.517 seconds.
+✔ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" passed after 0.520 seconds.
+◇ Test case passing 1 argument step → 1 to "Restart recovers each write boundary" started.
+✔ Test "Generation backup capacity failure retains the damaged original" passed after 0.498 seconds.
+✔ Test "A committed organization retains recovery data while the destination is missing" passed after 0.509 seconds.
+✔ Test "Recovery never replaces a populated catalog or revives intentionally cleared songs" passed after 0.519 seconds.
+✔ Test "URL audio import validates the downloaded audio contents" passed after 0.471 seconds.
+✔ Test "Schema 2 preserves stable identities while adding playlists and playback events" passed after 0.491 seconds.
+✔ Test "Schema 3 migrates to a queue-capable catalog without inventing queue state" passed after 0.520 seconds.
+✔ Test "A corrupt playback queue sidecar recovers its previous valid state" passed after 0.480 seconds.
+◇ Test case passing 2 arguments step → 0, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+✔ Test "Manifest round-trips atomically" passed after 0.497 seconds.
+✔ Test "Title-bar dragging excludes content and window controls" passed after 0.537 seconds.
+✔ Test "A playback sidecar is ignored when it belongs to another library" passed after 0.526 seconds.
+✔ Test "A full export destination never changes the damaged source and can be retried" passed after 0.520 seconds.
+✔ Test "A completely fresh install stores managed music under the Music directory" passed after 0.537 seconds.
+✔ Test "Playback queue order, current track, and position survive restart" passed after 0.447 seconds.
+✔ Test "Profile reconnection reports the actual storage location category" passed after 0.538 seconds.
+✔ Test "Existing sidecars prevent a new library from overwriting recoverable data" passed after 0.558 seconds.
+✔ Suite "M0 UI, accessibility, localization, and privacy gate" passed after 0.555 seconds.
+✔ Test "Schema 1 migrates once with stable library, artist, and album IDs" passed after 0.532 seconds.
+✔ Test "Playlist entries and playback events survive track-only saves and restart" passed after 0.531 seconds.
+✔ Test "External songs become portable without changing metadata or deleting originals" passed after 0.537 seconds.
+✔ Test "Reference recovery retains the journal when the existing track was relinked elsewhere" passed after 0.592 seconds.
+◇ Test "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Changing the media directory redirects the next import immediately" passed after 0.680 seconds.
+✔ Test "The automatic Ongaku Media directory is created only by a managed import" passed after 0.683 seconds.
+✔ Test "An installed file is recovered when import was interrupted before catalog save" passed after 0.683 seconds.
+✔ Test "Interrupted rollback can be retried without losing the prior catalog" passed after 0.592 seconds.
+◇ Test case passing 1 argument step → 2 to "Restart recovers each write boundary" started.
+✔ Test "Pending imports in the active library recover before selecting a preserved catalog" passed after 0.682 seconds.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "A user-selected storage directory is used directly" passed after 0.700 seconds.
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 2 arguments step → 1, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+✔ Test "Import copies data and rejects duplicate content" passed after 0.691 seconds.
+✔ Test "Import journal recovers at each installation boundary" with 6 test cases passed after 0.722 seconds.
+✔ Test "CD import metadata organizes verified copies by artist and album" passed after 0.716 seconds.
+✔ Test "Startup migrates legacy catalogs, retries failure, and creates portable libraries" passed after 0.731 seconds.
+✔ Test "External reference copying recovers new and existing tracks at each boundary" with 6 test cases passed after 0.731 seconds.
+✔ Test "A configured media directory receives new managed files" passed after 0.694 seconds.
+✔ Test "Song list columns and sorting persist" passed after 0.748 seconds.
+✔ Test "A selected Apple Music library resolves and persists its Media folder" passed after 0.750 seconds.
+✔ Test "Disconnected saved volume does not trigger migration or create a replacement" passed after 0.756 seconds.
+✔ Test "Missing recovery grants never create an empty replacement library" passed after 0.761 seconds.
+✔ Test "Appearance selection persists and system mode clears the override" passed after 0.776 seconds.
+◇ Test case passing 1 argument step → 3 to "Restart recovers each write boundary" started.
+✔ Test "The main window keeps all columns below the title bar" passed after 0.795 seconds.
+✔ Test "Restart recovers each write boundary" with 4 test cases passed after 0.802 seconds.
+◇ Test "Full disk during overlay publication keeps a recoverable consistent state" started.
+◇ Test case passing 1 argument step → 0 to "Full disk during overlay publication keeps a recoverable consistent state" started.
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✔ Test "Multiple libraries create, rename, switch, archive, and restore" passed after 0.813 seconds.
+◇ Test case passing 1 argument step → 1 to "Full disk during overlay publication keeps a recoverable consistent state" started.
+◇ Test case passing 2 arguments step → 1, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+✔ Test "Player presentation settings persist and the player defaults to the bottom" passed after 0.845 seconds.
+◇ Test case passing 1 argument step → 2 to "Full disk during overlay publication keeps a recoverable consistent state" started.
+✔ Test "Migration recovery discovers moved libraries and rejects ambiguous or missing data" passed after 0.902 seconds.
+✔ Test "Mini Player restores the original window frame" passed after 0.902 seconds.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Full disk during overlay publication keeps a recoverable consistent state" with 3 test cases passed after 0.130 seconds.
+◇ Test "Failed recovery retains journal, blocks writes and retries" started.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 2 arguments step → 2, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Failed recovery retains journal, blocks writes and retries" passed after 0.055 seconds.
+◇ Test "Ambiguous backup never consumes the journal" started.
+✔ Test "Ambiguous backup never consumes the journal" passed after 0.030 seconds.
+✔ Suite "Overlay journal recovery" passed after 1.020 seconds.
+◇ Test case passing 2 arguments step → 2, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 3, decodable → false to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✔ Test "A different existing library can be selected without replacing the missing profile" passed after 1.183 seconds.
+✔ Test "Registering a dropped folder preserves its hierarchy and every audio file" passed after 1.238 seconds.
+✔ Test "All old broken journal types can be escaped without source mutation" with 5 test cases passed after 1.272 seconds.
+◇ Test case passing 2 arguments step → 3, decodable → true to "Malformed or decodable altered primary is recovered at every move boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Malformed or decodable altered primary is recovered at every move boundary" with 8 test cases passed after 1.821 seconds.
+✔ Test "Resolving duplicates transfers catalog references without deleting files" passed after 1.799 seconds.
+✔ Test "Media organization rolls back completed moves when a later checksum changes" passed after 1.819 seconds.
+◇ Test "Moved media is recovered by hash when an old organization record cannot be decoded" started.
+✔ Test "A failed replacement restores both source and overwritten destination files" passed after 1.793 seconds.
+✔ Test "Media organization dry-runs and transactionally moves only managed files" passed after 1.837 seconds.
+✔ Test "Playlist membership preserves order, ignores duplicates, removes, and persists" passed after 1.906 seconds.
+◇ Test "Recovery record publication failure occurs before any catalog move" started.
+◇ Test case passing 1 argument afterPrimary → false to "Recovery record publication failure occurs before any catalog move" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Moved media is recovered by hash when an old organization record cannot be decoded" passed after 0.208 seconds.
+✔ Test "New selected media folder registers its audio in place and survives restart" passed after 2.071 seconds.
+✔ Test "Switching libraries isolates tracks and playback state" passed after 2.071 seconds.
+◇ Test case passing 1 argument afterPrimary → true to "Recovery record publication failure occurs before any catalog move" started.
+◇ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Recovery record publication failure occurs before any catalog move" with 2 test cases passed after 0.227 seconds.
+◇ Test "A recovery copy without an active journal cannot roll back a completed restore" started.
+✔ Test "Rescue interruption and disk exhaustion retain a retryable transaction" with 6 test cases passed after 1.491 seconds.
+◇ Test "A failed sidecar write after rescue journal publication can recover on restart" started.
+✔ Test "A failed sidecar write after rescue journal publication can recover on restart" passed after 0.078 seconds.
+✔ Test "Playlist order can be changed and restored with Undo and Redo" passed after 2.248 seconds.
+✔ Test "Music XML migration copies originals, restores metadata and playlists, and is idempotent" passed after 2.274 seconds.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Shared folder migration previews, verifies, copies, and remains idempotent" passed after 2.324 seconds.
+✔ Test "Playlist create, edit, artwork, duplicate, delete, and restart are transactional" passed after 2.336 seconds.
+✔ Test "Another Ongaku library merges metadata, smart playlists, folders, and audio non-destructively" passed after 2.333 seconds.
+◇ Test "A healthy interrupted transaction is never discarded by rescue" started.
+◇ Test case passing 2 arguments operation → "favorite", writeFails → true to "Old favorite and missing-file writes cannot affect the new library" started.
+✔ Test "Dropping files and folders imports supported audio into artist and album folders" passed after 2.332 seconds.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Imported Music songs reopen from Ongaku without the Music package or original audio" passed after 2.385 seconds.
+✔ Test "A recovery copy without an active journal cannot roll back a completed restore" passed after 0.252 seconds.
+◇ Test "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+◇ Test case passing 1 argument kind → 0 to "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+✔ Test "A healthy interrupted transaction is never discarded by rescue" passed after 0.053 seconds.
+◇ Test "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "Selecting an Apple Music library keeps originals and stores portable copies" passed after 2.424 seconds.
+✔ Test "Playlist folders preserve membership and sidebar order" passed after 2.344 seconds.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument kind → 1 to "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument kind → 2 to "Wrong generation, damaged copy and future version retain all recovery inputs" started.
+✔ Test "Storage selection recovers preserved catalogs without moving originals" with 3 test cases passed after 2.508 seconds.
+✔ Suite "Library repository integrity" passed after 2.509 seconds.
+✔ Test "Storage activation creates a catalog, reopens it, and preserves the old library on failure" passed after 2.523 seconds.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Wrong generation, damaged copy and future version retain all recovery inputs" with 3 test cases passed after 0.148 seconds.
+◇ Test "A failed backup of either damaged bytes or the good copy preserves inputs and retries" started.
+◇ Test case passing 1 argument failingCopy → false to "A failed backup of either damaged bytes or the good copy preserves inputs and retries" started.
+◇ Test case passing 1 argument name → "self-containment-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "Other pending recovery prevents rescue without changing any catalog" with 5 test cases passed after 0.183 seconds.
+◇ Test "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 0 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument failingCopy → true to "A failed backup of either damaged bytes or the good copy preserves inputs and retries" started.
+◇ Test case passing 2 arguments operation → "missing", writeFails → false to "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Selecting another Music library opens its own Ongaku storage and persists it" passed after 2.634 seconds.
+✔ Suite "Application settings" passed after 2.635 seconds.
+◇ Test case passing 1 argument kind → 1 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 2 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "A failed backup of either damaged bytes or the good copy preserves inputs and retries" with 2 test cases passed after 0.147 seconds.
+◇ Test "A second interruption after primary repair preserves the copy for another restart" started.
+✔ Test "A second interruption after primary repair preserves the copy for another restart" passed after 0.032 seconds.
+◇ Test "An empty legacy restore plan cannot discard a partially completed restore" started.
+◇ Test case passing 1 argument kind → 3 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "An empty legacy restore plan cannot discard a partially completed restore" passed after 0.032 seconds.
+◇ Test "Legacy records without a recovery copy still roll back" started.
+◇ Test case passing 1 argument kind → 4 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "No primary, invalid primary, future journal, and future primary fail closed" with 5 test cases passed after 0.200 seconds.
+◇ Test "Store rescue reloads published metadata and discards queued in-memory edits" started.
+✔ Test "Legacy records without a recovery copy still roll back" passed after 0.047 seconds.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Suite "Storage restore recovery copy" passed after 2.817 seconds.
+✔ Test "Store rescue reloads published metadata and discards queued in-memory edits" passed after 0.057 seconds.
+◇ Test "Damaged import rescue retains staging and resumes after every publication boundary" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+✔ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" with 6 test cases passed after 0.755 seconds.
+◇ Test "Already verified copies finish without the original medium after a crash" started.
+◇ Test case passing 2 arguments operation → "missing", writeFails → true to "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+✔ Test "Already verified copies finish without the original medium after a crash" passed after 0.061 seconds.
+◇ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+✔ Test "Old favorite and missing-file writes cannot affect the new library" with 4 test cases passed after 2.979 seconds.
+◇ Test "CD import reloads one recovered song when another repository commits first" started.
+✔ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" passed after 0.061 seconds.
+◇ Test "An explicitly selected Previous catalog works even when the primary has been moved away" started.
+✔ Test "CD import reloads one recovered song when another repository commits first" passed after 0.050 seconds.
+◇ Test "Unknown generation formats are retained without automatic repair" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+✔ Test "Unknown generation formats are retained without automatic repair" passed after 0.008 seconds.
+◇ Test "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+◇ Test case passing 2 arguments step → 0, priorEpoch → false to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+✔ Test "An explicitly selected Previous catalog works even when the primary has been moved away" passed after 0.058 seconds.
+◇ Test "Changed original bytes cannot be copied under their old fingerprint" started.
+◇ Test case passing 2 arguments step → 0, priorEpoch → true to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+✔ Test "Changed original bytes cannot be copied under their old fingerprint" passed after 0.036 seconds.
+◇ Test "Unknown old fingerprints are derived only from an existing exact file path" started.
+◇ Test case passing 2 arguments step → 1, priorEpoch → false to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+◇ Test case passing 2 arguments step → 1, priorEpoch → true to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+✔ Test "Unknown old fingerprints are derived only from an existing exact file path" passed after 0.048 seconds.
+◇ Test "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 1 argument future → false to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Damaged import rescue retains staging and resumes after every publication boundary" started.
+◇ Test case passing 1 argument future → true to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+✔ Test "Damaged import rescue retains staging and resumes after every publication boundary" with 6 test cases passed after 0.325 seconds.
+◇ Test "Recovery refuses a replaced import record instead of deleting another transaction" started.
+✔ Test "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" with 4 test cases passed after 0.144 seconds.
+◇ Test "A lost established generation gets a new epoch and rejects stale saves" started.
+✔ Test "A tampered plan and an unsupported catalog fail without modifying the source" with 2 test cases passed after 0.058 seconds.
+◇ Test "A cancelled creation never publishes a recovery folder" started.
+✔ Test "Recovery refuses a replaced import record instead of deleting another transaction" passed after 0.034 seconds.
+◇ Test "Invalid rescue flags or future target schema cannot mutate any recovery input" started.
+◇ Test case passing 1 argument futureSchema → false to "Invalid rescue flags or future target schema cannot mutate any recovery input" started.
+✔ Test "A cancelled creation never publishes a recovery folder" passed after 0.029 seconds.
+◇ Test "Audio retained only in organization backups is rescued without replaying its broken journal" started.
+◇ Test case passing 1 argument futureSchema → true to "Invalid rescue flags or future target schema cannot mutate any recovery input" started.
+✔ Test "A lost established generation gets a new epoch and rejects stale saves" passed after 0.070 seconds.
+◇ Test "Legacy catalog acquires a generation and interrupted reservation invalidates stale readers" started.
+✔ Test "Legacy catalog acquires a generation and interrupted reservation invalidates stale readers" passed after 0.034 seconds.
+◇ Test "An older complete snapshot cannot replace a newer same-repository edit" started.
+✔ Test "Audio retained only in organization backups is rescued without replaying its broken journal" passed after 0.075 seconds.
+◇ Test "Missing audio stays as explicit unavailable metadata only with opt-in" started.
+◇ Test case passing 1 argument unknownHash → false to "Missing audio stays as explicit unavailable metadata only with opt-in" started.
+✔ Test "Invalid rescue flags or future target schema cannot mutate any recovery input" with 2 test cases passed after 0.091 seconds.
+◇ Test "Checksum damage can restore primary without trusting the altered target" started.
+✔ Test "Checksum damage can restore primary without trusting the altered target" passed after 0.038 seconds.
+◇ Test "Valid and future import records cannot be discarded" started.
+◇ Test case passing 1 argument version → 1 to "Valid and future import records cannot be discarded" started.
+✔ Test "An older complete snapshot cannot replace a newer same-repository edit" passed after 0.066 seconds.
+◇ Test "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 1 argument version → 2 to "Valid and future import records cannot be discarded" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+✔ Test "Valid and future import records cannot be discarded" with 2 test cases passed after 0.039 seconds.
+◇ Test "Actual backup copy failure retains source bytes and can retry" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+✔ Test "Actual backup copy failure retains source bytes and can retry" passed after 0.038 seconds.
+✔ Suite "Damaged catalog journal rescue" passed after 3.426 seconds.
+◇ Test case passing 1 argument unknownHash → true to "Missing audio stays as explicit unavailable metadata only with opt-in" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+✔ Test "Missing audio stays as explicit unavailable metadata only with opt-in" with 2 test cases passed after 0.190 seconds.
+◇ Test "Unreadable audio can remain metadata only after explicit consent" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+✔ Test "Unreadable audio can remain metadata only after explicit consent" passed after 0.047 seconds.
+◇ Test "Strict failed copies can resume with explicit missing-audio consent" started.
+◇ Test case passing 2 arguments step → 3, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 3, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+✔ Test "Strict failed copies can resume with explicit missing-audio consent" passed after 0.054 seconds.
+◇ Test "Unknown files appearing at a copy destination are never overwritten" started.
+✔ Test "Catalog, history and queue recover together at each write boundary" with 8 test cases passed after 0.237 seconds.
+◇ Test "Interrupted import recovery retains its journal until the catalog is durable" started.
+✔ Test "Interrupted import recovery retains its journal until the catalog is durable" passed after 0.033 seconds.
+◇ Test "Recovery preserves an unexpected replacement catalog and the journal" started.
+✔ Test "Recovery preserves an unexpected replacement catalog and the journal" passed after 0.013 seconds.
+◇ Test "Nested catalog and sync journals recover their matching tracks and tags" started.
+✔ Test "Nested catalog and sync journals recover their matching tracks and tags" passed after 0.027 seconds.
+◇ Test "Clearing registrations recovers safely at every catalog write boundary" started.
+◇ Test case passing 1 argument step → 0 to "Clearing registrations recovers safely at every catalog write boundary" started.
+✔ Test "Unknown files appearing at a copy destination are never overwritten" passed after 0.090 seconds.
+◇ Test "A later profile switch wins over an in-flight recovery-copy open" started.
+◇ Test case passing 1 argument step → 1 to "Clearing registrations recovers safely at every catalog write boundary" started.
+✔ Test "A later profile switch wins over an in-flight recovery-copy open" passed after 0.059 seconds.
+◇ Test "Opening a recovered library does not flush the broken original's pending queue" started.
+◇ Test case passing 1 argument step → 2 to "Clearing registrations recovers safely at every catalog write boundary" started.
+✔ Test "Opening a recovered library does not flush the broken original's pending queue" passed after 0.067 seconds.
+✔ Suite "Read-only legacy recovery copies" passed after 3.805 seconds.
+◇ Test case passing 1 argument step → 3 to "Clearing registrations recovers safely at every catalog write boundary" started.
+✔ Test "Clearing registrations recovers safely at every catalog write boundary" with 4 test cases passed after 0.202 seconds.
+◇ Test "Starting an import reserves a generation before catalog publication" started.
+✔ Test "Starting an import reserves a generation before catalog publication" passed after 0.029 seconds.
+◇ Test "An unobserved repository cannot replace an existing catalog" started.
+✔ Test "An unobserved repository cannot replace an existing catalog" passed after 0.017 seconds.
+◇ Test "A stale repository cannot overwrite playlist, history, or queue updates" started.
+◇ Test case passing 1 argument operation → "playlist" to "A stale repository cannot overwrite playlist, history, or queue updates" started.
+◇ Test case passing 1 argument operation → "history" to "A stale repository cannot overwrite playlist, history, or queue updates" started.
+◇ Test case passing 1 argument operation → "queue" to "A stale repository cannot overwrite playlist, history, or queue updates" started.
+✔ Test "A stale repository cannot overwrite playlist, history, or queue updates" with 3 test cases passed after 0.058 seconds.
+◇ Test "Storage locks time out without modifying data and can be retried" started.
+◇ Test case passing 1 argument name → ".catalog-transaction-v1.lock" to "Storage locks time out without modifying data and can be retried" started.
+◇ Test case passing 1 argument name → ".import-transaction-v1.lock" to "Storage locks time out without modifying data and can be retried" started.
+✔ Test "Storage locks time out without modifying data and can be retried" with 2 test cases passed after 0.601 seconds.
+◇ Test "Storage lock waits can be cancelled" started.
+◇ Test case passing 1 argument name → ".catalog-transaction-v1.lock" to "Storage lock waits can be cancelled" started.
+◇ Test case passing 1 argument name → ".import-transaction-v1.lock" to "Storage lock waits can be cancelled" started.
+✔ Test "Storage lock waits can be cancelled" with 2 test cases passed after 0.511 seconds.
+◇ Test "A separate process holding the catalog lock blocks repository writes" started.
+✔ Test "A separate process holding the catalog lock blocks repository writes" passed after 0.336 seconds.
+◇ Test "A process update under the lock invalidates a waiting stale writer" started.
+✔ Test "A process update under the lock invalidates a waiting stale writer" passed after 0.330 seconds.
+◇ Test "An active asynchronous import cannot be mistaken for interrupted recovery" started.
+✔ Test "An active asynchronous import cannot be mistaken for interrupted recovery" passed after 0.559 seconds.
+◇ Test "An older repository rejects tracks after another repository organizes media" started.
+✔ Test "An older repository rejects tracks after another repository organizes media" passed after 0.036 seconds.
+◇ Test "A rejected stale favorite save reloads the organized track path" started.
+✔ Test "A rejected stale favorite save reloads the organized track path" passed after 0.033 seconds.
+◇ Test "An old history-clear failure cannot restore old events over the new library" started.
+✔ Test "An old history-clear failure cannot restore old events over the new library" passed after 0.042 seconds.
+◇ Test "An old successful edit cannot overwrite the new library" started.
+◇ Test case passing 1 argument operation → "metadata" to "An old successful edit cannot overwrite the new library" started.
+◇ Test case passing 1 argument operation → "playlist" to "An old successful edit cannot overwrite the new library" started.
+✔ Test "An old successful edit cannot overwrite the new library" with 2 test cases passed after 0.088 seconds.
+◇ Test "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "apply-success" to "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "apply-failure" to "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "undo-success" to "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "undo-failure" to "Old overlay completion and failure stay with their original library" started.
+✔ Test "Old overlay completion and failure stay with their original library" with 4 test cases passed after 0.213 seconds.
+◇ Test "Failed storage switch preserves the outcome of an in-flight overlay" started.
+◇ Test case passing 1 argument writeFails → false to "Failed storage switch preserves the outcome of an in-flight overlay" started.
+◇ Test case passing 1 argument writeFails → true to "Failed storage switch preserves the outcome of an in-flight overlay" started.
+✔ Test "Failed storage switch preserves the outcome of an in-flight overlay" with 2 test cases passed after 0.043 seconds.
+◇ Test "Unwritable tag destination does not commit the catalog" started.
+◇ Test case passing 1 argument isUndo → false to "Unwritable tag destination does not commit the catalog" started.
+◇ Test case passing 1 argument isUndo → true to "Unwritable tag destination does not commit the catalog" started.
+✔ Test "Unwritable tag destination does not commit the catalog" with 2 test cases passed after 0.040 seconds.
+◇ Test "Failed final tag publication restores the prior catalog" started.
+✔ Test "Failed final tag publication restores the prior catalog" passed after 0.014 seconds.
+◇ Test "Overlay rollback does not overwrite a newer track edit" started.
+✔ Test "Overlay rollback does not overwrite a newer track edit" passed after 0.008 seconds.
+◇ Test "Duplicate resolution completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → false to "Duplicate resolution completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → true to "Duplicate resolution completion stays with its starting library" started.
+✔ Test "Duplicate resolution completion stays with its starting library" with 2 test cases passed after 0.103 seconds.
+◇ Test "Media organization completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → false to "Media organization completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → true to "Media organization completion stays with its starting library" started.
+✔ Test "Media organization completion stays with its starting library" with 2 test cases passed after 0.098 seconds.
+◇ Test "Playlist edit queued during organization keeps the new file path" started.
+✔ Test "Playlist edit queued during organization keeps the new file path" passed after 0.045 seconds.
+◇ Test "Stale track snapshots cannot restore paths after organization" started.
+✔ Test "Stale track snapshots cannot restore paths after organization" passed after 0.042 seconds.
+◇ Test "Metadata writing cannot start while organization is moving the same library" started.
+✔ Test "Metadata writing cannot start while organization is moving the same library" passed after 0.032 seconds.
+◇ Test "Organization cannot start while metadata editing owns the same library" started.
+✔ Test "Organization cannot start while metadata editing owns the same library" passed after 0.035 seconds.
+◇ Test "Media organization refuses a preview from a previous library" started.
+✔ Test "Media organization refuses a preview from a previous library" passed after 0.030 seconds.
+◇ Test "Media organization refuses a preview after the same library changes" started.
+✔ Test "Media organization refuses a preview after the same library changes" passed after 0.036 seconds.
+◇ Test "Successful library switch clears only the store's previous undo actions" started.
+✔ Test "Successful library switch clears only the store's previous undo actions" passed after 0.034 seconds.
+✔ Suite "Storage delayed failure isolation" passed after 7.302 seconds.
+✔ Test run with 204 tests in 8 suites passed after 7.302 seconds.

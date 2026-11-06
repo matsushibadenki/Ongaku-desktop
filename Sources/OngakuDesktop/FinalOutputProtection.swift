@@ -17,7 +17,7 @@ final class FinalOutputProtection {
     private var userVolume: Float = 1
     private var transitionGain: Float = 1
     private var transportGain: Float = 1
-    private let conversionMixer = AVAudioMixerNode()
+    private let conversionMixer = AudioMixerCapacity.makeMixer()
     let protector: AVAudioUnitEffect?
     var isEnabled: Bool { protector != nil }
     var latency: TimeInterval {

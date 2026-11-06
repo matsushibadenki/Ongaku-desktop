@@ -1,0 +1,10 @@
+{
+  ".github/workflows/m0-quality-gate.yml": "c90a5b06800ea290f55906880db8469d277cee63dfcca42f3398eb4f8ba44a82",
+  "Sources/OngakuDesktop/LibraryRepository.swift": "47770289ab38ca2686af7f09682b632565485d11df41bbf909a18e13f155c0ea",
+  "Sources/OngakuDesktop/LibraryStore.swift": "22b7c9a949b3cb38ceb6d426bbeaa8ea1b44f90f01d366695cd987447f057fb8",
+  "Sources/OngakuDesktop/StorageSettingsView.swift": "b64dc268cdf362eae84fad66f28c658f0b088bccada64d150b73bfa8fb9d1bb2",
+  "Tests/OngakuDesktopTests/RecoveryCopyTests.swift": "d5e754b360d0e5f1744ae1c2e210d1cf4bcaf3c297a0e0f7c4026659bb799608",
+  "Sources/OngakuDesktop/Resources/en.lproj/Localizable.strings": "a31b10a53f6c6bf6e9ca7b7316c3dfc272a44cbe4356fd0313871cef68b33aff",
+  "Sources/OngakuDesktop/Resources/ja.lproj/Localizable.strings": "518bb275832a73260a271917e2415d1335c17dfd924b3c2e570c23b41a9c4c9d",
+  "Sources/OngakuDesktop/Resources/zh-Hans.lproj/Localizable.strings": "15e49015b05e9db0e77a443458bde0442bd2c1abab49947ce4caa413d3c7887f"
+}

@@ -1,0 +1,45 @@
+Building for debugging...
+[1 / 12] OngakuDesktop-product
+[3 / 13] OngakuDesktop-product
+[6 / 17] OngakuDesktop-product
+[7 / 17] OngakuDesktop-product
+[15 / 22] OngakuDesktop
+[15 / 25] OngakuDesktop-product
+[16 / 25] OngakuDesktop-product
+[18 / 19] OngakuDesktopTests-product
+[20 / 22] OngakuDesktopTests-product
+Build complete! (7.26秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Effect rack input ownership" started.
+◇ Test "EQ sections preserve every parameter exactly once and keep band controls together" started.
+✔ Test "EQ sections preserve every parameter exactly once and keep band controls together" passed after 0.007 seconds.
+◇ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" started.
+✔ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" passed after 0.084 seconds.
+◇ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" started.
+✔ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" passed after 0.007 seconds.
+◇ Test "Wheel scroll over a control reaches the scroll view, never the control" started.
+✔ Test "Wheel scroll over a control reaches the scroll view, never the control" passed after 0.004 seconds.
+◇ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" started.
+✔ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" passed after 0.037 seconds.
+◇ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" started.
+✔ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" passed after 0.275 seconds.
+◇ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" started.
+✔ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" passed after 0.013 seconds.
+◇ Test "Two-finger scroll can start on a partially clipped control to reveal it" started.
+✔ Test "Two-finger scroll can start on a partially clipped control to reveal it" passed after 0.005 seconds.
+◇ Test "Momentum produced during a control drag cannot move the rack after mouse-up" started.
+✔ Test "Momentum produced during a control drag cannot move the rack after mouse-up" passed after 0.038 seconds.
+◇ Test "Detaching the rack releases ownership and position protection" started.
+✔ Test "Detaching the rack releases ownership and position protection" passed after 0.008 seconds.
+◇ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" started.
+✔ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" passed after 1.163 seconds.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 49.122 seconds.
+◇ Test "Effect mode survives leaving and returning; OFF remains authoritative" started.
+✔ Test "Effect mode survives leaving and returning; OFF remains authoritative" passed after 2.314 seconds.
+◇ Test "SwiftUI region connects to the actual ancestor scroll view" started.
+✔ Test "SwiftUI region connects to the actual ancestor scroll view" passed after 0.131 seconds.
+✔ Suite "Effect rack input ownership" passed after 53.216 seconds.
+✔ Test run with 14 tests in 1 suite passed after 53.216 seconds.

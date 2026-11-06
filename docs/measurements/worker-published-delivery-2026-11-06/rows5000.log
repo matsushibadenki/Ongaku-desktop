@@ -1,0 +1,11 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Actual worker to Published delivery" started.
+◇ Test "Measure actual checkpoint, mailbox and controller publication" started.
+WORKER_DELIVERY rows=5000 round=0 files=4 bytes=16777216 chunks=256 publications=280 wall_ms=116.42825 cpu_ms=225.3520000000001 receipt_to_published_p50_ms=1.069375 receipt_to_published_p95_ms=1.719458 max_ms=2.684167 process_peak_rss_bytes=101924864
+WORKER_DELIVERY rows=5000 round=1 files=4 bytes=16777216 chunks=256 publications=280 wall_ms=108.193292 cpu_ms=212.20699999999988 receipt_to_published_p50_ms=1.014083 receipt_to_published_p95_ms=1.384625 max_ms=2.269834 process_peak_rss_bytes=102645760
+WORKER_DELIVERY rows=5000 round=2 files=4 bytes=16777216 chunks=256 publications=280 wall_ms=108.422208 cpu_ms=211.82999999999993 receipt_to_published_p50_ms=1.022708 receipt_to_published_p95_ms=1.259625 max_ms=2.216666 process_peak_rss_bytes=108003328
+✔ Test "Measure actual checkpoint, mailbox and controller publication" passed after 4.603 seconds.
+✔ Suite "Actual worker to Published delivery" passed after 4.603 seconds.
+✔ Test run with 1 test in 1 suite passed after 4.603 seconds.

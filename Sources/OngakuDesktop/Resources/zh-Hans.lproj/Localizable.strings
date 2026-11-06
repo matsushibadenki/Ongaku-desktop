@@ -1329,3 +1329,21 @@
 "library.error.damagedImportJournal" = "无法读取导入恢复记录。请保留原始数据，并在设置中导出恢复信息。";
 
 "library.error.unsupportedGenerationFormat" = "此资料库使用较新的版本格式。请更新应用后继续。";
+
+/* Explicit recovery of a damaged catalog save record. */
+"settings.storage.rescueCatalog" = "恢复上次资料库…";
+"settings.storage.rescueCatalog.confirm" = "恢复资料库";
+"settings.storage.rescueCatalog.message" = "仅用于资料库保存记录或导入记录损坏时。恢复最后可读取的资料库及其队列和历史记录。尚未写入该资料库的更改可能丢失。未登记的导入副本会保留，以便手动恢复。将先备份现有管理信息和损坏记录；保留音频文件。";
+"settings.storage.rescueCatalog.success" = "资料库已恢复。备份位置：%@";
+"library.error.catalogRescueUnavailable" = "此恢复操作需要损坏的资料库保存记录或导入记录及可读取的当前格式主资料库，且无其他待恢复操作。请保留原始数据并导出恢复信息。";
+
+/* Read-only salvage to a new library. */
+"settings.storage.recoveryCopy.create" = "创建恢复副本…";
+"settings.storage.recoveryCopy.resume" = "继续恢复副本…";
+"settings.storage.recoveryCopy.source" = "请选择可读取的资料库或资料库备份。原资料库和损坏的恢复记录会保留。 尚未提交的更改可能无法恢复。";
+"settings.storage.recoveryCopy.help" = "请选择父文件夹。将已验证的音频和可读取的资料库信息复制到新资料库并打开。未登记的副本和不可读取的信息保留在原位置。中断后可选择已创建的文件夹继续。";
+"settings.storage.recoveryCopy.resumeHelp" = "请选择未完成的Ongaku-Recovered文件夹。仅复用已验证的副本，并保留原资料库。";
+"settings.storage.recoveryCopy.success" = "已保存%d首曲目信息（缺少音频：%d首；重新生成指纹：%d首）。文件夹：%@";
+"library.error.recoveryCopyIncomplete" = "此恢复副本未完成或无法验证。请保留原数据和副本，并在存储设置中选择“继续恢复副本”。";
+"settings.storage.recoveryCopy.notOpened" = "恢复副本已创建：%@。复制期间当前资料库已更改，因此保留当前选择。";
+"settings.storage.recoveryCopy.keepMissing" = "音频无法找到时保留曲目信息并继续";

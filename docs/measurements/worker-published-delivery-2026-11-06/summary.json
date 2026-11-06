@@ -1,0 +1,160 @@
+{
+  "configuration": "SwiftPM Debug; macOS 27.2 build 26B123; Apple Swift 6.4.2; arm64; process-peak RSS includes fixtures/history/frameworks; no concurrent benchmarks/builds during timed samples",
+  "records": [
+    {
+      "rows": 50,
+      "round": 0,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 122.552542,
+      "cpu_ms": 197.548,
+      "receipt_to_published_p50_ms": 1.127708,
+      "receipt_to_published_p95_ms": 1.413917,
+      "max_ms": 2.9495,
+      "process_peak_rss_bytes": 95567872
+    },
+    {
+      "rows": 50,
+      "round": 1,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 130.318834,
+      "cpu_ms": 206.34300000000002,
+      "receipt_to_published_p50_ms": 1.188958,
+      "receipt_to_published_p95_ms": 2.192875,
+      "max_ms": 3.014333,
+      "process_peak_rss_bytes": 96075776
+    },
+    {
+      "rows": 50,
+      "round": 2,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 136.148417,
+      "cpu_ms": 210.03999999999996,
+      "receipt_to_published_p50_ms": 1.209125,
+      "receipt_to_published_p95_ms": 2.470375,
+      "max_ms": 4.211875,
+      "process_peak_rss_bytes": 97484800
+    },
+    {
+      "rows": 500,
+      "round": 0,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 112.933958,
+      "cpu_ms": 187.14099999999996,
+      "receipt_to_published_p50_ms": 1.01875,
+      "receipt_to_published_p95_ms": 1.676417,
+      "max_ms": 2.240208,
+      "process_peak_rss_bytes": 96010240
+    },
+    {
+      "rows": 500,
+      "round": 1,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 108.260125,
+      "cpu_ms": 179.49599999999998,
+      "receipt_to_published_p50_ms": 1.009625,
+      "receipt_to_published_p95_ms": 1.212375,
+      "max_ms": 1.488375,
+      "process_peak_rss_bytes": 96747520
+    },
+    {
+      "rows": 500,
+      "round": 2,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 109.402,
+      "cpu_ms": 180.76300000000003,
+      "receipt_to_published_p50_ms": 1.027459,
+      "receipt_to_published_p95_ms": 1.183166,
+      "max_ms": 1.77225,
+      "process_peak_rss_bytes": 96862208
+    },
+    {
+      "rows": 5000,
+      "round": 0,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 116.42825,
+      "cpu_ms": 225.3520000000001,
+      "receipt_to_published_p50_ms": 1.069375,
+      "receipt_to_published_p95_ms": 1.719458,
+      "max_ms": 2.684167,
+      "process_peak_rss_bytes": 101924864
+    },
+    {
+      "rows": 5000,
+      "round": 1,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 108.193292,
+      "cpu_ms": 212.20699999999988,
+      "receipt_to_published_p50_ms": 1.014083,
+      "receipt_to_published_p95_ms": 1.384625,
+      "max_ms": 2.269834,
+      "process_peak_rss_bytes": 102645760
+    },
+    {
+      "rows": 5000,
+      "round": 2,
+      "files": 4,
+      "bytes": 16777216,
+      "chunks": 256,
+      "publications": 280,
+      "wall_ms": 108.422208,
+      "cpu_ms": 211.82999999999993,
+      "receipt_to_published_p50_ms": 1.022708,
+      "receipt_to_published_p95_ms": 1.259625,
+      "max_ms": 2.216666,
+      "process_peak_rss_bytes": 108003328
+    }
+  ],
+  "summary": [
+    {
+      "history_rows": 50,
+      "samples": 3,
+      "wall_ms_median": 130.318834,
+      "cpu_ms_median": 206.34300000000002,
+      "run_p95_ms_median": 2.192875,
+      "max_observed_ms": 4.211875,
+      "process_peak_rss_bytes_max": 97484800
+    },
+    {
+      "history_rows": 500,
+      "samples": 3,
+      "wall_ms_median": 109.402,
+      "cpu_ms_median": 180.76300000000003,
+      "run_p95_ms_median": 1.212375,
+      "max_observed_ms": 2.240208,
+      "process_peak_rss_bytes_max": 96862208
+    },
+    {
+      "history_rows": 5000,
+      "samples": 3,
+      "wall_ms_median": 108.422208,
+      "cpu_ms_median": 212.20699999999988,
+      "run_p95_ms_median": 1.384625,
+      "max_observed_ms": 2.684167,
+      "process_peak_rss_bytes_max": 108003328
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "pairs": [
+    {
+      "mobile": "audio/GainEnvelopeAudioUnit.mm",
+      "desktop": "Sources/OngakuAudioDSP/GainEnvelopeAudioUnit.mm",
+      "identical": true
+    },
+    {
+      "mobile": "audio/TruePeakAudioUnit.mm",
+      "desktop": "Sources/OngakuAudioDSP/TruePeakAudioUnit.mm",
+      "identical": true
+    },
+    {
+      "mobile": "audio/SpectralTransientAudioUnit.mm",
+      "desktop": "Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm",
+      "identical": true
+    },
+    {
+      "mobile": "audio/GainEnvelopeDSP.hpp",
+      "desktop": "Sources/OngakuAudioDSP/GainEnvelopeDSP.hpp",
+      "identical": true
+    },
+    {
+      "mobile": "audio/TruePeakDSP.hpp",
+      "desktop": "Sources/OngakuAudioDSP/TruePeakDSP.hpp",
+      "identical": true
+    },
+    {
+      "mobile": "audio/SpectralTransientDSP.hpp",
+      "desktop": "Sources/OngakuAudioDSP/SpectralTransientDSP.hpp",
+      "identical": true
+    },
+    {
+      "mobile": "audio/GainEnvelopeAudioUnit.h",
+      "desktop": "Sources/OngakuAudioDSP/include/GainEnvelopeAudioUnit.h",
+      "identical": true
+    },
+    {
+      "mobile": "audio/TruePeakAudioUnit.h",
+      "desktop": "Sources/OngakuAudioDSP/include/TruePeakAudioUnit.h",
+      "identical": true
+    },
+    {
+      "mobile": "audio/SpectralTransientAudioUnit.h",
+      "desktop": "Sources/OngakuAudioDSP/include/SpectralTransientAudioUnit.h",
+      "identical": true
+    },
+    {
+      "mobile": "audio/effects/SpectralTransientAudioEffect.swift",
+      "desktop": "Sources/OngakuDesktop/SpectralTransientAudioEffect.swift",
+      "identical": true
+    },
+    {
+      "mobile": "audio/AudioThreadGainStage.swift",
+      "desktop": "Sources/OngakuDesktop/AudioThreadGainStage.swift",
+      "identical": true
+    }
+  ]
+}

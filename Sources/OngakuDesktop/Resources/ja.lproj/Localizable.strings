@@ -1329,3 +1329,21 @@
 "library.error.damagedImportJournal" = "インポートの復旧記録を読み取れません。元データを保持し、設定の「復旧情報を書き出す」から退避してください。";
 
 "library.error.unsupportedGenerationFormat" = "このライブラリの世代情報は新しいアプリ用です。アプリをアップデートしてください。";
+
+/* Explicit recovery of a damaged catalog save record. */
+"settings.storage.rescueCatalog" = "最後の台帳へ戻す…";
+"settings.storage.rescueCatalog.confirm" = "台帳へ戻す";
+"settings.storage.rescueCatalog.message" = "台帳の保存記録、またはインポート記録が破損した場合の操作です。読み取り可能な最後の台帳と、そのキュー・履歴へ戻します。その台帳に未反映の変更は失われる可能性があります。未登録の取込コピーは手動救済用に保持します。既存の管理情報と破損記録を先に退避し、曲ファイルは保持します。";
+"settings.storage.rescueCatalog.success" = "台帳を復元しました。退避先: %@";
+"library.error.catalogRescueUnavailable" = "破損した台帳保存記録またはインポート記録と、現行形式の読み取り可能な台帳が必要です。他の復旧が未完了の場合は実行できません。元データを保持し、復旧情報を書き出してください。";
+
+/* Read-only salvage to a new library. */
+"settings.storage.recoveryCopy.create" = "救済コピーを作成…";
+"settings.storage.recoveryCopy.resume" = "救済コピーを再開…";
+"settings.storage.recoveryCopy.source" = "読み取り可能な台帳か台帳バックアップを選択してください。元のライブラリと破損した復旧記録は保持します。 未確定の変更は復元できない場合があります。";
+"settings.storage.recoveryCopy.help" = "親フォルダを選択してください。検証した音源と読める台帳情報を新しいライブラリへコピーして開きます。未登録コピーや読めない情報は元の場所に保持します。中断後は作成されたフォルダを選んで再開できます。";
+"settings.storage.recoveryCopy.resumeHelp" = "未完了のOngaku-Recoveredフォルダを選択してください。検証できたコピーだけを再利用し、元のライブラリは保持します。";
+"settings.storage.recoveryCopy.success" = "%d曲の情報を救済しました（音源未取得: %d曲／指紋再作成: %d曲）。保存先: %@";
+"library.error.recoveryCopyIncomplete" = "救済コピーが未完了、または検証できません。元データとコピーを保持し、保存先設定の「救済コピーを再開」から続行してください。";
+"settings.storage.recoveryCopy.notOpened" = "救済コピーを作成しました: %@。コピー中に利用中のライブラリが変わったため、切り替えずに保持しました。";
+"settings.storage.recoveryCopy.keepMissing" = "音源が見つからない曲も情報を残して続行";

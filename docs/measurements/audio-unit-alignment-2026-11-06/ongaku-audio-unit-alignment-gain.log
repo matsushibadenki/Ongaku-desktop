@@ -1,0 +1,4 @@
+PASS: 72 real AU cases, 44.1/48/96/192 kHz, mono/stereo, 8/16/24 ms, 1/127/512 frames; max residual 0 FS
+PASS: exact mute/completion, UI-independent ramps, retarget continuity, silent input and stale-token lifecycle
+PASS: 30000 concurrent commands / 10000 render blocks, finite bounded gain, exact final mute and lifecycle identity
+PASS: negative control rejects a 48-step envelope

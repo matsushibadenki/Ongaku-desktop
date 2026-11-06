@@ -1,0 +1,6 @@
+/private/tmp/OngakuDSPTransition.Ll8aT6/ShippingEffectSelection.swift:2:6: error: invalid redeclaration of 'PlaybackDebugLogger'
+  1 | import Foundation
+  2 | enum PlaybackDebugLogger { static func event(_ value: String) {} }
+    |      `- error: invalid redeclaration of 'PlaybackDebugLogger'
+  3 | nonisolated enum HeadphoneHRTFPreset: String, Codable, CaseIterable, Hashable, Sendable {
+  4 |     case natural

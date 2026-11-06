@@ -1,0 +1,16 @@
+*** Terminating app due to uncaught exception 'com.apple.coreaudio.avfaudio', reason: 'required condition is false: comp != nullptr'
+*** First throw call stack:
+(
+	0   CoreFoundation                      0x000000018df0d7b0 __exceptionPreprocess + 176
+	1   libobjc.A.dylib                     0x0000000189b6865c objc_exception_throw + 88
+	2   CoreFoundation                      0x000000018df0d6a0 +[NSException exceptionWithName:reason:userInfo:] + 0
+	3   AVFAudio                            0x00000001bdc0de18 _ZN17AUInterfaceBaseV3C2ERK25AudioComponentDescriptionP23ComponentInstanceRecord + 1692
+	4   AVFAudio                            0x00000001bdcd2ea8 _ZN15AVAudioNodeImplC2EP23ComponentInstanceRecordRK25AudioComponentDescription13ENodeInternal + 116
+	5   AVFAudio                            0x00000001bdcdca04 -[AVAudioPlayerNode init] + 96
+	6   check                               0x0000000102c703d8 $s5check35SpectralTransientFallbackRegressionV6render4rate6effectSaySfGSd_AA0bC11AudioEffectCSgtKFZTf4nnd_n + 108
+	7   check                               0x0000000102c70ea0 $s5check35SpectralTransientFallbackRegressionV4mainyyKFZTf4d_n + 224
+	8   check                               0x0000000102c6fff0 main + 24
+	9   dyld                                0x0000000189c04d7c start + 6652
+)
+libc++abi: terminating due to uncaught exception of type NSException
+tests/run_spectral_transient_fallback_regression.sh: line 11: 16639 Abort trap: 6           "$fallback_dir/check"

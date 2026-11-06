@@ -1,0 +1,50 @@
+Building for debugging...
+[Using on-disk description]
+[1 / 16]
+[3 / 12] OngakuDesktop-product
+[6 / 16] OngakuDesktop-product
+[7 / 16] OngakuDesktop-product
+[15 / 19] OngakuDesktop
+[15 / 23] OngakuDesktop-product
+[20 / 24] OngakuDesktopTests-product
+[22 / 24] OngakuDesktopTests-product
+Build complete! (8.11秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Read-only legacy recovery copies" started.
+◇ Test "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✔ Test "All old broken journal types can be escaped without source mutation" with 5 test cases passed after 0.108 seconds.
+◇ Test "Moved media is recovered by hash when an old organization record cannot be decoded" started.
+✔ Test "Moved media is recovered by hash when an old organization record cannot be decoded" passed after 0.022 seconds.
+◇ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" with 6 test cases passed after 0.133 seconds.
+◇ Test "Already verified copies finish without the original medium after a crash" started.
+✔ Test "Already verified copies finish without the original medium after a crash" passed after 0.020 seconds.
+◇ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" started.
+✔ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" passed after 0.021 seconds.
+◇ Test "An explicitly selected Previous catalog works even when the primary has been moved away" started.
+✔ Test "An explicitly selected Previous catalog works even when the primary has been moved away" passed after 0.020 seconds.
+◇ Test "Changed original bytes cannot be copied under their old fingerprint" started.
+✔ Test "Changed original bytes cannot be copied under their old fingerprint" passed after 0.013 seconds.
+◇ Test "Unknown old fingerprints are derived only from an existing exact file path" started.
+✔ Test "Unknown old fingerprints are derived only from an existing exact file path" passed after 0.018 seconds.
+◇ Test "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 1 argument future → false to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 1 argument future → true to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+✔ Test "A tampered plan and an unsupported catalog fail without modifying the source" with 2 test cases passed after 0.022 seconds.
+◇ Test "Opening a recovered library does not flush the broken original's pending queue" started.
+✔ Test "Opening a recovered library does not flush the broken original's pending queue" passed after 0.032 seconds.
+✔ Suite "Read-only legacy recovery copies" passed after 0.415 seconds.
+✔ Test run with 10 tests in 1 suite passed after 0.415 seconds.

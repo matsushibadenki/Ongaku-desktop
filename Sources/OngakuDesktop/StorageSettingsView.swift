@@ -12,6 +12,10 @@ struct StorageSettingsView: View {
   @State private var isRegisteringDroppedFolder = false
   @State private var isFolderDropTargeted = false
   @State private var isClearingLibrary = false
+  @State private var recoveryCopyTask: Task<Void, Never>?
+  @State private var isCreatingRecoveryCopy = false
+  @State private var isRescuingCatalog = false
+  @State private var isShowingRescueConfirmation = false
   @State private var isExportingRecovery = false
   @State private var isShowingClearConfirmation = false
   @State private var resultMessage: String?
@@ -126,6 +130,30 @@ struct StorageSettingsView: View {
           .buttonStyle(.bordered)
           .disabled(isStorageOperationInProgress)
           .help(L10n.text("settings.storage.exportRecovery.help"))
+          Button {
+            isShowingRescueConfirmation = true
+          } label: {
+            Image(systemName: "arrow.uturn.backward.circle")
+          }
+          .buttonStyle(.bordered)
+          .disabled(isStorageOperationInProgress)
+          .help(L10n.text("settings.storage.rescueCatalog"))
+          .accessibilityLabel(L10n.text("settings.storage.rescueCatalog"))
+          Menu {
+            Button(L10n.text("settings.storage.recoveryCopy.create")) { chooseRecoveryCatalog() }
+            Button(L10n.text("settings.storage.recoveryCopy.resume")) { chooseRecoveryDestination(manifest: nil) }
+          } label: {
+            Image(systemName: "square.on.square")
+          }
+          .menuStyle(.borderlessButton)
+          .fixedSize()
+          .disabled(isStorageOperationInProgress)
+          .help(L10n.text("settings.storage.recoveryCopy.help"))
+          .accessibilityLabel(L10n.text("settings.storage.recoveryCopy.create"))
+          if isCreatingRecoveryCopy {
+            ProgressView().controlSize(.small)
+            Button(L10n.text("common.cancel")) { recoveryCopyTask?.cancel() }
+          }
           Image(systemName: "info.circle")
             .foregroundStyle(AppTheme.secondaryInk)
             .help(L10n.text("storage.migration.sameFolder"))
@@ -210,6 +238,14 @@ struct StorageSettingsView: View {
       }
     }
     .scrollIndicators(.automatic)
+    .alert(L10n.text("settings.storage.rescueCatalog"), isPresented: $isShowingRescueConfirmation) {
+      Button(L10n.text("common.cancel"), role: .cancel) {}
+      Button(L10n.text("settings.storage.rescueCatalog.confirm"), role: .destructive) {
+        rescueCatalog()
+      }
+    } message: {
+      Text(L10n.text("settings.storage.rescueCatalog.message"))
+    }
     .alert(
       L10n.text("settings.storage.clearConfirmationTitle"),
       isPresented: $isShowingClearConfirmation
@@ -267,6 +303,88 @@ struct StorageSettingsView: View {
       } catch {
         errorMessage = error.localizedDescription
       }
+    }
+  }
+
+  @MainActor
+  private func chooseRecoveryCatalog() {
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = true
+    panel.canChooseDirectories = false
+    panel.allowsMultipleSelection = false
+    panel.allowedContentTypes = [.json]
+    panel.directoryURL = libraryProfiles.activeProfile.catalogURL
+    panel.message = L10n.text("settings.storage.recoveryCopy.source")
+    panel.begin { response in
+      guard response == .OK, let manifest = panel.url else { return }
+      chooseRecoveryDestination(manifest: manifest)
+    }
+  }
+
+  @MainActor
+  private func chooseRecoveryDestination(manifest: URL?) {
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.canCreateDirectories = manifest != nil
+    panel.allowsMultipleSelection = false
+    panel.message = L10n.text(manifest == nil ? "settings.storage.recoveryCopy.resumeHelp" : "settings.storage.recoveryCopy.help")
+    let missing = NSButton(checkboxWithTitle: L10n.text("settings.storage.recoveryCopy.keepMissing"), target: nil, action: nil)
+    missing.state = .off
+    missing.sizeToFit()
+    panel.accessoryView = missing
+    panel.begin { response in
+      guard response == .OK, let folder = panel.url else { return }
+      guard !isStorageOperationInProgress else { return }
+      let origin = libraryProfiles.activeProfile
+      isCreatingRecoveryCopy = true
+      resultMessage = nil
+      errorMessage = nil
+      recoveryCopyTask = Task { @MainActor in
+        defer { isCreatingRecoveryCopy = false; recoveryCopyTask = nil }
+        let sourceAccess = manifest?.startAccessingSecurityScopedResource() == true
+        let destinationAccess = folder.startAccessingSecurityScopedResource()
+        defer {
+          if sourceAccess { manifest?.stopAccessingSecurityScopedResource() }
+          if destinationAccess { folder.stopAccessingSecurityScopedResource() }
+        }
+        do {
+          let media: URL
+          if let manifest {
+            let source = LibraryRepository(rootURL: origin.catalogURL, mediaURL: origin.mediaURL)
+            media = try await source.prepareRecoveryCopy(from: manifest, in: folder, allowMissing: missing.state == .on)
+          } else { media = folder }
+          let layout = PortableLibraryStorage(mediaURL: media)
+          let target = LibraryRepository(rootURL: layout.rootURL, mediaURL: media)
+          let result = try await target.resumeRecoveryCopy(allowMissing: missing.state == .on)
+          try Task.checkCancellation()
+          guard libraryProfiles.activeProfile.id == origin.id, library.isUsingCatalog(at: origin.catalogURL) else {
+            resultMessage = L10n.format("settings.storage.recoveryCopy.notOpened", media.path)
+            return
+          }
+          player.clearCurrentTrack()
+          try await storage.activateDirectory(media) { url in try await library.openRecoveryCopy(url, expectedLibraryID: result.libraryID) }
+          try finishStorageSwitch()
+          resultMessage = L10n.format("settings.storage.recoveryCopy.success", result.trackCount, result.missingTrackCount, result.derivedHashCount, media.path)
+        } catch { errorMessage = error.localizedDescription }
+      }
+    }
+  }
+
+  @MainActor
+  private func rescueCatalog() {
+    guard !isStorageOperationInProgress else { return }
+    isRescuingCatalog = true
+    resultMessage = nil
+    errorMessage = nil
+    player.clearCurrentTrack()
+    Task { @MainActor in
+      defer { isRescuingCatalog = false }
+      do {
+        let backup = try await library.rescueDamagedLibraryJournal()
+        player.restorePlaybackQueue(library.playbackQueue, tracks: library.tracks)
+        resultMessage = L10n.format("settings.storage.rescueCatalog.success", backup.path)
+      } catch { errorMessage = error.localizedDescription }
     }
   }
 
@@ -468,7 +586,7 @@ struct StorageSettingsView: View {
   }
 
   private var isStorageOperationInProgress: Bool {
-    isApplyingLocation || isImportingMusicLibrary || isRegisteringDroppedFolder || isClearingLibrary || isExportingRecovery
+    isApplyingLocation || isImportingMusicLibrary || isRegisteringDroppedFolder || isClearingLibrary || isExportingRecovery || isRescuingCatalog || isCreatingRecoveryCopy
       || library.isSwitchingLibrary
       || library.activity == .importing || library.activity == .verifying || library.activity == .relinking
   }

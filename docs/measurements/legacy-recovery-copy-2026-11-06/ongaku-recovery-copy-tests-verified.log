@@ -1,0 +1,62 @@
+Building for debugging...
+[3 / 26] OngakuDesktop-product
+[6 / 34] OngakuDesktop-product
+[7 / 34] OngakuDesktop-product
+[11 / 34] OngakuDesktop-product
+[12 / 36] OngakuDesktop
+[16 / 39] OngakuDesktop
+[21 / 38] OngakuDesktop
+[21 / 38] OngakuDesktop-product
+[26 / 37] OngakuDesktopTests-product
+[28 / 39] OngakuDesktopTests-product
+[34 / 38] OngakuDesktopTests-product
+[36 / 38] OngakuDesktopTests-product
+Build complete! (11.16秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Read-only legacy recovery copies" started.
+◇ Test "All old broken journal types can be escaped without source mutation" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✘ Test "All old broken journal types can be escaped without source mutation" recorded an issue with 1 argument name → "storage-restore-journal-v1.json" at RecoveryCopyTests.swift:78:6: Caught error: Error Domain=NSCocoaErrorDomain Code=260 "The file “library-v1.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-3759CC07-8B16-4940-B480-2FACE338A0E8/output/Ongaku-Recovered-C12950FF-0B12-4692-AEA6-F09164A222B9/Ongaku Library Data/library-v1.json, NSURL=file:///var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-3759CC07-8B16-4940-B480-2FACE338A0E8/output/Ongaku-Recovered-C12950FF-0B12-4692-AEA6-F09164A222B9/Ongaku%20Library%20Data/library-v1.json, NSUnderlyingError=0x7c73240240 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✘ Test "All old broken journal types can be escaped without source mutation" recorded an issue with 1 argument name → "device-sync-overlay-journal-v1.json" at RecoveryCopyTests.swift:78:6: Caught error: Error Domain=NSCocoaErrorDomain Code=260 "The file “library-v1.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-B398BBFC-4694-46E4-8BB3-78E92E171389/output/Ongaku-Recovered-6F85A55B-2B78-4041-9FDE-BCE9760BCFA0/Ongaku Library Data/library-v1.json, NSURL=file:///var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-B398BBFC-4694-46E4-8BB3-78E92E171389/output/Ongaku-Recovered-6F85A55B-2B78-4041-9FDE-BCE9760BCFA0/Ongaku%20Library%20Data/library-v1.json, NSUnderlyingError=0x7c732402a0 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✘ Test "All old broken journal types can be escaped without source mutation" recorded an issue with 1 argument name → "media-organization-journal-v1.json" at RecoveryCopyTests.swift:78:6: Caught error: Error Domain=NSCocoaErrorDomain Code=260 "The file “library-v1.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-8CC02E0D-AA23-4EB5-9430-216E900D8F99/output/Ongaku-Recovered-0053FF38-80AE-4567-8A6B-CD0312991D67/Ongaku Library Data/library-v1.json, NSURL=file:///var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-8CC02E0D-AA23-4EB5-9430-216E900D8F99/output/Ongaku-Recovered-0053FF38-80AE-4567-8A6B-CD0312991D67/Ongaku%20Library%20Data/library-v1.json, NSUnderlyingError=0x7c73240210 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+◇ Test case passing 1 argument name → "catalog-write-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✘ Test "All old broken journal types can be escaped without source mutation" recorded an issue with 1 argument name → "catalog-write-journal-v1.json" at RecoveryCopyTests.swift:78:6: Caught error: Error Domain=NSCocoaErrorDomain Code=260 "The file “library-v1.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-2A62A537-4EE1-4D87-9D03-0E70C33DE3F4/output/Ongaku-Recovered-BD07538F-0142-446C-AE39-B06239AAC8DF/Ongaku Library Data/library-v1.json, NSURL=file:///var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-2A62A537-4EE1-4D87-9D03-0E70C33DE3F4/output/Ongaku-Recovered-BD07538F-0142-446C-AE39-B06239AAC8DF/Ongaku%20Library%20Data/library-v1.json, NSUnderlyingError=0x7c73240270 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "All old broken journal types can be escaped without source mutation" started.
+✘ Test "All old broken journal types can be escaped without source mutation" recorded an issue with 1 argument name → "import-journal-v1.json" at RecoveryCopyTests.swift:78:6: Caught error: Error Domain=NSCocoaErrorDomain Code=260 "The file “library-v1.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-4084D0B6-0838-48A6-B9B2-ACD4203D9ECB/output/Ongaku-Recovered-4310C79A-3AD7-41B4-B47E-497C813CBA5C/Ongaku Library Data/library-v1.json, NSURL=file:///var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-4084D0B6-0838-48A6-B9B2-ACD4203D9ECB/output/Ongaku-Recovered-4310C79A-3AD7-41B4-B47E-497C813CBA5C/Ongaku%20Library%20Data/library-v1.json, NSUnderlyingError=0x7c73240240 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+✘ Test "All old broken journal types can be escaped without source mutation" with 5 test cases failed after 0.069 seconds with 5 issues.
+◇ Test "Moved media is recovered by hash when an old organization record cannot be decoded" started.
+✔ Test "Moved media is recovered by hash when an old organization record cannot be decoded" passed after 0.022 seconds.
+◇ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Restart and ENOSPC at copy, catalog and final marker preserve retryability" started.
+✔ Test "Restart and ENOSPC at copy, catalog and final marker preserve retryability" with 6 test cases passed after 0.134 seconds.
+◇ Test "Already verified copies finish without the original medium after a crash" started.
+✔ Test "Already verified copies finish without the original medium after a crash" passed after 0.080 seconds.
+◇ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" started.
+✘ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" recorded an issue at RecoveryCopyTests.swift:144:6: Caught error: Error Domain=NSCocoaErrorDomain Code=260 "The file “library-v1.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-F07567D8-BC6C-46A2-9EEA-B5898C8C5A29/output/Ongaku-Recovered-E1A3636F-67A1-4A34-87B5-4FE5FB21116C/Ongaku Library Data/library-v1.json, NSURL=file:///var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-F07567D8-BC6C-46A2-9EEA-B5898C8C5A29/output/Ongaku-Recovered-E1A3636F-67A1-4A34-87B5-4FE5FB21116C/Ongaku%20Library%20Data/library-v1.json, NSUnderlyingError=0x7c73240570 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+✘ Test "Actual audio-copy failure keeps originals and an identifiable resumable copy" failed after 0.019 seconds with 1 issue.
+◇ Test "An explicitly selected Previous catalog works even when the primary has been moved away" started.
+✔ Test "An explicitly selected Previous catalog works even when the primary has been moved away" passed after 0.027 seconds.
+◇ Test "Changed original bytes cannot be copied under their old fingerprint" started.
+✘ Test "Changed original bytes cannot be copied under their old fingerprint" recorded an issue at RecoveryCopyTests.swift:173:6: Caught error: Error Domain=NSCocoaErrorDomain Code=260 "The file “library-v1.json” couldn’t be opened because there is no such file." UserInfo={NSFilePath=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-BD9F2AF6-3851-48BF-88E9-CAADE9DF84F5/output/Ongaku-Recovered-DE4F5173-F3A3-44CF-AFE0-3BF1D5CC5F9D/Ongaku Library Data/library-v1.json, NSURL=file:///var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuRecoveryCopy-BD9F2AF6-3851-48BF-88E9-CAADE9DF84F5/output/Ongaku-Recovered-DE4F5173-F3A3-44CF-AFE0-3BF1D5CC5F9D/Ongaku%20Library%20Data/library-v1.json, NSUnderlyingError=0x7c732401e0 {Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory"}}
+✘ Test "Changed original bytes cannot be copied under their old fingerprint" failed after 0.014 seconds with 1 issue.
+◇ Test "Unknown old fingerprints are derived only from an existing exact file path" started.
+✔ Test "Unknown old fingerprints are derived only from an existing exact file path" passed after 0.027 seconds.
+◇ Test "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 1 argument future → false to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+◇ Test case passing 1 argument future → true to "A tampered plan and an unsupported catalog fail without modifying the source" started.
+✔ Test "A tampered plan and an unsupported catalog fail without modifying the source" with 2 test cases passed after 0.023 seconds.
+◇ Test "Opening a recovered library does not flush the broken original's pending queue" started.
+✔ Test "Opening a recovered library does not flush the broken original's pending queue" passed after 0.055 seconds.
+✘ Suite "Read-only legacy recovery copies" failed after 0.475 seconds with 7 issues.
+✘ Test run with 10 tests in 1 suite failed after 0.475 seconds with 7 issues.
+Note: Some test targets reported failures:
+  - OngakuDesktopTests (Swift Testing)

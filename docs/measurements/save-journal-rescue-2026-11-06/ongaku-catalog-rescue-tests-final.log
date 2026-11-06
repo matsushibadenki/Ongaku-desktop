@@ -1,0 +1,49 @@
+Building for debugging...
+[Using on-disk description]
+[3 / 14] OngakuDesktop
+[6 / 17] OngakuDesktop-product
+[10 / 21] OngakuDesktop-product
+[15 / 24] OngakuDesktop
+[15 / 24] OngakuDesktop-product
+[20 / 25] OngakuDesktopTests-product
+[23 / 32] OngakuDesktopTests-product
+[27 / 29] OngakuDesktopTests-product
+Build complete! (9.22秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Damaged catalog journal rescue" started.
+◇ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" started.
+✔ Test "Explicit rescue backs up all bytes and restores a coherent primary, invalidating stale writers" passed after 0.018 seconds.
+◇ Test "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Rescue interruption and disk exhaustion retain a retryable transaction" started.
+✔ Test "Rescue interruption and disk exhaustion retain a retryable transaction" with 6 test cases passed after 0.086 seconds.
+◇ Test "A failed sidecar write after rescue journal publication can recover on restart" started.
+✔ Test "A failed sidecar write after rescue journal publication can recover on restart" passed after 0.015 seconds.
+◇ Test "A healthy interrupted transaction is never discarded by rescue" started.
+✔ Test "A healthy interrupted transaction is never discarded by rescue" passed after 0.011 seconds.
+◇ Test "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "import-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "storage-restore-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "device-sync-overlay-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "media-organization-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+◇ Test case passing 1 argument name → "self-containment-journal-v1.json" to "Other pending recovery prevents rescue without changing any catalog" started.
+✔ Test "Other pending recovery prevents rescue without changing any catalog" with 5 test cases passed after 0.036 seconds.
+◇ Test "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 0 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 1 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 2 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 3 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+◇ Test case passing 1 argument kind → 4 to "No primary, invalid primary, future journal, and future primary fail closed" started.
+✔ Test "No primary, invalid primary, future journal, and future primary fail closed" with 5 test cases passed after 0.038 seconds.
+◇ Test "Store rescue reloads published metadata and discards queued in-memory edits" started.
+✔ Test "Store rescue reloads published metadata and discards queued in-memory edits" passed after 0.021 seconds.
+◇ Test "Actual backup copy failure retains source bytes and can retry" started.
+✔ Test "Actual backup copy failure retains source bytes and can retry" passed after 0.013 seconds.
+✔ Suite "Damaged catalog journal rescue" passed after 0.243 seconds.
+✔ Test run with 8 tests in 1 suite passed after 0.243 seconds.

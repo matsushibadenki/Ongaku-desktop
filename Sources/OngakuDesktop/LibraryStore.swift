@@ -2691,6 +2691,57 @@ final class LibraryStore: ObservableObject {
         deviceSyncTagsURL.deletingLastPathComponent().standardizedFileURL == url.standardizedFileURL
     }
 
+    /// Invalidate asynchronous editors and reload every cache from the rescued
+    /// primary. Do not flush an old in-memory queue over the recovered snapshot.
+    func rescueDamagedLibraryJournal() async throws -> URL {
+        guard !isSwitchingLibrary else { throw CocoaError(.userCancelled) }
+        isSwitchingLibrary = true
+        defer { if isSwitchingLibrary { finishStorageSwitch() } }
+        storageGeneration = UUID()
+        playbackQueueSaveTask?.cancel()
+        let target = repository
+        let catalogURL = target.rootURL
+        let mediaURL = await target.currentMediaDirectoryURL()
+        // Keep the old repository on its old generation: already queued edits
+        // must fail rather than inherit the rescue transaction's new baseline.
+        let rescue = LibraryRepository(rootURL: catalogURL, mediaURL: mediaURL)
+        let backup = try await rescue.rescueDamagedLibraryJournal()
+        let loaded = try await rescue.load()
+        await switchLibrary(catalogURL: catalogURL, mediaURL: mediaURL, preparedResult: loaded)
+        return backup
+    }
+
+#if DEBUG
+    var recoveryCopyLoadTestGate: (@Sendable () async -> Void)?
+#endif
+
+    /// A recovery copy was fully verified independently; never flush the broken
+    /// source's old queue or replay its pending journal while opening the new copy.
+    func openRecoveryCopy(_ mediaURL: URL, expectedLibraryID: UUID? = nil) async throws {
+        let catalog = PortableLibraryStorage(mediaURL: mediaURL).rootURL
+        guard let identityText = LibraryMigrationRecovery.catalogIdentity(at: catalog),
+              let identity = UUID(uuidString: identityText),
+              expectedLibraryID == nil || expectedLibraryID == identity else { throw LibraryRepository.RecoveryCopyIncomplete() }
+        guard !isSwitchingLibrary else { throw CocoaError(.userCancelled) }
+        isSwitchingLibrary = true
+        let operation = UUID()
+        storageGeneration = operation
+        defer { if storageGeneration == operation, isSwitchingLibrary { finishStorageSwitch() } }
+        playbackQueueSaveTask?.cancel()
+#if DEBUG
+        if let gate = recoveryCopyLoadTestGate { await gate() }
+#endif
+        guard storageGeneration == operation else { throw CancellationError() }
+        guard LibraryMigrationRecovery.catalogIdentity(at: catalog) == identityText else { throw LibraryRepository.RecoveryCopyIncomplete() }
+        let destination = LibraryRepository(rootURL: catalog, mediaURL: mediaURL)
+        let loaded = try await destination.load()
+        guard storageGeneration == operation else { throw CancellationError() }
+        guard loaded.document.libraryID == identity else { throw LibraryRepository.RecoveryCopyIncomplete() }
+        try await ArtworkResolver.shared.configure(libraryRootURL: catalog)
+        guard storageGeneration == operation else { throw CancellationError() }
+        await switchLibrary(catalogURL: catalog, mediaURL: mediaURL, preparedResult: loaded)
+    }
+
     /// Validate and initialize the destination before replacing the active library.
     func openStorageDirectory(_ mediaURL: URL) async throws {
         guard !isSwitchingLibrary else { throw CocoaError(.userCancelled) }
