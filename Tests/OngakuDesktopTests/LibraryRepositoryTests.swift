@@ -548,6 +548,51 @@ struct LibraryRepositoryTests {
     }
 #endif
 
+    @Test("Damaged generation and journals can be exported without changing the source", arguments: ["catalog-generation-v1", "catalog-write-journal-v1.json", "storage-restore-journal-v1.json", "import-journal-v1.json"])
+    func damagedRecoverySnapshot(name: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog")
+        let target = root.appendingPathComponent("Export")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        let repository = LibraryRepository(rootURL: catalog)
+        try await repository.save(playlists: [Playlist(name: "Original")])
+        let damaged = Data("broken".utf8)
+        let source = catalog.appendingPathComponent(name)
+        try damaged.write(to: source)
+        let manifest = catalog.appendingPathComponent("library-v1.json")
+        let original = try Data(contentsOf: manifest)
+        do { _ = try await repository.load(); Issue.record("Damaged data accepted") } catch { }
+        let snapshot = try await repository.exportRecoverySnapshot(to: target)
+        #expect(try Data(contentsOf: snapshot.appendingPathComponent(name)) == damaged)
+        #expect(try Data(contentsOf: snapshot.appendingPathComponent("library-v1.json")) == original)
+        #expect(try Data(contentsOf: source) == damaged)
+        #expect(try Data(contentsOf: manifest) == original)
+        #expect(!FileManager.default.fileExists(atPath: snapshot.appendingPathComponent("Incoming").path))
+        do { _ = try await repository.exportRecoverySnapshot(to: catalog); Issue.record("Snapshot inside the source accepted") } catch { }
+    }
+
+    @Test("A full export destination never changes the damaged source and can be retried")
+    func recoverySnapshotOutOfSpace() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let catalog = root.appendingPathComponent("Catalog")
+        let target = root.appendingPathComponent("Export")
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        let repository = LibraryRepository(rootURL: catalog)
+        try await repository.save(playlists: [Playlist(name: "Original")])
+        let manifest = catalog.appendingPathComponent("library-v1.json")
+        let bytes = try Data(contentsOf: manifest)
+        let failing = LibraryRepository(rootURL: catalog, fileManager: FullDiskCopyFileManager(failingSource: manifest))
+        do { _ = try await failing.exportRecoverySnapshot(to: target); Issue.record("Expected full disk") }
+        catch let error as POSIXError { #expect(error.code == .ENOSPC) }
+        #expect(try Data(contentsOf: manifest) == bytes)
+        let contents = try FileManager.default.contentsOfDirectory(atPath: target.path)
+        #expect(contents.count == 1 && contents[0].hasSuffix(".partial"))
+        let snapshot = try await repository.exportRecoverySnapshot(to: target)
+        #expect(try Data(contentsOf: snapshot.appendingPathComponent("library-v1.json")) == bytes)
+    }
+
     @Test("Missing external originals do not commit a partially localized catalog")
     func missingExternalCopyPreservesCatalog() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -1608,8 +1653,8 @@ struct LibraryRepositoryTests {
     }
 
 #if DEBUG
-    @Test("Import journal recovers at each installation boundary", arguments: [0, 1, 2])
-    func importWriteRecoveryBoundaries(step: Int) async throws {
+    @Test("Import journal recovers at each installation boundary", arguments: [0, 1, 2], [false, true])
+    func importWriteRecoveryBoundaries(step: Int, diskFull: Bool) async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -1626,7 +1671,10 @@ struct LibraryRepositoryTests {
             case .installing: match = step == 1
             case .installed: match = step == 2
             }
-            if match { throw CocoaError(.fileWriteUnknown) }
+            if match {
+                if diskFull { throw POSIXError(.ENOSPC) }
+                throw CocoaError(.fileWriteUnknown)
+            }
         }
         let result = await repository.importFiles([source], existing: [])
         #expect(result.imported.isEmpty)

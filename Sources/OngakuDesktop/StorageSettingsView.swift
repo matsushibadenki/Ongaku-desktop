@@ -12,6 +12,7 @@ struct StorageSettingsView: View {
   @State private var isRegisteringDroppedFolder = false
   @State private var isFolderDropTargeted = false
   @State private var isClearingLibrary = false
+  @State private var isExportingRecovery = false
   @State private var isShowingClearConfirmation = false
   @State private var resultMessage: String?
   @State private var errorMessage: String?
@@ -119,6 +120,12 @@ struct StorageSettingsView: View {
           }
           .buttonStyle(.bordered)
           .disabled(isStorageOperationInProgress)
+          Button(L10n.text("settings.storage.exportRecovery")) {
+            exportRecoverySnapshot()
+          }
+          .buttonStyle(.bordered)
+          .disabled(isStorageOperationInProgress)
+          .help(L10n.text("settings.storage.exportRecovery.help"))
           Image(systemName: "info.circle")
             .foregroundStyle(AppTheme.secondaryInk)
             .help(L10n.text("storage.migration.sameFolder"))
@@ -259,6 +266,35 @@ struct StorageSettingsView: View {
         )
       } catch {
         errorMessage = error.localizedDescription
+      }
+    }
+  }
+
+  @MainActor
+  private func exportRecoverySnapshot() {
+    let panel = NSOpenPanel()
+    panel.canChooseFiles = false
+    panel.canChooseDirectories = true
+    panel.canCreateDirectories = true
+    panel.allowsMultipleSelection = false
+    panel.message = L10n.text("settings.storage.exportRecovery.help")
+    panel.begin { response in
+      guard response == .OK, let destination = panel.url else { return }
+      Task { @MainActor in
+        isExportingRecovery = true
+        resultMessage = nil
+        errorMessage = nil
+        defer { isExportingRecovery = false }
+        let access = destination.startAccessingSecurityScopedResource()
+        defer { if access { destination.stopAccessingSecurityScopedResource() } }
+        do {
+          let profile = libraryProfiles.activeProfile
+          let repository = LibraryRepository(rootURL: profile.catalogURL, mediaURL: profile.mediaURL)
+          let result = try await repository.exportRecoverySnapshot(to: destination)
+          resultMessage = L10n.format("settings.storage.exportRecovery.success", result.path)
+        } catch {
+          errorMessage = error.localizedDescription
+        }
       }
     }
   }
@@ -432,7 +468,7 @@ struct StorageSettingsView: View {
   }
 
   private var isStorageOperationInProgress: Bool {
-    isApplyingLocation || isImportingMusicLibrary || isRegisteringDroppedFolder || isClearingLibrary
+    isApplyingLocation || isImportingMusicLibrary || isRegisteringDroppedFolder || isClearingLibrary || isExportingRecovery
       || library.isSwitchingLibrary
       || library.activity == .importing || library.activity == .verifying || library.activity == .relinking
   }

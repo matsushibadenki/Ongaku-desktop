@@ -1320,3 +1320,10 @@
 "library.error.sourceRecoveryRequired" = "所选资料库“%@”存在未完成的恢复。请先在原位置完成恢复，然后重试。";
 
 "library.error.storageLockTimedOut" = "资料库正被其他操作使用。请稍后重试，并检查外接或网络存储设备。";
+
+"settings.storage.exportRecovery" = "导出恢复信息…";
+"settings.storage.exportRecovery.help" = "复制资料库、历史记录、播放队列和恢复记录。不包含音频文件或暂存副本。请保留原资料库。";
+"settings.storage.exportRecovery.success" = "恢复信息已保存：%@";
+
+"library.error.damagedGeneration" = "无法读取资料库的版本信息。请保留原始数据，并在设置中导出恢复信息。";
+"library.error.damagedImportJournal" = "无法读取导入恢复记录。请保留原始数据，并在设置中导出恢复信息。";

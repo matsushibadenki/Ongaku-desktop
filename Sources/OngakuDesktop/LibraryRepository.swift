@@ -296,6 +296,8 @@ actor LibraryRepository {
         case staleOrganizedTrack
         case importInProgress
         case storageLockTimedOut
+        case damagedGeneration
+        case damagedImportJournal
         case sourceRecoveryRequired(String)
         case multiplePreservedLibraries(String)
 
@@ -319,6 +321,10 @@ actor LibraryRepository {
                 L10n.text("library.error.importInProgress")
             case .storageLockTimedOut:
                 L10n.text("library.error.storageLockTimedOut")
+            case .damagedGeneration:
+                L10n.text("library.error.damagedGeneration")
+            case .damagedImportJournal:
+                L10n.text("library.error.damagedImportJournal")
             case .sourceRecoveryRequired(let path):
                 L10n.format("library.error.sourceRecoveryRequired", path)
             case .multiplePreservedLibraries(let paths):
@@ -469,7 +475,7 @@ actor LibraryRepository {
         let data = try Data(contentsOf: generationURL)
         guard let text = String(data: data, encoding: .utf8),
               let value = UInt64(text), String(value) == text else {
-            throw CocoaError(.fileReadCorruptFile)
+            throw RepositoryError.damagedGeneration
         }
         return value
     }
@@ -783,6 +789,39 @@ actor LibraryRepository {
             return (backup, try readExternalLibraryDocument(at: backup))
         }
         return nil
+    }
+
+    /// Save recovery metadata without interpreting or changing damaged files.
+    /// Audio and Incoming are intentionally excluded; keep the original library.
+    func exportRecoverySnapshot(to parent: URL) throws -> URL {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
+        let source = rootURL.resolvingSymlinksInPath().standardizedFileURL
+        let target = parent.resolvingSymlinksInPath().standardizedFileURL
+        guard !isInside(target, directory: source) else { throw CocoaError(.fileWriteNoPermission) }
+        let name = "Ongaku-Recovery-\(UUID().uuidString)"
+        let partial = target.appendingPathComponent(name + ".partial", isDirectory: true)
+        let completed = target.appendingPathComponent(name, isDirectory: true)
+        try fileManager.createDirectory(at: partial, withIntermediateDirectories: false)
+        let names = ["catalog-generation-v1", "library-v1.json", "library-v1.backup.json",
+                     "playback-queue-v1.json", "playback-queue-v1.backup.json",
+                     "playback-events-v1.json", "playback-events-v1.backup.json",
+                     "catalog-write-journal-v1.json", "storage-restore-journal-v1.json",
+                     "import-journal-v1.json", "media-organization-journal-v1.json",
+                     "device-sync-overlay-journal-v1.json", "device-sync-tags-v1.json",
+                     "self-containment-journal-v1.json", "storage-recovery-v1.json",
+                     "Recovery Backups"]
+        for name in names {
+            try Task.checkCancellation()
+            let item = source.appendingPathComponent(name)
+            if fileManager.fileExists(atPath: item.path) {
+                try fileManager.copyItem(at: item, to: partial.appendingPathComponent(name))
+            }
+        }
+        try fileManager.moveItem(at: partial, to: completed)
+        return completed
     }
 
     /// Copy external references into this volume without changing IDs or metadata.
@@ -2608,7 +2647,9 @@ actor LibraryRepository {
 
     private func decodeImportJournal() throws -> ImportJournal {
         let data = try Data(contentsOf: importJournalURL)
-        let journal = try decoder.decode(ImportJournal.self, from: data)
+        let journal: ImportJournal
+        do { journal = try decoder.decode(ImportJournal.self, from: data) }
+        catch { throw RepositoryError.damagedImportJournal }
         guard journal.schemaVersion == ImportJournal.currentSchema else {
             throw RepositoryError.unsupportedSchema(journal.schemaVersion)
         }

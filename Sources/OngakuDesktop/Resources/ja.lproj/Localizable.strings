@@ -1320,3 +1320,10 @@
 "library.error.sourceRecoveryRequired" = "選択したライブラリ「%@」には未完了の復旧があります。元の保存先で復旧を完了してから、もう一度お試しください。";
 
 "library.error.storageLockTimedOut" = "ライブラリが別の処理で使用中です。しばらくしてから再試行してください。外付け・ネットワークの保存先も確認してください。";
+
+"settings.storage.exportRecovery" = "復旧情報を書き出す…";
+"settings.storage.exportRecovery.help" = "台帳、履歴、キュー、復旧記録をコピーします。曲ファイルや作業中のコピーは含まれません。元のライブラリは保持してください。";
+"settings.storage.exportRecovery.success" = "復旧情報を保存しました: %@";
+
+"library.error.damagedGeneration" = "ライブラリの世代情報を読み取れません。元データを保持し、設定の「復旧情報を書き出す」から退避してください。";
+"library.error.damagedImportJournal" = "インポートの復旧記録を読み取れません。元データを保持し、設定の「復旧情報を書き出す」から退避してください。";

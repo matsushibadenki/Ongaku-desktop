@@ -1320,3 +1320,10 @@
 "library.error.sourceRecoveryRequired" = "The selected library at “%@” has unfinished recovery. Complete recovery at its original location, then try again.";
 
 "library.error.storageLockTimedOut" = "The library is busy with another operation. Try again shortly and check any external or network storage.";
+
+"settings.storage.exportRecovery" = "Export Recovery Information…";
+"settings.storage.exportRecovery.help" = "Copies the catalog, history, queue, and recovery records. Audio files and staged copies are not included. Keep the original library.";
+"settings.storage.exportRecovery.success" = "Recovery information saved: %@";
+
+"library.error.damagedGeneration" = "The library generation information cannot be read. Keep the original data and use Export Recovery Information in Settings.";
+"library.error.damagedImportJournal" = "The import recovery record cannot be read. Keep the original data and use Export Recovery Information in Settings.";
