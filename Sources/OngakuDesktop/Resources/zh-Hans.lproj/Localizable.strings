@@ -1327,3 +1327,5 @@
 
 "library.error.damagedGeneration" = "无法读取资料库的版本信息。请保留原始数据，并在设置中导出恢复信息。";
 "library.error.damagedImportJournal" = "无法读取导入恢复记录。请保留原始数据，并在设置中导出恢复信息。";
+
+"library.error.unsupportedGenerationFormat" = "此资料库使用较新的版本格式。请更新应用后继续。";

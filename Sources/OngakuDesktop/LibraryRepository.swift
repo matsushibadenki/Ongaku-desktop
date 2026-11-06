@@ -297,6 +297,7 @@ actor LibraryRepository {
         case importInProgress
         case storageLockTimedOut
         case damagedGeneration
+        case unsupportedGenerationFormat
         case damagedImportJournal
         case sourceRecoveryRequired(String)
         case multiplePreservedLibraries(String)
@@ -323,6 +324,8 @@ actor LibraryRepository {
                 L10n.text("library.error.storageLockTimedOut")
             case .damagedGeneration:
                 L10n.text("library.error.damagedGeneration")
+            case .unsupportedGenerationFormat:
+                L10n.text("library.error.unsupportedGenerationFormat")
             case .damagedImportJournal:
                 L10n.text("library.error.damagedImportJournal")
             case .sourceRecoveryRequired(let path):
@@ -349,7 +352,11 @@ actor LibraryRepository {
     private var hasObservedManifest = false
     private var observedQueueStamp: ManifestStamp?
     private var observedEventsStamp: ManifestStamp?
-    private var observedPersistentGeneration: UInt64?
+    private struct GenerationToken: Equatable {
+        let value: UInt64
+        let epoch: UUID?
+    }
+    private var observedPersistentGeneration: GenerationToken?
     private var catalogLockDescriptor: Int32 = -1
     private var catalogLockDepth = 0
     private var importLockDescriptor: Int32 = -1
@@ -360,6 +367,9 @@ actor LibraryRepository {
     var importWriteTestHook: (@Sendable (ImportWriteStep) throws -> Void)?
     func setImportWriteTestHook(_ hook: (@Sendable (ImportWriteStep) throws -> Void)?) { importWriteTestHook = hook }
     var importStagedTestGate: (@Sendable () async -> Void)?
+    enum GenerationRecoveryStep: Sendable { case backup, counter }
+    var generationRecoveryTestHook: (@Sendable (GenerationRecoveryStep) throws -> Void)?
+    func setGenerationRecoveryTestHook(_ hook: (@Sendable (GenerationRecoveryStep) throws -> Void)?) { generationRecoveryTestHook = hook }
     var generationReservationTestHook: (@Sendable () throws -> Void)?
     func setGenerationReservationTestHook(_ hook: (@Sendable () throws -> Void)?) { generationReservationTestHook = hook }
     func setImportStagedTestGate(_ gate: (@Sendable () async -> Void)?) { importStagedTestGate = gate }
@@ -469,15 +479,62 @@ actor LibraryRepository {
     private func manifestStamp() throws -> ManifestStamp? { try fileStamp(manifestURL) }
 
     private var generationURL: URL { rootURL.appendingPathComponent("catalog-generation-v1") }
+    private var generationMarkerURL: URL { rootURL.appendingPathComponent("catalog-generation-established-v1") }
 
-    private func persistentGeneration() throws -> UInt64 {
-        guard fileManager.fileExists(atPath: generationURL.path) else { return 0 }
+    private func ensureGenerationMarker() throws {
+        guard !fileManager.fileExists(atPath: generationMarkerURL.path) else { return }
+        try Data("1".utf8).write(to: generationMarkerURL, options: .atomic)
+        try synchronizeOverlayFile(generationMarkerURL)
+    }
+
+    private func persistentGeneration() throws -> GenerationToken {
+        guard fileManager.fileExists(atPath: generationURL.path) else {
+            if fileManager.fileExists(atPath: generationMarkerURL.path) { throw RepositoryError.damagedGeneration }
+            return GenerationToken(value: 0, epoch: nil)
+        }
         let data = try Data(contentsOf: generationURL)
-        guard let text = String(data: data, encoding: .utf8),
-              let value = UInt64(text), String(value) == text else {
+        guard let text = String(data: data, encoding: .utf8) else { throw RepositoryError.damagedGeneration }
+        if let value = UInt64(text), String(value) == text {
+            return GenerationToken(value: value, epoch: nil)
+        }
+        let parts = text.split(separator: ":", omittingEmptySubsequences: false)
+        if parts.first?.hasPrefix("v") == true && parts.first != "v2" {
+            throw RepositoryError.unsupportedGenerationFormat
+        }
+        guard parts.count == 3, parts[0] == "v2",
+              let epoch = UUID(uuidString: String(parts[1])), epoch.uuidString == parts[1],
+              let value = UInt64(parts[2]), String(value) == parts[2] else {
             throw RepositoryError.damagedGeneration
         }
-        return value
+        return GenerationToken(value: value, epoch: epoch)
+    }
+
+    private func writeGeneration(_ token: GenerationToken) throws {
+        try ensureGenerationMarker()
+        let text = token.epoch.map { "v2:\($0.uuidString):\(token.value)" } ?? String(token.value)
+        try Data(text.utf8).write(to: generationURL, options: .atomic)
+        try synchronizeOverlayFile(generationURL)
+    }
+
+    /// Back up corrupt bytes before atomically publishing a fresh epoch and
+    /// counter. Old readers reject the new format rather than reusing a counter.
+    private func recoverDamagedGeneration() throws {
+        do { _ = try persistentGeneration(); return }
+        catch RepositoryError.damagedGeneration { }
+        let backup = rootURL.appendingPathComponent("Recovery Backups/Generation-\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: backup, withIntermediateDirectories: true)
+        for source in [generationURL, generationMarkerURL] where fileManager.fileExists(atPath: source.path) {
+            let preserved = backup.appendingPathComponent(source.lastPathComponent)
+            try fileManager.copyItem(at: source, to: preserved)
+            try synchronizeOverlayFile(preserved)
+        }
+#if DEBUG
+        try generationRecoveryTestHook?(.backup)
+#endif
+        try writeGeneration(GenerationToken(value: 0, epoch: UUID()))
+#if DEBUG
+        try generationRecoveryTestHook?(.counter)
+#endif
     }
 
     /// Reserve a new persistent generation before touching catalog data.
@@ -488,12 +545,9 @@ actor LibraryRepository {
         if let observedPersistentGeneration, observedPersistentGeneration != current {
             throw RepositoryError.staleOrganizedTrack
         }
-        guard current < UInt64.max else { throw CocoaError(.fileWriteUnknown) }
-        let next = current + 1
-        try Data(String(next).utf8).write(to: generationURL, options: [.atomic])
-        let handle = try FileHandle(forWritingTo: generationURL)
-        defer { try? handle.close() }
-        try handle.synchronize()
+        guard current.value < UInt64.max else { throw CocoaError(.fileWriteUnknown) }
+        let next = GenerationToken(value: current.value + 1, epoch: current.epoch)
+        try writeGeneration(next)
         observedPersistentGeneration = next
 #if DEBUG
         try generationReservationTestHook?()
@@ -805,7 +859,7 @@ actor LibraryRepository {
         let partial = target.appendingPathComponent(name + ".partial", isDirectory: true)
         let completed = target.appendingPathComponent(name, isDirectory: true)
         try fileManager.createDirectory(at: partial, withIntermediateDirectories: false)
-        let names = ["catalog-generation-v1", "library-v1.json", "library-v1.backup.json",
+        let names = ["catalog-generation-v1", "catalog-generation-established-v1", "library-v1.json", "library-v1.backup.json",
                      "playback-queue-v1.json", "playback-queue-v1.backup.json",
                      "playback-events-v1.json", "playback-events-v1.backup.json",
                      "catalog-write-journal-v1.json", "storage-restore-journal-v1.json",
@@ -891,7 +945,9 @@ actor LibraryRepository {
         defer { endImportJournalTransaction() }
         try prepareDirectories()
         // Loading explicitly refreshes the caller's baseline under the lock.
+        try recoverDamagedGeneration()
         observedPersistentGeneration = try persistentGeneration()
+        if fileManager.fileExists(atPath: generationURL.path) { try ensureGenerationMarker() }
         try recoverStorageRestoreJournal()
         try recoverCatalogWriteJournal()
         try recoverSelfContainmentStaging()

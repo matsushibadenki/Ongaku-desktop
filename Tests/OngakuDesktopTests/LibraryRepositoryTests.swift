@@ -41,8 +41,8 @@ struct LibraryRepositoryTests {
     }
 
 #if DEBUG
-    @Test("Interrupted storage restore rolls back without deleting files", arguments: [0, 1, 2, 3])
-    func interruptedStorageRestore(step: Int) async throws {
+    @Test("Interrupted storage restore rolls back without deleting files", arguments: [0, 1, 2, 3], [false, true])
+    func interruptedStorageRestore(step: Int, diskFull: Bool) async throws {
         let media = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: media) }
         let catalog = PortableLibraryStorage(mediaURL: media).rootURL
@@ -62,12 +62,16 @@ struct LibraryRepositoryTests {
             case .afterInstall(let name): shouldStop = (step == 1 && name == "playback-queue-v1.json") || (step == 3 && name == "library-v1.json")
             case .beforeRollbackCopy: shouldStop = false
             }
-            if shouldStop { throw LibraryRepository.StorageRestoreInterruption() }
+            if shouldStop {
+                if diskFull { throw POSIXError(.ENOSPC) }
+                throw LibraryRepository.StorageRestoreInterruption()
+            }
         }
         do { try await restoring.restorePreservedLibraryIfEmpty(); Issue.record("Expected interruption") }
         catch is LibraryRepository.StorageRestoreInterruption { }
+        catch let error as POSIXError { #expect(diskFull && error.code == .ENOSPC) }
         let journal = catalog.appendingPathComponent("storage-restore-journal-v1.json")
-        #expect(FileManager.default.fileExists(atPath: journal.path))
+        #expect(FileManager.default.fileExists(atPath: journal.path) == !diskFull)
         let restarted = LibraryRepository(rootURL: catalog, mediaURL: media)
         let recovered = try await restarted.load().document
         #expect(recovered.libraryID == old.libraryID)
@@ -562,7 +566,9 @@ struct LibraryRepositoryTests {
         try damaged.write(to: source)
         let manifest = catalog.appendingPathComponent("library-v1.json")
         let original = try Data(contentsOf: manifest)
-        do { _ = try await repository.load(); Issue.record("Damaged data accepted") } catch { }
+        if name != "catalog-generation-v1" {
+            do { _ = try await repository.load(); Issue.record("Damaged data accepted") } catch { }
+        }
         let snapshot = try await repository.exportRecoverySnapshot(to: target)
         #expect(try Data(contentsOf: snapshot.appendingPathComponent(name)) == damaged)
         #expect(try Data(contentsOf: snapshot.appendingPathComponent("library-v1.json")) == original)
@@ -591,6 +597,22 @@ struct LibraryRepositoryTests {
         #expect(contents.count == 1 && contents[0].hasSuffix(".partial"))
         let snapshot = try await repository.exportRecoverySnapshot(to: target)
         #expect(try Data(contentsOf: snapshot.appendingPathComponent("library-v1.json")) == bytes)
+    }
+
+    @Test("Generation backup capacity failure retains the damaged original")
+    func generationBackupOutOfSpace() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(playlists: [Playlist(name: "Keep")])
+        let generation = root.appendingPathComponent("catalog-generation-v1")
+        let damaged = Data("damaged".utf8)
+        try damaged.write(to: generation, options: .atomic)
+        let failing = LibraryRepository(rootURL: root, fileManager: FullDiskCopyFileManager(failingSource: generation))
+        do { _ = try await failing.load(); Issue.record("Expected full disk") }
+        catch let error as POSIXError { #expect(error.code == .ENOSPC) }
+        #expect(try Data(contentsOf: generation) == damaged)
+        #expect(try await LibraryRepository(rootURL: root).load().document.playlists.map(\.name) == ["Keep"])
     }
 
     @Test("Missing external originals do not commit a partially localized catalog")
@@ -2859,6 +2881,84 @@ struct StorageDelayedFailureTests {
     }
 #endif
 
+    @Test("Unknown generation formats are retained without automatic repair")
+    func futureGenerationRemainsUntouched() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(playlists: [Playlist(name: "Keep")])
+        let generation = root.appendingPathComponent("catalog-generation-v1")
+        let future = Data("v3:future:1".utf8)
+        try future.write(to: generation, options: .atomic)
+        do { _ = try await LibraryRepository(rootURL: root).load(); Issue.record("Future format accepted") }
+        catch LibraryRepository.RepositoryError.unsupportedGenerationFormat { }
+        #expect(try Data(contentsOf: generation) == future)
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("Recovery Backups").path))
+    }
+
+
+#if DEBUG
+    @Test("Damaged generation is preserved and stale writers remain rejected after interrupted recovery", arguments: [0, 1], [false, true])
+    func generationRecoveryInterruption(step: Int, priorEpoch: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let writer = LibraryRepository(rootURL: root)
+        try await writer.save(playlists: [Playlist(name: "Original")])
+        let generation = root.appendingPathComponent("catalog-generation-v1")
+        if priorEpoch { try Data("v2:\(UUID().uuidString):1".utf8).write(to: generation, options: .atomic) }
+        let stale = LibraryRepository(rootURL: root)
+        _ = try await stale.load()
+        let damaged = Data("damaged".utf8)
+        try damaged.write(to: generation, options: .atomic)
+        let recovering = LibraryRepository(rootURL: root)
+        await recovering.setGenerationRecoveryTestHook { stage in
+            let matches: Bool
+            switch stage {
+            case .backup: matches = step == 0
+            case .counter: matches = step == 1
+            }
+            if matches { throw POSIXError(.ENOSPC) }
+        }
+        do { _ = try await recovering.load(); Issue.record("Expected interrupted recovery") }
+        catch let error as POSIXError { #expect(error.code == .ENOSPC) }
+        let reopened = LibraryRepository(rootURL: root)
+        #expect(try await reopened.load().document.playlists.map(\.name) == ["Original"])
+        // Advance the reset counter back to the value the stale reader observed.
+        try await reopened.save(playlists: [Playlist(name: "New")])
+        do { try await stale.save(playlists: []); Issue.record("Stale writer accepted after generation reset") }
+        catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        #expect(try await LibraryRepository(rootURL: root).load().document.playlists.map(\.name) == ["New"])
+        let backups = try FileManager.default.contentsOfDirectory(at: root.appendingPathComponent("Recovery Backups"), includingPropertiesForKeys: nil)
+        #expect(backups.contains { folder in
+            let file = folder.appendingPathComponent("catalog-generation-v1")
+            return (try? Data(contentsOf: file)) == damaged
+        })
+    }
+#endif
+
+    @Test("A lost established generation gets a new epoch and rejects stale saves")
+    func missingEstablishedGenerationRecovery() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let initial = LibraryRepository(rootURL: root)
+        try await initial.save(playlists: [Playlist(name: "Original")])
+        let generation = root.appendingPathComponent("catalog-generation-v1")
+        let marker = root.appendingPathComponent("catalog-generation-established-v1")
+        #expect(FileManager.default.fileExists(atPath: marker.path))
+        let stale = LibraryRepository(rootURL: root)
+        _ = try await stale.load()
+        try FileManager.default.removeItem(at: generation)
+        let recovered = LibraryRepository(rootURL: root)
+        #expect(try await recovered.load().document.playlists.map(\.name) == ["Original"])
+        try await recovered.save(playlists: [Playlist(name: "New")])
+        do { try await stale.save(playlists: []); Issue.record("Stale save accepted") }
+        catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        #expect(try await LibraryRepository(rootURL: root).load().document.playlists.map(\.name) == ["New"])
+        #expect(try String(contentsOf: generation, encoding: .utf8).hasPrefix("v2:"))
+        let backups = try FileManager.default.contentsOfDirectory(at: root.appendingPathComponent("Recovery Backups"), includingPropertiesForKeys: nil)
+        #expect(backups.contains { FileManager.default.fileExists(atPath: $0.appendingPathComponent("catalog-generation-established-v1").path) })
+    }
+
 #if DEBUG
     @Test("Legacy catalog acquires a generation and interrupted reservation invalidates stale readers")
     func persistentGenerationMigrationAndInterruption() async throws {
@@ -2868,6 +2968,8 @@ struct StorageDelayedFailureTests {
         try await initial.save(document: LibraryDocument(playlists: [Playlist(name: "Original", description: "")]))
         let generationURL = root.appendingPathComponent("catalog-generation-v1")
         try FileManager.default.removeItem(at: generationURL)
+        // A legacy catalog has neither a generation nor its establishment marker.
+        try FileManager.default.removeItem(at: root.appendingPathComponent("catalog-generation-established-v1"))
         let writer = LibraryRepository(rootURL: root)
         let stale = LibraryRepository(rootURL: root)
         #expect(try await writer.load().document.playlists.map(\.name) == ["Original"])

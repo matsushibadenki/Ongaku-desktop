@@ -308,7 +308,7 @@ struct PortableLibraryStorage: Sendable {
         let names = try fileManager.contentsOfDirectory(atPath: rootURL.path)
         let exactNames: Set<String> = [
             "Incoming", "Playlist Artwork", "library-v1.json", "library-v1.backup.json",
-            "import-journal-v1.json", "media-organization-journal-v1.json", "self-containment-journal-v1.json",
+            "import-journal-v1.json", "media-organization-journal-v1.json", "self-containment-journal-v1.json", "catalog-generation-v1", "catalog-generation-established-v1",
             "audio-features-v1.json", "device-sync-tags-v1.json",
             "storage-recovery-v1.json", "Recovery Backups", "Legacy Imports",
             "playback-queue-v1.json", "playback-queue-v1.backup.json",

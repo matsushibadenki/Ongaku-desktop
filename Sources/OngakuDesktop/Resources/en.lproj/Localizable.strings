@@ -1327,3 +1327,5 @@
 
 "library.error.damagedGeneration" = "The library generation information cannot be read. Keep the original data and use Export Recovery Information in Settings.";
 "library.error.damagedImportJournal" = "The import recovery record cannot be read. Keep the original data and use Export Recovery Information in Settings.";
+
+"library.error.unsupportedGenerationFormat" = "This library uses a newer generation format. Update the app to continue.";

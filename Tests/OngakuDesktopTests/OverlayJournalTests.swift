@@ -43,6 +43,41 @@ struct OverlayJournalTests {
         #expect(second.tracks.first?.rating == expectedRating)
     }
 
+    @Test("Full disk during overlay publication keeps a recoverable consistent state", arguments: [0, 1, 2])
+    func fullDiskDuringOverlay(step: Int) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let track = Track(id: UUID(), title: "A", artist: "B", album: "C", duration: 10,
+                          fileSize: 1, managedPath: root.appendingPathComponent("a.mp3").path,
+                          sha256: "a", addedAt: .distantPast, health: .missing)
+        try await repository.save(tracks: [track])
+        let previous = try await repository.load().document.tracks
+        var updated = previous
+        updated[0].rating = 4
+        let tagsURL = root.appendingPathComponent("device-sync-tags-v1.json")
+        try JSONEncoder().encode([track.id: ["old"]]).write(to: tagsURL)
+        do {
+            try await repository.saveSynchronizedOverlay(previous: previous, updated: updated, tags: [track.id: ["new"]]) { phase in
+                let hit: Bool
+                switch phase {
+                case .journalWritten: hit = step == 0
+                case .catalogWritten: hit = step == 1
+                case .tagsWritten: hit = step == 2
+                }
+                if hit { throw POSIXError(.ENOSPC) }
+            }
+            Issue.record("Expected full disk")
+        } catch { }
+        let reopened = try await LibraryRepository(rootURL: root).load().document
+        let tags = try JSONDecoder().decode([UUID: [String]].self, from: Data(contentsOf: tagsURL))
+        #expect(reopened.tracks.first?.rating == (step == 2 ? 4 : 0))
+        #expect(tags[track.id] == (step == 2 ? ["new"] : ["old"]))
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("device-sync-overlay-journal-v1.json").path))
+        let again = try await LibraryRepository(rootURL: root).load().document
+        #expect(again.tracks.first?.rating == reopened.tracks.first?.rating)
+    }
+
     @Test("Failed recovery retains journal, blocks writes and retries")
     func unavailableDuringRecovery() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)

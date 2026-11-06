@@ -1327,3 +1327,5 @@
 
 "library.error.damagedGeneration" = "ライブラリの世代情報を読み取れません。元データを保持し、設定の「復旧情報を書き出す」から退避してください。";
 "library.error.damagedImportJournal" = "インポートの復旧記録を読み取れません。元データを保持し、設定の「復旧情報を書き出す」から退避してください。";
+
+"library.error.unsupportedGenerationFormat" = "このライブラリの世代情報は新しいアプリ用です。アプリをアップデートしてください。";
