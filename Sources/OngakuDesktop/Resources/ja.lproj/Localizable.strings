@@ -1312,3 +1312,5 @@
 
 "library.error.staleOrganizedTrack" = "ライブラリが別の操作で変更されました。ライブラリを再読み込みしてから、もう一度操作してください。";
 "metadataEditor.error.mediaOrganizationBusy" = "楽曲情報の保存またはファイルの整理が完了してから、もう一度操作してください。";
+
+"library.error.importInProgress" = "曲の読み込みが完了してから、もう一度操作してください。";

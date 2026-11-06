@@ -23,6 +23,23 @@ actor LibraryRepository {
         case installed
     }
 
+    private struct CatalogWriteJournal: Codable {
+        let version: Int
+        let previousManifestDigest: String?
+        let manifest: Data
+        let backUpReadablePrimary: Bool
+    }
+
+    struct CatalogWriteRecoveryRequired: LocalizedError {
+        var errorDescription: String? { L10n.text("library.error.staleOrganizedTrack") }
+    }
+#if DEBUG
+    enum CatalogWriteStep: Sendable { case journal, queue, events, manifest }
+    var catalogWriteTestHook: (@Sendable (CatalogWriteStep) throws -> Void)?
+    func setCatalogWriteTestHook(_ hook: (@Sendable (CatalogWriteStep) throws -> Void)?) { catalogWriteTestHook = hook }
+#endif
+    private var catalogWriteJournalURL: URL { rootURL.appendingPathComponent("catalog-write-journal-v1.json") }
+
     private struct ImportJournalEntry: Codable {
         let id: UUID
         let fileName: String
@@ -200,6 +217,7 @@ actor LibraryRepository {
         case mediaOrganizationConflict(Int)
         case mediaOrganizationAmbiguousConflict(String)
         case staleOrganizedTrack
+        case importInProgress
         case multiplePreservedLibraries(String)
 
         var errorDescription: String? {
@@ -218,6 +236,8 @@ actor LibraryRepository {
                 L10n.format("library.error.mediaOrganizationAmbiguousConflict", file)
             case .staleOrganizedTrack:
                 L10n.text("library.error.staleOrganizedTrack")
+            case .importInProgress:
+                L10n.text("library.error.importInProgress")
             case .multiplePreservedLibraries(let paths):
                 L10n.format("settings.storage.error.multiplePreservedLibraries", paths)
             }
@@ -239,12 +259,50 @@ actor LibraryRepository {
     private var hasObservedManifest = false
     private var observedQueueStamp: ManifestStamp?
     private var observedEventsStamp: ManifestStamp?
+    private var observedPersistentGeneration: UInt64?
     private var catalogLockDescriptor: Int32 = -1
     private var catalogLockDepth = 0
+    private var importLockDescriptor: Int32 = -1
+    private var importLockDepth = 0
+    private var importInProgress = false
+#if DEBUG
+    var importStagedTestGate: (@Sendable () async -> Void)?
+    var generationReservationTestHook: (@Sendable () throws -> Void)?
+    func setGenerationReservationTestHook(_ hook: (@Sendable () throws -> Void)?) { generationReservationTestHook = hook }
+    func setImportStagedTestGate(_ gate: (@Sendable () async -> Void)?) { importStagedTestGate = gate }
+#endif
+
+    private func beginImportJournalTransaction() throws {
+        if importLockDepth > 0 { importLockDepth += 1; return }
+        try prepareDirectories()
+        let path = rootURL.appendingPathComponent(".import-transaction-v1.lock").path
+        let descriptor = path.withCString { open($0, O_CREAT | O_RDWR | O_CLOEXEC, 0o600) }
+        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        while flock(descriptor, LOCK_EX) != 0 {
+            if errno == EINTR { continue }
+            let code = errno
+            close(descriptor)
+            throw POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
+        }
+        importLockDescriptor = descriptor
+        importLockDepth = 1
+    }
+
+    private func endImportJournalTransaction() {
+        precondition(importLockDepth > 0)
+        importLockDepth -= 1
+        guard importLockDepth == 0 else { return }
+        flock(importLockDescriptor, LOCK_UN)
+        close(importLockDescriptor)
+        importLockDescriptor = -1
+    }
 
     // The lock file is stable across atomic manifest replacement. All cooperating
     // processes must acquire this lock before checking or changing the catalog.
     private func beginCatalogTransaction() throws {
+        // The import owns its journal lock across an await. Do not block this
+        // actor on the catalog lock while another process waits for that import.
+        guard !importInProgress else { throw RepositoryError.importInProgress }
         if catalogLockDepth > 0 { catalogLockDepth += 1; return }
         try prepareDirectories()
         let lockURL = rootURL.appendingPathComponent(".catalog-transaction-v1.lock")
@@ -284,7 +342,40 @@ actor LibraryRepository {
 
     private func manifestStamp() throws -> ManifestStamp? { try fileStamp(manifestURL) }
 
+    private var generationURL: URL { rootURL.appendingPathComponent("catalog-generation-v1") }
+
+    private func persistentGeneration() throws -> UInt64 {
+        guard fileManager.fileExists(atPath: generationURL.path) else { return 0 }
+        let data = try Data(contentsOf: generationURL)
+        guard let text = String(data: data, encoding: .utf8),
+              let value = UInt64(text), String(value) == text else {
+            throw CocoaError(.fileReadCorruptFile)
+        }
+        return value
+    }
+
+    /// Reserve a new persistent generation before touching catalog data.
+    /// A crash after reservation conservatively invalidates older readers.
+    private func reservePersistentGeneration() throws {
+        precondition(catalogLockDepth > 0)
+        let current = try persistentGeneration()
+        if let observedPersistentGeneration, observedPersistentGeneration != current {
+            throw RepositoryError.staleOrganizedTrack
+        }
+        guard current < UInt64.max else { throw CocoaError(.fileWriteUnknown) }
+        let next = current + 1
+        try Data(String(next).utf8).write(to: generationURL, options: [.atomic])
+        let handle = try FileHandle(forWritingTo: generationURL)
+        defer { try? handle.close() }
+        try handle.synchronize()
+        observedPersistentGeneration = next
+#if DEBUG
+        try generationReservationTestHook?()
+#endif
+    }
+
     private func refreshObservedStamps() throws {
+        observedPersistentGeneration = try persistentGeneration()
         observedManifestStamp = try manifestStamp()
         observedQueueStamp = try fileStamp(playbackQueueURL)
         observedEventsStamp = try fileStamp(playbackEventsURL)
@@ -293,7 +384,8 @@ actor LibraryRepository {
 
     private func verifyObservedStamps() throws {
         guard hasObservedManifest else { return }
-        guard try manifestStamp() == observedManifestStamp,
+        guard try persistentGeneration() == observedPersistentGeneration,
+              try manifestStamp() == observedManifestStamp,
               try fileStamp(playbackQueueURL) == observedQueueStamp,
               try fileStamp(playbackEventsURL) == observedEventsStamp else {
             throw RepositoryError.staleOrganizedTrack
@@ -361,7 +453,11 @@ actor LibraryRepository {
     func restorePreservedLibraryIfEmpty() throws {
         try beginCatalogTransaction()
         defer { endCatalogTransaction() }
-        if fileManager.fileExists(atPath: overlayJournalURL.path) {
+        guard !importInProgress else { throw RepositoryError.importInProgress }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
+        if fileManager.fileExists(atPath: overlayJournalURL.path)
+            || fileManager.fileExists(atPath: catalogWriteJournalURL.path) {
             _ = try load()
             return
         }
@@ -546,7 +642,13 @@ actor LibraryRepository {
     func load() throws -> LibraryLoadResult {
         try beginCatalogTransaction()
         defer { endCatalogTransaction() }
+        guard !importInProgress else { throw RepositoryError.importInProgress }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
         try prepareDirectories()
+        // Loading explicitly refreshes the caller's baseline under the lock.
+        observedPersistentGeneration = try persistentGeneration()
+        try recoverCatalogWriteJournal()
         var recoveredFromBackup = false
         var decoded: DecodedLibraryDocument
         var decodedSourceURL: URL?
@@ -602,6 +704,9 @@ actor LibraryRepository {
             || !fileManager.fileExists(atPath: playbackEventsURL.path) {
             try persistPlaybackSidecars(document)
         }
+        // Keep recoverable import entries until the catalog that references
+        // them has been published. Retrying cleanup is safe after a crash.
+        if let journal = recovery.remainingJournal { try persistImportJournal(journal) }
         currentDocument = document
         try refreshObservedStamps()
         return LibraryLoadResult(
@@ -773,6 +878,7 @@ actor LibraryRepository {
                     : nil
             )
         })
+        try reservePersistentGeneration()
         try persistMediaOrganizationJournal(journal)
 
         var catalogCommitted = false
@@ -853,6 +959,9 @@ actor LibraryRepository {
     func save(tracks: [Track]) throws {
         try beginCatalogTransaction()
         defer { endCatalogTransaction() }
+        guard !importInProgress else { throw RepositoryError.importInProgress }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
         try prepareDirectories()
         var document = try documentForMutation()
         // A different repository may have committed since this actor loaded.
@@ -879,6 +988,9 @@ actor LibraryRepository {
     ) throws {
         try beginCatalogTransaction()
         defer { endCatalogTransaction() }
+        guard !importInProgress else { throw RepositoryError.importInProgress }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
         try prepareDirectories()
         guard !fileManager.fileExists(atPath: overlayJournalURL.path) else { throw CocoaError(.fileWriteUnknown) }
         let document = try documentForMutation()
@@ -887,6 +999,7 @@ actor LibraryRepository {
         if fileManager.fileExists(atPath: overlayTagsURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
             throw CocoaError(.fileWriteFileExists)
         }
+        try reservePersistentGeneration()
         let filtered = tags.filter { !$0.value.isEmpty }
         let tagData = try JSONEncoder().encode(filtered)
         let staged = rootURL.appendingPathComponent(".device-sync-tags-" + UUID().uuidString + ".tmp")
@@ -962,11 +1075,30 @@ actor LibraryRepository {
         return true
     }
 
-    func save(document: LibraryDocument) throws {
+    func save(document: LibraryDocument, expectedDocument: LibraryDocument? = nil) throws {
         try beginCatalogTransaction()
         defer { endCatalogTransaction() }
+        guard !importInProgress else { throw RepositoryError.importInProgress }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
         try prepareDirectories()
+        // Full replacements require an observed baseline when a catalog exists.
+        if !hasObservedManifest, try manifestStamp() != nil {
+            throw RepositoryError.staleOrganizedTrack
+        }
         try verifyObservedStamps()
+        guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
+        if let expectedDocument {
+            let current = try documentForMutation()
+            guard current.libraryID == expectedDocument.libraryID,
+                  current.tracks == expectedDocument.tracks,
+                  current.playlists == expectedDocument.playlists,
+                  current.playlistFolders == expectedDocument.playlistFolders,
+                  current.playbackEvents == expectedDocument.playbackEvents,
+                  current.playbackQueue == expectedDocument.playbackQueue else {
+                throw RepositoryError.staleOrganizedTrack
+            }
+        }
         var updated = document
         updated.updatedAt = .now
         try persistDocument(updated, backUpReadablePrimary: true)
@@ -1114,6 +1246,9 @@ actor LibraryRepository {
     func clearAllRegistrations() throws {
         try beginCatalogTransaction()
         defer { endCatalogTransaction() }
+        guard !importInProgress else { throw RepositoryError.importInProgress }
+        try beginImportJournalTransaction()
+        defer { endImportJournalTransaction() }
         try prepareDirectories()
         var emptyDocument = try documentForMutation()
         let removedTrackIDs = Set(emptyDocument.tracks.map(\.id))
@@ -1131,6 +1266,7 @@ actor LibraryRepository {
         emptyDocument.playbackQueue = PlaybackQueueState()
         let data = try encoder.encode(emptyDocument)
 
+        try reservePersistentGeneration()
         // Clear recovery metadata first. If the operation is interrupted before
         // the primary manifest is replaced, the previous catalog remains valid.
         // Once the primary becomes empty, neither recovery path can re-register
@@ -1151,12 +1287,20 @@ actor LibraryRepository {
         metadataOverrides: [String: AudioCDImportRequest] = [:],
         requiredMetadataOverrides: [String: RequiredImportMetadataDraft] = [:]
     ) async -> ImportResult {
-        do { try prepareDirectories() } catch {
+        do {
+            guard !importInProgress else { throw RepositoryError.importInProgress }
+            try beginImportJournalTransaction()
+            importInProgress = true
+        } catch {
             return ImportResult(imported: [], issues: sourceURLs.map {
                 ImportIssue(fileName: $0.lastPathComponent, message: error.localizedDescription)
             })
         }
 
+        defer {
+            importInProgress = false
+            endImportJournalTransaction()
+        }
         var imported: [Track] = []
         var issues: [ImportIssue] = []
         var knownHashes = Set(existing.map(\.sha256))
@@ -1203,6 +1347,9 @@ actor LibraryRepository {
                     throw RepositoryError.copyVerificationFailed(source.lastPathComponent)
                 }
 
+#if DEBUG
+                if let importStagedTestGate { await importStagedTestGate() }
+#endif
                 let metadata = await Self.readMetadata(from: staged, fallbackName: source.deletingPathExtension().lastPathComponent)
                 let metadataOverride = metadataOverrides[source.standardizedFileURL.path]
                 let requiredOverride = requiredMetadataOverrides[source.standardizedFileURL.path]
@@ -1301,6 +1448,19 @@ actor LibraryRepository {
         existing: [Track],
         copyExternalFiles: Bool = false
     ) async -> ImportResult {
+        do {
+            guard !importInProgress else { throw RepositoryError.importInProgress }
+            try beginImportJournalTransaction()
+            importInProgress = true
+        } catch {
+            return ImportResult(imported: [], issues: sourceURLs.map {
+                ImportIssue(fileName: $0.lastPathComponent, message: error.localizedDescription)
+            })
+        }
+        defer {
+            importInProgress = false
+            endImportJournalTransaction()
+        }
         var referenced: [Track] = []
         var issues: [ImportIssue] = []
         let existingByHash = Dictionary(
@@ -1795,6 +1955,33 @@ actor LibraryRepository {
         )
     }
 
+    private func digest(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func recoverCatalogWriteJournal() throws {
+        guard fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { return }
+        let journal = try decoder.decode(CatalogWriteJournal.self, from: Data(contentsOf: catalogWriteJournalURL))
+        guard journal.version == 1 else { throw CatalogWriteRecoveryRequired() }
+        let document = try decoder.decode(LibraryDocument.self, from: journal.manifest)
+        let current: Data? = fileManager.fileExists(atPath: manifestURL.path) ? try Data(contentsOf: manifestURL) : nil
+        let currentDigest = current.map(digest)
+        let targetDigest = digest(journal.manifest)
+        guard currentDigest == journal.previousManifestDigest || currentDigest == targetDigest else {
+            throw CatalogWriteRecoveryRequired()
+        }
+        try persistPlaybackSidecars(document)
+        if currentDigest != targetDigest {
+            if journal.backUpReadablePrimary, let current,
+               (try? decodeDocument(at: manifestURL)) != nil {
+                try current.write(to: backupURL, options: [.atomic])
+            }
+            try journal.manifest.write(to: manifestURL, options: [.atomic])
+        }
+        observedManifestStamp = try manifestStamp()
+        try fileManager.removeItem(at: catalogWriteJournalURL)
+    }
+
     private func persistDocument(
         _ document: LibraryDocument,
         backUpReadablePrimary: Bool
@@ -1802,16 +1989,36 @@ actor LibraryRepository {
         if !performingOverlayMutation && fileManager.fileExists(atPath: overlayJournalURL.path) {
             throw OverlayRecoveryRequired()
         }
-        try persistPlaybackSidecars(document)
+        guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
+        try reservePersistentGeneration()
         let data = try encoder.encode(document)
-        if backUpReadablePrimary,
-           let previous = try? Data(contentsOf: manifestURL),
+        let previous: Data? = fileManager.fileExists(atPath: manifestURL.path) ? try Data(contentsOf: manifestURL) : nil
+        let journal = CatalogWriteJournal(version: 1, previousManifestDigest: previous.map(digest),
+                                          manifest: data, backUpReadablePrimary: backUpReadablePrimary)
+        try encoder.encode(journal).write(to: catalogWriteJournalURL, options: [.atomic])
+        try synchronizeOverlayFile(catalogWriteJournalURL)
+#if DEBUG
+        try catalogWriteTestHook?(.journal)
+#endif
+        try persistPlaybackQueue(document)
+#if DEBUG
+        try catalogWriteTestHook?(.queue)
+#endif
+        try persistPlaybackEvents(document)
+#if DEBUG
+        try catalogWriteTestHook?(.events)
+#endif
+        if backUpReadablePrimary, let previous,
            (try? decodeDocument(at: manifestURL)) != nil {
             try previous.write(to: backupURL, options: [.atomic])
         }
         try data.write(to: manifestURL, options: [.atomic])
         observedManifestStamp = try manifestStamp()
         hasObservedManifest = true
+#if DEBUG
+        try catalogWriteTestHook?(.manifest)
+#endif
+        try fileManager.removeItem(at: catalogWriteJournalURL)
     }
 
     private func applyingPlaybackSidecars(to source: LibraryDocument) throws -> LibraryDocument {
@@ -1909,6 +2116,7 @@ actor LibraryRepository {
         backupURL: URL,
         validatesAs type: Value.Type
     ) throws {
+        try reservePersistentGeneration()
         if fileManager.fileExists(atPath: url.path),
            let previous = try? Data(contentsOf: url),
            (try? decoder.decode(type, from: previous)) != nil {
@@ -1950,6 +2158,7 @@ actor LibraryRepository {
     private var performingOverlayMutation = false
 
     private func documentForMutation() throws -> LibraryDocument {
+        guard !fileManager.fileExists(atPath: catalogWriteJournalURL.path) else { throw CatalogWriteRecoveryRequired() }
         if !performingOverlayMutation && fileManager.fileExists(atPath: overlayJournalURL.path) {
             throw OverlayRecoveryRequired()
         }
@@ -1968,8 +2177,8 @@ actor LibraryRepository {
         return document
     }
 
-    private func recoverImports(into document: inout LibraryDocument) throws -> (recovered: Int, unresolved: Int) {
-        guard fileManager.fileExists(atPath: importJournalURL.path) else { return (0, 0) }
+    private func recoverImports(into document: inout LibraryDocument) throws -> (recovered: Int, unresolved: Int, remainingJournal: ImportJournal?) {
+        guard fileManager.fileExists(atPath: importJournalURL.path) else { return (0, 0, nil) }
         var journal = try decodeImportJournal()
         var retained: [ImportJournalEntry] = []
         var knownHashes = Set(document.tracks.map(\.sha256))
@@ -2048,8 +2257,7 @@ actor LibraryRepository {
         }
 
         journal.entries = retained
-        try persistImportJournal(journal)
-        return (recoveredCount, unresolvedCount)
+        return (recoveredCount, unresolvedCount, journal)
     }
 
     private func upsertJournalEntry(_ entry: ImportJournalEntry) throws {

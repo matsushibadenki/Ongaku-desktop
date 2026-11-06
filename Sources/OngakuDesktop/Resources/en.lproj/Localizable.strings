@@ -1312,3 +1312,5 @@
 
 "library.error.staleOrganizedTrack" = "The library was changed by another operation. Reload it and try again.";
 "metadataEditor.error.mediaOrganizationBusy" = "Wait for song editing or media organization to finish, then try again.";
+
+"library.error.importInProgress" = "Wait for the music import to finish, then try again.";

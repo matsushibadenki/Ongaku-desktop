@@ -2307,6 +2307,402 @@ struct StorageDelayedFailureTests {
         else { #expect(saved.health == (writeFails ? .unchecked : .missing)) }
     }
 
+#if DEBUG
+    @Test("CD import reloads one recovered song when another repository commits first")
+    func cdImportRecoveryWinsTheHandoff() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("song.aiff")
+        let bytes = Data("audio sample".utf8)
+        try bytes.write(to: source)
+        let media = root.appendingPathComponent("Media")
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let repository = LibraryRepository(rootURL: catalog, mediaURL: media)
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let gate = StorageWriteGate(fails: false)
+        defer { gate.resume.signal() }
+        store.cdImportFinishedTestGate = {
+            gate.entered.signal()
+            _ = await Task.detached { @Sendable [gate] in gate.waitUntilResumed() }.value
+        }
+        let request = AudioCDImportRequest(sourceURL: source, title: "T", artist: "A", album: "B", trackNumber: 1, trackCount: 1)
+        let importing = Task { await store.importAudioCD([request]) }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await importing.value; return }
+        let recovered = try await LibraryRepository(rootURL: catalog, mediaURL: media).load()
+        #expect(recovered.recoveredImportCount == 1)
+        gate.resume.signal()
+        #expect(await importing.value == 0)
+        store.cdImportFinishedTestGate = nil
+        #expect(store.tracks.count == 1)
+        #expect(store.tracks.first?.id == recovered.document.tracks.first?.id)
+        let actual = try await LibraryRepository(rootURL: catalog, mediaURL: media).load().document
+        #expect(actual.tracks.count == 1)
+        #expect(try Data(contentsOf: try #require(actual.tracks.first?.fileURL)) == bytes)
+        if case .failed = store.activity {} else { Issue.record("Expected a visible conflict") }
+    }
+#endif
+
+#if DEBUG
+    @Test("Legacy catalog acquires a generation and interrupted reservation invalidates stale readers")
+    func persistentGenerationMigrationAndInterruption() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let initial = LibraryRepository(rootURL: root)
+        try await initial.save(document: LibraryDocument(playlists: [Playlist(name: "Original", description: "")]))
+        let generationURL = root.appendingPathComponent("catalog-generation-v1")
+        try FileManager.default.removeItem(at: generationURL)
+        let writer = LibraryRepository(rootURL: root)
+        let stale = LibraryRepository(rootURL: root)
+        #expect(try await writer.load().document.playlists.map(\.name) == ["Original"])
+        _ = try await stale.load()
+        await writer.setGenerationReservationTestHook { throw CocoaError(.fileWriteUnknown) }
+        do { try await writer.save(playlists: []); Issue.record("Interrupted write succeeded") } catch { }
+        #expect(String(data: try Data(contentsOf: generationURL), encoding: .utf8) == "1")
+        do { try await stale.save(playlists: []); Issue.record("Stale writer accepted") }
+        catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        await writer.setGenerationReservationTestHook(nil)
+        let recovered = try await writer.load().document
+        #expect(recovered.playlists.map(\.name) == ["Original"])
+        try await writer.save(playlists: [Playlist(name: "Next", description: "")])
+        let final = try await LibraryRepository(rootURL: root).load().document
+        #expect(final.playlists.map(\.name) == ["Next"])
+        let generation = try #require(UInt64(try String(contentsOf: generationURL, encoding: .utf8)))
+        #expect(generation > 1)
+    }
+#endif
+
+    @Test("An older complete snapshot cannot replace a newer same-repository edit")
+    func oldCompleteDocumentCannotOverwriteSameRepositoryEdit() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let baseline = try await repository.load().document
+        var proposed = baseline
+        proposed.playlists = [Playlist(name: "Older operation", description: "")]
+        try await repository.save(playlists: [Playlist(name: "Newer edit", description: "")])
+        do {
+            try await repository.save(document: proposed, expectedDocument: baseline)
+            Issue.record("Stale full document was accepted")
+        } catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        let actual = try await repository.load().document
+        #expect(actual.playlists.map(\.name) == ["Newer edit"])
+        var refreshed = actual
+        refreshed.playlists.append(Playlist(name: "Retried", description: ""))
+        try await repository.save(document: refreshed, expectedDocument: actual)
+        #expect(try await repository.load().document.playlists.map(\.name) == ["Newer edit", "Retried"])
+    }
+
+#if DEBUG
+    @Test("Catalog, history and queue recover together at each write boundary", arguments: [0, 1, 2, 3])
+    func catalogWriteRecoveryBoundaries(step: Int) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let first = Track(id: UUID(), title: "Old", artist: "A", album: "B", duration: 1,
+                          fileSize: 1, managedPath: root.appendingPathComponent("old.wav").path,
+                          sha256: "old", addedAt: .now, health: .missing)
+        let second = Track(id: UUID(), title: "New", artist: "A", album: "B", duration: 1,
+                           fileSize: 1, managedPath: root.appendingPathComponent("new.wav").path,
+                           sha256: "new", addedAt: .now, health: .missing)
+        var initial = LibraryDocument(tracks: [first, second])
+        initial.playbackEvents = [PlaybackEvent(trackID: first.id, kind: .started)]
+        initial.playbackQueue = PlaybackQueueState(trackIDs: [first.id], currentTrackID: first.id, position: 1)
+        try await repository.save(document: initial)
+        let baseline = try await repository.load().document
+        var updated = baseline
+        updated.tracks = [second]
+        updated.playbackEvents = [PlaybackEvent(trackID: second.id, kind: .completed)]
+        updated.playbackQueue = PlaybackQueueState(trackIDs: [second.id], currentTrackID: second.id, position: 3)
+        updated.playlists = [Playlist(name: "Updated", description: "")]
+        await repository.setCatalogWriteTestHook { stage in
+            let match: Bool
+            switch stage {
+            case .journal: match = step == 0
+            case .queue: match = step == 1
+            case .events: match = step == 2
+            case .manifest: match = step == 3
+            }
+            if match { throw CocoaError(.fileWriteUnknown) }
+        }
+        do { try await repository.save(document: updated, expectedDocument: baseline); Issue.record("Expected interruption") } catch { }
+        let journal = root.appendingPathComponent("catalog-write-journal-v1.json")
+        #expect(FileManager.default.fileExists(atPath: journal.path))
+        let reopened = LibraryRepository(rootURL: root)
+        do { try await reopened.save(playlists: []); Issue.record("Write bypassed recovery") } catch { }
+        let actual = try await reopened.load().document
+        #expect(actual.tracks.map(\.id) == [second.id])
+        #expect(actual.playbackEvents.map(\.trackID) == [second.id])
+        #expect(actual.playbackQueue?.currentTrackID == second.id)
+        #expect(actual.playlists.map(\.name) == ["Updated"])
+        #expect(!FileManager.default.fileExists(atPath: journal.path))
+        let again = try await LibraryRepository(rootURL: root).load().document
+        #expect(again.tracks.map(\.id) == [second.id])
+        #expect(again.playbackEvents.map(\.trackID) == [second.id])
+        #expect(again.playbackQueue?.currentTrackID == second.id)
+    }
+#endif
+
+#if DEBUG
+    @Test("Interrupted import recovery retains its journal until the catalog is durable")
+    func importRecoveryInterruptedBeforeCatalogPublish() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("source.mp3")
+        let bytes = Data([0x49, 0x44, 0x33, 1, 2, 3])
+        try bytes.write(to: source)
+        let catalog = root.appendingPathComponent("Catalog")
+        let importer = LibraryRepository(rootURL: catalog)
+        _ = try await importer.load()
+        let imported = await importer.importFiles([source], existing: [])
+        let track = try #require(imported.imported.first)
+        let recovering = LibraryRepository(rootURL: catalog)
+        await recovering.setCatalogWriteTestHook { stage in
+            if case .journal = stage { throw CocoaError(.fileWriteUnknown) }
+        }
+        do { _ = try await recovering.load(); Issue.record("Expected interruption") } catch { }
+        #expect(FileManager.default.fileExists(atPath: catalog.appendingPathComponent("import-journal-v1.json").path))
+        #expect(FileManager.default.fileExists(atPath: catalog.appendingPathComponent("catalog-write-journal-v1.json").path))
+        let recovered = try await LibraryRepository(rootURL: catalog).load().document
+        #expect(recovered.tracks.map(\.id) == [track.id])
+        #expect(try Data(contentsOf: track.fileURL) == bytes)
+        #expect(!FileManager.default.fileExists(atPath: catalog.appendingPathComponent("import-journal-v1.json").path))
+        #expect(try await LibraryRepository(rootURL: catalog).load().document.tracks.count == 1)
+    }
+#endif
+
+#if DEBUG
+    @Test("Recovery preserves an unexpected replacement catalog and the journal")
+    func catalogRecoveryRejectsUnrelatedManifest() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(document: LibraryDocument(playlists: [Playlist(name: "Original", description: "")]))
+        let baseline = try await repository.load().document
+        var updated = baseline
+        updated.playlists = [Playlist(name: "Pending", description: "")]
+        await repository.setCatalogWriteTestHook { stage in if case .journal = stage { throw CocoaError(.fileWriteUnknown) } }
+        do { try await repository.save(document: updated, expectedDocument: baseline); Issue.record("Expected interruption") } catch { }
+        var unrelated = baseline
+        unrelated.playlists = [Playlist(name: "External", description: "")]
+        let encoder = JSONEncoder(); encoder.dateEncodingStrategy = .iso8601
+        let bytes = try encoder.encode(unrelated)
+        let manifest = root.appendingPathComponent("library-v1.json")
+        try bytes.write(to: manifest, options: .atomic)
+        let reopened = LibraryRepository(rootURL: root)
+        do { _ = try await reopened.load(); Issue.record("Unrelated catalog overwritten") }
+        catch is LibraryRepository.CatalogWriteRecoveryRequired { }
+        #expect(try Data(contentsOf: manifest) == bytes)
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("catalog-write-journal-v1.json").path))
+    }
+
+    @Test("Nested catalog and sync journals recover their matching tracks and tags")
+    func nestedOverlayAndCatalogRecovery() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 1, managedPath: root.appendingPathComponent("song.wav").path,
+                          sha256: "hash", addedAt: .now, health: .missing)
+        try await repository.save(tracks: [track])
+        let previous = try await repository.load().document.tracks
+        var updated = previous; updated[0].rating = 4
+        await repository.setCatalogWriteTestHook { stage in if case .queue = stage { throw CocoaError(.fileWriteUnknown) } }
+        do { try await repository.saveSynchronizedOverlay(previous: previous, updated: updated, tags: [track.id: ["new"]]); Issue.record("Expected interruption") } catch { }
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("catalog-write-journal-v1.json").path))
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("device-sync-overlay-journal-v1.json").path))
+        let recovered = try await LibraryRepository(rootURL: root).load().document
+        #expect(recovered.tracks.first?.rating == 4)
+        let tags = try JSONDecoder().decode([UUID: [String]].self, from: Data(contentsOf: root.appendingPathComponent("device-sync-tags-v1.json")))
+        #expect(tags[track.id] == ["new"])
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("catalog-write-journal-v1.json").path))
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("device-sync-overlay-journal-v1.json").path))
+    }
+#endif
+
+    @Test("An unobserved repository cannot replace an existing catalog")
+    func fullReplacementRequiresBaseline() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = LibraryRepository(rootURL: root)
+        let original = LibraryDocument(playlists: [Playlist(name: "Original", description: "")])
+        try await first.save(document: original)
+        let second = LibraryRepository(rootURL: root)
+        do {
+            try await second.save(document: LibraryDocument())
+            Issue.record("Unobserved replacement accepted")
+        } catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        let loaded = try await second.load().document
+        #expect(loaded.playlists.map(\.name) == ["Original"])
+        var updated = loaded
+        updated.playlists.append(Playlist(name: "Next", description: ""))
+        try await second.save(document: updated)
+        #expect(try await second.load().document.playlists.map(\.name) == ["Original", "Next"])
+    }
+
+    @Test("A stale repository cannot overwrite playlist, history, or queue updates", arguments: ["playlist", "history", "queue"])
+    func staleSidecarAndPlaylistWriters(operation: String) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = LibraryRepository(rootURL: root)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: root.appendingPathComponent("song.wav").path,
+                          sha256: "hash", addedAt: .now, health: .missing)
+        try await first.save(tracks: [track])
+        _ = try await first.load()
+        let second = LibraryRepository(rootURL: root)
+        _ = try await second.load()
+        switch operation {
+        case "playlist": try await second.save(playlists: [Playlist(name: "New", description: "")])
+        case "history": try await second.recordPlaybackEvent(PlaybackEvent(trackID: track.id, kind: .started))
+        default: try await second.save(playbackQueue: PlaybackQueueState(trackIDs: [track.id], currentTrackID: track.id, position: 3))
+        }
+        do {
+            switch operation {
+            case "playlist": try await first.save(playlists: [])
+            case "history": try await first.save(playbackEvents: [])
+            default: try await first.save(playbackQueue: PlaybackQueueState())
+            }
+            Issue.record("A stale \(operation) writer was accepted")
+        } catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        let actual = try await LibraryRepository(rootURL: root).load().document
+        switch operation {
+        case "playlist": #expect(actual.playlists.map(\.name) == ["New"])
+        case "history": #expect(actual.playbackEvents.count == 1)
+        default: #expect(actual.playbackQueue?.currentTrackID == track.id)
+        }
+    }
+
+    @Test("A separate process holding the catalog lock blocks repository writes")
+    func processLockProtectsRepository() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(tracks: [])
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+        process.arguments = ["-u", "-c", "import fcntl,sys; f=open(sys.argv[1], 'a+'); fcntl.flock(f, fcntl.LOCK_EX); print('ready',flush=True); sys.stdin.buffer.read(1)", root.appendingPathComponent(".catalog-transaction-v1.lock").path]
+        let input = Pipe()
+        let output = Pipe()
+        process.standardInput = input
+        process.standardOutput = output
+        try process.run()
+        defer { if process.isRunning { try? input.fileHandleForWriting.close(); process.terminate() } }
+        let ready = try #require(try output.fileHandleForReading.read(upToCount: 6))
+        #expect(String(data: ready, encoding: .utf8) == "ready\n")
+        var finished = false
+        let task = Task { @MainActor in
+            try await repository.save(playlists: [Playlist(name: "After lock", description: "")])
+            finished = true
+        }
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(!finished)
+        try input.fileHandleForWriting.write(contentsOf: Data([1]))
+        try await task.value
+        process.waitUntilExit()
+        #expect(process.terminationStatus == 0)
+        #expect(try await repository.load().document.playlists.map(\.name) == ["After lock"])
+    }
+
+    @Test("A process update under the lock invalidates a waiting stale writer")
+    func processChangeInvalidatesWaitingWriter() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let repository = LibraryRepository(rootURL: root)
+        try await repository.save(tracks: [])
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
+        process.arguments = ["-u", "-c", "import fcntl,sys,os; f=open(sys.argv[1], 'a+'); fcntl.flock(f, fcntl.LOCK_EX); print('ready',flush=True); sys.stdin.buffer.read(1); p=sys.argv[2]; d=open(p,'rb').read(); t=p+'.test'; open(t,'wb').write(d); os.replace(t,p)", root.appendingPathComponent(".catalog-transaction-v1.lock").path, root.appendingPathComponent("playback-queue-v1.json").path]
+        let input = Pipe()
+        let output = Pipe()
+        process.standardInput = input
+        process.standardOutput = output
+        try process.run()
+        defer { if process.isRunning { try? input.fileHandleForWriting.close(); process.terminate() } }
+        let ready = try #require(try output.fileHandleForReading.read(upToCount: 6))
+        #expect(String(data: ready, encoding: .utf8) == "ready\n")
+        let task = Task { () -> Bool in
+            do {
+                try await repository.save(playlists: [Playlist(name: "Stale", description: "")])
+                return false
+            } catch LibraryRepository.RepositoryError.staleOrganizedTrack { return true }
+            catch { Issue.record("Unexpected error: \(error)"); return false }
+        }
+        try await Task.sleep(for: .milliseconds(250))
+        try input.fileHandleForWriting.write(contentsOf: Data([1]))
+        #expect(await task.value)
+        process.waitUntilExit()
+        #expect(process.terminationStatus == 0)
+        let document = try await repository.load().document
+        #expect(document.playlists.isEmpty)
+        try await repository.save(playlists: [Playlist(name: "Fresh", description: "")])
+        #expect(try await repository.load().document.playlists.map(\.name) == ["Fresh"])
+    }
+
+#if DEBUG
+    @Test("An active asynchronous import cannot be mistaken for interrupted recovery")
+    func activeImportKeepsItsStagedFile() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let media = root.appendingPathComponent("Media")
+        let catalog = PortableLibraryStorage(mediaURL: media).rootURL
+        let source = root.appendingPathComponent("source.wav")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        try Data("audio sample".utf8).write(to: source)
+        let first = LibraryRepository(rootURL: catalog, mediaURL: media)
+        _ = try await first.load()
+        let gate = StorageWriteGate(fails: false)
+        defer { gate.resume.signal() }
+        await first.setImportStagedTestGate {
+            gate.entered.signal()
+            _ = await Task.detached { @Sendable [gate] in gate.waitUntilResumed() }.value
+        }
+        let importing = Task { await first.importFiles([source], existing: []) }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); _ = await importing.value; return }
+        do { _ = try await first.load(); Issue.record("Same actor recovered an active import") }
+        catch LibraryRepository.RepositoryError.importInProgress { }
+        let second = LibraryRepository(rootURL: catalog, mediaURL: media)
+        var loaded = false
+        let loading = Task { @MainActor in
+            let result = try await second.load()
+            loaded = true
+            return result
+        }
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(!loaded)
+        do { try await first.save(playlists: []); Issue.record("Same actor entered a conflicting write") }
+        catch LibraryRepository.RepositoryError.importInProgress { }
+        let competingReference = await first.referenceFilesInPlace([source], existing: [], copyExternalFiles: true)
+        #expect(competingReference.imported.isEmpty)
+        #expect(competingReference.issues.count == 1)
+        let third = LibraryRepository(rootURL: catalog, mediaURL: media)
+        var referenceFinished = false
+        let referenceTask = Task { @MainActor in
+            let result = await third.referenceFilesInPlace([source], existing: [], copyExternalFiles: true)
+            referenceFinished = true
+            return result
+        }
+        try await Task.sleep(for: .milliseconds(250))
+        #expect(!referenceFinished)
+        gate.resume.signal()
+        let imported = await importing.value
+        let recovered = try await loading.value
+        let reference = await referenceTask.value
+        #expect(reference.imported.count == 1)
+        #expect(reference.issues.isEmpty)
+        #expect(imported.imported.count == 1)
+        let track = try #require(imported.imported.first)
+        #expect(try Data(contentsOf: track.fileURL) == Data("audio sample".utf8))
+        #expect(recovered.document.tracks.contains { $0.id == track.id })
+    }
+#endif
+
     @Test("An older repository rejects tracks after another repository organizes media")
     func staleTracksAcrossRepositories() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)

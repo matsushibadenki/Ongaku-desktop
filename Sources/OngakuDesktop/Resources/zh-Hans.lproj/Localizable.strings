@@ -1312,3 +1312,5 @@
 
 "library.error.staleOrganizedTrack" = "资料库已被其他操作更改。请重新载入资料库后重试。";
 "metadataEditor.error.mediaOrganizationBusy" = "请等待歌曲信息保存或媒体整理完成后重试。";
+
+"library.error.importInProgress" = "请等待音乐导入完成后重试。";

@@ -844,6 +844,7 @@ final class LibraryStore: ObservableObject {
                 failedFileNames: []
             )
         }
+        let baseline = currentDocument()
         let removedIDs = Set(removedTracks.map(\.id))
         let updatedTracks = tracks.filter { !removedIDs.contains($0.id) }
         let updatedPlaylists = playlists.map { playlist in
@@ -878,7 +879,7 @@ final class LibraryStore: ObservableObject {
             playbackQueue: updatedQueue
         )
         do {
-            try await repository.save(document: document)
+            try await repository.save(document: document, expectedDocument: baseline)
             tracks = updatedTracks
             playlists = updatedPlaylists
             playbackEvents = updatedEvents
@@ -1428,6 +1429,7 @@ final class LibraryStore: ObservableObject {
     private var organizingLibraries: Set<String> = []
 #if DEBUG
     var metadataWriteTestGate: (@MainActor () async -> Void)?
+    var cdImportFinishedTestGate: (@MainActor () async -> Void)?
 #endif
     private var storageSwitchWaiters: [CheckedContinuation<Void, Never>] = []
     private(set) var storageIdentity = UUID()
@@ -1752,10 +1754,14 @@ final class LibraryStore: ObservableObject {
             existing: tracks,
             metadataOverrides: overrides
         )
+#if DEBUG
+        if let cdImportFinishedTestGate { await cdImportFinishedTestGate() }
+#endif
         guard generation == storageGeneration else { return 0 }
         tracks.append(contentsOf: result.imported)
         tracks.sort { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
         contentRevision &+= 1
+        let attemptedRevision = contentRevision
         lastIssues = result.issues
 
         do {
@@ -1770,6 +1776,14 @@ final class LibraryStore: ObservableObject {
             }
             return result.imported.count
         } catch {
+            guard generation == storageGeneration else { return 0 }
+            if case LibraryRepository.RepositoryError.staleOrganizedTrack = error,
+               contentRevision == attemptedRevision,
+               let actual = try? await repository.load(),
+               generation == storageGeneration, contentRevision == attemptedRevision {
+                await applyLoadedLibrary(actual)
+                guard generation == storageGeneration else { return 0 }
+            }
             activity = .failed(error.localizedDescription)
             return 0
         }
@@ -1842,6 +1856,7 @@ final class LibraryStore: ObservableObject {
         )
 
         guard generation == storageGeneration else { throw CancellationError() }
+        let baseline = currentDocument()
         var updatedTracks = tracks + importResult.imported
         let importedIDs: Set<Track.ID> = Set(importResult.imported.map(\.id))
         let sourceByHash = Dictionary(
@@ -1910,7 +1925,7 @@ final class LibraryStore: ObservableObject {
             playbackQueue: playbackQueue
         )
         do {
-            try await repository.save(document: document)
+            try await repository.save(document: document, expectedDocument: baseline)
             guard generation == storageGeneration else { throw CancellationError() }
             tracks = updatedTracks
             playlists = updatedPlaylists
@@ -2043,6 +2058,7 @@ final class LibraryStore: ObservableObject {
         )
 
         guard generation == storageGeneration else { throw CancellationError() }
+        let baseline = currentDocument()
         var updatedTracks = tracks + importResult.imported
         let importedIDs: Set<Track.ID> = Set(importResult.imported.map(\.id))
         let sourceByHash = Dictionary(
@@ -2142,7 +2158,7 @@ final class LibraryStore: ObservableObject {
             playbackQueue: playbackQueue
         )
         do {
-            try await repository.save(document: destinationDocument)
+            try await repository.save(document: destinationDocument, expectedDocument: baseline)
             guard generation == storageGeneration else { throw CancellationError() }
             tracks = updatedTracks
             playlists = updatedPlaylists
@@ -2736,6 +2752,7 @@ final class LibraryStore: ObservableObject {
         }
         let removedIDs = Set(group.tracks.map(\.id)).subtracting([keepID])
         guard !removedIDs.isEmpty else { throw DuplicateResolutionError.invalidSelection }
+        let baseline = currentDocument()
         let removedTracks = tracks.filter { removedIDs.contains($0.id) }
         let updatedTracks = tracks.filter { !removedIDs.contains($0.id) }
 
@@ -2780,7 +2797,7 @@ final class LibraryStore: ObservableObject {
             playbackQueue: updatedQueue
         )
         do {
-            try await repository.save(document: document)
+            try await repository.save(document: document, expectedDocument: baseline)
             guard generation == storageGeneration else { throw CancellationError() }
             tracks = updatedTracks
             playlists = updatedPlaylists
