@@ -1310,5 +1310,5 @@
 
 "storage.migration.authorizeMediaFolder" = "音楽ファイルにもアクセスできるよう、Ongaku Library Dataを含むメディアフォルダを選択してください。";
 
-"library.error.staleOrganizedTrack" = "整理によって楽曲の保存先が変わりました。ライブラリを再読み込みしてから、もう一度操作してください。";
+"library.error.staleOrganizedTrack" = "ライブラリが別の操作で変更されました。ライブラリを再読み込みしてから、もう一度操作してください。";
 "metadataEditor.error.mediaOrganizationBusy" = "楽曲情報の保存またはファイルの整理が完了してから、もう一度操作してください。";

@@ -1310,5 +1310,5 @@
 
 "storage.migration.authorizeMediaFolder" = "Select the media folder containing Ongaku Library Data so the app can access the audio files.";
 
-"library.error.staleOrganizedTrack" = "A song was moved during organization. Reload the library and try again.";
+"library.error.staleOrganizedTrack" = "The library was changed by another operation. Reload it and try again.";
 "metadataEditor.error.mediaOrganizationBusy" = "Wait for song editing or media organization to finish, then try again.";

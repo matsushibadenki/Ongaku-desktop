@@ -1,6 +1,7 @@
 import AVFoundation
 import AppKit
 import CryptoKit
+import Darwin
 import Foundation
 
 actor LibraryRepository {
@@ -227,6 +228,78 @@ actor LibraryRepository {
     private let fileManager: FileManager
     private var mediaURL: URL
     private var currentDocument: LibraryDocument?
+    private struct ManifestStamp: Equatable {
+        let device: UInt64
+        let inode: UInt64
+        let size: Int64
+        let modificationSeconds: Int64
+        let modificationNanoseconds: Int64
+    }
+    private var observedManifestStamp: ManifestStamp?
+    private var hasObservedManifest = false
+    private var observedQueueStamp: ManifestStamp?
+    private var observedEventsStamp: ManifestStamp?
+    private var catalogLockDescriptor: Int32 = -1
+    private var catalogLockDepth = 0
+
+    // The lock file is stable across atomic manifest replacement. All cooperating
+    // processes must acquire this lock before checking or changing the catalog.
+    private func beginCatalogTransaction() throws {
+        if catalogLockDepth > 0 { catalogLockDepth += 1; return }
+        try prepareDirectories()
+        let lockURL = rootURL.appendingPathComponent(".catalog-transaction-v1.lock")
+        let descriptor = lockURL.path.withCString { open($0, O_CREAT | O_RDWR | O_CLOEXEC, 0o600) }
+        guard descriptor >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
+        while flock(descriptor, LOCK_EX) != 0 {
+            if errno == EINTR { continue }
+            let code = errno
+            close(descriptor)
+            throw POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
+        }
+        catalogLockDescriptor = descriptor
+        catalogLockDepth = 1
+    }
+
+    private func endCatalogTransaction() {
+        precondition(catalogLockDepth > 0)
+        catalogLockDepth -= 1
+        guard catalogLockDepth == 0 else { return }
+        flock(catalogLockDescriptor, LOCK_UN)
+        close(catalogLockDescriptor)
+        catalogLockDescriptor = -1
+    }
+
+    private func fileStamp(_ url: URL) throws -> ManifestStamp? {
+        var info = stat()
+        let result = url.path.withCString { lstat($0, &info) }
+        if result != 0 {
+            let code = errno
+            if code == ENOENT || code == ENOTDIR { return nil }
+            throw POSIXError(POSIXErrorCode(rawValue: code) ?? .EIO)
+        }
+        return ManifestStamp(device: UInt64(info.st_dev), inode: UInt64(info.st_ino),
+                             size: info.st_size, modificationSeconds: Int64(info.st_mtimespec.tv_sec),
+                             modificationNanoseconds: Int64(info.st_mtimespec.tv_nsec))
+    }
+
+    private func manifestStamp() throws -> ManifestStamp? { try fileStamp(manifestURL) }
+
+    private func refreshObservedStamps() throws {
+        observedManifestStamp = try manifestStamp()
+        observedQueueStamp = try fileStamp(playbackQueueURL)
+        observedEventsStamp = try fileStamp(playbackEventsURL)
+        hasObservedManifest = true
+    }
+
+    private func verifyObservedStamps() throws {
+        guard hasObservedManifest else { return }
+        guard try manifestStamp() == observedManifestStamp,
+              try fileStamp(playbackQueueURL) == observedQueueStamp,
+              try fileStamp(playbackEventsURL) == observedEventsStamp else {
+            throw RepositoryError.staleOrganizedTrack
+        }
+    }
+
     // Paths moved by this repository instance; in-flight callers can still hold
     // pre-move track arrays even after the actor finishes the transaction.
     private var organizedPreviousPaths: [Track.ID: Set<String>] = [:]
@@ -286,6 +359,8 @@ actor LibraryRepository {
     /// Legacy Imports. Only explicit storage selection invokes this recovery.
     /// Originals and the replaced empty catalog remain available on disk.
     func restorePreservedLibraryIfEmpty() throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         if fileManager.fileExists(atPath: overlayJournalURL.path) {
             _ = try load()
             return
@@ -418,6 +493,8 @@ actor LibraryRepository {
     /// Copy external references into this volume without changing IDs or metadata.
     /// Commit paths only after every copy has passed SHA-256 verification.
     func makeLibrarySelfContained() throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         var document = try load().document
         let root = mediaURL.resolvingSymlinksInPath().standardizedFileURL
         var changed = false
@@ -467,6 +544,8 @@ actor LibraryRepository {
     }
 
     func load() throws -> LibraryLoadResult {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var recoveredFromBackup = false
         var decoded: DecodedLibraryDocument
@@ -524,6 +603,7 @@ actor LibraryRepository {
             try persistPlaybackSidecars(document)
         }
         currentDocument = document
+        try refreshObservedStamps()
         return LibraryLoadResult(
             document: document,
             recoveredFromBackup: recoveredFromBackup,
@@ -636,6 +716,8 @@ actor LibraryRepository {
         preview: MediaOrganizationPreview,
         collisionPolicy: MediaOrganizationCollisionPolicy = .stop
     ) throws -> (document: LibraryDocument, summary: MediaOrganizationSummary) {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         // Serialize against repository writers and retain changes made after the
         // UI captured its snapshot. A changed track list invalidates the plan.
@@ -769,8 +851,12 @@ actor LibraryRepository {
     }
 
     func save(tracks: [Track]) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var document = try documentForMutation()
+        // A different repository may have committed since this actor loaded.
+        // Refuse to write the caller's old full track snapshot over that catalog.
         let currentPaths = Dictionary(uniqueKeysWithValues: document.tracks.map {
             ($0.id, $0.fileURL.standardizedFileURL.path)
         })
@@ -791,6 +877,8 @@ actor LibraryRepository {
         previous: [Track], updated: [Track], tags: [UUID: [String]],
         interruption: (@Sendable (OverlayJournalStep) throws -> Void)? = nil
     ) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         guard !fileManager.fileExists(atPath: overlayJournalURL.path) else { throw CocoaError(.fileWriteUnknown) }
         let document = try documentForMutation()
@@ -865,6 +953,8 @@ actor LibraryRepository {
 
     /// Roll back only if no other catalog writer has changed the track snapshot.
     func restoreOverlayTracksIfUnchanged(expected: [Track], previous: [Track]) throws -> Bool {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         let current = try documentForMutation().tracks
         if current == previous { return true }
         guard current == expected else { return false }
@@ -873,7 +963,10 @@ actor LibraryRepository {
     }
 
     func save(document: LibraryDocument) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
+        try verifyObservedStamps()
         var updated = document
         updated.updatedAt = .now
         try persistDocument(updated, backUpReadablePrimary: true)
@@ -929,6 +1022,8 @@ actor LibraryRepository {
     }
 
     func save(playlists: [Playlist]) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var document = try documentForMutation()
         document.updatedAt = .now
@@ -938,6 +1033,8 @@ actor LibraryRepository {
     }
 
     func save(playlists: [Playlist], folders: [PlaylistFolder]) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var document = try documentForMutation()
         document.playlists = playlists
@@ -980,6 +1077,8 @@ actor LibraryRepository {
     }
 
     func recordPlaybackEvent(_ event: PlaybackEvent) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var document = try documentForMutation()
         document.updatedAt = .now
@@ -989,6 +1088,8 @@ actor LibraryRepository {
     }
 
     func save(playbackEvents: [PlaybackEvent]) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var document = try documentForMutation()
         document.updatedAt = .now
@@ -998,6 +1099,8 @@ actor LibraryRepository {
     }
 
     func save(playbackQueue: PlaybackQueueState) throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var document = try documentForMutation()
         document.updatedAt = .now
@@ -1009,6 +1112,8 @@ actor LibraryRepository {
     /// Clears Ongaku's catalog records without deleting, moving, renaming, or
     /// otherwise touching any referenced or managed audio file.
     func clearAllRegistrations() throws {
+        try beginCatalogTransaction()
+        defer { endCatalogTransaction() }
         try prepareDirectories()
         var emptyDocument = try documentForMutation()
         let removedTrackIDs = Set(emptyDocument.tracks.map(\.id))
@@ -1035,6 +1140,7 @@ actor LibraryRepository {
         try replacePlaybackSidecarsForClear(emptyDocument)
         try data.write(to: backupURL, options: [.atomic])
         try data.write(to: manifestURL, options: [.atomic])
+        try refreshObservedStamps()
         currentDocument = emptyDocument
     }
 
@@ -1704,6 +1810,8 @@ actor LibraryRepository {
             try previous.write(to: backupURL, options: [.atomic])
         }
         try data.write(to: manifestURL, options: [.atomic])
+        observedManifestStamp = try manifestStamp()
+        hasObservedManifest = true
     }
 
     private func applyingPlaybackSidecars(to source: LibraryDocument) throws -> LibraryDocument {
@@ -1807,6 +1915,8 @@ actor LibraryRepository {
             try previous.write(to: backupURL, options: .atomic)
         }
         try data.write(to: url, options: .atomic)
+        if url == playbackQueueURL { observedQueueStamp = try fileStamp(url) }
+        if url == playbackEventsURL { observedEventsStamp = try fileStamp(url) }
     }
 
     private func replacePlaybackSidecarsForClear(_ document: LibraryDocument) throws {
@@ -1843,7 +1953,10 @@ actor LibraryRepository {
         if !performingOverlayMutation && fileManager.fileExists(atPath: overlayJournalURL.path) {
             throw OverlayRecoveryRequired()
         }
-        if let currentDocument { return currentDocument }
+        if let currentDocument {
+            try verifyObservedStamps()
+            return currentDocument
+        }
         if fileManager.fileExists(atPath: manifestURL.path)
             || fileManager.fileExists(atPath: backupURL.path)
         {
@@ -1851,6 +1964,7 @@ actor LibraryRepository {
         }
         let document = LibraryDocument()
         currentDocument = document
+        try refreshObservedStamps()
         return document
     }
 

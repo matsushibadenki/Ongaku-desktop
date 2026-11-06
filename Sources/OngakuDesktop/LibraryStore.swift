@@ -550,16 +550,29 @@ final class LibraryStore: ObservableObject {
         for trackID: Track.ID,
         mutation: (inout Track) -> Void
     ) async {
-        guard let index = tracks.firstIndex(where: { $0.id == trackID }) else { return }
+        guard !isSwitchingLibrary, let index = tracks.firstIndex(where: { $0.id == trackID }) else { return }
+        let generation = storageGeneration
+        let targetRepository = repository
         let previous = tracks
         mutation(&tracks[index])
+        let attempted = tracks
         contentRevision &+= 1
         do {
-            try await repository.save(tracks: tracks)
+            try await targetRepository.save(tracks: attempted)
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else { return }
             activity = .notice(L10n.text("status.playbackAttributesSaved"))
         } catch {
-            tracks = previous
-            contentRevision &+= 1
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else { return }
+            if tracks == attempted {
+                if case LibraryRepository.RepositoryError.staleOrganizedTrack = error,
+                   let actual = try? await targetRepository.load() {
+                    guard await stillOwnsOverlay(targetRepository, generation: generation), tracks == attempted else { return }
+                    tracks = actual.document.tracks
+                } else {
+                    tracks = previous
+                }
+                contentRevision &+= 1
+            }
             activity = .failed(error.localizedDescription)
         }
     }
@@ -2614,7 +2627,9 @@ final class LibraryStore: ObservableObject {
     }
 
     func handleMissingPlaybackFile(id: Track.ID) async {
-        guard let index = tracks.firstIndex(where: { $0.id == id }) else { return }
+        guard !isSwitchingLibrary, let index = tracks.firstIndex(where: { $0.id == id }) else { return }
+        let generation = storageGeneration
+        let targetRepository = repository
         let track = tracks[index]
         guard !FileManager.default.fileExists(atPath: track.fileURL.standardizedFileURL.path) else {
             return
@@ -2628,11 +2643,20 @@ final class LibraryStore: ObservableObject {
         tracks[index].lastVerifiedAt = .now
         contentRevision &+= 1
 
+        let attempted = tracks
         do {
-            try await repository.save(tracks: tracks)
+            try await targetRepository.save(tracks: attempted)
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else { return }
             scheduleSearchIndexSynchronization(document: currentDocument())
             activity = .notice(L10n.format("status.playbackMissingDetected", track.title))
         } catch {
+            guard await stillOwnsOverlay(targetRepository, generation: generation) else { return }
+            if case LibraryRepository.RepositoryError.staleOrganizedTrack = error, tracks == attempted,
+               let actual = try? await targetRepository.load() {
+                guard await stillOwnsOverlay(targetRepository, generation: generation), tracks == attempted else { return }
+                tracks = actual.document.tracks
+                contentRevision &+= 1
+            }
             activity = .failed(error.localizedDescription)
         }
     }

@@ -1310,5 +1310,5 @@
 
 "storage.migration.authorizeMediaFolder" = "请选择包含 Ongaku Library Data 的媒体文件夹，以便应用访问音频文件。";
 
-"library.error.staleOrganizedTrack" = "整理期间歌曲位置已更改。请重新载入资料库后重试。";
+"library.error.staleOrganizedTrack" = "资料库已被其他操作更改。请重新载入资料库后重试。";
 "metadataEditor.error.mediaOrganizationBusy" = "请等待歌曲信息保存或媒体整理完成后重试。";

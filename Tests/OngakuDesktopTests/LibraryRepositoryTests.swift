@@ -2265,6 +2265,110 @@ private final class DelayedStorageFailureFileManager: FileManager, @unchecked Se
 @Suite("Storage delayed failure isolation", .serialized)
 @MainActor
 struct StorageDelayedFailureTests {
+    @Test("Old favorite and missing-file writes cannot affect the new library", arguments: ["favorite", "missing"], [false, true])
+    func oldTrackAttributeCompletion(operation: String, writeFails: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let first = root.appendingPathComponent("First")
+        let second = root.appendingPathComponent("Second")
+        let firstCatalog = PortableLibraryStorage(mediaURL: first).rootURL
+        let secondCatalog = PortableLibraryStorage(mediaURL: second).rootURL
+        let gate = StorageWriteGate(fails: writeFails)
+        defer { gate.resume.signal() }
+        let oldRepository = LibraryRepository(rootURL: firstCatalog, mediaURL: first,
+            fileManager: DelayedStorageFailureFileManager(root: firstCatalog, gate: gate))
+        let newRepository = LibraryRepository(rootURL: secondCatalog, mediaURL: second)
+        let old = Track(id: UUID(), title: "Old", artist: "A", album: "A", duration: 10,
+                        fileSize: 1, managedPath: first.appendingPathComponent("old.mp3").path,
+                        sha256: "old", addedAt: .now, health: .unchecked)
+        let replacement = Track(id: UUID(), title: "New", artist: "B", album: "B", duration: 10,
+                                fileSize: 1, managedPath: second.appendingPathComponent("new.mp3").path,
+                                sha256: "new", addedAt: .now, health: .missing)
+        try await oldRepository.save(tracks: [old])
+        try await newRepository.save(tracks: [replacement])
+        let store = LibraryStore(repository: oldRepository)
+        await store.load()
+        gate.arm()
+        let operationTask = Task {
+            if operation == "favorite" { await store.setFavorite(true, for: old.id) }
+            else { await store.handleMissingPlaybackFile(id: old.id) }
+        }
+        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        #expect(reached)
+        guard reached else { gate.resume.signal(); await operationTask.value; return }
+        await store.switchLibrary(catalogURL: secondCatalog, mediaURL: second)
+        #expect(store.tracks.map(\.id) == [replacement.id])
+        gate.resume.signal()
+        await operationTask.value
+        #expect(store.tracks.map(\.id) == [replacement.id])
+        #expect(try await newRepository.load().document.tracks.map(\.id) == [replacement.id])
+        let saved = try #require(try await oldRepository.load().document.tracks.first)
+        if operation == "favorite" { #expect(saved.isFavorite == !writeFails) }
+        else { #expect(saved.health == (writeFails ? .unchecked : .missing)) }
+    }
+
+    @Test("An older repository rejects tracks after another repository organizes media")
+    func staleTracksAcrossRepositories() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("song.wav")
+        let bytes = Data("audio".utf8)
+        try bytes.write(to: source)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: source.path,
+                          sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        let catalog = PortableLibraryStorage(mediaURL: root).rootURL
+        let first = LibraryRepository(rootURL: catalog, mediaURL: root)
+        try await first.save(tracks: [track])
+        let stale = try await first.load().document.tracks
+        let second = LibraryRepository(rootURL: catalog, mediaURL: root)
+        let document = try await second.load().document
+        let preview = try await second.planMediaOrganization(tracks: document.tracks, destinationRootURL: root)
+        _ = try await second.executeMediaOrganization(document: document, preview: preview)
+        let destination = try #require(preview.items.first?.destinationURL)
+        var proposed = stale
+        proposed[0].isFavorite = true
+        do { try await first.save(tracks: proposed); Issue.record("Stale repository overwrote the moved path") }
+        catch LibraryRepository.RepositoryError.staleOrganizedTrack { }
+        let actual = try await LibraryRepository(rootURL: catalog, mediaURL: root).load().document
+        #expect(actual.tracks.first?.managedPath == destination.path)
+        #expect(try Data(contentsOf: destination) == bytes)
+        var refreshed = try await first.load().document.tracks
+        refreshed[0].isFavorite = true
+        try await first.save(tracks: refreshed)
+        let saved = try await LibraryRepository(rootURL: catalog, mediaURL: root).load().document
+        #expect(saved.tracks.first?.managedPath == destination.path)
+        #expect(saved.tracks.first?.isFavorite == true)
+    }
+
+    @Test("A rejected stale favorite save reloads the organized track path")
+    func favoriteReloadsAfterOrganizedPathConflict() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let source = root.appendingPathComponent("song.wav")
+        try Data("audio".utf8).write(to: source)
+        let track = Track(id: UUID(), title: "T", artist: "A", album: "B", duration: 1,
+                          fileSize: 5, managedPath: source.path,
+                          sha256: try LibraryRepository.sha256(of: source), addedAt: .now, health: .verified)
+        let repository = LibraryRepository(rootURL: PortableLibraryStorage(mediaURL: root).rootURL, mediaURL: root)
+        try await repository.save(tracks: [track])
+        let store = LibraryStore(repository: repository)
+        await store.load()
+        let document = try await repository.load().document
+        let preview = try await repository.planMediaOrganization(tracks: document.tracks, destinationRootURL: root)
+        _ = try await repository.executeMediaOrganization(document: document, preview: preview)
+        let destination = try #require(preview.items.first?.destinationURL)
+        await store.setFavorite(true, for: track.id)
+        #expect(store.tracks.first?.managedPath == destination.path)
+        #expect(store.tracks.first?.isFavorite == false)
+        if case .failed = store.activity {} else { Issue.record("Expected a visible conflict") }
+        await store.setFavorite(true, for: track.id)
+        #expect(store.tracks.first?.isFavorite == true)
+        #expect(try await repository.load().document.tracks.first?.managedPath == destination.path)
+    }
+
     @Test("An old history-clear failure cannot restore old events over the new library")
     func oldHistoryFailure() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
