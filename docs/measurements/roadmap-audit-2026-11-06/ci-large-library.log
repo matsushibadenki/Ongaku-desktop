@@ -1,0 +1,25 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Large library performance fixture" started.
+◇ Test "Opt-in 100,000-track search during real playback and index updates" started.
+✔ Test "Opt-in 100,000-track search during real playback and index updates" passed after 0.001 seconds.
+◇ Test "The 100,000-track fixture is deterministic and relationally consistent" started.
+✔ Test "The 100,000-track fixture is deterministic and relationally consistent" passed after 0.957 seconds.
+◇ Test "M3 loads a 100,000-track catalog and searches its index within CI budgets" started.
+ONGAKU_M3_CI coldLoadAndFirstPage=1.097103417s indexedSearchP95=0.001298666s
+✔ Test "M3 loads a 100,000-track catalog and searches its index within CI budgets" passed after 8.982 seconds.
+◇ Test "Opt-in 100,000-track cold fallback preparation benchmark" started.
+✔ Test "Opt-in 100,000-track cold fallback preparation benchmark" passed after 0.001 seconds.
+◇ Test "Opt-in 100,000-track fallback cache retirement benchmark" started.
+✔ Test "Opt-in 100,000-track fallback cache retirement benchmark" passed after 0.001 seconds.
+◇ Test "Opt-in 100,000-track asynchronous presentation benchmark" started.
+✔ Test "Opt-in 100,000-track asynchronous presentation benchmark" passed after 0.001 seconds.
+◇ Test "Opt-in JSON persistence, cold-load, search, and grouping benchmark" started.
+✔ Test "Opt-in JSON persistence, cold-load, search, and grouping benchmark" passed after 0.001 seconds.
+◇ Test "Opt-in SQLite migration and indexed-search benchmark" started.
+✔ Test "Opt-in SQLite migration and indexed-search benchmark" passed after 0.001 seconds.
+◇ Test "Opt-in 100,000-track playback sidecar persistence benchmark" started.
+✔ Test "Opt-in 100,000-track playback sidecar persistence benchmark" passed after 0.001 seconds.
+✔ Suite "Large library performance fixture" passed after 9.940 seconds.
+✔ Test run with 9 tests in 1 suite passed after 9.941 seconds.

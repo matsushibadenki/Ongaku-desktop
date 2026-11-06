@@ -1,0 +1,36 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Asynchronous library presentation" started.
+◇ Test "Fast filename extraction preserves file URL semantics and search text" started.
+✔ Test "Fast filename extraction preserves file URL semantics and search text" passed after 0.002 seconds.
+◇ Test "Search text keeps the original field separators and optional-number order" started.
+✔ Test "Search text keeps the original field separators and optional-number order" passed after 0.001 seconds.
+◇ Test "Search normalization preserves POSIX folding for ASCII and multilingual text" started.
+✔ Test "Search normalization preserves POSIX folding for ASCII and multilingual text" passed after 0.001 seconds.
+◇ Test "Oversized fallback text remains searchable without retaining the text cache" started.
+✔ Test "Oversized fallback text remains searchable without retaining the text cache" passed after 0.002 seconds.
+◇ Test "Fallback text remains correct across edits, reordering, removal, and library switches" started.
+✔ Test "Fallback text remains correct across edits, reordering, removal, and library switches" passed after 0.006 seconds.
+◇ Test "SQLite promotion releases only the superseded fallback snapshot" started.
+✔ Test "SQLite promotion releases only the superseded fallback snapshot" passed after 0.001 seconds.
+◇ Test "Duplicate analysis remains complete when the retained key budget is exceeded" started.
+✔ Test "Duplicate analysis remains complete when the retained key budget is exceeded" passed after 0.002 seconds.
+◇ Test "Cached duplicate keys preserve fresh analysis across all metadata changes" started.
+✔ Test "Cached duplicate keys preserve fresh analysis across all metadata changes" passed after 0.001 seconds.
+◇ Test "Cached history matches direct statistics across track edits and history replacement" started.
+✔ Test "Cached history matches direct statistics across track edits and history replacement" passed after 0.001 seconds.
+◇ Test "Returning to albums reuses current groups and edits invalidate them" started.
+✔ Test "Returning to albums reuses current groups and edits invalidate them" passed after 0.003 seconds.
+◇ Test "Album and artist snapshots retain grouping, ordering, and durations" started.
+✔ Test "Album and artist snapshots retain grouping, ordering, and durations" passed after 0.001 seconds.
+◇ Test "Same-size edits and removed history invalidate cached aggregates" started.
+✔ Test "Same-size edits and removed history invalidate cached aggregates" passed after 0.001 seconds.
+◇ Test "Cancelled work does not poison the next worker request" started.
+✔ Test "Cancelled work does not poison the next worker request" passed after 0.001 seconds.
+◇ Test "Rapid section and filter changes publish only the last request and preserve selection" started.
+✔ Test "Rapid section and filter changes publish only the last request and preserve selection" passed after 0.015 seconds.
+◇ Test "Switching libraries rejects an old pending presentation" started.
+✔ Test "Switching libraries rejects an old pending presentation" passed after 0.021 seconds.
+✔ Suite "Asynchronous library presentation" passed after 0.060 seconds.
+✔ Test run with 15 tests in 1 suite passed after 0.060 seconds.

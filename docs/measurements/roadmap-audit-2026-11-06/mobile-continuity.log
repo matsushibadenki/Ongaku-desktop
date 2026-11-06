@@ -1,0 +1,87 @@
+tests/TransportContinuityRegression.swift:22:42: warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 20 |     static func run() throws {
+ 21 |         if CommandLine.arguments.contains("--early-teardown-fixture") {
+ 22 |             let host = try ready(); host.stop()
+    |                                          `- warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 23 |             try require(host.resourcesCleared == 0 && host.activePlayerNode.isPlaying,
+ 24 |                         "shutdown released source before fade and drain")
+
+tests/TransportContinuityRegression.swift:70:17: warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 68 |         let stopped = try ready()
+ 69 |         stopped.pause(); DispatchQueue.main.advance(to: 0.105)
+ 70 |         stopped.stop()
+    |                 `- warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 71 |         do { try stopped.play(); throw NSError(domain: "play during teardown accepted", code: 1) }
+ 72 |         catch is CancellationError { }
+
+tests/TransportContinuityRegression.swift:80:18: warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 78 |         let retiring = try ready()
+ 79 |         var cleanup = 0
+ 80 |         retiring.stop(afterDrain: { cleanup += 1 })
+    |                  `- warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 81 |         try require(!retiring.isPlaying && retiring.currentTime() == 0, "stop intent not immediate")
+ 82 |         try require(retiring.activePlayerNode.isPlaying && retiring.resourcesCleared == 0, "stop released active source before fade")
+
+tests/TransportContinuityRegression.swift:88:18: warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 86 |         catch is CancellationError { }
+ 87 |         let originalToken = retiring.transportToken
+ 88 |         retiring.stop(afterDrain: { cleanup += 10 })
+    |                  `- warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+ 89 |         try require(retiring.transportToken == originalToken, "repeated stop restarted its fade")
+ 90 |         DispatchQueue.main.advance(to: 0.125)
+
+tests/TransportContinuityRegression.swift:112:14: warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+110 |         let idle = ShippingTransportHost()
+111 |         var idleCleanup = 0
+112 |         idle.stop(afterDrain: { idleCleanup += 1 })
+    |              `- warning: result of call to 'stop(afterDrain:)' is unused [#NoUsage]
+113 |         try require(idle.resourcesCleared == 1 && idleCleanup == 1 && DispatchQueue.main.events.isEmpty, "idle stop scheduled an unnecessary fade")
+114 |         print("PASS: an already-stopped engine releases resources synchronously")
+
+tests/TransportContinuityRegression.swift:186:29: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+184 |                 let format = AVAudioFormat(standardFormatWithSampleRate: rate, channels: 2)!
+185 |                 host.engine.attach(player)
+186 |                 host.engine.connect(player, to: host.engine.mainMixerNode, format: format)
+    |                             `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+187 |                 try host.engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 32)
+188 |                 let source = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(rate))!
+
+tests/TransportContinuityRegression.swift:196:53: warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+194 |                 host.engine.mainMixerNode.outputVolume = negative ? 1 : (direction ? 0 : 1)
+195 |                 player.scheduleBuffer(source); try host.engine.start()
+196 |                 if !negative || !direction { player.play() }
+    |                                                     `- warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+197 |                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+198 |                     if negative {
+
+tests/TransportContinuityRegression.swift:199:47: warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+197 |                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+198 |                     if negative {
+199 |                         if direction { player.play() } else { player.stop() }
+    |                                               `- warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+200 |                     }
+201 |                     else {
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+[#NoUsage]: <https://docs.swift.org/compiler/documentation/diagnostics/no-usage>
+PASS: startup waits for render before fading
+PASS: pause intent, silent drain, position and restart
+PASS: rapid resume cancels old gains and pause without rescheduling
+PASS: stop invalidates transport callbacks before new playback
+PASS: stop retains sources through fade/drain; repeated stop coalesces and only latest session cleanup runs
+PASS: a superseding load cancels old preparation/session release and survives the old stop callbacks
+PASS: an already-stopped engine releases resources synchronously
+PASS: seek cancellation and paused seek
+PASS: latest seek wins, including immediate seek/play callers
+PASS: explicit play after node loss retires the old seek and delivers EOF
+PASS: missing render ends in paused state
+PASS: EOF cannot override pause/seek; resume replaces an already-ended schedule
+TRANSPORT_PCM rate=44100.0 fadeIn=false maxStep=0.0003630072
+TRANSPORT_PCM rate=44100.0 fadeIn=true maxStep=0.0003629923
+TRANSPORT_PCM rate=48000.0 fadeIn=false maxStep=0.00033335388
+TRANSPORT_PCM rate=48000.0 fadeIn=true maxStep=0.00033335388
+TRANSPORT_PCM rate=96000.0 fadeIn=false maxStep=0.00016668439
+TRANSPORT_PCM rate=96000.0 fadeIn=true maxStep=0.00016669929
+PASS: 6 stock-mixer PCM fade cases
+PASS: PCM guard rejects abrupt source start/stop
+PASS: state guard rejects resource teardown before fade/drain

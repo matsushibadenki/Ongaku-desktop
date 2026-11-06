@@ -1,0 +1,123 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Storage delayed failure isolation" started.
+◇ Test "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test case passing 2 arguments operation → "favorite", writeFails → false to "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test case passing 2 arguments operation → "favorite", writeFails → true to "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test case passing 2 arguments operation → "missing", writeFails → false to "Old favorite and missing-file writes cannot affect the new library" started.
+◇ Test case passing 2 arguments operation → "missing", writeFails → true to "Old favorite and missing-file writes cannot affect the new library" started.
+✔ Test "Old favorite and missing-file writes cannot affect the new library" with 4 test cases passed after 0.119 seconds.
+◇ Test "CD import reloads one recovered song when another repository commits first" started.
+✔ Test "CD import reloads one recovered song when another repository commits first" passed after 0.047 seconds.
+◇ Test "Unknown generation formats are retained without automatic repair" started.
+✔ Test "Unknown generation formats are retained without automatic repair" passed after 0.004 seconds.
+◇ Test "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+◇ Test case passing 2 arguments step → 0, priorEpoch → false to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+◇ Test case passing 2 arguments step → 0, priorEpoch → true to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+◇ Test case passing 2 arguments step → 1, priorEpoch → false to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+◇ Test case passing 2 arguments step → 1, priorEpoch → true to "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" started.
+✔ Test "Damaged generation is preserved and stale writers remain rejected after interrupted recovery" with 4 test cases passed after 0.060 seconds.
+◇ Test "A lost established generation gets a new epoch and rejects stale saves" started.
+✔ Test "A lost established generation gets a new epoch and rejects stale saves" passed after 0.013 seconds.
+◇ Test "Legacy catalog acquires a generation and interrupted reservation invalidates stale readers" started.
+✔ Test "Legacy catalog acquires a generation and interrupted reservation invalidates stale readers" passed after 0.013 seconds.
+◇ Test "An older complete snapshot cannot replace a newer same-repository edit" started.
+✔ Test "An older complete snapshot cannot replace a newer same-repository edit" passed after 0.018 seconds.
+◇ Test "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 0, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 0, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 1, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 2, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 3, diskFull → false to "Catalog, history and queue recover together at each write boundary" started.
+◇ Test case passing 2 arguments step → 3, diskFull → true to "Catalog, history and queue recover together at each write boundary" started.
+✔ Test "Catalog, history and queue recover together at each write boundary" with 8 test cases passed after 0.183 seconds.
+◇ Test "Interrupted import recovery retains its journal until the catalog is durable" started.
+✔ Test "Interrupted import recovery retains its journal until the catalog is durable" passed after 0.018 seconds.
+◇ Test "Recovery preserves an unexpected replacement catalog and the journal" started.
+✔ Test "Recovery preserves an unexpected replacement catalog and the journal" passed after 0.007 seconds.
+◇ Test "Nested catalog and sync journals recover their matching tracks and tags" started.
+✔ Test "Nested catalog and sync journals recover their matching tracks and tags" passed after 0.016 seconds.
+◇ Test "Clearing registrations recovers safely at every catalog write boundary" started.
+◇ Test case passing 1 argument step → 0 to "Clearing registrations recovers safely at every catalog write boundary" started.
+◇ Test case passing 1 argument step → 1 to "Clearing registrations recovers safely at every catalog write boundary" started.
+◇ Test case passing 1 argument step → 2 to "Clearing registrations recovers safely at every catalog write boundary" started.
+◇ Test case passing 1 argument step → 3 to "Clearing registrations recovers safely at every catalog write boundary" started.
+✔ Test "Clearing registrations recovers safely at every catalog write boundary" with 4 test cases passed after 0.136 seconds.
+◇ Test "Starting an import reserves a generation before catalog publication" started.
+✔ Test "Starting an import reserves a generation before catalog publication" passed after 0.019 seconds.
+◇ Test "An unobserved repository cannot replace an existing catalog" started.
+✔ Test "An unobserved repository cannot replace an existing catalog" passed after 0.013 seconds.
+◇ Test "A stale repository cannot overwrite playlist, history, or queue updates" started.
+◇ Test case passing 1 argument operation → "playlist" to "A stale repository cannot overwrite playlist, history, or queue updates" started.
+◇ Test case passing 1 argument operation → "history" to "A stale repository cannot overwrite playlist, history, or queue updates" started.
+◇ Test case passing 1 argument operation → "queue" to "A stale repository cannot overwrite playlist, history, or queue updates" started.
+✔ Test "A stale repository cannot overwrite playlist, history, or queue updates" with 3 test cases passed after 0.039 seconds.
+◇ Test "Storage locks time out without modifying data and can be retried" started.
+◇ Test case passing 1 argument name → ".catalog-transaction-v1.lock" to "Storage locks time out without modifying data and can be retried" started.
+◇ Test case passing 1 argument name → ".import-transaction-v1.lock" to "Storage locks time out without modifying data and can be retried" started.
+✔ Test "Storage locks time out without modifying data and can be retried" with 2 test cases passed after 0.391 seconds.
+◇ Test "Storage lock waits can be cancelled" started.
+◇ Test case passing 1 argument name → ".catalog-transaction-v1.lock" to "Storage lock waits can be cancelled" started.
+◇ Test case passing 1 argument name → ".import-transaction-v1.lock" to "Storage lock waits can be cancelled" started.
+✔ Test "Storage lock waits can be cancelled" with 2 test cases passed after 0.298 seconds.
+◇ Test "A separate process holding the catalog lock blocks repository writes" started.
+✔ Test "A separate process holding the catalog lock blocks repository writes" passed after 0.301 seconds.
+◇ Test "A process update under the lock invalidates a waiting stale writer" started.
+✔ Test "A process update under the lock invalidates a waiting stale writer" passed after 0.311 seconds.
+◇ Test "An active asynchronous import cannot be mistaken for interrupted recovery" started.
+✔ Test "An active asynchronous import cannot be mistaken for interrupted recovery" passed after 0.563 seconds.
+◇ Test "An older repository rejects tracks after another repository organizes media" started.
+✔ Test "An older repository rejects tracks after another repository organizes media" passed after 0.013 seconds.
+◇ Test "A rejected stale favorite save reloads the organized track path" started.
+✔ Test "A rejected stale favorite save reloads the organized track path" passed after 0.017 seconds.
+◇ Test "An old history-clear failure cannot restore old events over the new library" started.
+✔ Test "An old history-clear failure cannot restore old events over the new library" passed after 0.017 seconds.
+◇ Test "An old successful edit cannot overwrite the new library" started.
+◇ Test case passing 1 argument operation → "metadata" to "An old successful edit cannot overwrite the new library" started.
+◇ Test case passing 1 argument operation → "playlist" to "An old successful edit cannot overwrite the new library" started.
+✔ Test "An old successful edit cannot overwrite the new library" with 2 test cases passed after 0.040 seconds.
+◇ Test "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "apply-success" to "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "apply-failure" to "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "undo-success" to "Old overlay completion and failure stay with their original library" started.
+◇ Test case passing 1 argument operation → "undo-failure" to "Old overlay completion and failure stay with their original library" started.
+✔ Test "Old overlay completion and failure stay with their original library" with 4 test cases passed after 0.078 seconds.
+◇ Test "Failed storage switch preserves the outcome of an in-flight overlay" started.
+◇ Test case passing 1 argument writeFails → false to "Failed storage switch preserves the outcome of an in-flight overlay" started.
+◇ Test case passing 1 argument writeFails → true to "Failed storage switch preserves the outcome of an in-flight overlay" started.
+✔ Test "Failed storage switch preserves the outcome of an in-flight overlay" with 2 test cases passed after 0.017 seconds.
+◇ Test "Unwritable tag destination does not commit the catalog" started.
+◇ Test case passing 1 argument isUndo → false to "Unwritable tag destination does not commit the catalog" started.
+◇ Test case passing 1 argument isUndo → true to "Unwritable tag destination does not commit the catalog" started.
+✔ Test "Unwritable tag destination does not commit the catalog" with 2 test cases passed after 0.015 seconds.
+◇ Test "Failed final tag publication restores the prior catalog" started.
+✔ Test "Failed final tag publication restores the prior catalog" passed after 0.006 seconds.
+◇ Test "Overlay rollback does not overwrite a newer track edit" started.
+✔ Test "Overlay rollback does not overwrite a newer track edit" passed after 0.003 seconds.
+◇ Test "Duplicate resolution completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → false to "Duplicate resolution completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → true to "Duplicate resolution completion stays with its starting library" started.
+✔ Test "Duplicate resolution completion stays with its starting library" with 2 test cases passed after 0.031 seconds.
+◇ Test "Media organization completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → false to "Media organization completion stays with its starting library" started.
+◇ Test case passing 1 argument writeFails → true to "Media organization completion stays with its starting library" started.
+✔ Test "Media organization completion stays with its starting library" with 2 test cases passed after 0.032 seconds.
+◇ Test "Playlist edit queued during organization keeps the new file path" started.
+✔ Test "Playlist edit queued during organization keeps the new file path" passed after 0.013 seconds.
+◇ Test "Stale track snapshots cannot restore paths after organization" started.
+✔ Test "Stale track snapshots cannot restore paths after organization" passed after 0.012 seconds.
+◇ Test "Metadata writing cannot start while organization is moving the same library" started.
+✔ Test "Metadata writing cannot start while organization is moving the same library" passed after 0.010 seconds.
+◇ Test "Organization cannot start while metadata editing owns the same library" started.
+✔ Test "Organization cannot start while metadata editing owns the same library" passed after 0.012 seconds.
+◇ Test "Media organization refuses a preview from a previous library" started.
+✔ Test "Media organization refuses a preview from a previous library" passed after 0.014 seconds.
+◇ Test "Media organization refuses a preview after the same library changes" started.
+✔ Test "Media organization refuses a preview after the same library changes" passed after 0.013 seconds.
+◇ Test "Successful library switch clears only the store's previous undo actions" started.
+✔ Test "Successful library switch clears only the store's previous undo actions" passed after 0.011 seconds.
+✔ Suite "Storage delayed failure isolation" passed after 2.943 seconds.
+✔ Test run with 38 tests in 1 suite passed after 2.943 seconds.

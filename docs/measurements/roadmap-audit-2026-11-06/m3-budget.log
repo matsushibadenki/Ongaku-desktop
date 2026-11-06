@@ -1,0 +1,9 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Large library performance fixture" started.
+◇ Test "M3 loads a 100,000-track catalog and searches its index within CI budgets" started.
+ONGAKU_M3_CI coldLoadAndFirstPage=1.104542333s indexedSearchP95=0.001340875s
+✔ Test "M3 loads a 100,000-track catalog and searches its index within CI budgets" passed after 8.496 seconds.
+✔ Suite "Large library performance fixture" passed after 8.496 seconds.
+✔ Test run with 1 test in 1 suite passed after 8.497 seconds.

@@ -1,0 +1,12 @@
+{
+  "Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift": "e491234522144294b2a4a26330db34d73fe1ce61823a29461ab2e2cf461b2c2d",
+  "Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift": "abe2051b5496898ef6ada7a4be39f32d28ad5ff9e05b4f39cdfec717e86ff20d",
+  "Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift": "7623583c0805d9930627d0da52881bd7d4aea4ce562f821c69832c01b672db16",
+  "Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift": "c14ea721834c445afb67ca7e16dcb6e82a411ce4eb781f9320f3bc8f46a9cfa6",
+  "Ongaku-desktop/Tests/OngakuDesktopTests/OverlayJournalTests.swift": "657bd27fbea1a1379aff28b75478634c198faf65a226abbbd31c3a7e5da4c000",
+  "Ongaku/audio/PlaybackTransportPolicy.swift": "5182eb21a19a6d1a5620aeb2739c81aa05708ce1e480db2ef6dcccae0db45870",
+  "Ongaku/audio/MusicAssetPreparation.swift": "ece5e9d5086765f3fea00e3eaf654e8f5267c35ff4160a6decdf17d6459e1cf9",
+  "Ongaku/audio/AudioPreparationFailure.swift": "d8bfc6b34d251e37ab7a3930c26fe4ecb54f53b409dc84003de2073002a074d6",
+  "Ongaku/tests/PlaybackTransportRegression.swift": "09573a80397b5fcec7a16a7d3d0e599dc29fd7efa35ad8f0a15e1a90e21cf73a",
+  "Ongaku/tests/MusicAssetPreparationRegression.swift": "1faebaf341e32f78b6dc1601719e6412d6e8d357f22d829fe0ce5f515a61acaf"
+}

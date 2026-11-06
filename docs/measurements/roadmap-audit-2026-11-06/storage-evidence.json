@@ -1,0 +1,259 @@
+[
+  {
+    "section": "同期タグ保存の容量不足",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "saveSynchronizedOverlay",
+        "line": 1287
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/OverlayJournalTests.swift",
+        "symbol": "fullDiskDuringOverlay",
+        "line": 47
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "世代ファイル消失時の復旧",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "persistentGeneration",
+        "line": 490
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverDamagedGeneration",
+        "line": 521
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "ensureGenerationMarker",
+        "line": 484
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "missingEstablishedGenerationRecovery",
+        "line": 2940
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "世代情報の破損復旧と保存先復元の容量不足",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverDamagedGeneration",
+        "line": 521
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "writeGeneration",
+        "line": 512
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "rollbackStorageRestore",
+        "line": 773
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "generationRecoveryInterruption",
+        "line": 2902
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "generationBackupOutOfSpace",
+        "line": 603
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "futureGenerationRemainsUntouched",
+        "line": 2885
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "interruptedStorageRestore",
+        "line": 45
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "復旧情報の退避とインポート容量不足",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "exportRecoverySnapshot",
+        "line": 850
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverImports",
+        "line": 2563
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "damagedRecoverySnapshot",
+        "line": 556
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "recoverySnapshotOutOfSpace",
+        "line": 582
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "importWriteRecoveryBoundaries",
+        "line": 1679
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "自己完結化の中断・救済と保存容量不足",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "makeLibrarySelfContained",
+        "line": 883
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverSelfContainmentStaging",
+        "line": 85
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "preserveUnusableSelfContainmentJournal",
+        "line": 76
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "selfContainedCopyOutOfSpace",
+        "line": 425
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "interruptedSelfContainmentStaging",
+        "line": 466
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "unsafeSelfContainmentRecovery",
+        "line": 490
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "selfContainmentRecoversWithCatalogJournal",
+        "line": 517
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "保存ロックの待機上限と容量不足の検証",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "acquireExclusiveLock",
+        "line": 378
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "storageLockTimeoutAndRetry",
+        "line": 3281
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "storageLockCancellation",
+        "line": 3309
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "台帳復旧ジャーナルの内容検証",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverCatalogWriteJournal",
+        "line": 2313
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "changedJournalPayloadIsRejected",
+        "line": 228
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "復旧ジャーナル破損時の保護",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverCatalogWriteJournal",
+        "line": 2313
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverStorageRestoreJournal",
+        "line": 820
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "damagedRecoveryJournalIsRetained",
+        "line": 200
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  },
+  {
+    "section": "保存先復元の中断・再復旧",
+    "code": [
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "rollbackStorageRestore",
+        "line": 773
+      },
+      {
+        "path": "Sources/OngakuDesktop/LibraryRepository.swift",
+        "symbol": "recoverStorageRestoreJournal",
+        "line": 820
+      }
+    ],
+    "tests": [
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "interruptedStorageRestore",
+        "line": 45
+      },
+      {
+        "path": "Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+        "symbol": "interruptedStorageRollbackRetries",
+        "line": 89
+      }
+    ],
+    "scope": "Current implementation and synthetic regression coverage reviewed. Historical test counts and real-device completion are not reasserted."
+  }
+]

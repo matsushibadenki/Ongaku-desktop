@@ -1,0 +1,105 @@
+audio/MusicAssetPreparation.swift:118:20: warning: 'alwaysCopiesSampleData' was deprecated in macOS 27.0: It is not necessary to copy the sample data in order to make it safe to use the vended buffer [#DeprecatedDeclaration]
+116 |                 AVLinearPCMIsNonInterleaved: false
+117 |             ])
+118 |             output.alwaysCopiesSampleData = false
+    |                    `- warning: 'alwaysCopiesSampleData' was deprecated in macOS 27.0: It is not necessary to copy the sample data in order to make it safe to use the vended buffer [#DeprecatedDeclaration]
+119 |             guard reader.canAdd(output) else { throw Failure.unsupported }
+120 |             reader.add(output)
+
+audio/MusicAssetPreparation.swift:120:20: warning: 'add' was deprecated in macOS 27.0: Use the appropriate AVAssetReader.outputProvider(for:...) overload for your output and optional adaptor instead [#DeprecatedDeclaration]
+118 |             output.alwaysCopiesSampleData = false
+119 |             guard reader.canAdd(output) else { throw Failure.unsupported }
+120 |             reader.add(output)
+    |                    `- warning: 'add' was deprecated in macOS 27.0: Use the appropriate AVAssetReader.outputProvider(for:...) overload for your output and optional adaptor instead [#DeprecatedDeclaration]
+121 |             let cancellation = Reader(reader)
+122 |             return try await withTaskCancellationHandler {
+
+audio/MusicAssetPreparation.swift:137:22: warning: 'startReading()' was deprecated in macOS 27.0: Use start() instead [#DeprecatedDeclaration]
+135 |         let copy = Snapshot(url: directory.appendingPathComponent("decoded.caf"), directory: directory)
+136 |         defer { reader.cancelReading() }
+137 |         guard reader.startReading() else { throw reader.error ?? Failure.unsupported }
+    |                      `- warning: 'startReading()' was deprecated in macOS 27.0: Use start() instead [#DeprecatedDeclaration]
+138 |         var file: AVAudioFile?
+139 |         var framesWritten: Int64 = 0
+
+audio/MusicAssetPreparation.swift:144:43: warning: 'copyNextSampleBuffer()' was deprecated in macOS 27.0: Use AVAssetReaderOutput.Provider.next() instead [#DeprecatedDeclaration]
+142 |             try Task.checkCancellation()
+143 |             let hasSample = try autoreleasepool { () throws -> Bool in
+144 |                 guard let sample = output.copyNextSampleBuffer() else { return false }
+    |                                           `- warning: 'copyNextSampleBuffer()' was deprecated in macOS 27.0: Use AVAssetReaderOutput.Provider.next() instead [#DeprecatedDeclaration]
+145 |                 guard let description = CMSampleBufferGetFormatDescription(sample),
+146 |                       let asbd = CMAudioFormatDescriptionGetStreamBasicDescription(description),
+
+audio/MusicAssetPreparation.swift:208:17: warning: 'outputURL' was deprecated in macOS 27.0: Use export(to:as:) async throws instead [#DeprecatedDeclaration]
+206 |         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+207 |         let snapshot = Snapshot(url: directory.appendingPathComponent("source.\(format.1)"), directory: directory)
+208 |         session.outputURL = snapshot.url
+    |                 `- warning: 'outputURL' was deprecated in macOS 27.0: Use export(to:as:) async throws instead [#DeprecatedDeclaration]
+209 |         session.outputFileType = format.0
+210 |         session.fileLengthLimit = 512 * 1024 * 1024
+
+audio/MusicAssetPreparation.swift:209:17: warning: 'outputFileType' was deprecated in macOS 27.0: Use export(to:as:) async throws instead [#DeprecatedDeclaration]
+207 |         let snapshot = Snapshot(url: directory.appendingPathComponent("source.\(format.1)"), directory: directory)
+208 |         session.outputURL = snapshot.url
+209 |         session.outputFileType = format.0
+    |                 `- warning: 'outputFileType' was deprecated in macOS 27.0: Use export(to:as:) async throws instead [#DeprecatedDeclaration]
+210 |         session.fileLengthLimit = 512 * 1024 * 1024
+211 |         let export = Export(session)
+
+audio/MusicAssetPreparation.swift:215:32: warning: 'exportAsynchronously(completionHandler:)' was deprecated in macOS 15.0 [#DeprecatedDeclaration]
+213 |             try Task.checkCancellation()
+214 |             await withCheckedContinuation { continuation in
+215 |                 export.session.exportAsynchronously { continuation.resume() }
+    |                                `- warning: 'exportAsynchronously(completionHandler:)' was deprecated in macOS 15.0 [#DeprecatedDeclaration]
+216 |                 if Task.isCancelled { export.session.cancelExport() }
+217 |             }
+
+audio/MusicAssetPreparation.swift:216:54: warning: 'cancelExport()' was deprecated in macOS 27.0: Use Task.cancel() instead [#DeprecatedDeclaration]
+214 |             await withCheckedContinuation { continuation in
+215 |                 export.session.exportAsynchronously { continuation.resume() }
+216 |                 if Task.isCancelled { export.session.cancelExport() }
+    |                                                      `- warning: 'cancelExport()' was deprecated in macOS 27.0: Use Task.cancel() instead [#DeprecatedDeclaration]
+217 |             }
+218 |             try Task.checkCancellation()
+
+audio/MusicAssetPreparation.swift:219:34: warning: 'status' was deprecated in macOS 15.0: Use states(updateInterval:) instead [#DeprecatedDeclaration]
+217 |             }
+218 |             try Task.checkCancellation()
+219 |             guard export.session.status == .completed else {
+    |                                  `- warning: 'status' was deprecated in macOS 15.0: Use states(updateInterval:) instead [#DeprecatedDeclaration]
+220 |                 throw export.session.error ?? Failure.incomplete
+221 |             }
+
+audio/MusicAssetPreparation.swift:220:38: warning: 'error' was deprecated in macOS 15.0: Use export(to:as:) async throws instead [#DeprecatedDeclaration]
+218 |             try Task.checkCancellation()
+219 |             guard export.session.status == .completed else {
+220 |                 throw export.session.error ?? Failure.incomplete
+    |                                      `- warning: 'error' was deprecated in macOS 15.0: Use export(to:as:) async throws instead [#DeprecatedDeclaration]
+221 |             }
+222 |         } onCancel: { export.session.cancelExport() }
+
+audio/MusicAssetPreparation.swift:222:38: warning: 'cancelExport()' was deprecated in macOS 27.0: Use Task.cancel() instead [#DeprecatedDeclaration]
+220 |                 throw export.session.error ?? Failure.incomplete
+221 |             }
+222 |         } onCancel: { export.session.cancelExport() }
+    |                                      `- warning: 'cancelExport()' was deprecated in macOS 27.0: Use Task.cancel() instead [#DeprecatedDeclaration]
+223 |         // A size-limited export may finish early. Never replace the full song
+224 |         // with a truncated snapshot or one that changes its timeline.
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+2026-11-06 17:15:30.674 test[29197:1275041] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PASS: passthrough preserves stereo PCM and timing; scoped snapshot cleanup preserves original
+PASS: cancelled preparation never publishes a snapshot
+PASS: unsupported passthrough falls back to disk PCM with exact stereo samples/rate/timing
+PASS: PCM fallback rejects oversize and cancellation
+PASS: stalled preparation times out and cancels its worker
+PASS: an unreadable exported container is discarded and decoded instead
+PASS: initial open failure retries readable local PCM, preserving samples and scoped lifetime
+PASS: native readable sources stay immediate; DRM/session errors do not enter export recovery
+PASS: cancellation between export and reload prevents stale graph mutation
+PASS: CD 44.1 kHz / 16-bit 1-channel wav read recovery preserves decoded PCM
+PASS: CD 44.1 kHz / 16-bit 2-channel wav read recovery preserves decoded PCM
+PASS: CD 44.1 kHz / 16-bit 1-channel aiff read recovery preserves decoded PCM
+PASS: CD 44.1 kHz / 16-bit 2-channel aiff read recovery preserves decoded PCM
+PASS: CD 44.1 kHz / 16-bit 1-channel m4a read recovery preserves decoded PCM
+PASS: CD 44.1 kHz / 16-bit 2-channel m4a read recovery preserves decoded PCM

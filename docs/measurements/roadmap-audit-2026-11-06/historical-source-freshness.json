@@ -1,0 +1,230 @@
+[
+  {
+    "record": "docs/measurements/fallback-cache-retirement-2026-10-22/source-sha256.json",
+    "source_key": "Sources/OngakuDesktop/LibraryPresentation.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/LibraryPresentation.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/fallback-cache-retirement-2026-10-22/source-sha256.json",
+    "source_key": "Sources/OngakuDesktop/LibraryStore.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/LibraryStore.swift",
+    "status": "changed"
+  },
+  {
+    "record": "docs/measurements/fallback-cache-retirement-2026-10-22/source-sha256.json",
+    "source_key": "Tests/OngakuDesktopTests/LibraryPresentationTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/LibraryPresentationTests.swift",
+    "status": "changed"
+  },
+  {
+    "record": "docs/measurements/fallback-cache-retirement-2026-10-22/source-sha256.json",
+    "source_key": "Tests/OngakuDesktopTests/LibrarySearchRoutingTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/LibrarySearchRoutingTests.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/fallback-cache-retirement-2026-10-22/source-sha256.json",
+    "source_key": "Tests/OngakuDesktopTests/LargeLibraryPerformanceTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/LargeLibraryPerformanceTests.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/LibraryRepository.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/LibraryStorageSettings.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/StorageSettingsView.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/LibraryRepositoryTests.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku-desktop/Tests/OngakuDesktopTests/OverlayJournalTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/OverlayJournalTests.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku/audio/PlaybackTransportPolicy.swift",
+    "resolved_source": "Ongaku/audio/PlaybackTransportPolicy.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku/audio/MusicAssetPreparation.swift",
+    "resolved_source": "Ongaku/audio/MusicAssetPreparation.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku/audio/AudioPreparationFailure.swift",
+    "resolved_source": "Ongaku/audio/AudioPreparationFailure.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku/tests/PlaybackTransportRegression.swift",
+    "resolved_source": "Ongaku/tests/PlaybackTransportRegression.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/roadmap-audit-2026-11-06/source-sha256.json",
+    "source_key": "Ongaku/tests/MusicAssetPreparationRegression.swift",
+    "resolved_source": "Ongaku/tests/MusicAssetPreparationRegression.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/session-recovery-2026-10-27/source-hashes.json",
+    "source_key": "audio/AudioPlayerViewModel.swift",
+    "resolved_source": "Ongaku/audio/AudioPlayerViewModel.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/session-recovery-2026-10-27/source-hashes.json",
+    "source_key": "audio/PlaybackTransportPolicy.swift",
+    "resolved_source": "Ongaku/audio/PlaybackTransportPolicy.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/session-recovery-2026-10-27/source-hashes.json",
+    "source_key": "tests/PlaybackTransportRegression.swift",
+    "resolved_source": "Ongaku/tests/PlaybackTransportRegression.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/player-clock-recovery-2026-10-28/source-hashes.json",
+    "source_key": "mobile:audio/TruePeakAudioUnit.h",
+    "resolved_source": "Ongaku/audio/TruePeakAudioUnit.h",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/player-clock-recovery-2026-10-28/source-hashes.json",
+    "source_key": "mobile:audio/TruePeakAudioUnit.mm",
+    "resolved_source": "Ongaku/audio/TruePeakAudioUnit.mm",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/player-clock-recovery-2026-10-28/source-hashes.json",
+    "source_key": "mobile:audio/HiResPlaybackEngine.swift",
+    "resolved_source": "Ongaku/audio/HiResPlaybackEngine.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/player-clock-recovery-2026-10-28/source-hashes.json",
+    "source_key": "desktop:PlaybackController.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/PlaybackController.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/player-clock-recovery-2026-10-28/source-hashes.json",
+    "source_key": "desktop:PlaybackTransportIntegrationTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/PlaybackTransportIntegrationTests.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/player-clock-recovery-2026-10-28/source-hashes.json",
+    "source_key": "test:SafePlayerTimeRegression.mm",
+    "resolved_source": "Ongaku/tests/SafePlayerTimeRegression.mm",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/effect-tab-retention-2026-10-28/source-hashes.json",
+    "source_key": "Sources/OngakuDesktop/LibraryContent.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/LibraryContent.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/effect-tab-retention-2026-10-28/source-hashes.json",
+    "source_key": "Sources/OngakuDesktop/EffectsRackView.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/EffectsRackView.swift",
+    "status": "changed"
+  },
+  {
+    "record": "docs/measurements/effect-tab-retention-2026-10-28/source-hashes.json",
+    "source_key": "Tests/OngakuDesktopTests/EffectRackInputTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/EffectRackInputTests.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/validated-chunk-snapshots-2026-10-24/source-sha256.json",
+    "source_key": "Sources/OngakuDesktop/DeviceChunkTransfer.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/DeviceChunkTransfer.swift",
+    "status": "changed"
+  },
+  {
+    "record": "docs/measurements/validated-chunk-snapshots-2026-10-24/source-sha256.json",
+    "source_key": "Sources/OngakuDesktop/PhoneSyncController.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuDesktop/PhoneSyncController.swift",
+    "status": "changed"
+  },
+  {
+    "record": "docs/measurements/validated-chunk-snapshots-2026-10-24/source-sha256.json",
+    "source_key": "Sources/OngakuMobile/MobileSyncController.swift",
+    "resolved_source": "Ongaku-desktop/Sources/OngakuMobile/MobileSyncController.swift",
+    "status": "changed"
+  },
+  {
+    "record": "docs/measurements/validated-chunk-snapshots-2026-10-24/source-sha256.json",
+    "source_key": "Tests/OngakuDesktopTests/M8TransferResilienceMilestoneTests.swift",
+    "resolved_source": "Ongaku-desktop/Tests/OngakuDesktopTests/M8TransferResilienceMilestoneTests.swift",
+    "status": "changed"
+  },
+  {
+    "record": "docs/measurements/vocal-presence-2026-10-28/source-hashes.json",
+    "source_key": "audio/effects/VocalPresenceAudioEffect.swift",
+    "resolved_source": "Ongaku/audio/effects/VocalPresenceAudioEffect.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/vocal-presence-2026-10-28/source-hashes.json",
+    "source_key": "audio/AudioEffectPreset.swift",
+    "resolved_source": "Ongaku/audio/AudioEffectPreset.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/vocal-presence-2026-10-28/source-hashes.json",
+    "source_key": "audio/effects/AudioEffectModuleRegistry.swift",
+    "resolved_source": "Ongaku/audio/effects/AudioEffectModuleRegistry.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/vocal-presence-2026-10-28/source-hashes.json",
+    "source_key": "tests/VocalPresenceRegression.swift",
+    "resolved_source": "Ongaku/tests/VocalPresenceRegression.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/vocal-presence-2026-10-28/source-hashes.json",
+    "source_key": "tests/ProtectedGraphRegression.swift",
+    "resolved_source": "Ongaku/tests/ProtectedGraphRegression.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/vocal-presence-2026-10-28/source-hashes.json",
+    "source_key": "tests/DSPTransitionRegression.swift",
+    "resolved_source": "Ongaku/tests/DSPTransitionRegression.swift",
+    "status": "same"
+  },
+  {
+    "record": "docs/measurements/vocal-presence-2026-10-28/source-hashes.json",
+    "source_key": "tests/DesktopEffectTransitionRegression.swift",
+    "resolved_source": "Ongaku/tests/DesktopEffectTransitionRegression.swift",
+    "status": "same"
+  }
+]
