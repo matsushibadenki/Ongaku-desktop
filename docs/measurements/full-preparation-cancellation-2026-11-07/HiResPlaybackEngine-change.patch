@@ -1,0 +1,302 @@
+--- before/audio/HiResPlaybackEngine.swift
++++ after/audio/HiResPlaybackEngine.swift
+@@ -831,7 +831,9 @@
+         )
+         playbackOffset = 0
+ 
+-        if let prepared = await awaitPreloadedPlaybackData(for: preloadKey) {
++        let preloadedPrepared = await awaitPreloadedPlaybackData(for: preloadKey)
++        try Task.checkCancellation()
++        if let prepared = preloadedPrepared {
+             try Task.checkCancellation()
+             guard preparationGeneration == generation else { throw CancellationError() }
+             guard Self.preparedPlaybackData(prepared, matches: url) else {
+@@ -1487,7 +1489,9 @@
+             spatialSettings: headphoneSpatialSettings
+         )
+         let prepared: PreparedPlaybackData
+-        if let cachedPrepared = await awaitPreloadedPlaybackData(for: preloadKey) {
++        let preloadedPrepared = await awaitPreloadedPlaybackData(for: preloadKey)
++        try Task.checkCancellation()
++        if let cachedPrepared = preloadedPrepared {
+             prepared = cachedPrepared
+         } else {
+             prepared = try await Self.preparePlaybackDataInWorker(
+@@ -1513,6 +1517,10 @@
+         if shouldResume, transportPauseGeneration == pauseGeneration {
+             try play()
+         }
++    }
++
++    func deferOptionalCacheWriteForPresentation() {
++        Self.cancelPreparedAudioDiskCacheWrite()
+     }
+ 
+     func seamlessUpgrade(
+@@ -1536,7 +1544,9 @@
+             spatialSettings: headphoneSpatialSettings
+         )
+         let prepared: PreparedPlaybackData
+-        if let cachedPrepared = await awaitPreloadedPlaybackData(for: preloadKey) {
++        let preloadedPrepared = await awaitPreloadedPlaybackData(for: preloadKey)
++        try Task.checkCancellation()
++        if let cachedPrepared = preloadedPrepared {
+             prepared = cachedPrepared
+         } else {
+             qualityUpgradeWorker?.cancel()
+@@ -2968,14 +2978,24 @@
+     private func awaitPreloadedPlaybackData(
+         for key: PreloadedPlaybackKey
+     ) async -> PreparedPlaybackData? {
++        guard !Task.isCancelled else { return nil }
+         if let prepared = preloadedPlaybackCache.removeValue(forKey: key),
+            prepared.spatialProcessingApplied == key.spatialProcessingApplied {
+             return prepared
+         }
+         if let task = preloadTasks[key] {
+-            await task.value
+-        }
+-        guard let prepared = preloadedPlaybackCache.removeValue(forKey: key),
++            let waiter = SharedPreparationWait()
++            let completed = await withTaskCancellationHandler {
++                await withCheckedContinuation { continuation in
++                    if waiter.install(continuation) {
++                        Task { await task.value; waiter.resolve(true) }
++                    }
++                }
++            } onCancel: { waiter.resolve(false) }
++            guard completed, !Task.isCancelled else { return nil }
++        }
++        guard !Task.isCancelled,
++              let prepared = preloadedPlaybackCache.removeValue(forKey: key),
+               prepared.spatialProcessingApplied == key.spatialProcessingApplied else { return nil }
+         return prepared
+     }
+@@ -3652,19 +3672,23 @@
+     }
+ 
+     nonisolated private static func readPCMBuffer(from url: URL) throws -> AVAudioPCMBuffer {
++        try Task.checkCancellation()
+         let file = try AVAudioFile(forReading: url)
+         let frameCount = try checkedAudioFrameCount(
+             file.length,
+             format: file.processingFormat,
+             failure: .sourceBufferFailed
+         )
++        try Task.checkCancellation()
+         guard let buffer = AVAudioPCMBuffer(
+             pcmFormat: file.processingFormat,
+             frameCapacity: frameCount
+         ) else {
+             throw HiResEngineError.sourceBufferFailed
+         }
++        try Task.checkCancellation()
+         try file.read(into: buffer, frameCount: frameCount)
++        try Task.checkCancellation()
+         return buffer
+     }
+ 
+@@ -4008,7 +4032,9 @@
+         skipDSPAnalysis: Bool = false,
+         storeSynchronously: Bool = false
+     ) throws -> PreparedPlaybackData {
++        try Task.checkCancellation()
+         migratePreparedAudioDiskCacheIfNeeded()
++        try Task.checkCancellation()
+         let audioFile = try AudioPreparationFailure.at(.offlineOpen) { try AVAudioFile(forReading: url) }
+         let bitDepth = audioFile.fileFormat.streamDescription.pointee.mBitsPerChannel
+         let sourceSampleRate = audioFile.fileFormat.sampleRate
+@@ -4058,6 +4084,7 @@
+                spatialSettings: headphoneSpatialSettings,
+                spatialProcessingApplied: spatialProcessingApplied
+            ) {
++            try Task.checkCancellation()
+             return cached
+         }
+         try Task.checkCancellation()
+@@ -4088,8 +4115,11 @@
+         } else {
+             playbackBuffer = convertedBuffer
+         }
++        try Task.checkCancellation()
+         if !skipDSPAnalysis {
+-            guard Self.isFiniteAudioBuffer(playbackBuffer) else {
++            let isFinite = Self.isFiniteAudioBuffer(playbackBuffer)
++            try Task.checkCancellation()
++            guard isFinite else {
+                 throw AudioPreparationFailure.tagging(HiResEngineError.upconvertFailed, stage: .offlineValidation)
+             }
+         }
+@@ -4122,10 +4152,13 @@
+             cacheHit = true
+         } else {
+             diagnostics = Self.analyzeSignalLevels(in: playbackBuffer)
++            try Task.checkCancellation()
+             automaticDSPProfile = Self.analyzeAutomaticDSP(in: playbackBuffer, diagnostics: diagnostics)
++            try Task.checkCancellation()
+             Self.storeCachedAnalysis(.init(diagnostics: diagnostics, automaticDSPProfile: automaticDSPProfile), for: cacheKey)
+             cacheHit = false
+         }
++        try Task.checkCancellation()
+         let duration = Double(playbackBuffer.frameLength) / targetFormat.sampleRate
+         let formatDescription = HiResPlaybackFormat(
+             sampleRate: targetSampleRate,
+@@ -4164,6 +4197,7 @@
+                     spatialProcessingApplied: spatialProcessingApplied)
+             }
+         }
++        try Task.checkCancellation()
+         return prepared
+     }
+ 
+@@ -4644,7 +4678,7 @@
+         var remainingDelay = workDuration * 3.0
+         while remainingDelay > 0 {
+             try Task.checkCancellation()
+-            let interval = min(0.020, remainingDelay)
++            let interval = min(0.005, remainingDelay)
+             Thread.sleep(forTimeInterval: interval)
+             remainingDelay -= interval
+         }
+@@ -5149,7 +5183,7 @@
+                 if let inverse { vDSP_DFT_DestroySetup(inverse) }
+             }
+             if let forward, let inverse {
+-                sourceFilter = Self.minimumPhaseKernel(prototype, fftSize: fftSize,
++                sourceFilter = try Self.minimumPhaseKernel(prototype, fftSize: fftSize,
+                     forwardSetup: forward, inverseSetup: inverse)
+             }
+         }
+@@ -5197,7 +5231,8 @@
+         fftSize: Int,
+         forwardSetup: vDSP_DFT_Setup,
+         inverseSetup: vDSP_DFT_Setup
+-    ) -> [Float] {
++    ) throws -> [Float] {
++        try Task.checkCancellation()
+         guard !input.isEmpty, fftSize >= input.count else { return input }
+ 
+         var inputReal = Array(repeating: Float(0), count: fftSize)
+@@ -5206,6 +5241,7 @@
+         var spectrumReal = Array(repeating: Float(0), count: fftSize)
+         var spectrumImag = Array(repeating: Float(0), count: fftSize)
+ 
++        try Task.checkCancellation()
+         inputReal.withUnsafeBufferPointer { realPointer in
+             inputImag.withUnsafeBufferPointer { imagPointer in
+                 spectrumReal.withUnsafeMutableBufferPointer { outputRealPointer in
+@@ -5222,13 +5258,16 @@
+             }
+         }
+ 
++        try Task.checkCancellation()
+         var logMagnitude = Array(repeating: Float(0), count: fftSize)
+         for index in 0..<fftSize {
+             let magnitude = max(1e-8, hypot(spectrumReal[index], spectrumImag[index]))
+             logMagnitude[index] = log(magnitude)
+         }
+ 
++        try Task.checkCancellation()
+         var cepstrum = Array(repeating: Float(0), count: fftSize)
++        try Task.checkCancellation()
+         var cepstrumImag = Array(repeating: Float(0), count: fftSize)
+         let zeroImag = Array(repeating: Float(0), count: fftSize)
+         logMagnitude.withUnsafeBufferPointer { realPointer in
+@@ -5247,6 +5286,7 @@
+             }
+         }
+ 
++        try Task.checkCancellation()
+         let inverseScale = 1.0 / Float(fftSize)
+         for index in 0..<fftSize {
+             cepstrum[index] *= inverseScale
+@@ -5261,6 +5301,7 @@
+             }
+         }
+ 
++        try Task.checkCancellation()
+         var minimumLogReal = Array(repeating: Float(0), count: fftSize)
+         var minimumLogImag = Array(repeating: Float(0), count: fftSize)
+         cepstrum.withUnsafeBufferPointer { realPointer in
+@@ -5279,6 +5320,7 @@
+             }
+         }
+ 
++        try Task.checkCancellation()
+         var minimumSpectrumReal = Array(repeating: Float(0), count: fftSize)
+         var minimumSpectrumImag = Array(repeating: Float(0), count: fftSize)
+         for index in 0..<fftSize {
+@@ -5287,6 +5329,7 @@
+             minimumSpectrumImag[index] = magnitude * sin(minimumLogImag[index])
+         }
+ 
++        try Task.checkCancellation()
+         var outputReal = Array(repeating: Float(0), count: fftSize)
+         var outputImag = Array(repeating: Float(0), count: fftSize)
+         minimumSpectrumReal.withUnsafeBufferPointer { realPointer in
+@@ -5305,6 +5348,7 @@
+             }
+         }
+ 
++        try Task.checkCancellation()
+         let targetDC = input.reduce(0, +)
+         let generatedDC = outputReal.prefix(input.count).reduce(0, +) * inverseScale
+         let gain = abs(generatedDC) > 1e-8 ? targetDC / generatedDC : 1
+@@ -5350,6 +5394,7 @@
+     }
+ 
+     nonisolated private static func clonePlaybackBuffer(from sourceBuffer: AVAudioPCMBuffer) throws -> AVAudioPCMBuffer {
++        try Task.checkCancellation()
+         guard let clonedBuffer = AVAudioPCMBuffer(
+             pcmFormat: sourceBuffer.format,
+             frameCapacity: sourceBuffer.frameCapacity
+@@ -5357,6 +5402,7 @@
+             throw HiResEngineError.upconvertBufferFailed
+         }
+ 
++        try Task.checkCancellation()
+         clonedBuffer.frameLength = sourceBuffer.frameLength
+         guard let sourceChannels = sourceBuffer.floatChannelData,
+               let targetChannels = clonedBuffer.floatChannelData else {
+@@ -5366,7 +5412,11 @@
+         let channelCount = Int(sourceBuffer.format.channelCount)
+         let frameCount = Int(sourceBuffer.frameLength)
+         for channel in 0..<channelCount {
+-            targetChannels[channel].update(from: sourceChannels[channel], count: frameCount)
++            for offset in stride(from: 0, to: frameCount, by: 16_384) {
++                try Task.checkCancellation()
++                targetChannels[channel].advanced(by: offset).update(
++                    from: sourceChannels[channel].advanced(by: offset), count: min(16_384, frameCount - offset))
++            }
+         }
+ 
+         return clonedBuffer
+@@ -5492,3 +5542,28 @@
+         }
+     }
+ }
++
++/// A cancelled waiter leaves promptly without cancelling the shared producer.
++/// Continuation installation and cancellation may race on different executors.
++nonisolated private final class SharedPreparationWait: @unchecked Sendable {
++    private let lock = NSLock()
++    private var result: Bool?
++    private var continuation: CheckedContinuation<Bool, Never>?
++    func install(_ continuation: CheckedContinuation<Bool, Never>) -> Bool {
++        lock.lock()
++        if let result {
++            lock.unlock(); continuation.resume(returning: result); return false
++        }
++        self.continuation = continuation
++        lock.unlock(); return true
++    }
++    func resolve(_ result: Bool) {
++        lock.lock()
++        guard self.result == nil else { lock.unlock(); return }
++        self.result = result
++        let continuation = self.continuation
++        self.continuation = nil
++        lock.unlock()
++        continuation?.resume(returning: result)
++    }
++}

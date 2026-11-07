@@ -1,0 +1,37 @@
+[
+  {
+    "height" : 874,
+    "initialCardBodies" : 2,
+    "mountAndSnapshotMs" : 3853.3418333390728,
+    "mountMs" : 2579.2813750013011,
+    "round" : 0,
+    "settledCardBodies" : 2,
+    "thumbRenders" : 24,
+    "width" : 402
+  },
+  {
+    "height" : 874,
+    "initialCardBodies" : 2,
+    "mountAndSnapshotMs" : 1261.7546249966836,
+    "mountMs" : 114.06920832814649,
+    "round" : 1,
+    "settledCardBodies" : 2,
+    "thumbRenders" : 24,
+    "width" : 402
+  },
+  {
+    "height" : 874,
+    "initialCardBodies" : 2,
+    "modePreserved" : true,
+    "mountAndSnapshotMs" : 1179.9439166643424,
+    "mountMs" : 101.29637500358513,
+    "returnedToTop" : true,
+    "round" : 2,
+    "scrollAfterBodies" : 4,
+    "scrollBeforeBodies" : 2,
+    "settledCardBodies" : 2,
+    "thumbCacheChecks" : 14,
+    "thumbRenders" : 24,
+    "width" : 402
+  }
+]

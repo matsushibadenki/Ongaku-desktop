@@ -1,0 +1,60 @@
+--- before/audio/AppearanceControls.swift
++++ after/audio/AppearanceControls.swift
+@@ -47,6 +47,7 @@
+     final class Coordinator: NSObject {
+         var parent: HardwareSlider
+         var appearance: AppAppearance?
++        var displayScale: CGFloat?
+         init(_ parent: HardwareSlider) { self.parent = parent }
+         @objc func changed(_ sender: UISlider) { parent.value = Double(sender.value) }
+     }
+@@ -67,15 +68,26 @@
+         slider.isEnabled = isEnabled
+         slider.minimumTrackTintColor = UIColor(accent)
+         slider.maximumTrackTintColor = UIColor(appearance.palette.well)
+-        if context.coordinator.appearance != appearance {
++        let displayScale = slider.traitCollection.displayScale
++        if context.coordinator.appearance != appearance || context.coordinator.displayScale != displayScale {
+             context.coordinator.appearance = appearance
+-            let thumb = thumbImage()
++            context.coordinator.displayScale = displayScale
++            let thumb = thumbImage(displayScale: displayScale)
+             slider.setThumbImage(thumb, for: .normal)
+             slider.setThumbImage(thumb, for: .highlighted)
+         }
+     }
+ 
+-    private func thumbImage() -> UIImage {
++    @MainActor private static let thumbImages: NSCache<NSString, UIImage> = {
++        let cache = NSCache<NSString, UIImage>()
++        cache.countLimit = 24
++        return cache
++    }()
++
++    private func thumbImage(displayScale: CGFloat) -> UIImage {
++        let scale = max(1, displayScale)
++        let key = "\(appearance.rawValue):\(scale)" as NSString
++        if let cached = Self.thumbImages.object(forKey: key) { return cached }
+         let p = appearance.palette
+         let dark = appearance == .dark
+         let face = dark ? UIColor(white: 0.52, alpha: 1) : UIColor(p.panel)
+@@ -85,7 +97,9 @@
+         let colors = dark
+             ? [UIColor(white: 0.66, alpha: 1).cgColor, UIColor(white: 0.40, alpha: 1).cgColor, UIColor(white: 0.56, alpha: 1).cgColor]
+             : [UIColor(p.top).cgColor, UIColor(p.bottom).cgColor, UIColor(p.top).cgColor]
+-        return UIGraphicsImageRenderer(size: CGSize(width: 30, height: 32)).image { renderer in
++        let format = UIGraphicsImageRendererFormat()
++        format.scale = scale
++        let image = UIGraphicsImageRenderer(size: CGSize(width: 30, height: 32), format: format).image { renderer in
+             let context = renderer.cgContext
+             let rect = CGRect(x: 4, y: 3, width: 22, height: 22)
+             context.setShadow(offset: CGSize(width: dark ? 1 : 0, height: 2), blur: 3, color: shadow.cgColor)
+@@ -109,6 +123,8 @@
+             }
+             context.strokePath()
+         }
++        Self.thumbImages.setObject(image, forKey: key)
++        return image
+     }
+ }
+ 

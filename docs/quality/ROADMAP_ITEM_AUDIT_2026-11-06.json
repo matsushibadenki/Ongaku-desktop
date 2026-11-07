@@ -3,6 +3,156 @@
   "source_files_scanned": 142,
   "items": [
     {
+      "section": "iPhone描画の画像共有と全準備経路の取消境界 — 2026-11-07",
+      "text": "- 🟢 [Done] ライト系スライダーの同一つまみ画像の反復生成を共有し、表示倍率変更にも追従。実画面の生成24回→初回1回・再表示0回、7テーマ×2倍率の画像一致／共有とスクロール・先頭復帰・Pro保持を確認。固定の初回フレーム時間は保証しない。",
+      "statuses": [
+        "Done"
+      ],
+      "id": "1c3897b540ab04f96ab3",
+      "code_candidates": [],
+      "references": [
+        "docs/quality/FULL_PREPARATION_CANCELLATION_2026-11-07.md"
+      ],
+      "verification": "current_implementation_and_regression_scope_reviewed",
+      "line": 5,
+      "review": {
+        "report": "docs/quality/FULL_PREPARATION_CANCELLATION_2026-11-07.md",
+        "code": [
+          {
+            "repository": "Ongaku",
+            "path": "audio/HiResPlaybackEngine.swift",
+            "symbol": "nonisolated private static func preparePlaybackData(",
+            "line": 4027
+          },
+          {
+            "repository": "Ongaku",
+            "path": "audio/AppearanceControls.swift",
+            "symbol": "private func thumbImage(displayScale:",
+            "line": 87
+          }
+        ],
+        "tests": [
+          {
+            "repository": "Ongaku",
+            "path": "tests/FullPreparationProbe.swift",
+            "symbol": "@MainActor enum FullPreparationAudit",
+            "line": 65
+          },
+          {
+            "repository": "Ongaku",
+            "path": "tests/EffectsMountAuditApp.swift",
+            "symbol": "func run() async",
+            "line": 24
+          }
+        ],
+        "scope": "32 instrumented iPhone-module preparation records; 4 shared-wait groups; light UI raster reuse/14 image cases; 14 regression groups; Sinc equality/cancellation; unsigned build. Not a physical/noise/GPU/all-async-path qualification."
+      }
+    },
+    {
+      "section": "iPhone描画の画像共有と全準備経路の取消境界 — 2026-11-07",
+      "text": "- 🟢 [Done] 取消された解析の空値／中立値を保存・返却し得る経路を保護。読込・確保・コピー・FFT間・検証・解析・返却の境界へ確認を追加し、待機は総量を維持して20ms→5ms刻みに変更。共有先読みは待ち手だけ即時取消し、表示前に独立書込も取消。通常のDSP・音量・レートは変更しない。",
+      "statuses": [
+        "Done"
+      ],
+      "id": "5b3daf503ad5da8bbe2c",
+      "code_candidates": [],
+      "references": [
+        "docs/quality/FULL_PREPARATION_CANCELLATION_2026-11-07.md"
+      ],
+      "verification": "current_implementation_and_regression_scope_reviewed",
+      "line": 6,
+      "review": {
+        "report": "docs/quality/FULL_PREPARATION_CANCELLATION_2026-11-07.md",
+        "code": [
+          {
+            "repository": "Ongaku",
+            "path": "audio/HiResPlaybackEngine.swift",
+            "symbol": "nonisolated private static func preparePlaybackData(",
+            "line": 4027
+          },
+          {
+            "repository": "Ongaku",
+            "path": "audio/AppearanceControls.swift",
+            "symbol": "private func thumbImage(displayScale:",
+            "line": 87
+          }
+        ],
+        "tests": [
+          {
+            "repository": "Ongaku",
+            "path": "tests/FullPreparationProbe.swift",
+            "symbol": "@MainActor enum FullPreparationAudit",
+            "line": 65
+          },
+          {
+            "repository": "Ongaku",
+            "path": "tests/EffectsMountAuditApp.swift",
+            "symbol": "func run() async",
+            "line": 24
+          }
+        ],
+        "scope": "32 instrumented iPhone-module preparation records; 4 shared-wait groups; light UI raster reuse/14 image cases; 14 regression groups; Sinc equality/cancellation; unsigned build. Not a physical/noise/GPU/all-async-path qualification."
+      }
+    },
+    {
+      "section": "iPhone描画の画像共有と全準備経路の取消境界 — 2026-11-07",
+      "text": "- 🟢 [Done] 製品モジュールの全11モード完走、入口取消・外部取消・コピー／空間処理・独立書込を含む32記録、既存14群と共有待機4群・Sinc係数／取消回帰とiPhone署名なしビルド成功。待機はworker終了と呼出元復帰を分離して記録し、固定の時間上限は保証しない。[条件・計測・未確認範囲](quality/FULL_PREPARATION_CANCELLATION_2026-11-07.md)を保存。Mac実行コードは変更なし。",
+      "statuses": [
+        "Done"
+      ],
+      "id": "3683e388881d92bfdaa1",
+      "code_candidates": [],
+      "references": [
+        "docs/quality/FULL_PREPARATION_CANCELLATION_2026-11-07.md"
+      ],
+      "verification": "current_implementation_and_regression_scope_reviewed",
+      "line": 7,
+      "review": {
+        "report": "docs/quality/FULL_PREPARATION_CANCELLATION_2026-11-07.md",
+        "code": [
+          {
+            "repository": "Ongaku",
+            "path": "audio/HiResPlaybackEngine.swift",
+            "symbol": "nonisolated private static func preparePlaybackData(",
+            "line": 4027
+          },
+          {
+            "repository": "Ongaku",
+            "path": "audio/AppearanceControls.swift",
+            "symbol": "private func thumbImage(displayScale:",
+            "line": 87
+          }
+        ],
+        "tests": [
+          {
+            "repository": "Ongaku",
+            "path": "tests/FullPreparationProbe.swift",
+            "symbol": "@MainActor enum FullPreparationAudit",
+            "line": 65
+          },
+          {
+            "repository": "Ongaku",
+            "path": "tests/EffectsMountAuditApp.swift",
+            "symbol": "func run() async",
+            "line": 24
+          }
+        ],
+        "scope": "32 instrumented iPhone-module preparation records; 4 shared-wait groups; light UI raster reuse/14 image cases; 14 regression groups; Sinc equality/cancellation; unsigned build. Not a physical/noise/GPU/all-async-path qualification."
+      }
+    },
+    {
+      "section": "iPhone描画の画像共有と全準備経路の取消境界 — 2026-11-07",
+      "text": "- ⭕️ [Pending] 実iPhoneの音声波形・ノイズと初回フレーム／GPU締切、全ライブラリ・画面サイズ・操作・経路、長い圧縮曲・低速媒体・大確保・FFT／ロック競合、独立非同期キャッシュ書込・共有先読み・資産exportを含む実負荷での取消、復帰・温度電力を確認。3秒ローカル素材・同期保存の隔離試験を全状況の保証とは扱わない。",
+      "statuses": [
+        "Pending"
+      ],
+      "id": "2f7a93e577c5e15ec758",
+      "code_candidates": [],
+      "references": [],
+      "verification": "tracked_unfinished",
+      "line": 8
+    },
+    {
       "section": "iPhone初回カード生成とSincキャンセル遅延 — 2026-11-07",
       "text": "- 🟢 [Done] 全EffectCardの初回一括生成と、冷Sincカーネル生成中のキャンセル未確認を残る負荷経路として特定。メーター通知分離や表示前の取消要求だけでは防げなかった処理であり、実機ノイズの単一原因と断定しない。",
       "statuses": [
@@ -14,7 +164,7 @@
         "docs/quality/EFFECTS_MOUNT_CANCELLATION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 5,
+      "line": 12,
       "review": {
         "report": "docs/quality/EFFECTS_MOUNT_CANCELLATION_2026-11-07.md",
         "code": [
@@ -22,7 +172,7 @@
             "repository": "Ongaku",
             "path": "audio/HiResPlaybackEngine.swift",
             "symbol": "nonisolated private static func cachedPolyphaseSincKernels(",
-            "line": 5105
+            "line": 5139
           },
           {
             "repository": "Ongaku",
@@ -60,7 +210,7 @@
         "docs/quality/EFFECTS_MOUNT_CANCELLATION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 6,
+      "line": 13,
       "review": {
         "report": "docs/quality/EFFECTS_MOUNT_CANCELLATION_2026-11-07.md",
         "code": [
@@ -68,7 +218,7 @@
             "repository": "Ongaku",
             "path": "audio/HiResPlaybackEngine.swift",
             "symbol": "nonisolated private static func cachedPolyphaseSincKernels(",
-            "line": 5105
+            "line": 5139
           },
           {
             "repository": "Ongaku",
@@ -106,7 +256,7 @@
         "docs/quality/EFFECTS_MOUNT_CANCELLATION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 7,
+      "line": 14,
       "review": {
         "report": "docs/quality/EFFECTS_MOUNT_CANCELLATION_2026-11-07.md",
         "code": [
@@ -114,7 +264,7 @@
             "repository": "Ongaku",
             "path": "audio/HiResPlaybackEngine.swift",
             "symbol": "nonisolated private static func cachedPolyphaseSincKernels(",
-            "line": 5105
+            "line": 5139
           },
           {
             "repository": "Ongaku",
@@ -150,7 +300,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 8
+      "line": 15
     },
     {
       "section": "iPhoneエフェクト画面の不要なメーター通知を分離 — 2026-11-07",
@@ -164,7 +314,7 @@
         "docs/quality/EFFECTS_TELEMETRY_ISOLATION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 12,
+      "line": 19,
       "review": {
         "report": "docs/quality/EFFECTS_TELEMETRY_ISOLATION_2026-11-07.md",
         "code": [
@@ -204,7 +354,7 @@
         "docs/quality/EFFECTS_TELEMETRY_ISOLATION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 13,
+      "line": 20,
       "review": {
         "report": "docs/quality/EFFECTS_TELEMETRY_ISOLATION_2026-11-07.md",
         "code": [
@@ -244,7 +394,7 @@
         "docs/quality/EFFECTS_TELEMETRY_ISOLATION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 14,
+      "line": 21,
       "review": {
         "report": "docs/quality/EFFECTS_TELEMETRY_ISOLATION_2026-11-07.md",
         "code": [
@@ -282,7 +432,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 15
+      "line": 22
     },
     {
       "section": "Macウインドウ初期接続のレイアウト再帰を特定・修正 — 2026-11-07",
@@ -296,7 +446,7 @@
         "docs/quality/WINDOW_LAYOUT_RECURSION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 19,
+      "line": 26,
       "review": {
         "report": "docs/quality/WINDOW_LAYOUT_RECURSION_2026-11-07.md",
         "code": [
@@ -330,7 +480,7 @@
         "docs/quality/WINDOW_LAYOUT_RECURSION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 20,
+      "line": 27,
       "review": {
         "report": "docs/quality/WINDOW_LAYOUT_RECURSION_2026-11-07.md",
         "code": [
@@ -364,7 +514,7 @@
         "docs/quality/WINDOW_LAYOUT_RECURSION_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 21,
+      "line": 28,
       "review": {
         "report": "docs/quality/WINDOW_LAYOUT_RECURSION_2026-11-07.md",
         "code": [
@@ -396,7 +546,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 22
+      "line": 29
     },
     {
       "section": "Mac背景レイアウト再入の追加保護と同期診断 — 2026-11-07",
@@ -408,7 +558,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 26
+      "line": 33
     },
     {
       "section": "Mac背景レイアウト再入の追加保護と同期診断 — 2026-11-07",
@@ -420,7 +570,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 27
+      "line": 34
     },
     {
       "section": "Mac背景レイアウト再入の追加保護と同期診断 — 2026-11-07",
@@ -432,7 +582,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 28
+      "line": 35
     },
     {
       "section": "Mac背景レイアウト再入の追加保護と同期診断 — 2026-11-07",
@@ -444,7 +594,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 29
+      "line": 36
     },
     {
       "section": "iPhoneエフェクト画面表示時の再生優先 — 2026-11-07",
@@ -456,7 +606,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 33
+      "line": 40
     },
     {
       "section": "iPhoneエフェクト画面表示時の再生優先 — 2026-11-07",
@@ -468,7 +618,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 34
+      "line": 41
     },
     {
       "section": "iPhoneエフェクト画面表示時の再生優先 — 2026-11-07",
@@ -480,7 +630,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 35
+      "line": 42
     },
     {
       "section": "独立したサンプル間ピークと長い残響・リリース — 2026-11-07",
@@ -494,7 +644,7 @@
         "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 39,
+      "line": 46,
       "review": {
         "report": "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md",
         "code": [
@@ -552,7 +702,7 @@
         "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 40,
+      "line": 47,
       "review": {
         "report": "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md",
         "code": [
@@ -610,7 +760,7 @@
         "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 41,
+      "line": 48,
       "review": {
         "report": "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md",
         "code": [
@@ -666,7 +816,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 42
+      "line": 49
     },
     {
       "section": "保護併用製品経路の強入力・高クレスト信号 — 2026-11-07",
@@ -678,7 +828,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 46
+      "line": 53
     },
     {
       "section": "保護併用製品経路の強入力・高クレスト信号 — 2026-11-07",
@@ -690,7 +840,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 47
+      "line": 54
     },
     {
       "section": "保護併用製品経路の強入力・高クレスト信号 — 2026-11-07",
@@ -704,7 +854,7 @@
         "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 48,
+      "line": 55,
       "review": {
         "report": "docs/quality/INDEPENDENT_INTERSAMPLE_2026-11-07.md",
         "code": [
@@ -760,7 +910,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 49
+      "line": 56
     },
     {
       "section": "true-peak・共通音量保護併用の製品経路 — 2026-11-07",
@@ -772,7 +922,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 53
+      "line": 60
     },
     {
       "section": "true-peak・共通音量保護併用の製品経路 — 2026-11-07",
@@ -784,7 +934,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 54
+      "line": 61
     },
     {
       "section": "true-peak・共通音量保護併用の製品経路 — 2026-11-07",
@@ -796,7 +946,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 55
+      "line": 62
     },
     {
       "section": "全エフェクトを含む曲間グラフ再利用 — 2026-11-07",
@@ -808,7 +958,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 59
+      "line": 66
     },
     {
       "section": "全エフェクトを含む曲間グラフ再利用 — 2026-11-07",
@@ -820,7 +970,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 60
+      "line": 67
     },
     {
       "section": "全エフェクトを含む曲間グラフ再利用 — 2026-11-07",
@@ -832,7 +982,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 61
+      "line": 68
     },
     {
       "section": "実エフェクト製品グラフのフレーム上限 — 2026-11-07",
@@ -844,7 +994,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 65
+      "line": 72
     },
     {
       "section": "実エフェクト製品グラフのフレーム上限 — 2026-11-07",
@@ -856,7 +1006,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 66
+      "line": 73
     },
     {
       "section": "実エフェクト製品グラフのフレーム上限 — 2026-11-07",
@@ -868,7 +1018,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 67
+      "line": 74
     },
     {
       "section": "内部ミキサーの容量予約範囲 — 2026-11-07",
@@ -880,7 +1030,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 71
+      "line": 78
     },
     {
       "section": "内部ミキサーの容量予約範囲 — 2026-11-07",
@@ -892,7 +1042,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 72
+      "line": 79
     },
     {
       "section": "内部ミキサーの容量予約範囲 — 2026-11-07",
@@ -904,7 +1054,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 73
+      "line": 80
     },
     {
       "section": "再生・レイアウト警告への保護 — 2026-11-06",
@@ -916,7 +1066,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 77
+      "line": 84
     },
     {
       "section": "再生・レイアウト警告への保護 — 2026-11-06",
@@ -928,7 +1078,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 78
+      "line": 85
     },
     {
       "section": "再生・レイアウト警告への保護 — 2026-11-06",
@@ -940,7 +1090,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "semantic_review_required",
-      "line": 79
+      "line": 86
     },
     {
       "section": "再生・レイアウト警告への保護 — 2026-11-06",
@@ -952,7 +1102,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 80
+      "line": 87
     },
     {
       "section": "再生・レイアウト警告への保護 — 2026-11-06",
@@ -964,7 +1114,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 81
+      "line": 88
     },
     {
       "section": "旧破損記録から独立したライブラリへの救済 — 2026-11-06",
@@ -978,7 +1128,7 @@
         "docs/quality/LEGACY_RECOVERY_COPY_2026-11-06.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 85,
+      "line": 92,
       "review": {
         "report": "docs/quality/LEGACY_RECOVERY_COPY_2026-11-06.md",
         "code": [
@@ -1084,7 +1234,7 @@
         "docs/quality/LEGACY_RECOVERY_COPY_2026-11-06.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 86,
+      "line": 93,
       "review": {
         "report": "docs/quality/LEGACY_RECOVERY_COPY_2026-11-06.md",
         "code": [
@@ -1190,7 +1340,7 @@
         "docs/quality/LEGACY_RECOVERY_COPY_2026-11-06.md"
       ],
       "verification": "current_implementation_and_regression_scope_reviewed",
-      "line": 87,
+      "line": 94,
       "review": {
         "report": "docs/quality/LEGACY_RECOVERY_COPY_2026-11-06.md",
         "code": [
@@ -1296,7 +1446,7 @@
         "docs/quality/LEGACY_RECOVERY_COPY_2026-11-06.md"
       ],
       "verification": "tracked_unfinished",
-      "line": 88
+      "line": 95
     },
     {
       "section": "転送workerから表示用状態までの実経路計測 — 2026-11-06",
@@ -1354,7 +1504,7 @@
         ],
         "scope": "Actual receiver worker and production Published reducer; synthetic four-file/256-chunk loopback, 3 history sizes x3 rounds, isolated final controller tests. Excludes real MC transport, SwiftUI frame rendering and large-descriptor scales."
       },
-      "line": 92
+      "line": 99
     },
     {
       "section": "転送workerから表示用状態までの実経路計測 — 2026-11-06",
@@ -1412,7 +1562,7 @@
         ],
         "scope": "Actual receiver worker and production Published reducer; synthetic four-file/256-chunk loopback, 3 history sizes x3 rounds, isolated final controller tests. Excludes real MC transport, SwiftUI frame rendering and large-descriptor scales."
       },
-      "line": 93
+      "line": 100
     },
     {
       "section": "転送workerから表示用状態までの実経路計測 — 2026-11-06",
@@ -1470,7 +1620,7 @@
         ],
         "scope": "Actual receiver worker and production Published reducer; synthetic four-file/256-chunk loopback, 3 history sizes x3 rounds, isolated final controller tests. Excludes real MC transport, SwiftUI frame rendering and large-descriptor scales."
       },
-      "line": 94
+      "line": 101
     },
     {
       "section": "転送workerから表示用状態までの実経路計測 — 2026-11-06",
@@ -1484,7 +1634,7 @@
         "docs/quality/WORKER_PUBLISHED_DELIVERY_2026-11-06.md"
       ],
       "verification": "physical_device_verification_pending",
-      "line": 95
+      "line": 102
     },
     {
       "section": "カスタムAudio Unit生成と共通回帰の整合 — 2026-11-06",
@@ -1560,7 +1710,7 @@
         ],
         "scope": "Shared native registration and Transient failure bypass; six fallback renders, native/sanitizer checks, 48 extracted-control DSP transitions and iPhone Simulator compilation. No physical-device or startup-performance qualification."
       },
-      "line": 99
+      "line": 106
     },
     {
       "section": "カスタムAudio Unit生成と共通回帰の整合 — 2026-11-06",
@@ -1636,7 +1786,7 @@
         ],
         "scope": "Shared native registration and Transient failure bypass; six fallback renders, native/sanitizer checks, 48 extracted-control DSP transitions and iPhone Simulator compilation. No physical-device or startup-performance qualification."
       },
-      "line": 100
+      "line": 107
     },
     {
       "section": "カスタムAudio Unit生成と共通回帰の整合 — 2026-11-06",
@@ -1712,7 +1862,7 @@
         ],
         "scope": "Shared native registration and Transient failure bypass; six fallback renders, native/sanitizer checks, 48 extracted-control DSP transitions and iPhone Simulator compilation. No physical-device or startup-performance qualification."
       },
-      "line": 101
+      "line": 108
     },
     {
       "section": "カスタムAudio Unit生成と共通回帰の整合 — 2026-11-06",
@@ -1726,7 +1876,7 @@
         "docs/quality/AUDIO_UNIT_ALIGNMENT_2026-11-06.md"
       ],
       "verification": "physical_device_verification_pending",
-      "line": 102
+      "line": 109
     },
     {
       "section": "保存先復元ジャーナルの副本からの復旧 — 2026-11-06",
@@ -1813,7 +1963,7 @@
         ],
         "scope": "Generation-bound recovery copy for new Mac storage restores and healthy legacy rollback; damaged legacy without valid copy and real power loss excluded."
       },
-      "line": 106
+      "line": 113
     },
     {
       "section": "保存先復元ジャーナルの副本からの復旧 — 2026-11-06",
@@ -1900,7 +2050,7 @@
         ],
         "scope": "Generation-bound recovery copy for new Mac storage restores and healthy legacy rollback; damaged legacy without valid copy and real power loss excluded."
       },
-      "line": 107
+      "line": 114
     },
     {
       "section": "保存先復元ジャーナルの副本からの復旧 — 2026-11-06",
@@ -1987,7 +2137,7 @@
         ],
         "scope": "Generation-bound recovery copy for new Mac storage restores and healthy legacy rollback; damaged legacy without valid copy and real power loss excluded."
       },
-      "line": 108
+      "line": 115
     },
     {
       "section": "保存先復元ジャーナルの副本からの復旧 — 2026-11-06",
@@ -1999,7 +2149,7 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 109
+      "line": 116
     },
     {
       "section": "破損した台帳・インポート記録の明示的救済 — 2026-11-06",
@@ -2076,7 +2226,7 @@
         ],
         "scope": "Explicit catalog/import damaged-journal rollback only; physical devices and other rescue journals excluded."
       },
-      "line": 113
+      "line": 120
     },
     {
       "section": "破損した台帳・インポート記録の明示的救済 — 2026-11-06",
@@ -2153,7 +2303,7 @@
         ],
         "scope": "Explicit catalog/import damaged-journal rollback only; physical devices and other rescue journals excluded."
       },
-      "line": 114
+      "line": 121
     },
     {
       "section": "破損した台帳・インポート記録の明示的救済 — 2026-11-06",
@@ -2230,7 +2380,7 @@
         ],
         "scope": "Explicit catalog/import damaged-journal rollback only; physical devices and other rescue journals excluded."
       },
-      "line": 115
+      "line": 122
     },
     {
       "section": "破損した台帳・インポート記録の明示的救済 — 2026-11-06",
@@ -2244,7 +2394,7 @@
         "docs/quality/SAVE_JOURNAL_RESCUE_2026-11-06.md"
       ],
       "verification": "physical_device_verification_pending",
-      "line": 116
+      "line": 123
     },
     {
       "section": "iPhoneペアリング許可の応答保護 — 2026-11-06",
@@ -2258,7 +2408,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 120
+      "line": 127
     },
     {
       "section": "iPhoneペアリング許可の応答保護 — 2026-11-06",
@@ -2272,7 +2422,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 121
+      "line": 128
     },
     {
       "section": "iPhoneペアリング許可の応答保護 — 2026-11-06",
@@ -2286,10 +2436,10 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 122
+      "line": 129
     },
     {
-      "line": 126,
+      "line": 133,
       "section": "プレイヤーノード停止のQoS保護 — 2026-11-06",
       "text": "- 🟢 [Done] MacのAVAudioPlayerNode.stopをMainActorの同期呼出しから専用キューへ移し、停止完了までノード・音源・engineを保持。重複停止をまとめ、古い操作の完了を拒否して次のスケジュールを保護する。クロスフェードの終了ノードも非同期停止する。",
       "statuses": [
@@ -2329,7 +2479,7 @@
       }
     },
     {
-      "line": 127,
+      "line": 134,
       "section": "プレイヤーノード停止のQoS保護 — 2026-11-06",
       "text": "- 🟢 [Done] 非同期停止／出力保護8テストと実エンジン再生制御16テストが成功。通常版・App Store版の署名なしDebugビルド成功。[条件・初回失敗・最終ログ](quality/PLAYER_NODE_STOP_QOS_2026-11-06.md)を保存。iPhone側の動作変更はない。",
       "statuses": [
@@ -2374,7 +2524,7 @@
       }
     },
     {
-      "line": 128,
+      "line": 135,
       "section": "プレイヤーノード停止のQoS保護 — 2026-11-06",
       "text": "- ⭕️ [Pending] 利用中のMacでThread Performance Checkerの警告消失、署名済み配布版、実出力機器とスリープ復帰を確認する。",
       "statuses": [
@@ -2386,7 +2536,7 @@
       "references": []
     },
     {
-      "line": 132,
+      "line": 139,
       "section": "世代補助ファイルの同時消失からの復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2441,7 +2591,7 @@
       }
     },
     {
-      "line": 133,
+      "line": 140,
       "section": "世代補助ファイルの同時消失からの復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2501,7 +2651,7 @@
       }
     },
     {
-      "line": 134,
+      "line": 141,
       "section": "世代補助ファイルの同時消失からの復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -2513,7 +2663,7 @@
       "verification": "tracked_unfinished"
     },
     {
-      "line": 138,
+      "line": 145,
       "section": "現行コードの検証再実行 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2530,7 +2680,7 @@
       "id": "81976b1232d90ac55bfd"
     },
     {
-      "line": 139,
+      "line": 146,
       "section": "現行コードの検証再実行 — 2026-11-06",
       "statuses": [
         "Next"
@@ -2542,7 +2692,7 @@
       "id": "312272561966ab9f3fff"
     },
     {
-      "line": 140,
+      "line": 147,
       "section": "現行コードの検証再実行 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -2554,7 +2704,7 @@
       "id": "5f0b638fc764029436d0"
     },
     {
-      "line": 144,
+      "line": 151,
       "section": "機能表と検証根拠の再照合 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2571,7 +2721,7 @@
       "id": "83942dac6c0f0809a8ab"
     },
     {
-      "line": 145,
+      "line": 152,
       "section": "機能表と検証根拠の再照合 — 2026-11-06",
       "statuses": [
         "Next"
@@ -2583,7 +2733,7 @@
       "id": "0b0538899d3eebe4c83f"
     },
     {
-      "line": 146,
+      "line": 153,
       "section": "機能表と検証根拠の再照合 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -2595,7 +2745,7 @@
       "id": "7a27e28e105eb1b82255"
     },
     {
-      "line": 150,
+      "line": 157,
       "section": "保存・復旧項目の根拠確認 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2612,7 +2762,7 @@
       "id": "3805ef8cb35bf9c767be"
     },
     {
-      "line": 151,
+      "line": 158,
       "section": "保存・復旧項目の根拠確認 — 2026-11-06",
       "statuses": [
         "Next"
@@ -2624,7 +2774,7 @@
       "verification": "tracked_unfinished"
     },
     {
-      "line": 152,
+      "line": 159,
       "section": "保存・復旧項目の根拠確認 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -2636,7 +2786,7 @@
       "id": "2733693868cacd846edb"
     },
     {
-      "line": 156,
+      "line": 163,
       "section": "全項目照合の管理 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2653,7 +2803,7 @@
       "id": "e2156c686dda061af16b"
     },
     {
-      "line": 157,
+      "line": 164,
       "section": "全項目照合の管理 — 2026-11-06",
       "statuses": [
         "Next"
@@ -2670,7 +2820,7 @@
       "id": "8f0232b3c39b4d2148a6"
     },
     {
-      "line": 158,
+      "line": 165,
       "section": "全項目照合の管理 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -2682,7 +2832,7 @@
       "id": "b6963ca7e87277ab5a38"
     },
     {
-      "line": 164,
+      "line": 171,
       "section": "現在の進捗と優先項目 — 2026-11-06確認",
       "statuses": [
         "Done"
@@ -2703,10 +2853,10 @@
       "code_candidates": [],
       "references": [],
       "verification": "tracked_unfinished",
-      "line": 165
+      "line": 172
     },
     {
-      "line": 166,
+      "line": 173,
       "section": "現在の進捗と優先項目 — 2026-11-06確認",
       "statuses": [
         "Next"
@@ -2718,7 +2868,7 @@
       "id": "2088ac5b36de1251b947"
     },
     {
-      "line": 167,
+      "line": 174,
       "section": "現在の進捗と優先項目 — 2026-11-06確認",
       "statuses": [
         "Next"
@@ -2741,10 +2891,10 @@
         "docs/quality/WORKER_PUBLISHED_DELIVERY_2026-11-06.md"
       ],
       "verification": "semantic_review_required",
-      "line": 168
+      "line": 175
     },
     {
-      "line": 169,
+      "line": 176,
       "section": "現在の進捗と優先項目 — 2026-11-06確認",
       "statuses": [
         "Pending",
@@ -2757,7 +2907,7 @@
       "id": "dbf8f48bfad393c682cb"
     },
     {
-      "line": 170,
+      "line": 177,
       "section": "現在の進捗と優先項目 — 2026-11-06確認",
       "statuses": [
         "Later"
@@ -2769,7 +2919,7 @@
       "id": "0ff11146c0702656f092"
     },
     {
-      "line": 174,
+      "line": 181,
       "section": "同期タグ保存の容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2799,7 +2949,7 @@
       }
     },
     {
-      "line": 175,
+      "line": 182,
       "section": "同期タグ保存の容量不足 — 2026-11-06",
       "statuses": [
         "Next"
@@ -2811,7 +2961,7 @@
       "verification": "tracked_unfinished"
     },
     {
-      "line": 176,
+      "line": 183,
       "section": "同期タグ保存の容量不足 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -2823,7 +2973,7 @@
       "id": "f10ed939a874e7b97f0a"
     },
     {
-      "line": 180,
+      "line": 187,
       "section": "世代ファイル消失時の復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2863,7 +3013,7 @@
       }
     },
     {
-      "line": 181,
+      "line": 188,
       "section": "世代ファイル消失時の復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2903,7 +3053,7 @@
       }
     },
     {
-      "line": 182,
+      "line": 189,
       "section": "世代ファイル消失時の復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -2963,7 +3113,7 @@
       }
     },
     {
-      "line": 185,
+      "line": 192,
       "section": "世代ファイル消失時の復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -2975,7 +3125,7 @@
       "id": "fe8af2cad037557e1635"
     },
     {
-      "line": 189,
+      "line": 196,
       "section": "世代情報の破損復旧と保存先復元の容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3030,7 +3180,7 @@
       }
     },
     {
-      "line": 190,
+      "line": 197,
       "section": "世代情報の破損復旧と保存先復元の容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3085,7 +3235,7 @@
       }
     },
     {
-      "line": 191,
+      "line": 198,
       "section": "世代情報の破損復旧と保存先復元の容量不足 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3097,7 +3247,7 @@
       "verification": "tracked_unfinished"
     },
     {
-      "line": 192,
+      "line": 199,
       "section": "世代情報の破損復旧と保存先復元の容量不足 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3109,7 +3259,7 @@
       "id": "2ecf139666bd2cfef8af"
     },
     {
-      "line": 196,
+      "line": 203,
       "section": "復旧情報の退避とインポート容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3154,7 +3304,7 @@
       }
     },
     {
-      "line": 197,
+      "line": 204,
       "section": "復旧情報の退避とインポート容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3199,7 +3349,7 @@
       }
     },
     {
-      "line": 198,
+      "line": 205,
       "section": "復旧情報の退避とインポート容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3244,7 +3394,7 @@
       }
     },
     {
-      "line": 199,
+      "line": 206,
       "section": "復旧情報の退避とインポート容量不足 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3256,7 +3406,7 @@
       "id": "0a16d97ad0d591dd952d"
     },
     {
-      "line": 200,
+      "line": 207,
       "section": "復旧情報の退避とインポート容量不足 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3268,7 +3418,7 @@
       "id": "4b6b60df94f422953167"
     },
     {
-      "line": 204,
+      "line": 211,
       "section": "自己完結化の中断・救済と保存容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3323,7 +3473,7 @@
       }
     },
     {
-      "line": 205,
+      "line": 212,
       "section": "自己完結化の中断・救済と保存容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3378,7 +3528,7 @@
       }
     },
     {
-      "line": 206,
+      "line": 213,
       "section": "自己完結化の中断・救済と保存容量不足 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3433,7 +3583,7 @@
       }
     },
     {
-      "line": 207,
+      "line": 214,
       "section": "自己完結化の中断・救済と保存容量不足 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3445,7 +3595,7 @@
       "id": "e76d579d96151da5ebfc"
     },
     {
-      "line": 208,
+      "line": 215,
       "section": "自己完結化の中断・救済と保存容量不足 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3457,7 +3607,7 @@
       "id": "da7e948121bd32ef1619"
     },
     {
-      "line": 212,
+      "line": 219,
       "section": "保存ロックの待機上限と容量不足の検証 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3492,7 +3642,7 @@
       }
     },
     {
-      "line": 213,
+      "line": 220,
       "section": "保存ロックの待機上限と容量不足の検証 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3527,7 +3677,7 @@
       }
     },
     {
-      "line": 214,
+      "line": 221,
       "section": "保存ロックの待機上限と容量不足の検証 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3539,7 +3689,7 @@
       "id": "3ab9eb4833a7f5ed6b72"
     },
     {
-      "line": 215,
+      "line": 222,
       "section": "保存ロックの待機上限と容量不足の検証 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3551,7 +3701,7 @@
       "id": "7b8b5e12bba5f3673a47"
     },
     {
-      "line": 219,
+      "line": 226,
       "section": "保存先選択と未完了復旧の分離 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3563,7 +3713,7 @@
       "id": "8ec193dc9cf15bebacbe"
     },
     {
-      "line": 220,
+      "line": 227,
       "section": "保存先選択と未完了復旧の分離 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3575,7 +3725,7 @@
       "id": "ac9c92d17e75710fa092"
     },
     {
-      "line": 221,
+      "line": 228,
       "section": "保存先選択と未完了復旧の分離 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3587,7 +3737,7 @@
       "id": "8f549b128b4136d48df9"
     },
     {
-      "line": 222,
+      "line": 229,
       "section": "保存先選択と未完了復旧の分離 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3599,7 +3749,7 @@
       "id": "958a57df41838e780f50"
     },
     {
-      "line": 226,
+      "line": 233,
       "section": "外部参照コピーの中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3611,7 +3761,7 @@
       "id": "239c1de4e0969fd54d47"
     },
     {
-      "line": 227,
+      "line": 234,
       "section": "外部参照コピーの中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3623,7 +3773,7 @@
       "id": "6db7ff633988f78cf7ad"
     },
     {
-      "line": 228,
+      "line": 235,
       "section": "外部参照コピーの中断復旧 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3635,7 +3785,7 @@
       "id": "b6a8692c9a773150a8d1"
     },
     {
-      "line": 229,
+      "line": 236,
       "section": "外部参照コピーの中断復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3647,7 +3797,7 @@
       "id": "1d2db04c56f71631e116"
     },
     {
-      "line": 233,
+      "line": 240,
       "section": "インポート開始時の世代予約と中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3659,7 +3809,7 @@
       "id": "ee1ccf97b6a07d3f4ad9"
     },
     {
-      "line": 234,
+      "line": 241,
       "section": "インポート開始時の世代予約と中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3671,7 +3821,7 @@
       "id": "f19d6c5471fdb35191d5"
     },
     {
-      "line": 235,
+      "line": 242,
       "section": "インポート開始時の世代予約と中断復旧 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3683,7 +3833,7 @@
       "id": "5e82597ccc5d965b7a95"
     },
     {
-      "line": 236,
+      "line": 243,
       "section": "インポート開始時の世代予約と中断復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3695,7 +3845,7 @@
       "id": "7d77be2d6167eb73e0d6"
     },
     {
-      "line": 242,
+      "line": 249,
       "section": "台帳復旧ジャーナルの内容検証 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3725,7 +3875,7 @@
       }
     },
     {
-      "line": 243,
+      "line": 250,
       "section": "台帳復旧ジャーナルの内容検証 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3755,7 +3905,7 @@
       }
     },
     {
-      "line": 244,
+      "line": 251,
       "section": "台帳復旧ジャーナルの内容検証 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3767,7 +3917,7 @@
       "id": "c6d1e7f0cbb656911754"
     },
     {
-      "line": 245,
+      "line": 252,
       "section": "台帳復旧ジャーナルの内容検証 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3779,7 +3929,7 @@
       "id": "4560fa488d1588590c5f"
     },
     {
-      "line": 249,
+      "line": 256,
       "section": "復旧ジャーナル破損時の保護 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3814,7 +3964,7 @@
       }
     },
     {
-      "line": 250,
+      "line": 257,
       "section": "復旧ジャーナル破損時の保護 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3849,7 +3999,7 @@
       }
     },
     {
-      "line": 251,
+      "line": 258,
       "section": "復旧ジャーナル破損時の保護 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3861,7 +4011,7 @@
       "id": "bae898107a5ce38c98cd"
     },
     {
-      "line": 252,
+      "line": 259,
       "section": "復旧ジャーナル破損時の保護 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3873,7 +4023,7 @@
       "id": "c9eeaf9efda862958c55"
     },
     {
-      "line": 256,
+      "line": 263,
       "section": "保存先復元の中断・再復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3913,7 +4063,7 @@
       }
     },
     {
-      "line": 257,
+      "line": 264,
       "section": "保存先復元の中断・再復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3953,7 +4103,7 @@
       }
     },
     {
-      "line": 258,
+      "line": 265,
       "section": "保存先復元の中断・再復旧 — 2026-11-06",
       "statuses": [
         "Next"
@@ -3965,7 +4115,7 @@
       "id": "e6428a9827a3f9d89ee7"
     },
     {
-      "line": 259,
+      "line": 266,
       "section": "保存先復元の中断・再復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -3977,7 +4127,7 @@
       "id": "891591d8b4a56a4a31ab"
     },
     {
-      "line": 263,
+      "line": 270,
       "section": "保存先復元時の世代連携 — 2026-11-06",
       "statuses": [
         "Done"
@@ -3989,7 +4139,7 @@
       "id": "8d0ee2d38725e30ac70b"
     },
     {
-      "line": 264,
+      "line": 271,
       "section": "保存先復元時の世代連携 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4001,7 +4151,7 @@
       "id": "b0c307cacfef363e638e"
     },
     {
-      "line": 265,
+      "line": 272,
       "section": "保存先復元時の世代連携 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4013,7 +4163,7 @@
       "id": "ecf79a4c35ab3cb6db6a"
     },
     {
-      "line": 266,
+      "line": 273,
       "section": "保存先復元時の世代連携 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4025,7 +4175,7 @@
       "id": "155b95a2f000520f2b89"
     },
     {
-      "line": 270,
+      "line": 277,
       "section": "全登録解除の中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4037,7 +4187,7 @@
       "id": "883ca7af822ebb09c610"
     },
     {
-      "line": 271,
+      "line": 278,
       "section": "全登録解除の中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4049,7 +4199,7 @@
       "id": "71c385ec898828330427"
     },
     {
-      "line": 272,
+      "line": 279,
       "section": "全登録解除の中断復旧 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4061,7 +4211,7 @@
       "id": "7d00fcf01d7d1dca2f17"
     },
     {
-      "line": 273,
+      "line": 280,
       "section": "全登録解除の中断復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4073,7 +4223,7 @@
       "id": "57c62551ed0b29e68707"
     },
     {
-      "line": 277,
+      "line": 284,
       "section": "台帳・再生サイドカーの中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4085,7 +4235,7 @@
       "id": "2b72c798d062f6ded1e7"
     },
     {
-      "line": 278,
+      "line": 285,
       "section": "台帳・再生サイドカーの中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4097,7 +4247,7 @@
       "id": "66df4523e9b899958b95"
     },
     {
-      "line": 279,
+      "line": 286,
       "section": "台帳・再生サイドカーの中断復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4109,7 +4259,7 @@
       "id": "a6646c53a095e6865ca1"
     },
     {
-      "line": 280,
+      "line": 287,
       "section": "台帳・再生サイドカーの中断復旧 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4121,7 +4271,7 @@
       "id": "4f6feb6560bbd59f0100"
     },
     {
-      "line": 281,
+      "line": 288,
       "section": "台帳・再生サイドカーの中断復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4133,7 +4283,7 @@
       "id": "9a4e16c470aa37d9f6bd"
     },
     {
-      "line": 285,
+      "line": 292,
       "section": "永続世代の予約と旧台帳の移行 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4145,7 +4295,7 @@
       "id": "70bd3eb5731bddf7574a"
     },
     {
-      "line": 286,
+      "line": 293,
       "section": "永続世代の予約と旧台帳の移行 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4157,7 +4307,7 @@
       "id": "2c1c4b0a790747b379e7"
     },
     {
-      "line": 287,
+      "line": 294,
       "section": "永続世代の予約と旧台帳の移行 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4169,7 +4319,7 @@
       "id": "cd934b990ab3de670067"
     },
     {
-      "line": 288,
+      "line": 295,
       "section": "永続世代の予約と旧台帳の移行 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4181,7 +4331,7 @@
       "id": "2efdfb3ffc0df6650d66"
     },
     {
-      "line": 292,
+      "line": 299,
       "section": "台帳全体の古いスナップショットとCDインポート復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4193,7 +4343,7 @@
       "id": "5809740a4c0818945fb7"
     },
     {
-      "line": 293,
+      "line": 300,
       "section": "台帳全体の古いスナップショットとCDインポート復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4205,7 +4355,7 @@
       "id": "4b94ce7882511f3dcac5"
     },
     {
-      "line": 294,
+      "line": 301,
       "section": "台帳全体の古いスナップショットとCDインポート復旧 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4217,7 +4367,7 @@
       "id": "2822e2f045a2f0c9bc52"
     },
     {
-      "line": 295,
+      "line": 302,
       "section": "台帳全体の古いスナップショットとCDインポート復旧 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4229,7 +4379,7 @@
       "id": "59b3afbdb9222b9bd3cd"
     },
     {
-      "line": 296,
+      "line": 303,
       "section": "台帳全体の古いスナップショットとCDインポート復旧 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4241,7 +4391,7 @@
       "id": "81da5512f33917646ae3"
     },
     {
-      "line": 300,
+      "line": 307,
       "section": "ファイル参照・コピーとインポートの競合 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4253,7 +4403,7 @@
       "id": "91f5aba1e4b55631c6bf"
     },
     {
-      "line": 301,
+      "line": 308,
       "section": "ファイル参照・コピーとインポートの競合 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4265,7 +4415,7 @@
       "id": "a0e1b51d20ff6e0b33c4"
     },
     {
-      "line": 302,
+      "line": 309,
       "section": "ファイル参照・コピーとインポートの競合 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4277,7 +4427,7 @@
       "id": "ac24589532a7978912b0"
     },
     {
-      "line": 303,
+      "line": 310,
       "section": "ファイル参照・コピーとインポートの競合 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4289,7 +4439,7 @@
       "id": "a9fc73ef74ee6ef5e106"
     },
     {
-      "line": 307,
+      "line": 314,
       "section": "非同期インポートと復旧の競合 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4301,7 +4451,7 @@
       "id": "9942f9fa88aeb992edb2"
     },
     {
-      "line": 308,
+      "line": 315,
       "section": "非同期インポートと復旧の競合 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4313,7 +4463,7 @@
       "id": "91892886da165a58e776"
     },
     {
-      "line": 309,
+      "line": 316,
       "section": "非同期インポートと復旧の競合 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4328,7 +4478,7 @@
       "id": "e3c2ad1f9654baca8ca8"
     },
     {
-      "line": 310,
+      "line": 317,
       "section": "非同期インポートと復旧の競合 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4340,7 +4490,7 @@
       "id": "a61f6e4aa460775b1f7d"
     },
     {
-      "line": 314,
+      "line": 321,
       "section": "台帳のプロセス間排他と変更照合 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4355,7 +4505,7 @@
       "id": "8d915b08b349a680d419"
     },
     {
-      "line": 315,
+      "line": 322,
       "section": "台帳のプロセス間排他と変更照合 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4367,7 +4517,7 @@
       "id": "0c0a3020efda3e4dcd44"
     },
     {
-      "line": 316,
+      "line": 323,
       "section": "台帳のプロセス間排他と変更照合 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4379,7 +4529,7 @@
       "id": "1934a49546050d08f9f8"
     },
     {
-      "line": 317,
+      "line": 324,
       "section": "台帳のプロセス間排他と変更照合 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4391,7 +4541,7 @@
       "id": "af1a8a5d2868c680dbb0"
     },
     {
-      "line": 321,
+      "line": 328,
       "section": "別repositoryによる台帳更新の検出 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4403,7 +4553,7 @@
       "id": "302048c8562602d0bb84"
     },
     {
-      "line": 322,
+      "line": 329,
       "section": "別repositoryによる台帳更新の検出 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4415,7 +4565,7 @@
       "id": "547f4803459ceabf2c69"
     },
     {
-      "line": 323,
+      "line": 330,
       "section": "別repositoryによる台帳更新の検出 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4427,7 +4577,7 @@
       "id": "e585d98ccaf8aaacccb9"
     },
     {
-      "line": 324,
+      "line": 331,
       "section": "別repositoryによる台帳更新の検出 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4439,7 +4589,7 @@
       "id": "c62bcbdb35703c96b029"
     },
     {
-      "line": 328,
+      "line": 335,
       "section": "曲属性の保存とライブラリ切替 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4451,7 +4601,7 @@
       "id": "01272a53ad55d62a94dd"
     },
     {
-      "line": 329,
+      "line": 336,
       "section": "曲属性の保存とライブラリ切替 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4463,7 +4613,7 @@
       "id": "8e2e1197fb81b666cb20"
     },
     {
-      "line": 330,
+      "line": 337,
       "section": "曲属性の保存とライブラリ切替 — 2026-11-06",
       "statuses": [
         "Done"
@@ -4475,7 +4625,7 @@
       "id": "4c2549d5316e2e92f6bd"
     },
     {
-      "line": 331,
+      "line": 338,
       "section": "曲属性の保存とライブラリ切替 — 2026-11-06",
       "statuses": [
         "Next"
@@ -4487,7 +4637,7 @@
       "id": "c6ea5aa96db4a7c971ab"
     },
     {
-      "line": 332,
+      "line": 339,
       "section": "曲属性の保存とライブラリ切替 — 2026-11-06",
       "statuses": [
         "Pending"
@@ -4499,7 +4649,7 @@
       "id": "32a6fd33604429665817"
     },
     {
-      "line": 336,
+      "line": 343,
       "section": "GitHub Actionsのライブラリ切替テスト — 2026-11-05",
       "statuses": [
         "Done"
@@ -4511,7 +4661,7 @@
       "id": "7f14bb02e89d5447fcec"
     },
     {
-      "line": 337,
+      "line": 344,
       "section": "GitHub Actionsのライブラリ切替テスト — 2026-11-05",
       "statuses": [
         "Done"
@@ -4523,7 +4673,7 @@
       "id": "8175605a9989f5d83b8e"
     },
     {
-      "line": 338,
+      "line": 345,
       "section": "GitHub Actionsのライブラリ切替テスト — 2026-11-05",
       "statuses": [
         "Done"
@@ -4535,7 +4685,7 @@
       "id": "c562a253931d6788d748"
     },
     {
-      "line": 342,
+      "line": 349,
       "section": "メディア整理と曲編集の競合 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4547,7 +4697,7 @@
       "id": "8a78af5dd0cf1eab9fce"
     },
     {
-      "line": 343,
+      "line": 350,
       "section": "メディア整理と曲編集の競合 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4559,7 +4709,7 @@
       "id": "af3d2a40bdb1c3f142fe"
     },
     {
-      "line": 344,
+      "line": 351,
       "section": "メディア整理と曲編集の競合 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4571,7 +4721,7 @@
       "id": "f4f1b0aea98ba119a38b"
     },
     {
-      "line": 345,
+      "line": 352,
       "section": "メディア整理と曲編集の競合 — 2026-11-04",
       "statuses": [
         "Next"
@@ -4583,7 +4733,7 @@
       "id": "efa125c5deb651acde48"
     },
     {
-      "line": 346,
+      "line": 353,
       "section": "メディア整理と曲編集の競合 — 2026-11-04",
       "statuses": [
         "Pending"
@@ -4595,7 +4745,7 @@
       "id": "2b9bf0bc53de4970d323"
     },
     {
-      "line": 350,
+      "line": 357,
       "section": "メディア整理中の競合と復旧 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4607,7 +4757,7 @@
       "id": "8a9478a739d1fcb03383"
     },
     {
-      "line": 351,
+      "line": 358,
       "section": "メディア整理中の競合と復旧 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4619,7 +4769,7 @@
       "id": "ade33c9ca1b75277ece0"
     },
     {
-      "line": 352,
+      "line": 359,
       "section": "メディア整理中の競合と復旧 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4631,7 +4781,7 @@
       "id": "7e836208d18e42b85beb"
     },
     {
-      "line": 353,
+      "line": 360,
       "section": "メディア整理中の競合と復旧 — 2026-11-04",
       "statuses": [
         "Next"
@@ -4643,7 +4793,7 @@
       "id": "0ceeaf89501070b8c2a2"
     },
     {
-      "line": 354,
+      "line": 361,
       "section": "メディア整理中の競合と復旧 — 2026-11-04",
       "statuses": [
         "Pending"
@@ -4655,7 +4805,7 @@
       "id": "f11da5c5a0d90fc1d0dc"
     },
     {
-      "line": 358,
+      "line": 365,
       "section": "整理プレビューの更新競合 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4667,7 +4817,7 @@
       "id": "32ca24d0657ec7681a36"
     },
     {
-      "line": 359,
+      "line": 366,
       "section": "整理プレビューの更新競合 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4679,7 +4829,7 @@
       "id": "d85b21ec65e170aea216"
     },
     {
-      "line": 360,
+      "line": 367,
       "section": "整理プレビューの更新競合 — 2026-11-04",
       "statuses": [
         "Next"
@@ -4691,7 +4841,7 @@
       "id": "be4a79cec12b361aecb3"
     },
     {
-      "line": 361,
+      "line": 368,
       "section": "整理プレビューの更新競合 — 2026-11-04",
       "statuses": [
         "Pending"
@@ -4703,7 +4853,7 @@
       "id": "44338f91871038ff62f3"
     },
     {
-      "line": 365,
+      "line": 372,
       "section": "メディア保存先の自由な再選択 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4715,7 +4865,7 @@
       "id": "e87275449edbbef9210c"
     },
     {
-      "line": 366,
+      "line": 373,
       "section": "メディア保存先の自由な再選択 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4727,7 +4877,7 @@
       "id": "9416e6b3e70ad49cb94d"
     },
     {
-      "line": 367,
+      "line": 374,
       "section": "メディア保存先の自由な再選択 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4739,7 +4889,7 @@
       "id": "fdb5e3d2f2343966b7b4"
     },
     {
-      "line": 368,
+      "line": 375,
       "section": "メディア保存先の自由な再選択 — 2026-11-04",
       "statuses": [
         "Done"
@@ -4756,7 +4906,7 @@
       "id": "7aff7bfefdf9c3add150"
     },
     {
-      "line": 369,
+      "line": 376,
       "section": "メディア保存先の自由な再選択 — 2026-11-04",
       "statuses": [
         "Pending"
@@ -4768,7 +4918,7 @@
       "id": "9623f9de9792926ce80e"
     },
     {
-      "line": 373,
+      "line": 380,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Done"
@@ -4780,7 +4930,7 @@
       "id": "ac0529668854d602544f"
     },
     {
-      "line": 374,
+      "line": 381,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Done"
@@ -4792,7 +4942,7 @@
       "id": "86be33b4577be1014a67"
     },
     {
-      "line": 375,
+      "line": 382,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Done"
@@ -4804,7 +4954,7 @@
       "id": "d453045ca98030834797"
     },
     {
-      "line": 376,
+      "line": 383,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Done"
@@ -4816,7 +4966,7 @@
       "id": "52a375088a445a0eba94"
     },
     {
-      "line": 377,
+      "line": 384,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Pending"
@@ -4828,7 +4978,7 @@
       "id": "89a2737ea9c650351045"
     },
     {
-      "line": 379,
+      "line": 386,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Done"
@@ -4840,7 +4990,7 @@
       "id": "d0836151640d2cd281e7"
     },
     {
-      "line": 380,
+      "line": 387,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Done"
@@ -4852,7 +5002,7 @@
       "id": "a19297f4b3de29d64ea1"
     },
     {
-      "line": 381,
+      "line": 388,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Done"
@@ -4864,7 +5014,7 @@
       "id": "14020938f670582b4a78"
     },
     {
-      "line": 382,
+      "line": 389,
       "section": "App Review起動クラッシュ — 2026-10-29",
       "statuses": [
         "Later"
@@ -4876,7 +5026,7 @@
       "id": "6c1e881a89a769552088"
     },
     {
-      "line": 387,
+      "line": 394,
       "section": "Macエフェクトモードの終了・再起動検証 — 2026-10-28",
       "statuses": [
         "Done"
@@ -4893,7 +5043,7 @@
       "id": "69af6c5f77fafc052100"
     },
     {
-      "line": 388,
+      "line": 395,
       "section": "Macエフェクトモードの終了・再起動検証 — 2026-10-28",
       "statuses": [
         "Done"
@@ -4905,7 +5055,7 @@
       "id": "1578f8f72bda2ae363b6"
     },
     {
-      "line": 389,
+      "line": 396,
       "section": "Macエフェクトモードの終了・再起動検証 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -4917,7 +5067,7 @@
       "id": "b832a2a82fedffbab9f1"
     },
     {
-      "line": 393,
+      "line": 400,
       "section": "Macエフェクトモードの選択保持 — 2026-10-28",
       "statuses": [
         "Done"
@@ -4934,7 +5084,7 @@
       "id": "7a6c35b593e166244753"
     },
     {
-      "line": 394,
+      "line": 401,
       "section": "Macエフェクトモードの選択保持 — 2026-10-28",
       "statuses": [
         "Done"
@@ -4946,7 +5096,7 @@
       "id": "6728d4baf586f8ceb031"
     },
     {
-      "line": 395,
+      "line": 402,
       "section": "Macエフェクトモードの選択保持 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -4958,7 +5108,7 @@
       "id": "52d65d771f6271f63bd2"
     },
     {
-      "line": 399,
+      "line": 406,
       "section": "再生クロック取得時のクラッシュ対策 — 2026-10-28",
       "statuses": [
         "Done"
@@ -4975,7 +5125,7 @@
       "id": "be0aded2e38e5a6b076d"
     },
     {
-      "line": 400,
+      "line": 407,
       "section": "再生クロック取得時のクラッシュ対策 — 2026-10-28",
       "statuses": [
         "Done"
@@ -4987,7 +5137,7 @@
       "id": "84751ad4a90f49d2f1d9"
     },
     {
-      "line": 401,
+      "line": 408,
       "section": "再生クロック取得時のクラッシュ対策 — 2026-10-28",
       "statuses": [
         "Done"
@@ -4999,7 +5149,7 @@
       "id": "0506d42e9528dbb5ed31"
     },
     {
-      "line": 402,
+      "line": 409,
       "section": "再生クロック取得時のクラッシュ対策 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -5011,7 +5161,7 @@
       "id": "6352ea25e0895b4cb96a"
     },
     {
-      "line": 406,
+      "line": 413,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Done"
@@ -5028,7 +5178,7 @@
       "id": "e0b897752d821450bbb0"
     },
     {
-      "line": 407,
+      "line": 414,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Done"
@@ -5040,7 +5190,7 @@
       "id": "495b52b28e9243fad6aa"
     },
     {
-      "line": 408,
+      "line": 415,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Done"
@@ -5052,7 +5202,7 @@
       "id": "1433a83c12df90a17c05"
     },
     {
-      "line": 409,
+      "line": 416,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Done"
@@ -5069,7 +5219,7 @@
       "id": "95fa58289b495461694c"
     },
     {
-      "line": 410,
+      "line": 417,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Done"
@@ -5086,7 +5236,7 @@
       "id": "2cb7403f6bcfb101dee2"
     },
     {
-      "line": 411,
+      "line": 418,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Done"
@@ -5103,7 +5253,7 @@
       "id": "55293ab81e06b7aa9e30"
     },
     {
-      "line": 412,
+      "line": 419,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Done"
@@ -5120,7 +5270,7 @@
       "id": "748cdedaad0ab35772a8"
     },
     {
-      "line": 413,
+      "line": 420,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Next"
@@ -5132,7 +5282,7 @@
       "id": "ddaaaf247846495c0adb"
     },
     {
-      "line": 414,
+      "line": 421,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -5144,7 +5294,7 @@
       "id": "9b3bbc55079ad560d9cf"
     },
     {
-      "line": 415,
+      "line": 422,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -5156,7 +5306,7 @@
       "id": "a95d8432cdc46399e345"
     },
     {
-      "line": 416,
+      "line": 423,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -5168,7 +5318,7 @@
       "id": "acda61acb2a468736199"
     },
     {
-      "line": 417,
+      "line": 424,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -5180,7 +5330,7 @@
       "id": "7ceb0b60928c988b548b"
     },
     {
-      "line": 418,
+      "line": 425,
       "section": "Vocal Presence 試作 — 2026-10-28",
       "statuses": [
         "Pending"
@@ -5192,7 +5342,7 @@
       "id": "a6b5b3d99f26d5e07979"
     },
     {
-      "line": 422,
+      "line": 429,
       "section": "iPhone復帰時の再生セッション再試行 — 2026-10-27",
       "statuses": [
         "Done"
@@ -5204,7 +5354,7 @@
       "id": "a29050d05695fe7c8dd5"
     },
     {
-      "line": 423,
+      "line": 430,
       "section": "iPhone復帰時の再生セッション再試行 — 2026-10-27",
       "statuses": [
         "Done"
@@ -5221,7 +5371,7 @@
       "id": "6a6fdbda34795017894e"
     },
     {
-      "line": 424,
+      "line": 431,
       "section": "iPhone復帰時の再生セッション再試行 — 2026-10-27",
       "statuses": [
         "Done"
@@ -5233,7 +5383,7 @@
       "id": "677aca6eb2fe774825b9"
     },
     {
-      "line": 425,
+      "line": 432,
       "section": "iPhone復帰時の再生セッション再試行 — 2026-10-27",
       "statuses": [
         "Pending"
@@ -5245,7 +5395,7 @@
       "id": "adc1c2ede9578346e26a"
     },
     {
-      "line": 429,
+      "line": 436,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5257,7 +5407,7 @@
       "id": "669b489492a070e15f3c"
     },
     {
-      "line": 430,
+      "line": 437,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5269,7 +5419,7 @@
       "id": "376ef8c5e1e265337b80"
     },
     {
-      "line": 431,
+      "line": 438,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5286,7 +5436,7 @@
       "id": "b4c65bf967e56367ce21"
     },
     {
-      "line": 432,
+      "line": 439,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5303,7 +5453,7 @@
       "id": "5ad7df7a57c6556fa6fb"
     },
     {
-      "line": 433,
+      "line": 440,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5320,7 +5470,7 @@
       "id": "5d572f336478b9e1401b"
     },
     {
-      "line": 434,
+      "line": 441,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5337,7 +5487,7 @@
       "id": "b5b3d6e8e0ec4a53ff8e"
     },
     {
-      "line": 435,
+      "line": 442,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5354,7 +5504,7 @@
       "id": "8934e6f88d087b26726e"
     },
     {
-      "line": 436,
+      "line": 443,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Next"
@@ -5366,7 +5516,7 @@
       "id": "6f835651cd56ef0c6fa0"
     },
     {
-      "line": 437,
+      "line": 444,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Pending"
@@ -5378,7 +5528,7 @@
       "id": "0c4617d30c1e1ac8474d"
     },
     {
-      "line": 438,
+      "line": 445,
       "section": "A4 保存結果とライブラリ所有権 — 2026-11-03",
       "statuses": [
         "Pending"
@@ -5390,7 +5540,7 @@
       "id": "f40c1005395d01da9f2e"
     },
     {
-      "line": 442,
+      "line": 449,
       "section": "複数ストレージのライブラリ分離 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5402,7 +5552,7 @@
       "id": "1abba68289f44a0f028b"
     },
     {
-      "line": 444,
+      "line": 451,
       "section": "複数ストレージのライブラリ分離 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5414,7 +5564,7 @@
       "id": "2cf6fb79eb9d699948e8"
     },
     {
-      "line": 445,
+      "line": 452,
       "section": "複数ストレージのライブラリ分離 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5426,7 +5576,7 @@
       "id": "841fad9565c1e0a3b635"
     },
     {
-      "line": 446,
+      "line": 453,
       "section": "複数ストレージのライブラリ分離 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5443,7 +5593,7 @@
       "id": "854fa6fb6a2375190d4e"
     },
     {
-      "line": 447,
+      "line": 454,
       "section": "複数ストレージのライブラリ分離 — 2026-11-03",
       "statuses": [
         "Done"
@@ -5455,7 +5605,7 @@
       "id": "25df1dfe667e6055420d"
     },
     {
-      "line": 448,
+      "line": 455,
       "section": "複数ストレージのライブラリ分離 — 2026-11-03",
       "statuses": [
         "Pending"
@@ -5467,7 +5617,7 @@
       "id": "8e2d60724192e544d597"
     },
     {
-      "line": 452,
+      "line": 459,
       "section": "音楽ドロップ案内の表示残り — 2026-11-03",
       "statuses": [
         "Done"
@@ -5479,7 +5629,7 @@
       "id": "dd61c0aec8662c5a93ec"
     },
     {
-      "line": 453,
+      "line": 460,
       "section": "音楽ドロップ案内の表示残り — 2026-11-03",
       "statuses": [
         "Done"
@@ -5491,7 +5641,7 @@
       "id": "08e97415c963fd32b706"
     },
     {
-      "line": 454,
+      "line": 461,
       "section": "音楽ドロップ案内の表示残り — 2026-11-03",
       "statuses": [
         "Next"
@@ -5503,7 +5653,7 @@
       "id": "86905eb31b876b2c6656"
     },
     {
-      "line": 458,
+      "line": 465,
       "section": "Macエフェクトページのスクロール負荷 — 2026-11-02",
       "statuses": [
         "Done"
@@ -5515,7 +5665,7 @@
       "id": "ecf3a1dfa0d9ccc63924"
     },
     {
-      "line": 459,
+      "line": 466,
       "section": "Macエフェクトページのスクロール負荷 — 2026-11-02",
       "statuses": [
         "Done"
@@ -5527,7 +5677,7 @@
       "id": "b14125306f46fae700ef"
     },
     {
-      "line": 460,
+      "line": 467,
       "section": "Macエフェクトページのスクロール負荷 — 2026-11-02",
       "statuses": [
         "Done"
@@ -5544,7 +5694,7 @@
       "id": "3f02a3113224880650ba"
     },
     {
-      "line": 461,
+      "line": 468,
       "section": "Macエフェクトページのスクロール負荷 — 2026-11-02",
       "statuses": [
         "Next"
@@ -5556,7 +5706,7 @@
       "id": "fc55282fe37f5af611d4"
     },
     {
-      "line": 465,
+      "line": 472,
       "section": "Macエフェクトページの描画負荷 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5568,7 +5718,7 @@
       "id": "eb28c8e3d07b80834308"
     },
     {
-      "line": 466,
+      "line": 473,
       "section": "Macエフェクトページの描画負荷 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5585,7 +5735,7 @@
       "id": "be4f9098cdb6c3997543"
     },
     {
-      "line": 467,
+      "line": 474,
       "section": "Macエフェクトページの描画負荷 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5597,7 +5747,7 @@
       "id": "818cd221c4f8ee414b9b"
     },
     {
-      "line": 468,
+      "line": 475,
       "section": "Macエフェクトページの描画負荷 — 2026-10-26",
       "statuses": [
         "Next"
@@ -5609,7 +5759,7 @@
       "id": "7d9cf4be3924d3c1f108"
     },
     {
-      "line": 469,
+      "line": 476,
       "section": "Macエフェクトページの描画負荷 — 2026-10-26",
       "statuses": [
         "Pending"
@@ -5621,7 +5771,7 @@
       "id": "2765cf556486d920e995"
     },
     {
-      "line": 473,
+      "line": 480,
       "section": "エフェクトページの初回表示 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5638,7 +5788,7 @@
       "id": "2e791cb0e37b247a84c1"
     },
     {
-      "line": 474,
+      "line": 481,
       "section": "エフェクトページの初回表示 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5650,7 +5800,7 @@
       "id": "f368290ec151fde23708"
     },
     {
-      "line": 475,
+      "line": 482,
       "section": "エフェクトページの初回表示 — 2026-10-26",
       "statuses": [
         "Next"
@@ -5662,7 +5812,7 @@
       "id": "31287bbc401894fde38a"
     },
     {
-      "line": 476,
+      "line": 483,
       "section": "エフェクトページの初回表示 — 2026-10-26",
       "statuses": [
         "Pending"
@@ -5674,7 +5824,7 @@
       "id": "6de770fec277eae3766d"
     },
     {
-      "line": 480,
+      "line": 487,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5686,7 +5836,7 @@
       "id": "56ea5e83566680c4fa22"
     },
     {
-      "line": 482,
+      "line": 489,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5703,7 +5853,7 @@
       "id": "b9a0f3aa40590a411a53"
     },
     {
-      "line": 483,
+      "line": 490,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5715,7 +5865,7 @@
       "id": "f3da6ef0b119b6664456"
     },
     {
-      "line": 484,
+      "line": 491,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5727,7 +5877,7 @@
       "id": "ebe225aedbaddd92babf"
     },
     {
-      "line": 485,
+      "line": 492,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5739,7 +5889,7 @@
       "id": "283e6fe7560f6f95fc68"
     },
     {
-      "line": 486,
+      "line": 493,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5756,7 +5906,7 @@
       "id": "57b552fa067e8fd166c4"
     },
     {
-      "line": 487,
+      "line": 494,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Done"
@@ -5768,7 +5918,7 @@
       "id": "68cfa855bb7bcbb3b6e9"
     },
     {
-      "line": 488,
+      "line": 495,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Next"
@@ -5780,7 +5930,7 @@
       "id": "3fc15d89f6736d61b176"
     },
     {
-      "line": 489,
+      "line": 496,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Pending"
@@ -5792,7 +5942,7 @@
       "id": "3f71511de04e42f26b39"
     },
     {
-      "line": 490,
+      "line": 497,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Later"
@@ -5804,7 +5954,7 @@
       "id": "d2df56998e77c451bcf0"
     },
     {
-      "line": 491,
+      "line": 498,
       "section": "控えめなスペクトラル・トランジェント試作 — 2026-10-26",
       "statuses": [
         "Pending"
@@ -5816,7 +5966,7 @@
       "id": "a21b2dfe0cae2ef50877"
     },
     {
-      "line": 496,
+      "line": 503,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5833,7 +5983,7 @@
       "id": "17d9b8999c7cd8571e32"
     },
     {
-      "line": 498,
+      "line": 505,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5850,7 +6000,7 @@
       "id": "1326a0610063e6f39f14"
     },
     {
-      "line": 500,
+      "line": 507,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5867,7 +6017,7 @@
       "id": "7d41eb00be23b0744b52"
     },
     {
-      "line": 502,
+      "line": 509,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5884,7 +6034,7 @@
       "id": "5269817ef84e398b2e8f"
     },
     {
-      "line": 503,
+      "line": 510,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5896,7 +6046,7 @@
       "id": "938b0d46c457a51b843a"
     },
     {
-      "line": 504,
+      "line": 511,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5908,7 +6058,7 @@
       "id": "65f99e7f823cf5c5dc98"
     },
     {
-      "line": 505,
+      "line": 512,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Next"
@@ -5920,7 +6070,7 @@
       "id": "149f77900197ea0ba2d0"
     },
     {
-      "line": 506,
+      "line": 513,
       "section": "受信スナップショット・永続化・UI反映経路 — 2026-10-25",
       "statuses": [
         "Pending"
@@ -5932,7 +6082,7 @@
       "id": "1d2f937a801d12cd06f7"
     },
     {
-      "line": 511,
+      "line": 518,
       "section": "不足チャンク要求の走査・生成・送信負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5949,7 +6099,7 @@
       "id": "025cf68925466a3f9b9f"
     },
     {
-      "line": 512,
+      "line": 519,
       "section": "不足チャンク要求の走査・生成・送信負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5961,7 +6111,7 @@
       "id": "1b1ad8cfa1b1832f1b50"
     },
     {
-      "line": 513,
+      "line": 520,
       "section": "不足チャンク要求の走査・生成・送信負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5973,7 +6123,7 @@
       "id": "6e8889aa022948c8d275"
     },
     {
-      "line": 514,
+      "line": 521,
       "section": "不足チャンク要求の走査・生成・送信負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -5985,7 +6135,7 @@
       "id": "94b0e350cd962d19e2f9"
     },
     {
-      "line": 515,
+      "line": 522,
       "section": "不足チャンク要求の走査・生成・送信負荷 — 2026-10-25",
       "statuses": [
         "Pending"
@@ -5997,7 +6147,7 @@
       "id": "0fba35246681b5a33c28"
     },
     {
-      "line": 520,
+      "line": 527,
       "section": "大規模チャンク転送の保存負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -6014,7 +6164,7 @@
       "id": "fc79072b03baf5d62a8f"
     },
     {
-      "line": 521,
+      "line": 528,
       "section": "大規模チャンク転送の保存負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -6026,7 +6176,7 @@
       "id": "1b46613fcb57475e5e81"
     },
     {
-      "line": 522,
+      "line": 529,
       "section": "大規模チャンク転送の保存負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -6038,7 +6188,7 @@
       "id": "9870a978bdd60a230d70"
     },
     {
-      "line": 523,
+      "line": 530,
       "section": "大規模チャンク転送の保存負荷 — 2026-10-25",
       "statuses": [
         "Done"
@@ -6050,7 +6200,7 @@
       "id": "707c89f410946791a6fe"
     },
     {
-      "line": 524,
+      "line": 531,
       "section": "大規模チャンク転送の保存負荷 — 2026-10-25",
       "statuses": [
         "Pending"
@@ -6062,7 +6212,7 @@
       "id": "af3e721862dd12b9091c"
     },
     {
-      "line": 529,
+      "line": 536,
       "section": "Chunk transfer actor ownership — 2026-10-24",
       "statuses": [
         "Done"
@@ -6079,7 +6229,7 @@
       "id": "29288fcd098750554c07"
     },
     {
-      "line": 530,
+      "line": 537,
       "section": "Chunk transfer actor ownership — 2026-10-24",
       "statuses": [
         "Done"
@@ -6091,7 +6241,7 @@
       "id": "cf63aa7eab211873d8d1"
     },
     {
-      "line": 531,
+      "line": 538,
       "section": "Chunk transfer actor ownership — 2026-10-24",
       "statuses": [
         "Done"
@@ -6103,7 +6253,7 @@
       "id": "0cf2c576e00682cb7be2"
     },
     {
-      "line": 532,
+      "line": 539,
       "section": "Chunk transfer actor ownership — 2026-10-24",
       "statuses": [
         "Pending"
@@ -6115,7 +6265,7 @@
       "id": "d3be693a0b739098f896"
     },
     {
-      "line": 537,
+      "line": 544,
       "section": "Validated chunk transfer snapshots — 2026-10-24",
       "statuses": [
         "Done"
@@ -6132,7 +6282,7 @@
       "id": "3f0e8755bf99ce12c1d5"
     },
     {
-      "line": 538,
+      "line": 545,
       "section": "Validated chunk transfer snapshots — 2026-10-24",
       "statuses": [
         "Done"
@@ -6144,7 +6294,7 @@
       "id": "2644bf6761cc8625c038"
     },
     {
-      "line": 539,
+      "line": 546,
       "section": "Validated chunk transfer snapshots — 2026-10-24",
       "statuses": [
         "Done"
@@ -6156,7 +6306,7 @@
       "id": "cef9b7658e4356fceca9"
     },
     {
-      "line": 540,
+      "line": 547,
       "section": "Validated chunk transfer snapshots — 2026-10-24",
       "statuses": [
         "Done",
@@ -6169,7 +6319,7 @@
       "id": "dbd3294e627500af3e58"
     },
     {
-      "line": 541,
+      "line": 548,
       "section": "Validated chunk transfer snapshots — 2026-10-24",
       "statuses": [
         "Pending"
@@ -6181,7 +6331,7 @@
       "id": "b5666ec63d49fcf24d1a"
     },
     {
-      "line": 546,
+      "line": 553,
       "section": "Monotonic gain acknowledgement and PCM startup qualification — 2026-10-22",
       "statuses": [
         "Done"
@@ -6198,7 +6348,7 @@
       "id": "1577ced662fd6fb72486"
     },
     {
-      "line": 547,
+      "line": 554,
       "section": "Monotonic gain acknowledgement and PCM startup qualification — 2026-10-22",
       "statuses": [
         "Done"
@@ -6210,7 +6360,7 @@
       "id": "bab5c8040a536c8402a7"
     },
     {
-      "line": 548,
+      "line": 555,
       "section": "Monotonic gain acknowledgement and PCM startup qualification — 2026-10-22",
       "statuses": [
         "Done"
@@ -6222,7 +6372,7 @@
       "id": "45d0479ae115da8e576f"
     },
     {
-      "line": 549,
+      "line": 556,
       "section": "Monotonic gain acknowledgement and PCM startup qualification — 2026-10-22",
       "statuses": [
         "Next"
@@ -6234,7 +6384,7 @@
       "id": "8f730b787c23f4652308"
     },
     {
-      "line": 550,
+      "line": 557,
       "section": "Monotonic gain acknowledgement and PCM startup qualification — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6246,7 +6396,7 @@
       "id": "9a06616a575f76714abf"
     },
     {
-      "line": 555,
+      "line": 562,
       "section": "Retire fallback search memory after verified SQLite recovery — 2026-10-22",
       "statuses": [
         "Done"
@@ -6263,7 +6413,7 @@
       "id": "15dff50e9072337471d8"
     },
     {
-      "line": 556,
+      "line": 563,
       "section": "Retire fallback search memory after verified SQLite recovery — 2026-10-22",
       "statuses": [
         "Done"
@@ -6275,7 +6425,7 @@
       "id": "f6b227bb0855599ed430"
     },
     {
-      "line": 557,
+      "line": 564,
       "section": "Retire fallback search memory after verified SQLite recovery — 2026-10-22",
       "statuses": [
         "Done"
@@ -6287,7 +6437,7 @@
       "id": "24cf78d9d54a75e9c6b1"
     },
     {
-      "line": 558,
+      "line": 565,
       "section": "Retire fallback search memory after verified SQLite recovery — 2026-10-22",
       "statuses": [
         "Next"
@@ -6299,7 +6449,7 @@
       "id": "241106da6c60d812847f"
     },
     {
-      "line": 559,
+      "line": 566,
       "section": "Retire fallback search memory after verified SQLite recovery — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6311,7 +6461,7 @@
       "id": "e225a23a3540dc68d092"
     },
     {
-      "line": 564,
+      "line": 571,
       "section": "Connected gain CI state waits — 2026-10-22",
       "statuses": [
         "Done"
@@ -6328,7 +6478,7 @@
       "id": "19b35e5c04ba8ce05b38"
     },
     {
-      "line": 565,
+      "line": 572,
       "section": "Connected gain CI state waits — 2026-10-22",
       "statuses": [
         "Done"
@@ -6340,7 +6490,7 @@
       "id": "0f741d25dfea9401ee5d"
     },
     {
-      "line": 566,
+      "line": 573,
       "section": "Connected gain CI state waits — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6352,7 +6502,7 @@
       "id": "ef7e8c732240a980d397"
     },
     {
-      "line": 571,
+      "line": 578,
       "section": "Initial graph setup and compatible reload reuse — 2026-10-22",
       "statuses": [
         "Done"
@@ -6369,7 +6519,7 @@
       "id": "185cf0cff7550a034b19"
     },
     {
-      "line": 572,
+      "line": 579,
       "section": "Initial graph setup and compatible reload reuse — 2026-10-22",
       "statuses": [
         "Done"
@@ -6381,7 +6531,7 @@
       "id": "efe5a9d8ff458cd89e6e"
     },
     {
-      "line": 573,
+      "line": 580,
       "section": "Initial graph setup and compatible reload reuse — 2026-10-22",
       "statuses": [
         "Done"
@@ -6393,7 +6543,7 @@
       "id": "8bece13733a084b6f93f"
     },
     {
-      "line": 574,
+      "line": 581,
       "section": "Initial graph setup and compatible reload reuse — 2026-10-22",
       "statuses": [
         "Done"
@@ -6405,7 +6555,7 @@
       "id": "5d916dca4a89e5a79052"
     },
     {
-      "line": 575,
+      "line": 582,
       "section": "Initial graph setup and compatible reload reuse — 2026-10-22",
       "statuses": [
         "Next"
@@ -6417,7 +6567,7 @@
       "id": "c6847b427549d604d9cc"
     },
     {
-      "line": 576,
+      "line": 583,
       "section": "Initial graph setup and compatible reload reuse — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6429,7 +6579,7 @@
       "id": "c7d47326d44094af8901"
     },
     {
-      "line": 580,
+      "line": 587,
       "section": "Matched startup cost and retained render resources — 2026-10-22",
       "statuses": [
         "Done"
@@ -6446,7 +6596,7 @@
       "id": "a51ed952001679995d58"
     },
     {
-      "line": 581,
+      "line": 588,
       "section": "Matched startup cost and retained render resources — 2026-10-22",
       "statuses": [
         "Done"
@@ -6458,7 +6608,7 @@
       "id": "363f41ec4c2ab669b069"
     },
     {
-      "line": 582,
+      "line": 589,
       "section": "Matched startup cost and retained render resources — 2026-10-22",
       "statuses": [
         "Done",
@@ -6471,7 +6621,7 @@
       "id": "33e8343591a4150f7b41"
     },
     {
-      "line": 583,
+      "line": 590,
       "section": "Matched startup cost and retained render resources — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6483,7 +6633,7 @@
       "id": "33da6d4660c8471e6041"
     },
     {
-      "line": 587,
+      "line": 594,
       "section": "Connected audio-thread protection — 2026-10-22",
       "statuses": [
         "Done"
@@ -6503,7 +6653,7 @@
       "id": "bf6cede7c6fde5f2573b"
     },
     {
-      "line": 588,
+      "line": 595,
       "section": "Connected audio-thread protection — 2026-10-22",
       "statuses": [
         "Done"
@@ -6515,7 +6665,7 @@
       "id": "99d538f2702e4bd2043a"
     },
     {
-      "line": 589,
+      "line": 596,
       "section": "Connected audio-thread protection — 2026-10-22",
       "statuses": [
         "Done"
@@ -6527,7 +6677,7 @@
       "id": "2899d6e8ecaea8b3069d"
     },
     {
-      "line": 590,
+      "line": 597,
       "section": "Connected audio-thread protection — 2026-10-22",
       "statuses": [
         "Done"
@@ -6539,7 +6689,7 @@
       "id": "7c8c1e8c6e7e68a2ebe2"
     },
     {
-      "line": 591,
+      "line": 598,
       "section": "Connected audio-thread protection — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6551,7 +6701,7 @@
       "id": "acbaf0df3bc1a7ba5827"
     },
     {
-      "line": 596,
+      "line": 603,
       "section": "Shared audio-thread gain stage — 2026-10-22",
       "statuses": [
         "Done"
@@ -6568,7 +6718,7 @@
       "id": "24ac5d99d785387c2625"
     },
     {
-      "line": 597,
+      "line": 604,
       "section": "Shared audio-thread gain stage — 2026-10-22",
       "statuses": [
         "Done"
@@ -6580,7 +6730,7 @@
       "id": "3105628f15679e055a63"
     },
     {
-      "line": 598,
+      "line": 605,
       "section": "Shared audio-thread gain stage — 2026-10-22",
       "statuses": [
         "Done"
@@ -6592,7 +6742,7 @@
       "id": "282dffdaaf1c19ba9ead"
     },
     {
-      "line": 599,
+      "line": 606,
       "section": "Shared audio-thread gain stage — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6604,7 +6754,7 @@
       "id": "0323858a50d7fcfeff4a"
     },
     {
-      "line": 604,
+      "line": 611,
       "section": "Restart after automatic library repair — 2026-10-22",
       "statuses": [
         "Done"
@@ -6616,7 +6766,7 @@
       "id": "826a6a3a9374c040b750"
     },
     {
-      "line": 605,
+      "line": 612,
       "section": "Restart after automatic library repair — 2026-10-22",
       "statuses": [
         "Done"
@@ -6633,7 +6783,7 @@
       "id": "e0916de202a2ec65139f"
     },
     {
-      "line": 606,
+      "line": 613,
       "section": "Restart after automatic library repair — 2026-10-22",
       "statuses": [
         "Pending"
@@ -6645,7 +6795,7 @@
       "id": "9d6abca66a54e96e657c"
     },
     {
-      "line": 610,
+      "line": 617,
       "section": "Mobile foreground track-end follow-up — 2026-10-21",
       "statuses": [
         "Done"
@@ -6657,7 +6807,7 @@
       "id": "b8c1e540fb821bc514d7"
     },
     {
-      "line": 611,
+      "line": 618,
       "section": "Mobile foreground track-end follow-up — 2026-10-21",
       "statuses": [
         "Done"
@@ -6669,7 +6819,7 @@
       "id": "357b622c4342d2da2fa5"
     },
     {
-      "line": 612,
+      "line": 619,
       "section": "Mobile foreground track-end follow-up — 2026-10-21",
       "statuses": [
         "Pending"
@@ -6681,7 +6831,7 @@
       "id": "514b4333c4b0cb72cfd4"
     },
     {
-      "line": 616,
+      "line": 623,
       "section": "Original source information in track details — 2026-10-21",
       "statuses": [
         "Done"
@@ -6693,7 +6843,7 @@
       "id": "bfd799a29614a4b2bb00"
     },
     {
-      "line": 617,
+      "line": 624,
       "section": "Original source information in track details — 2026-10-21",
       "statuses": [
         "Done"
@@ -6705,7 +6855,7 @@
       "id": "01fc6f210c706de64682"
     },
     {
-      "line": 618,
+      "line": 625,
       "section": "Original source information in track details — 2026-10-21",
       "statuses": [
         "Pending"
@@ -6717,7 +6867,7 @@
       "id": "ab6eedaeba11d822ae6b"
     },
     {
-      "line": 622,
+      "line": 629,
       "section": "Desktop CD-import mono / meter availability — 2026-10-21",
       "statuses": [
         "Done"
@@ -6729,7 +6879,7 @@
       "id": "6009e0af2302f356fb7d"
     },
     {
-      "line": 623,
+      "line": 630,
       "section": "Desktop CD-import mono / meter availability — 2026-10-21",
       "statuses": [
         "Done"
@@ -6746,7 +6896,7 @@
       "id": "dcaf97dc56442fecf93f"
     },
     {
-      "line": 624,
+      "line": 631,
       "section": "Desktop CD-import mono / meter availability — 2026-10-21",
       "statuses": [
         "Done"
@@ -6758,7 +6908,7 @@
       "id": "5925f176ac31c274eab6"
     },
     {
-      "line": 625,
+      "line": 632,
       "section": "Desktop CD-import mono / meter availability — 2026-10-21",
       "statuses": [
         "Pending"
@@ -6770,7 +6920,7 @@
       "id": "e10d6f57273063e19d10"
     },
     {
-      "line": 629,
+      "line": 636,
       "section": "Mobile CD-import availability coordination — 2026-10-21",
       "statuses": [
         "Done"
@@ -6782,7 +6932,7 @@
       "id": "7e5e82fde16dd0a4ba7e"
     },
     {
-      "line": 630,
+      "line": 637,
       "section": "Mobile CD-import availability coordination — 2026-10-21",
       "statuses": [
         "Done"
@@ -6794,7 +6944,7 @@
       "id": "3d69b4b400b20c3dea28"
     },
     {
-      "line": 631,
+      "line": 638,
       "section": "Mobile CD-import availability coordination — 2026-10-21",
       "statuses": [
         "Pending"
@@ -6806,7 +6956,7 @@
       "id": "b7b3d9afc6ed28dd1f55"
     },
     {
-      "line": 635,
+      "line": 642,
       "section": "Mobile VU response coordination — 2026-10-20",
       "statuses": [
         "Done"
@@ -6818,7 +6968,7 @@
       "id": "038b240ac4fac92200b7"
     },
     {
-      "line": 636,
+      "line": 643,
       "section": "Mobile VU response coordination — 2026-10-20",
       "statuses": [
         "Done"
@@ -6830,7 +6980,7 @@
       "id": "3b0fca40f285b008166b"
     },
     {
-      "line": 637,
+      "line": 644,
       "section": "Mobile VU response coordination — 2026-10-20",
       "statuses": [
         "Pending"
@@ -6842,7 +6992,7 @@
       "id": "29a3ecf00cb2f813048e"
     },
     {
-      "line": 641,
+      "line": 648,
       "section": "CI real-engine test isolation — 2026-10-20",
       "statuses": [
         "Done"
@@ -6859,7 +7009,7 @@
       "id": "9575a1e1d867e71deaec"
     },
     {
-      "line": 642,
+      "line": 649,
       "section": "CI real-engine test isolation — 2026-10-20",
       "statuses": [
         "Done"
@@ -6871,7 +7021,7 @@
       "id": "ca22fc1d54e1579c5215"
     },
     {
-      "line": 643,
+      "line": 650,
       "section": "CI real-engine test isolation — 2026-10-20",
       "statuses": [
         "Done"
@@ -6883,7 +7033,7 @@
       "id": "d749cd3f74de2c1f120c"
     },
     {
-      "line": 644,
+      "line": 651,
       "section": "CI real-engine test isolation — 2026-10-20",
       "statuses": [
         "Pending"
@@ -6895,7 +7045,7 @@
       "id": "77785c3bada76c997569"
     },
     {
-      "line": 648,
+      "line": 655,
       "section": "Release 0.1.11 / CI effect-rack teardown — 2026-10-20",
       "statuses": [
         "Done"
@@ -6907,7 +7057,7 @@
       "id": "9c337c29897e09263c07"
     },
     {
-      "line": 649,
+      "line": 656,
       "section": "Release 0.1.11 / CI effect-rack teardown — 2026-10-20",
       "statuses": [
         "Done"
@@ -6924,7 +7074,7 @@
       "id": "2dedf7d114459191b19b"
     },
     {
-      "line": 650,
+      "line": 657,
       "section": "Release 0.1.11 / CI effect-rack teardown — 2026-10-20",
       "statuses": [
         "Done"
@@ -6941,7 +7091,7 @@
       "id": "4dbda25e579cc842f3de"
     },
     {
-      "line": 651,
+      "line": 658,
       "section": "Release 0.1.11 / CI effect-rack teardown — 2026-10-20",
       "statuses": [
         "Done"
@@ -6953,7 +7103,7 @@
       "id": "bc4e6b570b6497b88953"
     },
     {
-      "line": 652,
+      "line": 659,
       "section": "Release 0.1.11 / CI effect-rack teardown — 2026-10-20",
       "statuses": [
         "Pending"
@@ -6965,7 +7115,7 @@
       "id": "6b1d7b1ca29bb73f947c"
     },
     {
-      "line": 656,
+      "line": 663,
       "section": "EQ grouping and Synth-inspired knobs — 2026-10-20",
       "statuses": [
         "Done"
@@ -6990,7 +7140,7 @@
       "id": "cfdaa9762539da4d39c2"
     },
     {
-      "line": 657,
+      "line": 664,
       "section": "EQ grouping and Synth-inspired knobs — 2026-10-20",
       "statuses": [
         "Done"
@@ -7002,7 +7152,7 @@
       "id": "d4e3ccde1b7e218055bf"
     },
     {
-      "line": 658,
+      "line": 665,
       "section": "EQ grouping and Synth-inspired knobs — 2026-10-20",
       "statuses": [
         "Done"
@@ -7014,7 +7164,7 @@
       "id": "7b9367cb200ddd345cf5"
     },
     {
-      "line": 659,
+      "line": 666,
       "section": "EQ grouping and Synth-inspired knobs — 2026-10-20",
       "statuses": [
         "Done"
@@ -7031,7 +7181,7 @@
       "id": "fecf4354059c5df7fd11"
     },
     {
-      "line": 660,
+      "line": 667,
       "section": "EQ grouping and Synth-inspired knobs — 2026-10-20",
       "statuses": [
         "Pending"
@@ -7043,7 +7193,7 @@
       "id": "64fbfd4aaa10851134a9"
     },
     {
-      "line": 664,
+      "line": 671,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Done"
@@ -7055,7 +7205,7 @@
       "id": "bb9cf5ac7f993c0a83c3"
     },
     {
-      "line": 665,
+      "line": 672,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Done"
@@ -7072,7 +7222,7 @@
       "id": "af143e3358a220229db0"
     },
     {
-      "line": 666,
+      "line": 673,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Pending"
@@ -7084,7 +7234,7 @@
       "id": "fe97b03f7f5237235894"
     },
     {
-      "line": 667,
+      "line": 674,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Done"
@@ -7096,7 +7246,7 @@
       "id": "a0127203809ce1555f50"
     },
     {
-      "line": 668,
+      "line": 675,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Done"
@@ -7117,7 +7267,7 @@
       "id": "40a7076817e6be94e6df"
     },
     {
-      "line": 669,
+      "line": 676,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Done"
@@ -7129,7 +7279,7 @@
       "id": "116e44ed4df58d4775dd"
     },
     {
-      "line": 670,
+      "line": 677,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Done"
@@ -7144,7 +7294,7 @@
       "id": "be545fe2892f35022f02"
     },
     {
-      "line": 671,
+      "line": 678,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Done"
@@ -7161,7 +7311,7 @@
       "id": "dc2c18e272617b6b499c"
     },
     {
-      "line": 672,
+      "line": 679,
       "section": "Effect rack input ownership — 2026-10-20",
       "statuses": [
         "Pending"
@@ -7173,7 +7323,7 @@
       "id": "8797f3c00b8c55c477d9"
     },
     {
-      "line": 680,
+      "line": 687,
       "section": "Mac / iPhone track-end ownership parity — 2026-10-20",
       "statuses": [
         "Done"
@@ -7185,7 +7335,7 @@
       "id": "7c080a810cf9ec33ed0c"
     },
     {
-      "line": 681,
+      "line": 688,
       "section": "Mac / iPhone track-end ownership parity — 2026-10-20",
       "statuses": [
         "Done"
@@ -7197,7 +7347,7 @@
       "id": "d42e311bd9168135a599"
     },
     {
-      "line": 682,
+      "line": 689,
       "section": "Mac / iPhone track-end ownership parity — 2026-10-20",
       "statuses": [
         "Done"
@@ -7214,7 +7364,7 @@
       "id": "ab61a30f46b0af20702d"
     },
     {
-      "line": 683,
+      "line": 690,
       "section": "Mac / iPhone track-end ownership parity — 2026-10-20",
       "statuses": [
         "Pending"
@@ -7226,7 +7376,7 @@
       "id": "1da713e5cc62676e6de1"
     },
     {
-      "line": 687,
+      "line": 694,
       "section": "CI playback completion concurrency repair — 2026-10-19",
       "statuses": [
         "Done"
@@ -7247,7 +7397,7 @@
       "id": "910940660cb4887ea493"
     },
     {
-      "line": 688,
+      "line": 695,
       "section": "CI playback completion concurrency repair — 2026-10-19",
       "statuses": [
         "Done"
@@ -7259,7 +7409,7 @@
       "id": "6612a53f572f2fbcfd6a"
     },
     {
-      "line": 689,
+      "line": 696,
       "section": "CI playback completion concurrency repair — 2026-10-19",
       "statuses": [
         "Done"
@@ -7271,7 +7421,7 @@
       "id": "3bf2661b8bca3742f4c4"
     },
     {
-      "line": 693,
+      "line": 700,
       "section": "Effect tails and latency-change protection — 2026-10-19",
       "statuses": [
         "Done"
@@ -7292,7 +7442,7 @@
       "id": "346b936c6eec908bfa1b"
     },
     {
-      "line": 694,
+      "line": 701,
       "section": "Effect tails and latency-change protection — 2026-10-19",
       "statuses": [
         "Done"
@@ -7304,7 +7454,7 @@
       "id": "6aa0e6baabbcf2be7083"
     },
     {
-      "line": 695,
+      "line": 702,
       "section": "Effect tails and latency-change protection — 2026-10-19",
       "statuses": [
         "Done"
@@ -7316,7 +7466,7 @@
       "id": "a66e2305636097933cbe"
     },
     {
-      "line": 696,
+      "line": 703,
       "section": "Effect tails and latency-change protection — 2026-10-19",
       "statuses": [
         "Done"
@@ -7333,7 +7483,7 @@
       "id": "0e490a529317b812095c"
     },
     {
-      "line": 697,
+      "line": 704,
       "section": "Effect tails and latency-change protection — 2026-10-19",
       "statuses": [
         "Done"
@@ -7345,7 +7495,7 @@
       "id": "148f24c4244722da43ce"
     },
     {
-      "line": 698,
+      "line": 705,
       "section": "Effect tails and latency-change protection — 2026-10-19",
       "statuses": [
         "Later"
@@ -7357,7 +7507,7 @@
       "id": "d8518426d717ad9c4b40"
     },
     {
-      "line": 699,
+      "line": 706,
       "section": "Effect tails and latency-change protection — 2026-10-19",
       "statuses": [
         "Pending"
@@ -7369,7 +7519,7 @@
       "id": "892b09eb7f36445e56f9"
     },
     {
-      "line": 703,
+      "line": 710,
       "section": "CPU / Metal upsampling comparison — 2026-10-19",
       "statuses": [
         "Done"
@@ -7381,7 +7531,7 @@
       "id": "831caddef859a66415a0"
     },
     {
-      "line": 704,
+      "line": 711,
       "section": "CPU / Metal upsampling comparison — 2026-10-19",
       "statuses": [
         "Done"
@@ -7398,7 +7548,7 @@
       "id": "3d4583d20649a73b54be"
     },
     {
-      "line": 705,
+      "line": 712,
       "section": "CPU / Metal upsampling comparison — 2026-10-19",
       "statuses": [
         "Done"
@@ -7410,7 +7560,7 @@
       "id": "457da3b0242e19e132b6"
     },
     {
-      "line": 706,
+      "line": 713,
       "section": "CPU / Metal upsampling comparison — 2026-10-19",
       "statuses": [
         "Done"
@@ -7427,7 +7577,7 @@
       "id": "fa66b42152ec4ca2c193"
     },
     {
-      "line": 707,
+      "line": 714,
       "section": "CPU / Metal upsampling comparison — 2026-10-19",
       "statuses": [
         "Later"
@@ -7439,7 +7589,7 @@
       "id": "a036b7dea0f6318d8622"
     },
     {
-      "line": 708,
+      "line": 715,
       "section": "CPU / Metal upsampling comparison — 2026-10-19",
       "statuses": [
         "Pending"
@@ -7451,7 +7601,7 @@
       "id": "b1efd3448dc164fd2137"
     },
     {
-      "line": 712,
+      "line": 719,
       "section": "Mac transport and late-analysis parity — 2026-10-19",
       "statuses": [
         "Done"
@@ -7463,7 +7613,7 @@
       "id": "0220c841d5e10aaa33d9"
     },
     {
-      "line": 713,
+      "line": 720,
       "section": "Mac transport and late-analysis parity — 2026-10-19",
       "statuses": [
         "Done"
@@ -7475,7 +7625,7 @@
       "id": "4bb973ca51b0cb28b35d"
     },
     {
-      "line": 714,
+      "line": 721,
       "section": "Mac transport and late-analysis parity — 2026-10-19",
       "statuses": [
         "Done"
@@ -7492,7 +7642,7 @@
       "id": "730f9815909270355287"
     },
     {
-      "line": 715,
+      "line": 722,
       "section": "Mac transport and late-analysis parity — 2026-10-19",
       "statuses": [
         "Done"
@@ -7509,7 +7659,7 @@
       "id": "458eface59e798f86708"
     },
     {
-      "line": 716,
+      "line": 723,
       "section": "Mac transport and late-analysis parity — 2026-10-19",
       "statuses": [
         "Pending"
@@ -7521,7 +7671,7 @@
       "id": "ceaac89aa838e7b05923"
     },
     {
-      "line": 717,
+      "line": 724,
       "section": "Mac transport and late-analysis parity — 2026-10-19",
       "statuses": [
         "Done"
@@ -7538,7 +7688,7 @@
       "id": "42a7fc2be9954ac20722"
     },
     {
-      "line": 721,
+      "line": 728,
       "section": "iPhone foreground recovery coordination — 2026-10-19",
       "statuses": [
         "Done"
@@ -7550,7 +7700,7 @@
       "id": "c40c3af64b37c1cfb450"
     },
     {
-      "line": 722,
+      "line": 729,
       "section": "iPhone foreground recovery coordination — 2026-10-19",
       "statuses": [
         "Done"
@@ -7567,7 +7717,7 @@
       "id": "b54730abec96a25b6882"
     },
     {
-      "line": 723,
+      "line": 730,
       "section": "iPhone foreground recovery coordination — 2026-10-19",
       "statuses": [
         "Pending"
@@ -7579,7 +7729,7 @@
       "id": "9e4b6582c9fd8836cbcd"
     },
     {
-      "line": 727,
+      "line": 734,
       "section": "iPhone destructive shutdown coordination — 2026-10-18",
       "statuses": [
         "Done"
@@ -7591,7 +7741,7 @@
       "id": "6c6ff4a51fd40dbf1eb8"
     },
     {
-      "line": 728,
+      "line": 735,
       "section": "iPhone destructive shutdown coordination — 2026-10-18",
       "statuses": [
         "Done"
@@ -7614,7 +7764,7 @@
       "id": "85516b6f4327f8a5f0f4"
     },
     {
-      "line": 729,
+      "line": 736,
       "section": "iPhone destructive shutdown coordination — 2026-10-18",
       "statuses": [
         "Done"
@@ -7631,7 +7781,7 @@
       "id": "7c4f93917ae79f763697"
     },
     {
-      "line": 730,
+      "line": 737,
       "section": "iPhone destructive shutdown coordination — 2026-10-18",
       "statuses": [
         "Done"
@@ -7648,7 +7798,7 @@
       "id": "88764b000fe867eda291"
     },
     {
-      "line": 731,
+      "line": 738,
       "section": "iPhone destructive shutdown coordination — 2026-10-18",
       "statuses": [
         "Pending"
@@ -7660,7 +7810,7 @@
       "id": "069950265673795625cd"
     },
     {
-      "line": 735,
+      "line": 742,
       "section": "Pastel appearance and shared dial detail — 2026-10-18",
       "statuses": [
         "Done"
@@ -7672,7 +7822,7 @@
       "id": "aab4a84f12fcef04d33f"
     },
     {
-      "line": 736,
+      "line": 743,
       "section": "Pastel appearance and shared dial detail — 2026-10-18",
       "statuses": [
         "Done"
@@ -7684,7 +7834,7 @@
       "id": "0d987cf5cebf73a05f85"
     },
     {
-      "line": 737,
+      "line": 744,
       "section": "Pastel appearance and shared dial detail — 2026-10-18",
       "statuses": [
         "Done"
@@ -7696,7 +7846,7 @@
       "id": "b0d0dea1623ff7a87990"
     },
     {
-      "line": 738,
+      "line": 745,
       "section": "Pastel appearance and shared dial detail — 2026-10-18",
       "statuses": [
         "Done"
@@ -7713,7 +7863,7 @@
       "id": "f305103a46e8d6f36d7f"
     },
     {
-      "line": 739,
+      "line": 746,
       "section": "Pastel appearance and shared dial detail — 2026-10-18",
       "statuses": [
         "Pending"
@@ -7725,7 +7875,7 @@
       "id": "65d3266f066cda0beb57"
     },
     {
-      "line": 743,
+      "line": 750,
       "section": "iPhone speaker continuity coordination — 2026-10-17",
       "statuses": [
         "Done"
@@ -7737,7 +7887,7 @@
       "id": "74433d081a628c6994ff"
     },
     {
-      "line": 744,
+      "line": 751,
       "section": "iPhone speaker continuity coordination — 2026-10-17",
       "statuses": [
         "Done"
@@ -7760,7 +7910,7 @@
       "id": "d8068c19e33205e025df"
     },
     {
-      "line": 745,
+      "line": 752,
       "section": "iPhone speaker continuity coordination — 2026-10-17",
       "statuses": [
         "Done"
@@ -7777,7 +7927,7 @@
       "id": "9d4c5470337fa060b546"
     },
     {
-      "line": 746,
+      "line": 753,
       "section": "iPhone speaker continuity coordination — 2026-10-17",
       "statuses": [
         "Done"
@@ -7794,7 +7944,7 @@
       "id": "5302b4cb42bdf87797e8"
     },
     {
-      "line": 747,
+      "line": 754,
       "section": "iPhone speaker continuity coordination — 2026-10-17",
       "statuses": [
         "Done"
@@ -7811,7 +7961,7 @@
       "id": "18ab50869f0e1dcdc0e0"
     },
     {
-      "line": 748,
+      "line": 755,
       "section": "iPhone speaker continuity coordination — 2026-10-17",
       "statuses": [
         "Pending"
@@ -7823,7 +7973,7 @@
       "id": "160f2a0da0414388192d"
     },
     {
-      "line": 752,
+      "line": 759,
       "section": "iPhone preparation diagnostics coordination — 2026-10-17",
       "statuses": [
         "Done"
@@ -7835,7 +7985,7 @@
       "id": "90a1eda26c0e3a94e682"
     },
     {
-      "line": 753,
+      "line": 760,
       "section": "iPhone preparation diagnostics coordination — 2026-10-17",
       "statuses": [
         "Done"
@@ -7852,7 +8002,7 @@
       "id": "cbb1503af09c5dbb5b59"
     },
     {
-      "line": 754,
+      "line": 761,
       "section": "iPhone preparation diagnostics coordination — 2026-10-17",
       "statuses": [
         "Pending"
@@ -7864,7 +8014,7 @@
       "id": "f1521322f0ce48a7ee29"
     },
     {
-      "line": 758,
+      "line": 765,
       "section": "Effect ON/OFF protection — 2026-10-17",
       "statuses": [
         "Done"
@@ -7876,7 +8026,7 @@
       "id": "ff39c61dd04650a1323e"
     },
     {
-      "line": 759,
+      "line": 766,
       "section": "Effect ON/OFF protection — 2026-10-17",
       "statuses": [
         "Done"
@@ -7888,7 +8038,7 @@
       "id": "0f3122417b421ddfb7dc"
     },
     {
-      "line": 760,
+      "line": 767,
       "section": "Effect ON/OFF protection — 2026-10-17",
       "statuses": [
         "Done"
@@ -7905,7 +8055,7 @@
       "id": "e532731d8b27c2453163"
     },
     {
-      "line": 761,
+      "line": 768,
       "section": "Effect ON/OFF protection — 2026-10-17",
       "statuses": [
         "Done"
@@ -7917,7 +8067,7 @@
       "id": "eb2e8a8d4fe113cfb2ef"
     },
     {
-      "line": 762,
+      "line": 769,
       "section": "Effect ON/OFF protection — 2026-10-17",
       "statuses": [
         "Pending"
@@ -7929,7 +8079,7 @@
       "id": "dcf49f42d2d37e244c74"
     },
     {
-      "line": 763,
+      "line": 770,
       "section": "Effect ON/OFF protection — 2026-10-17",
       "statuses": [
         "Later"
@@ -7941,7 +8091,7 @@
       "id": "ede25d91cd3fefb97871"
     },
     {
-      "line": 767,
+      "line": 774,
       "section": "Effect parameter parity — 2026-10-17",
       "statuses": [
         "Done"
@@ -7953,7 +8103,7 @@
       "id": "7270b788dba1ef6f76ab"
     },
     {
-      "line": 768,
+      "line": 775,
       "section": "Effect parameter parity — 2026-10-17",
       "statuses": [
         "Done"
@@ -7970,7 +8120,7 @@
       "id": "1703b46ac6b052af8a02"
     },
     {
-      "line": 769,
+      "line": 776,
       "section": "Effect parameter parity — 2026-10-17",
       "statuses": [
         "Done"
@@ -7987,7 +8137,7 @@
       "id": "f8662199170385647eb6"
     },
     {
-      "line": 770,
+      "line": 777,
       "section": "Effect parameter parity — 2026-10-17",
       "statuses": [
         "Pending"
@@ -7999,7 +8149,7 @@
       "id": "cf0016b13cfa375946b3"
     },
     {
-      "line": 771,
+      "line": 778,
       "section": "Effect parameter parity — 2026-10-17",
       "statuses": [
         "Later"
@@ -8011,7 +8161,7 @@
       "id": "a0cb6c6b237bafca1de3"
     },
     {
-      "line": 775,
+      "line": 782,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Done"
@@ -8023,7 +8173,7 @@
       "id": "3c0eb38cbc1b6b148ca8"
     },
     {
-      "line": 776,
+      "line": 783,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Done"
@@ -8035,7 +8185,7 @@
       "id": "8de3313089fc9ada5598"
     },
     {
-      "line": 777,
+      "line": 784,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Done"
@@ -8052,7 +8202,7 @@
       "id": "a2b570d9184bc9e5f78a"
     },
     {
-      "line": 778,
+      "line": 785,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Done"
@@ -8069,7 +8219,7 @@
       "id": "aa02c540bdc746a816a0"
     },
     {
-      "line": 779,
+      "line": 786,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Done"
@@ -8081,7 +8231,7 @@
       "id": "c24153931a57290384e2"
     },
     {
-      "line": 780,
+      "line": 787,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Pending"
@@ -8098,7 +8248,7 @@
       "id": "29ebe3ccdc6d4918e965"
     },
     {
-      "line": 781,
+      "line": 788,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Pending"
@@ -8110,7 +8260,7 @@
       "id": "562f65bbd8c57d867890"
     },
     {
-      "line": 782,
+      "line": 789,
       "section": "Audio fidelity policy — 2026-10-17",
       "statuses": [
         "Later"
@@ -8122,7 +8272,7 @@
       "id": "842011799b9d4b3a2e05"
     },
     {
-      "line": 803,
+      "line": 810,
       "section": "2. ステータス",
       "statuses": [
         "Done"
@@ -8134,7 +8284,7 @@
       "id": "637063bfa578a6037369"
     },
     {
-      "line": 804,
+      "line": 811,
       "section": "2. ステータス",
       "statuses": [
         "Next"
@@ -8146,7 +8296,7 @@
       "id": "8a381a8235f3d01a1a9a"
     },
     {
-      "line": 805,
+      "line": 812,
       "section": "2. ステータス",
       "statuses": [
         "Later"
@@ -8158,7 +8308,7 @@
       "id": "1b881e1cea6a953cda78"
     },
     {
-      "line": 806,
+      "line": 813,
       "section": "2. ステータス",
       "statuses": [
         "Pending"
@@ -8170,7 +8320,7 @@
       "id": "e66ba790bcb745185f02"
     },
     {
-      "line": 812,
+      "line": 819,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8182,7 +8332,7 @@
       "id": "99ca361cdb11bb67de97"
     },
     {
-      "line": 813,
+      "line": 820,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8194,7 +8344,7 @@
       "id": "d8e566b9bfa364fd7bb1"
     },
     {
-      "line": 814,
+      "line": 821,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8211,7 +8361,7 @@
       "id": "09340acd8764808385db"
     },
     {
-      "line": 815,
+      "line": 822,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Pending"
@@ -8223,7 +8373,7 @@
       "id": "d2d9a047463262ea40d9"
     },
     {
-      "line": 817,
+      "line": 824,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8235,7 +8385,7 @@
       "id": "977ff12138afd6417f9d"
     },
     {
-      "line": 819,
+      "line": 826,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8247,7 +8397,7 @@
       "id": "0c2867357b9caae10fda"
     },
     {
-      "line": 821,
+      "line": 828,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8259,7 +8409,7 @@
       "id": "a08c600f3ee92e6f57e5"
     },
     {
-      "line": 823,
+      "line": 830,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8276,7 +8426,7 @@
       "id": "c8b479444bf1cc9052d6"
     },
     {
-      "line": 825,
+      "line": 832,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8288,7 +8438,7 @@
       "id": "e373cc627a77ebbde1a4"
     },
     {
-      "line": 826,
+      "line": 833,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8305,7 +8455,7 @@
       "id": "3e61abdfb37965a5b0ab"
     },
     {
-      "line": 828,
+      "line": 835,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8317,7 +8467,7 @@
       "id": "f193a62a7f1b4a656297"
     },
     {
-      "line": 830,
+      "line": 837,
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
       "statuses": [
         "Done"
@@ -8345,7 +8495,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 838
+      "line": 845
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8359,7 +8509,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 839
+      "line": 846
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8373,7 +8523,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 840
+      "line": 847
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8387,7 +8537,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 841
+      "line": 848
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8401,7 +8551,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 842
+      "line": 849
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8415,7 +8565,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 843
+      "line": 850
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8429,7 +8579,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 845
+      "line": 852
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8443,7 +8593,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 846
+      "line": 853
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8457,7 +8607,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 847
+      "line": 854
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8471,7 +8621,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 848
+      "line": 855
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8485,7 +8635,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 849
+      "line": 856
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8499,7 +8649,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 850
+      "line": 857
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8513,7 +8663,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 851
+      "line": 858
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8527,7 +8677,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 852
+      "line": 859
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8541,7 +8691,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 853
+      "line": 860
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8555,7 +8705,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 854
+      "line": 861
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8569,7 +8719,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 855
+      "line": 862
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8583,7 +8733,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 856
+      "line": 863
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8597,7 +8747,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 857
+      "line": 864
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8611,7 +8761,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 858
+      "line": 865
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8625,7 +8775,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 859
+      "line": 866
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8639,7 +8789,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 860
+      "line": 867
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8653,7 +8803,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 861
+      "line": 868
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8667,7 +8817,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 862
+      "line": 869
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8681,7 +8831,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 863
+      "line": 870
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8695,7 +8845,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 864
+      "line": 871
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8709,7 +8859,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 865
+      "line": 872
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8723,7 +8873,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 866
+      "line": 873
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8737,7 +8887,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 867
+      "line": 874
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8751,7 +8901,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 868
+      "line": 875
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8765,7 +8915,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 869
+      "line": 876
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8779,7 +8929,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 870
+      "line": 877
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8793,7 +8943,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 871
+      "line": 878
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8807,7 +8957,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 872
+      "line": 879
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8821,7 +8971,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 873
+      "line": 880
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8835,7 +8985,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 874
+      "line": 881
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8849,7 +8999,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 875
+      "line": 882
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8863,7 +9013,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 876
+      "line": 883
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8877,7 +9027,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 877
+      "line": 884
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8891,7 +9041,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 878
+      "line": 885
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8905,7 +9055,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 879
+      "line": 886
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8919,7 +9069,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 880
+      "line": 887
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8933,7 +9083,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 881
+      "line": 888
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8947,7 +9097,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 882
+      "line": 889
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8961,7 +9111,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 883
+      "line": 890
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8975,7 +9125,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 884
+      "line": 891
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -8989,7 +9139,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 885
+      "line": 892
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9003,7 +9153,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 886
+      "line": 893
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9017,7 +9167,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 887
+      "line": 894
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9031,7 +9181,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 888
+      "line": 895
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9045,7 +9195,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 889
+      "line": 896
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9059,7 +9209,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 890
+      "line": 897
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9073,7 +9223,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 891
+      "line": 898
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9087,7 +9237,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 892
+      "line": 899
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9102,7 +9252,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 893
+      "line": 900
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9116,7 +9266,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 894
+      "line": 901
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9130,7 +9280,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 895
+      "line": 902
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9144,7 +9294,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 896
+      "line": 903
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9158,7 +9308,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 897
+      "line": 904
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9172,7 +9322,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 898
+      "line": 905
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9186,7 +9336,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 899
+      "line": 906
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9200,7 +9350,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 900
+      "line": 907
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9214,7 +9364,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 901
+      "line": 908
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9228,7 +9378,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 902
+      "line": 909
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9242,7 +9392,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 903
+      "line": 910
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9256,7 +9406,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 904
+      "line": 911
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9270,7 +9420,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 905
+      "line": 912
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9284,7 +9434,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 906
+      "line": 913
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9298,7 +9448,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 907
+      "line": 914
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9312,7 +9462,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 908
+      "line": 915
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9326,7 +9476,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 909
+      "line": 916
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9340,7 +9490,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 910
+      "line": 917
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9354,7 +9504,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 911
+      "line": 918
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9368,7 +9518,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 912
+      "line": 919
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9382,7 +9532,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 913
+      "line": 920
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9396,7 +9546,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 914
+      "line": 921
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9410,7 +9560,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 918
+      "line": 925
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9424,7 +9574,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 919
+      "line": 926
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9438,7 +9588,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 920
+      "line": 927
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9452,7 +9602,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 921
+      "line": 928
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9466,7 +9616,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 922
+      "line": 929
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9480,7 +9630,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 923
+      "line": 930
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9494,7 +9644,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 924
+      "line": 931
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9508,7 +9658,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 925
+      "line": 932
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9522,7 +9672,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 926
+      "line": 933
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9536,7 +9686,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 927
+      "line": 934
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9550,7 +9700,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 928
+      "line": 935
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9564,7 +9714,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 929
+      "line": 936
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9578,7 +9728,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 930
+      "line": 937
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9592,7 +9742,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 931
+      "line": 938
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9606,7 +9756,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 932
+      "line": 939
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9620,7 +9770,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 936
+      "line": 943
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9634,7 +9784,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 937
+      "line": 944
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9648,7 +9798,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 938
+      "line": 945
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9662,7 +9812,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 939
+      "line": 946
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9676,7 +9826,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 940
+      "line": 947
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9690,7 +9840,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 941
+      "line": 948
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9704,7 +9854,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 942
+      "line": 949
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9718,7 +9868,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 943
+      "line": 950
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9732,7 +9882,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 944
+      "line": 951
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9746,7 +9896,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 945
+      "line": 952
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9760,7 +9910,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 946
+      "line": 953
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9774,7 +9924,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 947
+      "line": 954
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9788,7 +9938,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 948
+      "line": 955
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9802,7 +9952,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 949
+      "line": 956
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9816,7 +9966,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 950
+      "line": 957
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9830,7 +9980,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 951
+      "line": 958
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9844,7 +9994,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 952
+      "line": 959
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9858,7 +10008,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 953
+      "line": 960
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9872,7 +10022,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 954
+      "line": 961
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9886,7 +10036,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 955
+      "line": 962
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9900,7 +10050,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 956
+      "line": 963
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9914,7 +10064,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 957
+      "line": 964
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9928,7 +10078,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 958
+      "line": 965
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9942,7 +10092,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 959
+      "line": 966
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9956,7 +10106,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 960
+      "line": 967
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9970,7 +10120,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 961
+      "line": 968
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9984,7 +10134,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 962
+      "line": 969
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -9998,7 +10148,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 963
+      "line": 970
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10012,7 +10162,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 964
+      "line": 971
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10026,7 +10176,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 965
+      "line": 972
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10040,7 +10190,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 966
+      "line": 973
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10054,7 +10204,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 967
+      "line": 974
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10068,7 +10218,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 968
+      "line": 975
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10082,7 +10232,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 969
+      "line": 976
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10096,7 +10246,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 970
+      "line": 977
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10110,7 +10260,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 971
+      "line": 978
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10124,7 +10274,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 972
+      "line": 979
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10138,7 +10288,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 973
+      "line": 980
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10152,7 +10302,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 974
+      "line": 981
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10166,7 +10316,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 975
+      "line": 982
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10180,7 +10330,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 976
+      "line": 983
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10194,7 +10344,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 977
+      "line": 984
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10208,7 +10358,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 978
+      "line": 985
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10222,7 +10372,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 979
+      "line": 986
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10236,7 +10386,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 980
+      "line": 987
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10250,7 +10400,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 981
+      "line": 988
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10264,7 +10414,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 982
+      "line": 989
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10278,7 +10428,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 983
+      "line": 990
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10292,7 +10442,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 984
+      "line": 991
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10306,7 +10456,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 990
+      "line": 997
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10320,7 +10470,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 991
+      "line": 998
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10334,7 +10484,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 992
+      "line": 999
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10348,7 +10498,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 993
+      "line": 1000
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10362,7 +10512,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 994
+      "line": 1001
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10376,7 +10526,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 995
+      "line": 1002
     },
     {
       "section": "3. 過去の進捗記録（主に2026-10-16時点）",
@@ -10390,10 +10540,10 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 996
+      "line": 1003
     },
     {
-      "line": 1004,
+      "line": 1011,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10406,7 +10556,7 @@
       "id": "cfc84f069c768abea6a7"
     },
     {
-      "line": 1005,
+      "line": 1012,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10419,7 +10569,7 @@
       "id": "34a550b817b176f173b1"
     },
     {
-      "line": 1006,
+      "line": 1013,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done"
@@ -10431,7 +10581,7 @@
       "id": "6d6c9715812405aa4998"
     },
     {
-      "line": 1007,
+      "line": 1014,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10443,7 +10593,7 @@
       "id": "ca386169c2602a796b9a"
     },
     {
-      "line": 1008,
+      "line": 1015,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10456,7 +10606,7 @@
       "id": "e8b3b81e9e715de23202"
     },
     {
-      "line": 1009,
+      "line": 1016,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10469,7 +10619,7 @@
       "id": "ececd93aa4f2f0bb2a55"
     },
     {
-      "line": 1010,
+      "line": 1017,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10482,7 +10632,7 @@
       "id": "38041155067fcb0c9862"
     },
     {
-      "line": 1011,
+      "line": 1018,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10495,7 +10645,7 @@
       "id": "879a98ac3f83b9a5c3c8"
     },
     {
-      "line": 1012,
+      "line": 1019,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10508,7 +10658,7 @@
       "id": "511dc1661365a4139ed9"
     },
     {
-      "line": 1013,
+      "line": 1020,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10520,7 +10670,7 @@
       "id": "b1ff83260b253dc09f52"
     },
     {
-      "line": 1014,
+      "line": 1021,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done"
@@ -10532,7 +10682,7 @@
       "id": "fa71d23b5945ae040990"
     },
     {
-      "line": 1015,
+      "line": 1022,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done"
@@ -10544,7 +10694,7 @@
       "id": "cd4b526f6600e3f0ef39"
     },
     {
-      "line": 1016,
+      "line": 1023,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done"
@@ -10556,7 +10706,7 @@
       "id": "2c50b0cf0a8d653e1818"
     },
     {
-      "line": 1017,
+      "line": 1024,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10569,7 +10719,7 @@
       "id": "af8161cad8d237870284"
     },
     {
-      "line": 1018,
+      "line": 1025,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10581,7 +10731,7 @@
       "id": "0ef2906a2e1474b9c50e"
     },
     {
-      "line": 1019,
+      "line": 1026,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10593,7 +10743,7 @@
       "id": "5674b556838bd871d7cb"
     },
     {
-      "line": 1020,
+      "line": 1027,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10605,7 +10755,7 @@
       "id": "8288d70e0f7433ab36ca"
     },
     {
-      "line": 1021,
+      "line": 1028,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10617,7 +10767,7 @@
       "id": "367a1e6097c960d5fb09"
     },
     {
-      "line": 1022,
+      "line": 1029,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10629,7 +10779,7 @@
       "id": "e65b0474326fd472bc24"
     },
     {
-      "line": 1023,
+      "line": 1030,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10641,7 +10791,7 @@
       "id": "586c44c52b65213c91ef"
     },
     {
-      "line": 1024,
+      "line": 1031,
       "section": "4. 機能網羅表",
       "statuses": [
         "Done",
@@ -10654,7 +10804,7 @@
       "id": "4643b6393e75cfbc11b4"
     },
     {
-      "line": 1025,
+      "line": 1032,
       "section": "4. 機能網羅表",
       "statuses": [
         "Later"
@@ -10677,7 +10827,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1060
+      "line": 1067
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10691,7 +10841,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1061
+      "line": 1068
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10705,7 +10855,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1062
+      "line": 1069
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10719,7 +10869,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1063
+      "line": 1070
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10733,7 +10883,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1064
+      "line": 1071
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10747,7 +10897,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1065
+      "line": 1072
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10761,7 +10911,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1066
+      "line": 1073
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10775,7 +10925,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1067
+      "line": 1074
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10789,7 +10939,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1068
+      "line": 1075
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10803,7 +10953,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1069
+      "line": 1076
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10817,7 +10967,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1070
+      "line": 1077
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10831,7 +10981,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1071
+      "line": 1078
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10845,7 +10995,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1072
+      "line": 1079
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10859,7 +11009,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1073
+      "line": 1080
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10873,7 +11023,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1074
+      "line": 1081
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10887,7 +11037,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1075
+      "line": 1082
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10901,7 +11051,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1076
+      "line": 1083
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10915,7 +11065,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1077
+      "line": 1084
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10929,7 +11079,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1078
+      "line": 1085
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10943,7 +11093,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1079
+      "line": 1086
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10957,7 +11107,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1085
+      "line": 1092
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10971,7 +11121,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1086
+      "line": 1093
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10985,7 +11135,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1087
+      "line": 1094
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -10999,7 +11149,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1088
+      "line": 1095
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11013,7 +11163,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1089
+      "line": 1096
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11027,7 +11177,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1090
+      "line": 1097
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11041,7 +11191,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1091
+      "line": 1098
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11055,7 +11205,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1092
+      "line": 1099
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11069,7 +11219,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1098
+      "line": 1105
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11083,7 +11233,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1099
+      "line": 1106
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11097,7 +11247,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1100
+      "line": 1107
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11111,7 +11261,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1101
+      "line": 1108
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11125,7 +11275,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1102
+      "line": 1109
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11139,7 +11289,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1103
+      "line": 1110
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11153,7 +11303,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1104
+      "line": 1111
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11167,7 +11317,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1105
+      "line": 1112
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11181,7 +11331,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1111
+      "line": 1118
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11195,7 +11345,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1112
+      "line": 1119
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11209,7 +11359,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1113
+      "line": 1120
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11223,7 +11373,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1114
+      "line": 1121
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11237,7 +11387,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1115
+      "line": 1122
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11251,7 +11401,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1116
+      "line": 1123
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11265,7 +11415,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1117
+      "line": 1124
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11279,7 +11429,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1118
+      "line": 1125
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11293,7 +11443,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1119
+      "line": 1126
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11307,7 +11457,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1120
+      "line": 1127
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11321,7 +11471,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1121
+      "line": 1128
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11335,7 +11485,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1122
+      "line": 1129
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11349,7 +11499,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1123
+      "line": 1130
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11363,7 +11513,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1124
+      "line": 1131
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11377,7 +11527,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1125
+      "line": 1132
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11391,7 +11541,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1126
+      "line": 1133
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11405,7 +11555,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1127
+      "line": 1134
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11419,7 +11569,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1128
+      "line": 1135
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11433,7 +11583,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1129
+      "line": 1136
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11447,7 +11597,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1130
+      "line": 1137
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11461,7 +11611,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1131
+      "line": 1138
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11475,7 +11625,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1132
+      "line": 1139
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11489,7 +11639,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1133
+      "line": 1140
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11503,7 +11653,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1134
+      "line": 1141
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11517,7 +11667,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1135
+      "line": 1142
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11531,7 +11681,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1136
+      "line": 1143
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11545,7 +11695,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1142
+      "line": 1149
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11559,7 +11709,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1143
+      "line": 1150
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11573,7 +11723,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1144
+      "line": 1151
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11587,7 +11737,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1145
+      "line": 1152
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11601,7 +11751,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1146
+      "line": 1153
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11615,7 +11765,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1147
+      "line": 1154
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11629,7 +11779,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1148
+      "line": 1155
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11643,7 +11793,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1149
+      "line": 1156
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11657,7 +11807,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1150
+      "line": 1157
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11671,7 +11821,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1151
+      "line": 1158
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11685,7 +11835,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1152
+      "line": 1159
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11699,7 +11849,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1158
+      "line": 1165
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11713,7 +11863,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1159
+      "line": 1166
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11727,7 +11877,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1160
+      "line": 1167
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11741,7 +11891,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1161
+      "line": 1168
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11755,7 +11905,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1162
+      "line": 1169
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11769,7 +11919,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1163
+      "line": 1170
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11783,7 +11933,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1164
+      "line": 1171
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11797,7 +11947,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1165
+      "line": 1172
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11811,7 +11961,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1166
+      "line": 1173
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11825,7 +11975,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1167
+      "line": 1174
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11839,7 +11989,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1168
+      "line": 1175
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11853,7 +12003,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1169
+      "line": 1176
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11867,7 +12017,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1170
+      "line": 1177
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11881,7 +12031,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1171
+      "line": 1178
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11895,7 +12045,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1172
+      "line": 1179
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11909,7 +12059,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1178
+      "line": 1185
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11923,7 +12073,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1179
+      "line": 1186
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11937,7 +12087,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1180
+      "line": 1187
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11951,7 +12101,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1181
+      "line": 1188
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11965,7 +12115,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1182
+      "line": 1189
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11979,7 +12129,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1183
+      "line": 1190
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -11993,7 +12143,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1184
+      "line": 1191
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12007,7 +12157,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1185
+      "line": 1192
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12021,7 +12171,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1186
+      "line": 1193
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12035,7 +12185,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1187
+      "line": 1194
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12049,7 +12199,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1188
+      "line": 1195
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12063,7 +12213,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1189
+      "line": 1196
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12077,7 +12227,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1190
+      "line": 1197
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12091,7 +12241,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1191
+      "line": 1198
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12105,7 +12255,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1192
+      "line": 1199
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12119,7 +12269,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1193
+      "line": 1200
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12133,7 +12283,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1194
+      "line": 1201
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12147,7 +12297,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1195
+      "line": 1202
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12161,7 +12311,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1196
+      "line": 1203
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12175,7 +12325,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1197
+      "line": 1204
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12189,7 +12339,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1198
+      "line": 1205
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12203,7 +12353,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1199
+      "line": 1206
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12217,7 +12367,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1200
+      "line": 1207
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12231,7 +12381,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1201
+      "line": 1208
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12245,7 +12395,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1202
+      "line": 1209
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12259,7 +12409,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1208
+      "line": 1215
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12273,7 +12423,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1209
+      "line": 1216
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12287,7 +12437,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1210
+      "line": 1217
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12301,7 +12451,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1211
+      "line": 1218
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12315,7 +12465,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1212
+      "line": 1219
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12329,7 +12479,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1213
+      "line": 1220
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12343,7 +12493,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1214
+      "line": 1221
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12357,7 +12507,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1215
+      "line": 1222
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12371,7 +12521,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1216
+      "line": 1223
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12385,7 +12535,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1217
+      "line": 1224
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12399,7 +12549,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1218
+      "line": 1225
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12413,7 +12563,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1219
+      "line": 1226
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12427,7 +12577,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1220
+      "line": 1227
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12441,7 +12591,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1221
+      "line": 1228
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12455,7 +12605,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1222
+      "line": 1229
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12469,7 +12619,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1223
+      "line": 1230
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12483,7 +12633,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1224
+      "line": 1231
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12497,7 +12647,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1225
+      "line": 1232
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12511,7 +12661,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1226
+      "line": 1233
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12525,7 +12675,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1232
+      "line": 1239
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12539,7 +12689,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1233
+      "line": 1240
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12553,7 +12703,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1234
+      "line": 1241
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12567,7 +12717,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1235
+      "line": 1242
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12581,7 +12731,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1236
+      "line": 1243
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12595,7 +12745,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1237
+      "line": 1244
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12609,7 +12759,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1238
+      "line": 1245
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12623,7 +12773,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1239
+      "line": 1246
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12637,7 +12787,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1240
+      "line": 1247
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12651,7 +12801,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1241
+      "line": 1248
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12665,7 +12815,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1242
+      "line": 1249
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12679,7 +12829,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1243
+      "line": 1250
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12693,7 +12843,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1244
+      "line": 1251
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12707,7 +12857,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1245
+      "line": 1252
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12721,7 +12871,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1246
+      "line": 1253
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12735,7 +12885,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1247
+      "line": 1254
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12749,7 +12899,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1248
+      "line": 1255
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12763,7 +12913,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1249
+      "line": 1256
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12777,7 +12927,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1250
+      "line": 1257
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12791,7 +12941,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1251
+      "line": 1258
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12805,7 +12955,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1252
+      "line": 1259
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12819,7 +12969,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1253
+      "line": 1260
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12833,7 +12983,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1254
+      "line": 1261
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12847,7 +12997,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1255
+      "line": 1262
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12861,7 +13011,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1256
+      "line": 1263
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12875,7 +13025,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1257
+      "line": 1264
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12889,7 +13039,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1258
+      "line": 1265
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12903,7 +13053,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1259
+      "line": 1266
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12917,7 +13067,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1260
+      "line": 1267
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12931,7 +13081,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1261
+      "line": 1268
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12945,7 +13095,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1267
+      "line": 1274
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12959,7 +13109,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1268
+      "line": 1275
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12973,7 +13123,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1269
+      "line": 1276
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -12987,7 +13137,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1270
+      "line": 1277
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13001,7 +13151,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1271
+      "line": 1278
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13015,7 +13165,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1272
+      "line": 1279
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13029,7 +13179,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1273
+      "line": 1280
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13043,7 +13193,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1274
+      "line": 1281
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13057,7 +13207,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1275
+      "line": 1282
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13071,7 +13221,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1281
+      "line": 1288
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13085,7 +13235,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1282
+      "line": 1289
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13099,7 +13249,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1283
+      "line": 1290
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13113,7 +13263,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1284
+      "line": 1291
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13127,7 +13277,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1285
+      "line": 1292
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13141,7 +13291,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1286
+      "line": 1293
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13155,7 +13305,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1292
+      "line": 1299
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13169,7 +13319,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1293
+      "line": 1300
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13183,7 +13333,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1294
+      "line": 1301
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13197,7 +13347,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1295
+      "line": 1302
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13211,7 +13361,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1296
+      "line": 1303
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13225,7 +13375,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1300
+      "line": 1307
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13239,7 +13389,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1301
+      "line": 1308
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13253,7 +13403,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1302
+      "line": 1309
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13267,7 +13417,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1303
+      "line": 1310
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13281,7 +13431,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1304
+      "line": 1311
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13295,7 +13445,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1308
+      "line": 1315
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13309,7 +13459,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1309
+      "line": 1316
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13323,7 +13473,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1310
+      "line": 1317
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13337,7 +13487,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1314
+      "line": 1321
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13351,7 +13501,7 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1315
+      "line": 1322
     },
     {
       "section": "7. 機能分類別の実装台帳",
@@ -13365,10 +13515,10 @@
       "references": [
         "docs/quality/PAIRING_INVITATION_2026-11-06.md"
       ],
-      "line": 1316
+      "line": 1323
     },
     {
-      "line": 1427,
+      "line": 1434,
       "section": "14. 進捗運用",
       "statuses": [
         "Next"
@@ -13380,7 +13530,7 @@
       "id": "1a0030f2d618bf69740b"
     },
     {
-      "line": 1428,
+      "line": 1435,
       "section": "14. 進捗運用",
       "statuses": [
         "Done"
@@ -13392,7 +13542,7 @@
       "id": "27315847fb1b5f976a24"
     },
     {
-      "line": 1455,
+      "line": 1462,
       "section": "別ライブラリの選択と保存先未接続 — 2026-11-04",
       "statuses": [
         "Done"
@@ -13404,7 +13554,7 @@
       "id": "fccc9a7f22636f199fb9"
     },
     {
-      "line": 1456,
+      "line": 1463,
       "section": "別ライブラリの選択と保存先未接続 — 2026-11-04",
       "statuses": [
         "Done"
@@ -13416,7 +13566,7 @@
       "id": "56fadbc9639743a1f343"
     },
     {
-      "line": 1457,
+      "line": 1464,
       "section": "別ライブラリの選択と保存先未接続 — 2026-11-04",
       "statuses": [
         "Done"
@@ -13428,7 +13578,7 @@
       "id": "aae154b645f91c398d98"
     },
     {
-      "line": 1458,
+      "line": 1465,
       "section": "別ライブラリの選択と保存先未接続 — 2026-11-04",
       "statuses": [
         "Done"
@@ -13440,7 +13590,7 @@
       "id": "b49b555280dcd3184f15"
     },
     {
-      "line": 1459,
+      "line": 1466,
       "section": "別ライブラリの選択と保存先未接続 — 2026-11-04",
       "statuses": [
         "Pending"

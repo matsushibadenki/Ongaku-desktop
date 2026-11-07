@@ -1,0 +1,14 @@
+{
+  "audio/HiResPlaybackEngine.swift": "165addd11b804d4330b951058ff6a9ec3c85ae3feee2fc2489b8e4da5cd49737",
+  "audio/AppearanceControls.swift": "ad3d1d88e5f43daace403667f84c487f87415d07df7d7ca823aea84cd6822b3f",
+  "audio/AudioPlayerViewModel.swift": "4ee9680849ed6a7e70fa974cb78196b91e7ebbf53c4044156642a8176611b3a7",
+  "tests/SharedPreparationWaitRegression.swift": "50563eaafc0f098af4f8ee3dc2bba97aec7eaa804232cd7e2a46e732ef191c43",
+  "tests/extract_shared_preparation_wait.py": "6ae59dc56c75e7793faac0b7b33d7268b92fcce40cba245bf7a87d737dfd5a54",
+  "tests/run_shared_preparation_wait_regression.sh": "3685783e364bf7232871ae17b065a3855d3cdb2ed4fe74e89cea3dcdbfd67e80",
+  "tests/extract_effect_presentation_fixture.py": "002a07ff53c3d57a5a9697665123d315966c43dffded123c715be997d78b7cb0",
+  "tests/EffectPresentationRegression.swift": "77fb811d3715a84169239bb9609d150bb2ea928a832a73f77dbb6ffe5f902196",
+  "tests/FullPreparationProbe.swift": "7319ba7d97459d6361eb372b49430ae9ac2f3c8ae82d5e7e97db6f9f0f8e5e35",
+  "tests/instrument_full_preparation.py": "c1fcde8a6842595429aee92a2369d954c1ebe24883425bbc7e7fe38b9cd123bd",
+  "tests/EffectsMountAuditApp.swift": "03d3cec7aa6dd3dece571db4a863aea3292178dcccedb6aa75d4396f43e0e1f0",
+  "tests/run_effects_mount_audit.sh": "514fefb76c513b8addcf44ec66e82306547da4bd18f0ec58fd9690949f622a8e"
+}

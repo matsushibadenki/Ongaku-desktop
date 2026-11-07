@@ -56,3 +56,7 @@ The initial audit harness used a legacy app lifecycle and was rejected by iOS 27
 ⭕️ [Pending] Physical iPhone speaker noise and output waveform during first/repeated Effects entry, active controls under OFF/BASIC/Pro, full Music library, cold/warm high-quality conversion, I/O/FFT/allocation/throttle cancellation latency, source handoff, scrolling and rapid mode changes, foreground/pause/resume, narrow and largest iPhone screens and signed-app/thermal/power conditions. Do not mark the user's noise resolved from these measurements. Hardware frame/GPU counters, concurrent workers and actual audio deadlines are not measured here.
 
 [Raw logs, before/after measurements, screenshots and source hashes](../measurements/effects-mount-cancellation-2026-11-07/).
+
+## Follow-up: preparation boundaries and remaining UI work
+
+[Full-module preparation and light-theme raster reuse](FULL_PREPARATION_CANCELLATION_2026-11-07.md) adds measured read/allocation/FFT/wait/analysis/persistence boundaries, all modes, and native-thumb sharing. Physical noise, true GPU/first-frame deadlines and the explicitly excluded async/remote paths remain unqualified.

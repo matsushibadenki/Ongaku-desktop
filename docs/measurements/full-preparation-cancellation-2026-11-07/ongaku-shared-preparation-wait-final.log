@@ -1,0 +1,4 @@
+PASS: cancelled shared waiter returns without producer completion; elapsedMs=0.028967857360839844
+PASS: shared producer remains usable by another caller
+PASS: pre-cancelled caller does not consume prepared cache
+PASS: 200 installation/completion/cancellation races resume once

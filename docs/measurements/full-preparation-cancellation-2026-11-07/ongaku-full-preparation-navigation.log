@@ -1,0 +1,6 @@
+PASS: 1,800 telemetry publications do not refresh Library/Search presentation
+PASS: library/playback/overlay batch produces one update after values commit
+PASS: repeated identical transport observations do not refresh navigation content
+PASS: query/results/catalog changes refresh Search without refreshing Library
+PASS: loading, permission and effect-processing changes still update row controls
+PASS: route identity survives metadata refresh and typed tab paths remain independent
