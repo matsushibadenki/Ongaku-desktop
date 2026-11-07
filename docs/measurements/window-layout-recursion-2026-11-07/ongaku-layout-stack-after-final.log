@@ -1,0 +1,9 @@
+(lldb) settings set target.disable-aslr false
+(lldb) command script import /private/tmp/ongaku_layout_trace.py
+(lldb) command script add -f ongaku_layout_trace.trace trace_layout
+(lldb) trace_layout
+Process 54710 exited with status = 9 (0x00000009) killed
+launch=success root=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuLayoutTrace-u78kf356
+observedSeconds=35.05 breakpointLocations=1 lastState=6
+hit=False
+(lldb) quit

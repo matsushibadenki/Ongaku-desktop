@@ -1,0 +1,10 @@
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Playback transport integration" started.
+◇ Test "Compatible file reload retains the graph but retires source, gain and tail ownership" started.
+2026-11-07 07:40:29.712 swiftpm-testing-helper[12142:115666] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 07:40:29.714 swiftpm-testing-helper[12142:115666] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+✔ Test "Compatible file reload retains the graph but retires source, gain and tail ownership" passed after 6.698 seconds.
+✔ Suite "Playback transport integration" passed after 6.698 seconds.
+✔ Test run with 1 test in 1 suite passed after 6.698 seconds.

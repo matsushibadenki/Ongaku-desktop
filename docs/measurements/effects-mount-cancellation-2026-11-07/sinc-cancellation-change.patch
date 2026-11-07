@@ -1,0 +1,74 @@
+--- before/HiResPlaybackEngine.swift
++++ after/HiResPlaybackEngine.swift
+@@ -4547,7 +4547,7 @@
+         let kernelSize = kernelProfile.radius * (phaseMode == .minimumPhase ? 4 : 2) + 1
+         let numPhases = kernelProfile.numPhases
+         let cutoff = Float(min(1.0, targetRate / sourceRate) * Double(phaseMode.cutoffScale))
+-        let kernels = cachedPolyphaseSincKernels(
++        let kernels = try cachedPolyphaseSincKernels(
+             cutoff: cutoff,
+             kernelRadius: kernelRadius,
+             kernelSize: kernelSize,
+@@ -4593,12 +4593,15 @@
+                     throw HiResEngineError.sourceBufferFailed
+                 }
+                 audioFile.framePosition = AVAudioFramePosition(sourceReadStart)
++                try Task.checkCancellation()
+                 try audioFile.read(into: sourceChunk, frameCount: sourceChunkCapacity)
++                try Task.checkCancellation()
+                 let normalizedChunk = try normalizePrecisionSincSourceChunk(
+                     sourceChunk,
+                     sourceFormat: sourceFormat,
+                     intermediateFormat: intermediateFormat
+                 )
++                try Task.checkCancellation()
+                 guard let sourceChannels = normalizedChunk.floatChannelData else {
+                     throw HiResEngineError.upconvertFailed
+                 }
+@@ -4871,7 +4874,7 @@
+         let kernelRadius = kernelProfile.radius * (phaseMode == .minimumPhase ? 3 : 1)
+         let kernelSize = kernelProfile.radius * (phaseMode == .minimumPhase ? 4 : 2) + 1
+         let numPhases = kernelProfile.numPhases
+-        let polyphaseKernels = Self.cachedPolyphaseSincKernels(
++        let polyphaseKernels = try Self.cachedPolyphaseSincKernels(
+             cutoff: cutoff,
+             kernelRadius: kernelRadius,
+             kernelSize: kernelSize,
+@@ -5106,7 +5109,8 @@
+         numPhases: Int,
+         phaseMode: PrecisionSincPhaseMode,
+         qualityMode: PrecisionSincQualityMode
+-    ) -> [Float] {
++    ) throws -> [Float] {
++        try Task.checkCancellation()
+         let key = SincKernelCacheKey(
+             kernelSize: kernelSize,
+             numPhases: numPhases,
+@@ -5122,6 +5126,7 @@
+         }
+         sincKernelCacheLock.unlock()
+ 
++        try Task.checkCancellation()
+         var kernels = [Float](repeating: 0, count: numPhases * kernelSize)
+ 
+         // A magnitude-only minimum-phase reconstruction removes fractional
+@@ -5150,9 +5155,11 @@
+         }
+ 
+         for p in 0..<numPhases {
++            try Task.checkCancellation()
+             let fractional = Float(p) / Float(numPhases)
+             let phaseOffset = p * kernelSize
+             for k in 0..<prototypeSize {
++                if k & 0xF == 0 { try Task.checkCancellation() }
+                 let coefficient = Self.sincCoefficientFloat(
+                     distance: Float(k - prototypeRadius) - fractional,
+                     cutoff: cutoff, kernelRadius: prototypeRadius, phaseMode: phaseMode)
+@@ -5175,6 +5182,7 @@
+             }
+         }
+ 
++        try Task.checkCancellation()
+         sincKernelCacheLock.lock()
+         if sincKernelCache.count > 24 {
+             sincKernelCache.removeAll(keepingCapacity: true)

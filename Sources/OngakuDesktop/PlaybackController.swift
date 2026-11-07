@@ -1740,6 +1740,97 @@ final class PlaybackController: ObservableObject {
         publishQueueState(force: true)
     }
 
+#if DEBUG
+    private var frameAuditOutput: AVAudioFormat?
+
+    /// Drives the shipping graph builder without a physical output device.
+    /// Consecutive calls retain this controller to exercise reconnect/reuse.
+    func auditProductFrames(url: URL, outputRate: Double, overlap: Bool, maximumFrames: AVAudioFrameCount = 2048, reuseGraph: Bool = false, incomingURL: URL? = nil, renderSeconds: Double? = nil, spaceSize: Double? = nil, capturePCM: ((AVAudioPCMBuffer) -> Void)? = nil) throws -> (peak: Float, mixers: [String], generation: UInt64) {
+        if let renderSeconds, !renderSeconds.isFinite || renderSeconds <= 0 || renderSeconds > 20 {
+            throw NSError(domain: "Ongaku.FrameAudit", code: -3)
+        }
+        engine.stop()
+        primaryPlayerNode.stop(); secondaryPlayerNode.stop()
+        removeMeterTapIfNeeded()
+        let output = AVAudioFormat(standardFormatWithSampleRate: outputRate, channels: 2)!
+        let canRetainManualGraph = reuseGraph && engine.isInManualRenderingMode
+            && engine.manualRenderingFormat.isEqual(output)
+            && engine.manualRenderingMaximumFrameCount == maximumFrames
+        if !canRetainManualGraph { engine.disableManualRenderingMode() }
+        frameAuditOutput = output
+        effectsBypassed = false
+        effectSettings = AudioEffectModuleRegistry.makeDefaultSettings().map { setting in
+            var enabled = setting
+            enabled.isEnabled = true
+            for key in enabled.parameters.keys { enabled.parameters[key] = 0.5 }
+            if enabled.kind == .space, let spaceSize { enabled.parameters["size"] = spaceSize }
+            return enabled
+        }
+        finalOutputProtection.setTransitionGain(1, engine: engine)
+        finalOutputProtection.setTransportGain(1, engine: engine)
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        effectAudioGain.setImmediate(1); transportAudioGain.setImmediate(1)
+#endif
+        defer { engine.stop(); primaryPlayerNode.stop(); secondaryPlayerNode.stop(); frameAuditOutput = nil }
+        if !canRetainManualGraph {
+            try engine.enableManualRenderingMode(.offline, format: output, maximumFrameCount: maximumFrames)
+        }
+        let reusableState = canRetainManualGraph && AudioGraphLifecycle.resetWhilePaused(engine)
+        let file = try AVAudioFile(forReading: url)
+        try configureEngine(for: file, forceRebuild: !reusableState)
+        primaryPlayerNode.scheduleFile(file, at: nil, completionHandler: nil)
+        if overlap {
+            let next = try AVAudioFile(forReading: incomingURL ?? url)
+            guard next.processingFormat.isEqual(file.processingFormat) else { throw NSError(domain: "Ongaku.FrameAudit", code: -4) }
+            secondaryPlayerNode.scheduleFile(next, at: nil, completionHandler: nil)
+        }
+        primaryPlayerNode.volume = overlap ? 0.5 : 1
+        secondaryPlayerNode.volume = overlap ? 0.5 : 0
+        try engine.start()
+#if ONGAKU_ENABLE_TRUE_PEAK
+        guard finalOutputProtection.isEnabled else { throw NSError(domain: "Ongaku.FrameAudit", code: -2) }
+#endif
+#if ONGAKU_ENABLE_AUDIO_THREAD_GAIN
+        // Match production start: allocation initializes native gain AUs muted.
+        effectAudioGain.synchronizeAfterStart()
+        transportAudioGain.synchronizeAfterStart()
+#endif
+        primaryPlayerNode.play()
+        if overlap { secondaryPlayerNode.play() }
+        let buffer = AVAudioPCMBuffer(pcmFormat: output, frameCapacity: 2048)!
+        var peak: Float = 0
+        let requests: [AVAudioFrameCount] = maximumFrames == 512 ? [128, 256, 512, 512] : [512, 558, 1024, 2048]
+        let rounds = renderSeconds.map { Int(ceil($0 * outputRate / Double(requests.reduce(0, +)))) } ?? 4
+        var renderedFrames = 0
+        for step in 0..<rounds {
+            if overlap {
+                let gains = CrossfadePolicy.clippingProtectedGains(progress: renderSeconds == nil ? Double(step) / 3 : min(1, Double(renderedFrames) / outputRate / 0.25),
+                    outgoingNormalization: 1, incomingNormalization: 1, preventsClipping: preventsClipping)
+                primaryPlayerNode.volume = gains.outgoing
+                secondaryPlayerNode.volume = gains.incoming
+            }
+            for frames in requests {
+                let status = try engine.renderOffline(frames, to: buffer)
+                guard status == .success, buffer.frameLength == frames else {
+                    throw NSError(domain: "Ongaku.FrameAudit", code: Int(status.rawValue))
+                }
+                for c in 0..<2 { for i in 0..<Int(frames) {
+                    let sample = buffer.floatChannelData![c][i]
+                    guard sample.isFinite else { throw NSError(domain: "Ongaku.FrameAudit", code: -1) }
+                    peak = max(peak, abs(sample))
+                } }
+                capturePCM?(buffer) // Manual-render audit thread, never the render callback.
+                renderedFrames += Int(frames)
+            }
+        }
+        let capacities = engine.attachedNodes.compactMap { node -> String? in
+            guard let mixer = node as? AVAudioMixerNode else { return nil }
+            return "\(mixer.auAudioUnit.componentName ?? "mixer"):\(mixer.auAudioUnit.maximumFramesToRender)"
+        }.sorted()
+        return (peak, capacities, graphConfigurationGeneration)
+    }
+#endif
+
     private func configureEngine(for file: AVAudioFile, forceRebuild: Bool = false) throws {
 #if ONGAKU_STARTUP_AUDIT
         let audit = StartupCostAudit.begin(); defer { StartupCostAudit.end("graph.configure", audit) }
@@ -1747,10 +1838,19 @@ final class PlaybackController: ObservableObject {
         let processingFormat = AVAudioFormat(standardFormatWithSampleRate:
             AudioProcessingPolicy.processingSampleRate(for: file.processingFormat.sampleRate),
             channels: max(2, file.processingFormat.channelCount))!
+#if DEBUG
+        let hardwareFormat = frameAuditOutput ?? engine.outputNode.outputFormat(forBus: 0)
+#else
         let hardwareFormat = engine.outputNode.outputFormat(forBus: 0)
+#endif
         let configuration = AudioGraphConfiguration(source: file.processingFormat,
             processing: processingFormat, output: hardwareFormat,
-            routeIdentifier: outputManager.defaultOutputIdentity)
+            routeIdentifier: {
+#if DEBUG
+                if frameAuditOutput != nil { return "offline-frame-audit" }
+#endif
+                return outputManager.defaultOutputIdentity
+            }())
         if !forceRebuild, !engine.isRunning, let configuration, configuredGraph == configuration {
             // loadAfterDrain has already muted and retired the previous source.
             // Reuse only the graph; new file/schedule/gain references still apply.
@@ -1829,6 +1929,7 @@ final class PlaybackController: ObservableObject {
         outputSampleRate = hardwareFormat.sampleRate
         outputChannelCount = hardwareFormat.channelCount
         installMeterTap()
+        AudioMixerCapacity.reserveAvailableMixers(in: engine)
 #if ONGAKU_STARTUP_AUDIT
         StartupCostAudit.measure("engine.prepare") { engine.prepare() }
 #else

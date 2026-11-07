@@ -1,0 +1,55 @@
+Building for debugging...
+[1 / 1]
+[2 / 7] OngakuDesktopTests-product
+[4 / 9] OngakuDesktopTests-product
+[9 / 13] OngakuDesktopTests-product
+[11 / 13] OngakuDesktopTests-product
+Build complete! (2.96秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Product graph frame capacities" started.
+◇ Test "Protected product graph bounds strong and high-crest input across rebuilt and retained graphs" started.
+2026-11-07 08:29:25.525 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=false source=44100.0 output=88200.0 burst=false frames=512 fresh=0.45005184 retained=0.4277312
+PRODUCT_STRONG clipping=false source=44100.0 output=48000.0 burst=false frames=512 fresh=0.66218424 retained=0.648198
+PRODUCT_STRONG clipping=false source=44100.0 output=88200.0 burst=false frames=2048 fresh=0.65947384 retained=0.66005564
+PRODUCT_STRONG clipping=false source=44100.0 output=48000.0 burst=false frames=2048 fresh=0.62433416 retained=0.6306836
+2026-11-07 08:29:45.801 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=false source=44100.0 output=88200.0 burst=true frames=512 fresh=0.83986884 retained=0.8298725
+PRODUCT_STRONG clipping=false source=44100.0 output=48000.0 burst=true frames=512 fresh=0.8255872 retained=0.84139514
+PRODUCT_STRONG clipping=false source=44100.0 output=88200.0 burst=true frames=2048 fresh=0.84139514 retained=0.83805954
+PRODUCT_STRONG clipping=false source=44100.0 output=48000.0 burst=true frames=2048 fresh=0.8365216 retained=0.84139514
+2026-11-07 08:30:05.979 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=false source=48000.0 output=88200.0 burst=false frames=512 fresh=0.40723085 retained=0.4113975
+PRODUCT_STRONG clipping=false source=48000.0 output=48000.0 burst=false frames=512 fresh=0.6468711 retained=0.642302
+PRODUCT_STRONG clipping=false source=48000.0 output=88200.0 burst=false frames=2048 fresh=0.67956114 retained=0.68138987
+PRODUCT_STRONG clipping=false source=48000.0 output=48000.0 burst=false frames=2048 fresh=0.6652515 retained=0.6353966
+2026-11-07 08:30:25.803 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=false source=48000.0 output=88200.0 burst=true frames=512 fresh=0.8226732 retained=0.84139514
+PRODUCT_STRONG clipping=false source=48000.0 output=48000.0 burst=true frames=512 fresh=0.82042724 retained=0.84139514
+PRODUCT_STRONG clipping=false source=48000.0 output=88200.0 burst=true frames=2048 fresh=0.8382979 retained=0.84012914
+PRODUCT_STRONG clipping=false source=48000.0 output=48000.0 burst=true frames=2048 fresh=0.8178464 retained=0.83928925
+2026-11-07 08:30:45.481 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=true source=44100.0 output=88200.0 burst=false frames=512 fresh=0.6596892 retained=0.6622696
+PRODUCT_STRONG clipping=true source=44100.0 output=48000.0 burst=false frames=512 fresh=0.6766735 retained=0.6791426
+PRODUCT_STRONG clipping=true source=44100.0 output=88200.0 burst=false frames=2048 fresh=0.6655436 retained=0.64855707
+PRODUCT_STRONG clipping=true source=44100.0 output=48000.0 burst=false frames=2048 fresh=0.66216135 retained=0.66900563
+2026-11-07 08:31:05.125 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=true source=44100.0 output=88200.0 burst=true frames=512 fresh=0.8382525 retained=0.8398581
+PRODUCT_STRONG clipping=true source=44100.0 output=48000.0 burst=true frames=512 fresh=0.817788 retained=0.79821885
+PRODUCT_STRONG clipping=true source=44100.0 output=88200.0 burst=true frames=2048 fresh=0.8412297 retained=0.83189607
+PRODUCT_STRONG clipping=true source=44100.0 output=48000.0 burst=true frames=2048 fresh=0.84139514 retained=0.835945
+2026-11-07 08:31:24.783 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=true source=48000.0 output=88200.0 burst=false frames=512 fresh=0.67426705 retained=0.6812453
+PRODUCT_STRONG clipping=true source=48000.0 output=48000.0 burst=false frames=512 fresh=0.6837387 retained=0.6847997
+PRODUCT_STRONG clipping=true source=48000.0 output=88200.0 burst=false frames=2048 fresh=0.6679063 retained=0.68402
+PRODUCT_STRONG clipping=true source=48000.0 output=48000.0 burst=false frames=2048 fresh=0.64193654 retained=0.6719539
+2026-11-07 08:31:44.470 swiftpm-testing-helper[18409:169639] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG clipping=true source=48000.0 output=88200.0 burst=true frames=512 fresh=0.8234472 retained=0.8402526
+PRODUCT_STRONG clipping=true source=48000.0 output=48000.0 burst=true frames=512 fresh=0.8248639 retained=0.7584792
+PRODUCT_STRONG clipping=true source=48000.0 output=88200.0 burst=true frames=2048 fresh=0.8394008 retained=0.84114265
+PRODUCT_STRONG clipping=true source=48000.0 output=48000.0 burst=true frames=2048 fresh=0.8376948 retained=0.84139514
+✔ Test "Protected product graph bounds strong and high-crest input across rebuilt and retained graphs" passed after 161.568 seconds.
+✔ Suite "Product graph frame capacities" passed after 161.568 seconds.
+✔ Test run with 1 test in 1 suite passed after 161.569 seconds.

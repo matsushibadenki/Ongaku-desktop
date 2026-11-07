@@ -1,6 +1,7 @@
 @preconcurrency import MultipeerConnectivity
 import AppKit
 import Foundation
+import OSLog
 #if !APP_STORE
 import IOKit
 #endif
@@ -101,6 +102,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private var chunkEventTask: Task<Void, Never>?
 
     private var automaticInvitationCooldowns: [String: Date] = [:]
+    private static let connectionLogger = Logger(subsystem: "OngakuDesktop", category: "DeviceSync")
     private var browserLifecycle = NearbyBrowserLifecycle()
     private var isStarted = false
 
@@ -380,6 +382,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         }
         connectionAttemptTimeoutWorkItem?.cancel()
         connectionState = .connecting(phone.name)
+        Self.connectionLogger.notice("sync.invitation.started automatic=\(automatically, privacy: .public)")
         let context = try? encoder.encode(["pairingCode": phone.pairingCode])
         browser.invitePeer(peer, to: session, withContext: context, timeout: DeviceSyncService.invitationTimeout)
 
@@ -1059,6 +1062,7 @@ extension PhoneSyncController: MCSessionDelegate {
         Task { @MainActor [weak self] in
             guard let self, chunkTransfers.client.isCurrent(connection) else { return }
             let name = peerID.displayName
+            Self.connectionLogger.notice("sync.session.state state=\(state.rawValue, privacy: .public) connectedPeers=\(session.connectedPeers.count, privacy: .public)")
             switch state {
             case .notConnected:
                 guard !session.connectedPeers.contains(peerID) else { return }

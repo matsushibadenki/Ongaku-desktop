@@ -1,0 +1,13 @@
+# Retained product graph frame capacity — 2026-11-07
+
+The Debug-only product driver now retains manual-render mode for a compatible format/block limit, calls the shipping AudioGraphLifecycle.resetWhilePaused, then invokes the shipping configureEngine without forcing a rebuild if state can safely be retained. A fixed offline route identity makes this test independent of an attached physical device. Outside the Debug driver, the actual route identity continues to come from the output manager.
+
+The prior full-effect matrix is extended: each of 16 rebuilt cases is followed by a different file of the same format, with the opposite overlap setting. All effects are ON with normalized parameters 0.5. Output blocks 512/2048 and output sequence 88.2→48→96→88.2 kHz cover 44.1/48 kHz stereo sources. Sixteen rebuilt + sixteen retained runs succeed (one test declaration). Each retained run asserts unchanged graphConfigurationGeneration and finite/non-silent PCM; source/output conversions, all effect branches and shipping crossfade gains remain in the render path. Runtime may still manage its internal resources; unchanged graph generation does not prove zero allocations. Unknown reverb state retains the existing safe-rebuild fallback rather than forcing reuse.
+
+The independent PlaybackTransportIntegrationTests.compatibleGraphReuse test passes. It loads real fixture tracks through the controller, verifies graph generation and node identity, preserves analysis ownership across pause/resume, rejects reuse for an incompatible mono format and retires/reloads after clear. Mac Debug signing-disabled build passes. Common AudioProcessingPolicy remains byte-identical between iPhone and Mac. iPhone runtime, DSP coefficients and production reuse decisions are unchanged by this test-driver expansion. Release and independent iPhone builds from the previous step are historical; they were not rerun for these Debug-only changes.
+
+⭕️ [Pending] Actual CoreAudio device changes, buffer negotiation and AVAudioEngineConfigurationChange delivery; live 88.2 kHz -10874 reproduction; physical unplug/reconnect; real Music songs, repeat/automatic queue end transitions and iPhone listening. Synthetic offline route changes and graph generation assertions do not qualify these. Experimental true-peak/audio-thread gain compile variants remain outside this matrix.
+
+[Logs and source hashes](../measurements/product-frame-reuse-2026-11-07/).
+
+Follow-up: [Both protection flags enabled](PROTECTED_PRODUCT_FRAME_2026-11-07.md) now covers the combined true-peak/audio-thread gain configuration with 32 frame renders and two isolated transport regressions. Physical verification remains Pending.

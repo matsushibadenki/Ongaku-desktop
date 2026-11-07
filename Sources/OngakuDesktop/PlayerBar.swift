@@ -846,6 +846,7 @@ private struct SpectrumBackdropBlur: NSViewRepresentable {
         view.material = .underWindowBackground
         view.state = .active
         view.alphaValue = opacity
+        view.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
         view.wantsLayer = true
         view.layerUsesCoreImageFilters = true
         view.layer?.masksToBounds = true
@@ -854,13 +855,14 @@ private struct SpectrumBackdropBlur: NSViewRepresentable {
 
     func updateNSView(_ view: SpectrumGlassView, context: Context) {
         // Match the app's appearance override, including when it differs from macOS.
-        view.appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)
-        view.alphaValue = opacity
+        view.requestBackdropStyle(isDark: isDark, opacity: CGFloat(opacity))
     }
 }
 
-private final class SpectrumGlassView: NSVisualEffectView {
-    private var filteredSize: NSSize = .zero
+final class SpectrumGlassView: NSVisualEffectView {
+    private(set) var filteredSize: NSSize = .zero
+    private var filterUpdatePending = false
+    private var pendingStyle: (NSAppearance.Name, CGFloat)?
     private let transmissionMask: CAGradientLayer = {
         let mask = CAGradientLayer()
         // Vary the actual backdrop opacity, not just the foreground reflection.
@@ -878,6 +880,38 @@ private final class SpectrumGlassView: NSVisualEffectView {
 
     override func layout() {
         super.layout()
+        guard bounds.size != filteredSize else { return }
+        scheduleBackdropUpdate()
+    }
+
+    func requestBackdropStyle(isDark: Bool, opacity: CGFloat) {
+        let name: NSAppearance.Name = isDark ? .darkAqua : .aqua
+        guard pendingStyle != nil || appearance?.name != name || alphaValue != opacity else { return }
+        pendingStyle = (name, opacity)
+        scheduleBackdropUpdate()
+    }
+
+    private func scheduleBackdropUpdate() {
+        guard !filterUpdatePending else { return }
+        filterUpdatePending = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            // Appearance changes can themselves request layout. Keep this
+            // update coalesced until both native style and filters are applied.
+            if let (name, opacity) = self.pendingStyle {
+                self.pendingStyle = nil
+                if self.appearance?.name != name {
+                    self.appearance = NSAppearance(named: name)
+                    self.filteredSize = .zero
+                }
+                if self.alphaValue != opacity { self.alphaValue = opacity }
+            }
+            self.updateBackdropFilters()
+            self.filterUpdatePending = false
+        }
+    }
+
+    private func updateBackdropFilters() {
         let size = bounds.size
         guard size.width > 0, size.height > 0, size != filteredSize else { return }
         filteredSize = size

@@ -1,0 +1,90 @@
+audio/AudioProcessingPolicy.swift:56:33: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+54 |         let reverbs = engine.attachedNodes.compactMap { node -> (AVAudioUnitReverb, AVAudioUnitReverbPreset?, Float, Bool)? in
+55 |             guard let reverb = node as? AVAudioUnitReverb else { return nil }
+56 |             let preset = reverb.auAudioUnit.currentPreset.flatMap { AVAudioUnitReverbPreset(rawValue: $0.number) }
+   |                                 `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+57 |             return (reverb, preset, reverb.wetDryMix, reverb.bypass)
+58 |         }
+
+audio/AudioProcessingPolicy.swift:80:26: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+78 |     static let minimumFrames: AUAudioFrameCount = 4096
+79 |     static func reserve(_ mixer: AVAudioMixerNode) {
+80 |         let unit = mixer.auAudioUnit
+   |                          `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+81 |         guard !unit.renderResourcesAllocated else { return }
+82 |         unit.maximumFramesToRender = max(unit.maximumFramesToRender, minimumFrames)
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+tests/MixerCapacityRegression.swift:17:24: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+15 |                 let processing = AVAudioFormat(standardFormatWithSampleRate: 96_000, channels: 2)!
+16 |                 let output = AVAudioFormat(standardFormatWithSampleRate: outputRate, channels: 2)!
+17 |                 engine.connect(player, to: branch, format: source)
+   |                        `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+18 |                 engine.connect(branch, to: mixer, format: processing)
+19 |                 engine.connect(mixer, to: engine.mainMixerNode, format: processing)
+
+tests/MixerCapacityRegression.swift:18:24: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+16 |                 let output = AVAudioFormat(standardFormatWithSampleRate: outputRate, channels: 2)!
+17 |                 engine.connect(player, to: branch, format: source)
+18 |                 engine.connect(branch, to: mixer, format: processing)
+   |                        `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+19 |                 engine.connect(mixer, to: engine.mainMixerNode, format: processing)
+20 |                 AudioMixerCapacity.reserveAvailableMixers(in: engine)
+
+tests/MixerCapacityRegression.swift:19:24: warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+17 |                 engine.connect(player, to: branch, format: source)
+18 |                 engine.connect(branch, to: mixer, format: processing)
+19 |                 engine.connect(mixer, to: engine.mainMixerNode, format: processing)
+   |                        `- warning: 'connect(_:to:format:)' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+20 |                 AudioMixerCapacity.reserveAvailableMixers(in: engine)
+21 |                 guard mixer.auAudioUnit.maximumFramesToRender >= 4096, branch.auAudioUnit.maximumFramesToRender >= 4096 else { fatalError("branch capacity not reserved") }
+
+tests/MixerCapacityRegression.swift:21:29: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+19 |                 engine.connect(mixer, to: engine.mainMixerNode, format: processing)
+20 |                 AudioMixerCapacity.reserveAvailableMixers(in: engine)
+21 |                 guard mixer.auAudioUnit.maximumFramesToRender >= 4096, branch.auAudioUnit.maximumFramesToRender >= 4096 else { fatalError("branch capacity not reserved") }
+   |                             `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+22 |                 try engine.enableManualRenderingMode(.offline, format: output, maximumFrameCount: 2048)
+23 |                 let input = AVAudioPCMBuffer(pcmFormat: source, frameCapacity: 48_000)!
+
+tests/MixerCapacityRegression.swift:21:79: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+19 |                 engine.connect(mixer, to: engine.mainMixerNode, format: processing)
+20 |                 AudioMixerCapacity.reserveAvailableMixers(in: engine)
+21 |                 guard mixer.auAudioUnit.maximumFramesToRender >= 4096, branch.auAudioUnit.maximumFramesToRender >= 4096 else { fatalError("branch capacity not reserved") }
+   |                                                                               `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+22 |                 try engine.enableManualRenderingMode(.offline, format: output, maximumFrameCount: 2048)
+23 |                 let input = AVAudioPCMBuffer(pcmFormat: source, frameCapacity: 48_000)!
+
+tests/MixerCapacityRegression.swift:27:62: warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+25 |                 for c in 0..<2 { for i in 0..<Int(input.frameLength) { input.floatChannelData![c][i] = 0.1 * sin(Float(i) * 0.04) } }
+26 |                 player.scheduleBuffer(input, at: nil, options: .loops, completionHandler: nil)
+27 |                 engine.prepare(); try engine.start(); player.play()
+   |                                                              `- warning: 'play()' was deprecated in macOS 27.0 [#DeprecatedDeclaration]
+28 |                 let liveCapacity = mixer.auAudioUnit.maximumFramesToRender
+29 |                 AudioMixerCapacity.reserveAvailableMixers(in: engine)
+
+tests/MixerCapacityRegression.swift:28:42: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+26 |                 player.scheduleBuffer(input, at: nil, options: .loops, completionHandler: nil)
+27 |                 engine.prepare(); try engine.start(); player.play()
+28 |                 let liveCapacity = mixer.auAudioUnit.maximumFramesToRender
+   |                                          `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+29 |                 AudioMixerCapacity.reserveAvailableMixers(in: engine)
+30 |                 guard mixer.auAudioUnit.maximumFramesToRender == liveCapacity else { fatalError("live resources resized") }
+
+tests/MixerCapacityRegression.swift:30:29: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+28 |                 let liveCapacity = mixer.auAudioUnit.maximumFramesToRender
+29 |                 AudioMixerCapacity.reserveAvailableMixers(in: engine)
+30 |                 guard mixer.auAudioUnit.maximumFramesToRender == liveCapacity else { fatalError("live resources resized") }
+   |                             `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+31 |                 let buffer = AVAudioPCMBuffer(pcmFormat: output, frameCapacity: 2048)!
+32 |                 var peak: Float = 0
+
+tests/MixerCapacityRegression.swift:39:105: warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+37 |                 }
+38 |                 guard peak > 0.01 else { fatalError("silent output") }
+39 |                 print("PASS source=\(sourceRate) processing=96000 output=\(outputRate) capacity=\(mixer.auAudioUnit.maximumFramesToRender) peak=\(peak)")
+   |                                                                                                         `- warning: 'auAudioUnit' was deprecated in macOS 27.0: Deprecated in favor of withAUAudioUnit [#DeprecatedDeclaration]
+40 |                 player.stop(); engine.stop()
+41 |             }
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>

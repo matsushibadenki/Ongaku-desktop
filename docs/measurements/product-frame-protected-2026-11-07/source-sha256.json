@@ -1,0 +1,7 @@
+{
+  "Sources/OngakuDesktop/PlaybackController.swift": "064f2696ac85fc048c3c62d5a074a022806c7b2ef2262578952b54ee5da4b957",
+  "Sources/OngakuDesktop/AudioProcessingPolicy.swift": "fddada17a93b128670cbe16fa6170084171a0b5467ccf3e520bbc6abf1f2853d",
+  "Sources/OngakuDesktop/AudioThreadGainStage.swift": "b83469cdc645208dfb8243c5d1598023aeff9b1d1a634ee91c6c0dc972d9649a",
+  "Sources/OngakuDesktop/FinalOutputProtection.swift": "afd4c52de495124aeeab316e8e9d9b43e81b13d54b68e6b4e49fe0228ccee905",
+  "Tests/OngakuDesktopTests/ProductFrameCapacityTests.swift": "e65cc45be088b1760203d6a4129478132cfb1da4029094f5ccb633b995d0857c"
+}

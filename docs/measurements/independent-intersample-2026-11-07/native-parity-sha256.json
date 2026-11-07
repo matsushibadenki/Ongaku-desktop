@@ -1,0 +1,6 @@
+{
+  "TruePeakDSP.hpp": "ea893c1da9b1862b22a46cfeff6dde12376cf09bf33a3a03c88f9707daafe0f3",
+  "GainEnvelopeDSP.hpp": "a9137ba69d7e6adcdf3142cea4305f78c42ade2a0b05b41fcad9262ea37100d6",
+  "TruePeakAudioUnit.mm": "524558578ac9ccd10cad239db31c4ec50c62b22d57100219120ad44a0a120aaa",
+  "GainEnvelopeAudioUnit.mm": "a67877cf362daef8bcd16f8eab7902c84f6de74ea22048f5c3655e182137db0f"
+}

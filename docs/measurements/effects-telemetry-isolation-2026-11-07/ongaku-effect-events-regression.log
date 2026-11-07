@@ -1,0 +1,4 @@
+PASS: 1800 telemetry publications -> broad=1800, effects=0; elapsedMs=32.99403190612793 (includes 25ms drain; no UI/audio timing claim)
+PASS: effect mode, parameters, spatial and A/B batch arrives once after values commit
+PASS: all 15 readiness, format, recovery, diagnostic and memory events remain visible
+PASS: identical scalar observations do not invalidate controls

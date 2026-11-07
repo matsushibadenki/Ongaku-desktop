@@ -1,0 +1,6 @@
+{
+  "Sources/OngakuDesktop/PlayerBar.swift": "d319bc4da1e1065751459ba84950845772488040b983edd7da365880e3419099",
+  "Sources/OngakuDesktop/PhoneSyncController.swift": "5bcef67f333d3cd4029f2fa064cabcb605f8622f3f38d36d838fbcac946a04e6",
+  "Tests/OngakuDesktopTests/SpectrumGlassLayoutTests.swift": "30094743bdd88f467c98cb70b4680a76ac8868c688b81ad0bf6dca76c137e242",
+  "Ongaku/audio/DesktopSyncController.swift": "3cb8363a8dd4d40742cbf2d17b4bff302f681582fe9814fc4eda19f3a03a65b9"
+}

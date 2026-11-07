@@ -1,0 +1,18 @@
+{
+  "Sources/OngakuDesktop/PlaybackController.swift": "54ac5cce7618064dddcd5ca58670d16251ee2a7b2cca47d583fc2fb9bd00a0ce",
+  "Sources/OngakuDesktop/AudioProcessingPolicy.swift": "fddada17a93b128670cbe16fa6170084171a0b5467ccf3e520bbc6abf1f2853d",
+  "Sources/OngakuDesktop/AudioEffectModuleRegistry.swift": "04690c9659f6a8032409710c0f4b6a157172571e37023cf4263844c570ec5892",
+  "Tests/OngakuDesktopTests/ProductFrameCapacityTests.swift": "4302800f68cea00bcc1df88b7a5a049a275578debae8eabdd19bfb24f1c26d7d",
+  "Sources/OngakuDesktop/SpectralTransientAudioEffect.swift": "fd9a190b17cb5607ed0d1831db9a6a67a3e37ae2c2290fa5ef22f9f2eb20ff40",
+  "Sources/OngakuDesktop/EqualizerAudioEffect.swift": "f66f38502134e28a0d33b5e532fcc88e7af77621508690f7f8d708ab3ddc2e6c",
+  "Sources/OngakuDesktop/WarmAudioEffect.swift": "935d68b518ddf3ea0ddee71afb59d6c767e5ff48b091d9e3fd7c8a97deff1314",
+  "Sources/OngakuDesktop/HighQualityEnhancementAudioEffect.swift": "b38d7fc9217f10f2833d5acce4523c125124cc6515b6e45374791454fd2486a1",
+  "Sources/OngakuDesktop/BodyAudioEffect.swift": "573d52922a9275047cf0499cb87d38a6ba6328e10551aade2f04072948bbe4a6",
+  "Sources/OngakuDesktop/GlossAudioEffect.swift": "5c6e8ae8c4960ed38b8bf452f667a972d1f95886a0da831b5a553b872a229a67",
+  "Sources/OngakuDesktop/OptoFETAudioEffect.swift": "015fa53231bf3afbe2c595b90731a0cb6e18e808661e941526dfc30ced2925fb",
+  "Sources/OngakuDesktop/SimulationAudioEffect.swift": "6e2189befdebc69d568f2c017b0b36970824b9d09a9c39a56ef0f65fa52ea834",
+  "Sources/OngakuDesktop/ExciterAudioEffect.swift": "efa200a21f67defcfa12dc81959e059508dd45e111e87733e894cee22d2a9c33",
+  "Sources/OngakuDesktop/VocalPresenceAudioEffect.swift": "cdc60a76e96ce9516f77922afef852eb979fb024df2191336dbc37b8b130cb2a",
+  "Sources/OngakuDesktop/BBEAudioEffect.swift": "5c386fbe56e752742b4170187e4413ff57aaa92e2d9ce13b14f750435ad594cb",
+  "Sources/OngakuDesktop/SpaceAudioEffect.swift": "287f67ea1e9ba890683784bd7b2aabde3e8b897b5e522c313cde7f9b573b66b6"
+}

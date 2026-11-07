@@ -1,0 +1,7 @@
+{
+  "audio/AudioPlayerViewModel.swift": "68b016966dc74670d5a3290d37970eba670dcecfe798d3346a11a5298c150a3a",
+  "audio/ContentView.swift": "cb2691775ca6b8bd9715719d82d2bc85cfad1970f345e9684e710c3c52fccf81",
+  "tests/extract_effect_presentation_fixture.py": "3dd86a5a25d321268e75dbbae2794c6ebacb1323746df15111da0d52734e57b6",
+  "tests/EffectPresentationRegression.swift": "2262bd097b9c911283c3d7d2e2865c4d1120c5fa6ba7fcb324371d76c6ce34a2",
+  "tests/run_effect_presentation_regression.sh": "212977783d06e051fe1439f0e2f5d68a0a3647bbfde0843843f7a2fd442efcbe"
+}

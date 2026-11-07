@@ -1,0 +1,108 @@
+(lldb) settings set target.disable-aslr false
+(lldb) command script import /private/tmp/ongaku_layout_trace.py
+(lldb) command script add -f ongaku_layout_trace.trace trace_layout
+(lldb) trace_layout
+Process 51817 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 1.1
+       frame #0: 0x0000000199cb3c34 AppKit`_NSDetectedLayoutRecursion
+AppKit`_NSDetectedLayoutRecursion:
+->  0x199cb3c34 <+0>:  pacibsp 
+    0x199cb3c38 <+4>:  sub    sp, sp, #0x40
+    0x199cb3c3c <+8>:  stp    x20, x19, [sp, #0x20]
+    0x199cb3c40 <+12>: stp    x29, x30, [sp, #0x30]
+Target 0: (OngakuDesktop) stopped.
+Process 51817 exited with status = 9 (0x00000009) killed
+launch=success root=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuLayoutTrace-jcb4cald
+LAYOUT_RECURSION_BREAKPOINT_HIT
+#0 _NSDetectedLayoutRecursion :4294967295
+#1 NSPerformVisuallyAtomicChange :4294967295
+#2 -[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:] :4294967295
+#3 NSPerformVisuallyAtomicChange :4294967295
+#4 -[NSView layoutSubtreeIfNeeded] :4294967295
+#5 -[NSWindow(NSConstraintBasedLayoutInternal) _layoutViewTree] :4294967295
+#6 -[NSWindow _oldPlaceWindow:fromServer:] :4294967295
+#7 -[NSWindow _setFrameCommon:display:fromServer:] :4294967295
+#8 __25-[NSWindow setStyleMask:]_block_invoke :4294967295
+#9 NSPerformVisuallyAtomicChange :4294967295
+#10 -[NSWindow setStyleMask:] :4294967295
+#11 OngakuDesktop.WindowPresentationController.attach(to: __C.NSWindow) -> () /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift:0
+#12 OngakuDesktop.WindowMiniaturizeBridge.Coordinator.connect(to: Swift.Optional<__C.NSWindow>) -> () /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift:170
+#13 closure #1 (Swift.Optional<__C.NSWindow>) -> () in OngakuDesktop.WindowMiniaturizeBridge.makeNSView(context: SwiftUI.NSViewRepresentableContext<OngakuDesktop.WindowMiniaturizeBridge>) -> OngakuDesktop.WindowProbeView /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift:123
+#14 OngakuDesktop.WindowProbeView.viewDidMoveToWindow() -> () /Users/Shared/Program/Xcode/Ongaku-desktop/Sources/OngakuDesktop/WindowPresentationController.swift:277
+#15 @objc OngakuDesktop.WindowProbeView.viewDidMoveToWindow() -> () /<compiler-generated>:0
+#16 -[NSView _setWindow:] :4294967295
+#17 __21-[NSView _setWindow:]_block_invoke.164 :4294967295
+#18 -[NSView _setWindow:] :4294967295
+#19 -[NSView addSubview:] :4294967295
+#20 -[NSView addSubview:positioned:relativeTo:] :4294967295
+#21 SwiftUI.NSHostingView.swiftui_addManagedSubview(_: __C.NSView, positioned: __C.NSWindowOrderingMode, relativeTo: Swift.Optional<__C.NSView>) -> () :4294967295
+#22 @objc SwiftUI.NSHostingView.swiftui_addManagedSubview(_: __C.NSView, positioned: __C.NSWindowOrderingMode, relativeTo: Swift.Optional<__C.NSView>) -> () :4294967295
+#23 _AppKitAddSubview :4294967295
+#24 SwiftUI.DisplayList.ViewUpdater.updateItemView(container: inout SwiftUI.DisplayList.ViewUpdater.Container, from: SwiftUI.DisplayList.Item, localState: inout SwiftUI.DisplayList.ViewUpdater.Model.State) -> () :4294967295
+#25 SwiftUI.DisplayList.ViewUpdater.updateInheritedView(container: inout SwiftUI.DisplayList.ViewUpdater.Container, from: SwiftUI.DisplayList.Item, parentState: Swift.UnsafePointer<SwiftUI.DisplayList.ViewUpdater.Model.State>) -> () :4294967295
+#26 SwiftUI.DisplayList.ViewUpdater.update(container: inout SwiftUI.DisplayList.ViewUpdater.Container, from: SwiftUI.DisplayList, parentState: Swift.UnsafePointer<SwiftUI.DisplayList.ViewUpdater.Model.State>) -> () :4294967295
+#27 SwiftUI.DisplayList.ViewUpdater.updateInheritedView(container: inout SwiftUI.DisplayList.ViewUpdater.Container, from: SwiftUI.DisplayList.Item, parentState: Swift.UnsafePointer<SwiftUI.DisplayList.ViewUpdater.Model.State>) -> () :4294967295
+#28 SwiftUI.DisplayList.ViewUpdater.update(container: inout SwiftUI.DisplayList.ViewUpdater.Container, from: SwiftUI.DisplayList, parentState: Swift.UnsafePointer<SwiftUI.DisplayList.ViewUpdater.Model.State>) -> () :4294967295
+#29 SwiftUI.DisplayList.ViewUpdater.render(rootView: Swift.AnyObject, from: SwiftUI.DisplayList, time: SwiftUI.Time, version: SwiftUI.DisplayList.Version, maxVersion: SwiftUI.DisplayList.Version, environment: SwiftUI.DisplayList.ViewRenderer.Environment) -> SwiftUI.Time :4294967295
+#30 closure #1 () -> SwiftUI.Time in renderOnMainThread() -> SwiftUI.Time :4294967295
+#31 SwiftUI.ViewGraphRenderDelegate.withMainThreadRender(wasAsync: Swift.Bool, _: () -> SwiftUI.Time) -> SwiftUI.Time :4294967295
+#32 SwiftUI.ViewGraph.renderDisplayList(_: SwiftUI.DisplayList, asynchronously: Swift.Bool, time: SwiftUI.Time, nextTime: SwiftUI.Time, targetTimestamp: Swift.Optional<SwiftUI.Time>, version: SwiftUI.DisplayList.Version, maxVersion: SwiftUI.DisplayList.Version) -> SwiftUI.Time :4294967295
+#33 protocol witness for SwiftUI.ViewGraphRenderHost.renderDisplayList(_: SwiftUI.DisplayList, asynchronously: Swift.Bool, time: SwiftUI.Time, nextTime: SwiftUI.Time, targetTimestamp: Swift.Optional<SwiftUI.Time>, version: SwiftUI.DisplayList.Version, maxVersion: SwiftUI.DisplayList.Version) -> SwiftUI.Time in conformance SwiftUI.ViewGraph : SwiftUI.ViewGraphRenderHost in SwiftUI :4294967295
+#34 closure #1 () -> () in SwiftUI.ViewGraphRootValueUpdater.render(interval: Swift.Double, updateDisplayList: Swift.Bool, targetTimestamp: Swift.Optional<SwiftUI.Time>) -> () :4294967295
+#35 SwiftUI.ViewGraphRootValueUpdater.render(interval: Swift.Double, updateDisplayList: Swift.Bool, targetTimestamp: Swift.Optional<SwiftUI.Time>) -> () :4294967295
+#36 closure #1 (__C.NSAnimationContext) -> () in SwiftUI.NSHostingView.layout() -> () :4294967295
+#37 partial apply forwarder for reabstraction thunk helper from @callee_guaranteed (@guaranteed __C.NSAnimationContext) -> () to @escaping @callee_guaranteed (@guaranteed __C.NSAnimationContext) -> () :4294967295
+#38 reabstraction thunk helper from @escaping @callee_guaranteed (@guaranteed __C.NSAnimationContext) -> () to @callee_unowned @convention(block) (@unowned __C.NSAnimationContext) -> () :4294967295
+#39 +[NSAnimationContext runAnimationGroup:] :4294967295
+#40 SwiftUI.NSHostingView.layout() -> () :4294967295
+#41 @objc SwiftUI.NSHostingView.layout() -> () :4294967295
+#42 ___lldb_unnamed_symbol_18b4c2d80 :4294967295
+#43 ___lldb_unnamed_symbol_18b65ed58 :4294967295
+#44 ___lldb_unnamed_symbol_18b40c064 :4294967295
+#45 ___lldb_unnamed_symbol_18b40cbd0 :4294967295
+#46 ___NSViewLayout_block_invoke :4294967295
+#47 NSPerformVisuallyAtomicChange :4294967295
+#48 _NSViewLayout :4294967295
+#49 __36-[NSView _layoutSubtreeWithOldSize:]_block_invoke :4294967295
+#50 NSPerformVisuallyAtomicChange :4294967295
+#51 -[NSView _layoutSubtreeWithOldSize:] :4294967295
+#52 __36-[NSView _layoutSubtreeWithOldSize:]_block_invoke :4294967295
+#53 NSPerformVisuallyAtomicChange :4294967295
+#54 -[NSView _layoutSubtreeWithOldSize:] :4294967295
+#55 __56-[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:]_block_invoke :4294967295
+#56 NSPerformVisuallyAtomicChange :4294967295
+#57 -[NSView _layoutSubtreeIfNeededAndAllowTemporaryEngine:] :4294967295
+#58 NSPerformVisuallyAtomicChange :4294967295
+#59 -[NSView layoutSubtreeIfNeeded] :4294967295
+#60 -[NSWindow(NSConstraintBasedLayoutInternal) _layoutViewTree] :4294967295
+#61 -[NSWindow _oldPlaceWindow:fromServer:] :4294967295
+#62 -[NSWindow _setFrameCommon:display:fromServer:] :4294967295
+#63 -[NSWindow _setFrameFromString:overrideTopLeft:preferActiveDisplay:constrainFullFrame:force:] :4294967295
+#64 -[NSWindow _setFrameAutosaveName:changeFrame:] :4294967295
+#65 SwiftUI.AppKitWindowController.sizeAndPlaceWindow() -> () :4294967295
+#66 SwiftUI.AppKitWindowController.windowDidLoad() -> () :4294967295
+#67 @objc SwiftUI.AppKitWindowController.windowDidLoad() -> () :4294967295
+#68 -[NSWindowController _windowDidLoad] :4294967295
+#69 -[NSWindowController window] :4294967295
+#70 SwiftUI.AppWindowsController.showInitialWindows() -> () :4294967295
+#71 @objc SwiftUI.AppDelegate.applicationOpenUntitledFile(__C.NSApplication) -> Swift.Bool :4294967295
+#72 -[NSApplication _doOpenUntitled] :4294967295
+#73 __58-[NSApplication(NSAppleEventHandling) _handleAEOpenEvent:]_block_invoke :4294967295
+#74 __102-[NSApplication _reopenWindowsAsNecessaryIncludingRestorableState:withFullFidelity:completionHandler:]_block_invoke :4294967295
+#75 __97-[NSDocumentController(NSInternal) _autoreopenDocumentsIgnoringExpendable:withCompletionHandler:]_block_invoke_3 :4294967295
+#76 -[NSDocumentController(NSInternal) _autoreopenDocumentsIgnoringExpendable:withCompletionHandler:] :4294967295
+#77 -[NSApplication _reopenWindowsAsNecessaryIncludingRestorableState:withFullFidelity:completionHandler:] :4294967295
+#78 -[NSApplication(NSAppleEventHandling) _handleAEOpenEvent:] :4294967295
+#79 -[NSApplication(NSAppleEventHandling) _handleCoreEvent:withReplyEvent:] :4294967295
+#80 -[NSAppleEventManager dispatchRawAppleEvent:withRawReply:handlerRefCon:] :4294967295
+#81 _NSAppleEventManagerGenericHandler :4294967295
+#82 ___lldb_unnamed_symbol_18e427050 :4294967295
+#83 ___lldb_unnamed_symbol_18e426fac :4294967295
+#84 aeProcessAppleEvent :4294967295
+#85 AEProcessAppleEvent :4294967295
+#86 _DPSNextEvent :4294967295
+#87 -[NSApplication(NSEventRouting) _nextEventMatchingEventMask:untilDate:inMode:dequeue:] :4294967295
+#88 -[NSApplication(NSEventRouting) nextEventMatchingMask:untilDate:inMode:dequeue:] :4294967295
+#89 -[NSApplication run] :4294967295
+hit=True
+(lldb) quit

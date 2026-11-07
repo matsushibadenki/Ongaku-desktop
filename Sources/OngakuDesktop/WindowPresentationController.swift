@@ -23,8 +23,10 @@ final class WindowPresentationController: ObservableObject {
         // Keep the three-column layout below the title bar and its toolbar.
         // A full-size transparent title bar makes SwiftUI place the first row
         // of every NavigationSplitView column underneath those controls.
-        window.styleMask.remove(.fullSizeContentView)
-        window.titlebarAppearsTransparent = false
+        if window.styleMask.contains(.fullSizeContentView) {
+            window.styleMask.remove(.fullSizeContentView)
+        }
+        if window.titlebarAppearsTransparent { window.titlebarAppearsTransparent = false }
         window.isMovable = true
         window.isMovableByWindowBackground = true
         // The navigation and transport paint their own backgrounds. Leave the
@@ -127,12 +129,11 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
 
     func updateNSView(_ nsView: WindowProbeView, context: Context) {
         context.coordinator.controller = controller
-        if let window = nsView.window {
-            context.coordinator.connect(to: window)
-        }
+        nsView.scheduleWindowChange()
     }
 
     static func dismantleNSView(_ nsView: WindowProbeView, coordinator: Coordinator) {
+        nsView.onWindowChange = nil
         coordinator.disconnect()
     }
 
@@ -160,6 +161,9 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
                 return
             }
             disconnect()
+            // Style changes may rebuild standard buttons. Acquire the current
+            // button only after the window contract has been applied.
+            controller.attach(to: window)
             guard let button = window.standardWindowButton(.miniaturizeButton) else { return }
             self.window = window
             self.button = button
@@ -167,7 +171,6 @@ struct WindowMiniaturizeBridge: NSViewRepresentable {
             originalAction = button.action
             button.target = self
             button.action = #selector(toggleMiniPlayer)
-            controller.attach(to: window)
             titleBarMouseMonitor = NSEvent.addLocalMonitorForEvents(
                 matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
             ) { [weak self] event in
@@ -269,11 +272,24 @@ struct TitleBarDrag {
 
 final class WindowProbeView: NSView {
     var onWindowChange: ((NSWindow?) -> Void)?
+    private var windowChangePending = false
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        onWindowChange?(window)
+        scheduleWindowChange()
+    }
+
+    /// SwiftUI inserts this view during NSHostingView.layout. Window style
+    /// setters force another layout, so notify only after that stack unwinds.
+    func scheduleWindowChange() {
+        guard !windowChangePending else { return }
+        windowChangePending = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.windowChangePending = false
+            self.onWindowChange?(self.window) // Read latest owner, never a stale captured window.
+        }
     }
 }

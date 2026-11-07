@@ -1,0 +1,7 @@
+{
+  "Sources/OngakuDesktop/WindowPresentationController.swift": "e67ab14648f0ac0dd170f5cba52cda4db7669ce7ccbadf4a4f5ff1c3cc45803c",
+  "Tests/OngakuDesktopTests/WindowBridgeLayoutTests.swift": "472186fb7fd9332298c68c26aee8154cba3c21a2328b2eefa8210fc319a1dfa2",
+  "Tests/OngakuDesktopTests/ApplicationSettingsTests.swift": "8f06840b63c351efd23e1168f3f4a71f3357131810d8f14f31e9a535ce6b321b",
+  "Tests/OngakuDesktopTests/SpectrumGlassLayoutTests.swift": "30094743bdd88f467c98cb70b4680a76ac8868c688b81ad0bf6dca76c137e242",
+  "Tests/OngakuDesktopTests/EffectRackInputTests.swift": "a99a1b0d2d21ae5ee2522b222e61cbbdf9f4736d0d72c45e9d5166aae5d075cd"
+}

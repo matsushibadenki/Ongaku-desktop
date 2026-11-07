@@ -1,0 +1,11 @@
+{
+  "audio/ContentView.swift": "f153e78f36157b5dae92a672109c260fcadbd9a327e256fa33ed8cfc5746946e",
+  "audio/HiResPlaybackEngine.swift": "94d4a279d9144f81f871713fac07992105ed617af34eff9a760afe084622cce3",
+  "tests/EffectsMountAuditApp.swift": "9263919014ebcd427bd79a8a16582312d2b141d0ef8b658de45ee2b6d1079659",
+  "tests/run_effects_mount_audit.sh": "4f791e5b9bc6f3bda8358b78a1eb2f0eca53d82ed4c22e754ee5b7ec2ffef4a9",
+  "tests/SincCancellationRegression.swift": "47f5ee595cb741efd2e6ab7e32e42352410faa586677ec2945e4952d42b9566a",
+  "tests/run_sinc_cancellation_regression.sh": "3f1e62085d75d17f7117ea2c28748e62463c3424f8c87873449fca224219f615",
+  "tests/sinc-benchmark/extract_fixture.py": "b6d326a00159d84b1dd51e6d5ffde0748568216b913925a3f2e733ee42dfa500",
+  "tests/sinc-benchmark/Benchmark.swift": "5bdacd6ec6ab00cdbef3d79f82291c6b85c9b39928ade7c1d901168f4bab7c28",
+  "tests/extract_sinc_measurement_fixture.py": "13c4eb8fd6d6ab433bef9d94a4396289b078a990a909ee351932beb6aadd499f"
+}

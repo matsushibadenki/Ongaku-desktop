@@ -1,0 +1,13 @@
+{
+  "audio/AudioPlayerViewModel.swift": "b1a3f3e2ea91f95fbe8d0d3dce9736d31297376a338dc6f9dfe2175905859cd0",
+  "audio/ContentView.swift": "71eed40a8553afda5a2af34de826fe90fb6093c2e16db8907c0f5d5218f3549a",
+  "audio/CoalescedViewUpdates.swift": "30e8491032f11093cc92fe911792c8ac291edf0e4c8e9303ebf6ff8e1f1a42c0",
+  "tests/EffectEventsModel.swift": "65443065b230ef9863ead10081f32c1834c9843808488ee84400ebe9e2806772",
+  "tests/EffectEventsRegression.swift": "acac7cc780d3fd004f43b8dacb34adae6c473485ddea45bcc61c433e0fd6295d",
+  "tests/extract_effect_events_fixture.py": "c4d647cc39e2553a7bd516c769bb4f0a4837814faed86616b2d8432da5c1b8be",
+  "tests/run_effect_events_regression.sh": "963885d0a62a3b6e76fe113001a53acb616c1b99ed97f0cdc82e1391e7e340bb",
+  "tests/extract_effect_presentation_fixture.py": "3565985078acf950af32d199a81c305d07f6d389d7ecfcd9de7ac84360204107",
+  "tests/extract_dsp_transition_fixture.py": "4d6b2a7a66764e4100803cca2722e3bbe03fc742f16fcface57fe7d1c7e15212",
+  "tests/run_dsp_transition_regression.sh": "acbb3ed29121f0731fba2414dab994e0e72d911693bfdea66bef77282114b95c",
+  "audio/AudioProcessingPolicy.swift": "fddada17a93b128670cbe16fa6170084171a0b5467ccf3e520bbc6abf1f2853d"
+}

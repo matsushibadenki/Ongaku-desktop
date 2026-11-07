@@ -1,0 +1,29 @@
+[
+  {
+    "height" : 874,
+    "initialCardBodies" : 2,
+    "mountAndSnapshotMs" : 1509.993374995247,
+    "mountMs" : 622.65787499927683,
+    "round" : 0,
+    "settledCardBodies" : 2,
+    "width" : 402
+  },
+  {
+    "height" : 874,
+    "initialCardBodies" : 2,
+    "mountAndSnapshotMs" : 926.49520833947463,
+    "mountMs" : 86.185958338319324,
+    "round" : 1,
+    "settledCardBodies" : 2,
+    "width" : 402
+  },
+  {
+    "height" : 874,
+    "initialCardBodies" : 2,
+    "mountAndSnapshotMs" : 897.13029166887281,
+    "mountMs" : 90.7986250022077,
+    "round" : 2,
+    "settledCardBodies" : 2,
+    "width" : 402
+  }
+]

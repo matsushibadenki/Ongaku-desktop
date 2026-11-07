@@ -1,0 +1,8 @@
+PASS source=44100.0 processing=96000 output=44100.0 capacity=4480 peak=0.09999664
+PASS source=44100.0 processing=96000 output=48000.0 capacity=4128 peak=0.099996895
+PASS source=44100.0 processing=96000 output=88200.0 capacity=2240 peak=0.10000055
+PASS source=44100.0 processing=96000 output=96000.0 capacity=2048 peak=0.09999937
+PASS source=48000.0 processing=96000 output=44100.0 capacity=4480 peak=0.09999737
+PASS source=48000.0 processing=96000 output=48000.0 capacity=4128 peak=0.099997476
+PASS source=48000.0 processing=96000 output=88200.0 capacity=2240 peak=0.10000108
+PASS source=48000.0 processing=96000 output=96000.0 capacity=2048 peak=0.10000004

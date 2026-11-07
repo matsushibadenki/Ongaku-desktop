@@ -1,0 +1,10 @@
+CANCEL coldMinimumMaster round=0 cancelled=false latencyMs=45.589375 cachedEntries=1
+CANCEL coldMinimumMaster round=1 cancelled=false latencyMs=48.258833 cachedEntries=1
+CANCEL coldMinimumMaster round=2 cancelled=false latencyMs=54.665667 cachedEntries=1
+KERNEL phase=linear count=16896 sha256=6b4e890acd9641eac292fc8c1f0352a7e059b1b81ca32f3c4f085373a44d45a5
+CANCEL warm phase=linear cancelled=false
+KERNEL phase=apodizing count=16896 sha256=fb0dab29be8abf16d54f2d68bb596226e77ff49b3f086b18aeae2325aba263db
+CANCEL warm phase=apodizing cancelled=false
+KERNEL phase=minimumPhase count=33280 sha256=b60ac7d7e4465301c3af6e078a14ab6c38f318817e22f7a45d995ccaf7a29ed5
+CANCEL warm phase=minimumPhase cancelled=false
+PASS: sinc cancellation probe completed enforce=false

@@ -81,6 +81,12 @@ nonisolated enum AudioMixerCapacity {
         guard !unit.renderResourcesAllocated else { return }
         unit.maximumFramesToRender = max(unit.maximumFramesToRender, minimumFrames)
     }
+    /// Include mixers inside parallel wet/dry effect branches as well as
+    /// the source/output mixers. Never resize resources in a live graph.
+    static func reserveAvailableMixers(in engine: AVAudioEngine) {
+        guard !engine.isRunning else { return }
+        for case let mixer as AVAudioMixerNode in engine.attachedNodes { reserve(mixer) }
+    }
     static func makeMixer() -> AVAudioMixerNode {
         let mixer = AVAudioMixerNode()
         reserve(mixer)

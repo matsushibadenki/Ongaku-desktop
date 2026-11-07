@@ -1,0 +1,9 @@
+{
+  "Sources/OngakuDesktop/PlaybackController.swift": "441b7f0c0338a0f3fbe1d9ef6eb3e59260f46b0a951ed7dc8e00b07894955792",
+  "Tests/OngakuDesktopTests/IndependentIntersampleMeter.swift": "8fa8f1bca8fbff8a4f8dc3390a2b8696c60a9cb36c9f39ac2d805a10956aba2c",
+  "Tests/OngakuDesktopTests/ProductIntersampleTests.swift": "8bce3982c5575e4e7c82a887e32a22bff0949e7c7532f3fd7c912ab714080f3e",
+  "Tests/OngakuDesktopTests/IndependentLimiterReleaseTests.swift": "099f767885bbb78d1d1716b5c080efaaebb9896c8a3496f998d13ad9e781ba25",
+  "Tests/OngakuDesktopTests/ProductFrameCapacityTests.swift": "f15693aa6037ed572bf2d9a3a3275ac44dcaa397d96b9d34f99a3e1fe75a4def",
+  "Sources/OngakuAudioDSP/TruePeakDSP.hpp": "ea893c1da9b1862b22a46cfeff6dde12376cf09bf33a3a03c88f9707daafe0f3",
+  "Sources/OngakuAudioDSP/GainEnvelopeDSP.hpp": "a9137ba69d7e6adcdf3142cea4305f78c42ade2a0b05b41fcad9262ea37100d6"
+}

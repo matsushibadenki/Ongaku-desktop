@@ -1,0 +1,35 @@
+Building for debugging...
+[1 / 2]
+[2 / 7] OngakuDesktopTests-product
+[4 / 9] OngakuDesktopTests-product
+[10 / 14] OngakuDesktopTests-product
+[12 / 14] OngakuDesktopTests-product
+Build complete! (3.64秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Product graph frame capacities" started.
+◇ Test "Protected product graph bounds strong and high-crest input across rebuilt and retained graphs" started.
+2026-11-07 08:27:20.494 swiftpm-testing-helper[17880:166153] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG source=44100.0 output=88200.0 burst=false frames=512 fresh=0.45005184 retained=0.4277312
+PRODUCT_STRONG source=44100.0 output=48000.0 burst=false frames=512 fresh=0.66218424 retained=0.648198
+PRODUCT_STRONG source=44100.0 output=88200.0 burst=false frames=2048 fresh=0.65947384 retained=0.66005564
+PRODUCT_STRONG source=44100.0 output=48000.0 burst=false frames=2048 fresh=0.62433416 retained=0.6306836
+2026-11-07 08:27:40.212 swiftpm-testing-helper[17880:166153] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG source=44100.0 output=88200.0 burst=true frames=512 fresh=0.83986884 retained=0.8298725
+PRODUCT_STRONG source=44100.0 output=48000.0 burst=true frames=512 fresh=0.8255872 retained=0.84139514
+PRODUCT_STRONG source=44100.0 output=88200.0 burst=true frames=2048 fresh=0.84139514 retained=0.83805954
+PRODUCT_STRONG source=44100.0 output=48000.0 burst=true frames=2048 fresh=0.8365216 retained=0.84139514
+2026-11-07 08:27:59.992 swiftpm-testing-helper[17880:166153] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG source=48000.0 output=88200.0 burst=false frames=512 fresh=0.40723085 retained=0.4113975
+PRODUCT_STRONG source=48000.0 output=48000.0 burst=false frames=512 fresh=0.6468711 retained=0.642302
+PRODUCT_STRONG source=48000.0 output=88200.0 burst=false frames=2048 fresh=0.67956114 retained=0.68138987
+PRODUCT_STRONG source=48000.0 output=48000.0 burst=false frames=2048 fresh=0.6652515 retained=0.6353966
+2026-11-07 08:28:20.480 swiftpm-testing-helper[17880:166153] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_STRONG source=48000.0 output=88200.0 burst=true frames=512 fresh=0.8226732 retained=0.84139514
+PRODUCT_STRONG source=48000.0 output=48000.0 burst=true frames=512 fresh=0.82042724 retained=0.84139514
+PRODUCT_STRONG source=48000.0 output=88200.0 burst=true frames=2048 fresh=0.8382979 retained=0.84012914
+PRODUCT_STRONG source=48000.0 output=48000.0 burst=true frames=2048 fresh=0.8178464 retained=0.83928925
+✔ Test "Protected product graph bounds strong and high-crest input across rebuilt and retained graphs" passed after 80.012 seconds.
+✔ Suite "Product graph frame capacities" passed after 80.012 seconds.
+✔ Test run with 1 test in 1 suite passed after 80.012 seconds.

@@ -1,0 +1,79 @@
+Building for debugging...
+[Pre-planning 1 / 186]
+[Planning deferred tasks]
+[1 / 1]
+[5 / 38] OngakuDesktop-product
+[11 / 34] OngakuDesktop-product
+[12 / 34] OngakuDesktop-product
+[16 / 54] OngakuDesktop-product
+[17 / 54] OngakuDesktop-product
+[18 / 54] OngakuDesktop-product
+[19 / 56] OngakuDesktop-product
+[21 / 56] OngakuDesktop-product
+[23 / 59] OngakuDesktop-product
+[28 / 59] OngakuDesktop-product
+[30 / 59] OngakuDesktop
+[31 / 59] OngakuDesktop
+[32 / 59] OngakuDesktop
+[33 / 59] OngakuDesktop
+[35 / 59] OngakuDesktop
+[37 / 59] OngakuDesktop
+[39 / 59] OngakuDesktop
+[40 / 59] OngakuDesktop
+[40 / 59]
+[42 / 59] OngakuDesktop
+[44 / 59] OngakuDesktop
+[46 / 57] OngakuDesktopTests-product
+[48 / 68] OngakuDesktopTests-product
+[50 / 68] OngakuDesktopTests-product
+[51 / 68] OngakuDesktopTests-product
+[54 / 68] OngakuDesktopTests-product
+[58 / 68] OngakuDesktopTests-product
+[60 / 68] OngakuDesktopTests-product
+[61 / 68] OngakuDesktopTests-product
+[62 / 68] OngakuDesktopTests-product
+[64 / 68] OngakuDesktopTests-product
+[66 / 68] OngakuDesktopTests-product
+Build complete! (42.23秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Independent intersample meter" started.
+◇ Suite "Independent product intersample peaks" started.
+◇ Test phaseLevelAndLongTail() started.
+◇ Test analyticCalibration() started.
+ISP_CALIBRATION sample=0.70710677 reconstructed=0.9999988413762881 expected=1
+✔ Test analyticCalibration() passed after 0.079 seconds.
+✔ Suite "Independent intersample meter" passed after 0.079 seconds.
+2026-11-07 08:55:02.836 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:02.913 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=0 source=44100.0 output=88200.0 volume=1.0 phase=0.7853981633974483 sample=0.5872233 isp=0.5926530983539352
+2026-11-07 08:55:06.257 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:06.327 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=1 source=44100.0 output=88200.0 volume=0.3 phase=2.356194490192345 sample=0.19181791 isp=0.19688728550505916
+2026-11-07 08:55:09.698 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:09.768 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=2 source=44100.0 output=48000.0 volume=1.0 phase=0.7853981633974483 sample=0.78834665 isp=0.8429543631029534
+2026-11-07 08:55:12.743 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:12.813 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=3 source=44100.0 output=48000.0 volume=0.3 phase=2.356194490192345 sample=0.19718656 isp=0.19718655943870544
+2026-11-07 08:55:15.796 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:15.872 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=4 source=48000.0 output=88200.0 volume=1.0 phase=0.7853981633974483 sample=0.5270646 isp=0.5276144198432047
+2026-11-07 08:55:19.303 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:19.380 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=5 source=48000.0 output=88200.0 volume=0.3 phase=2.356194490192345 sample=0.19055676 isp=0.19567687532788922
+2026-11-07 08:55:22.837 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:22.912 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=6 source=48000.0 output=48000.0 volume=1.0 phase=0.7853981633974483 sample=0.82358736 isp=0.843076448202899
+2026-11-07 08:55:25.888 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+2026-11-07 08:55:25.963 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_ISP case=7 source=48000.0 output=48000.0 volume=0.3 phase=2.356194490192345 sample=0.16209239 isp=0.18903428832734484
+2026-11-07 08:55:28.953 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_LONG source=44100.0 output=88200.0 seconds=8 sample=0.82133406 isp=0.841513021876581 earlyRMS=0.0001651370482685979 lateRMS=3.448625057422499e-12
+2026-11-07 08:55:40.684 swiftpm-testing-helper[31535:241510] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+PRODUCT_LONG source=48000.0 output=48000.0 seconds=8 sample=0.83950776 isp=0.8429677339401113 earlyRMS=0.00019704582030645695 lateRMS=3.0307758812392806e-12
+PRODUCT_CONVERGENCE primary=0.843076448202899 dense=0.8430489527003447 deltaDB=-0.0002832801173888469
+✔ Test phaseLevelAndLongTail() passed after 46.135 seconds.
+✔ Suite "Independent product intersample peaks" passed after 46.135 seconds.
+✔ Test run with 2 tests in 2 suites passed after 46.135 seconds.

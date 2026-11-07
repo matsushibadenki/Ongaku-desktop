@@ -1,0 +1,18 @@
+Building for debugging...
+[Planning 1 / 186]
+[Planning deferred tasks]
+[1 / 1]
+[8 / 19] OngakuDesktopTests-product
+[10 / 21] OngakuDesktopTests-product
+[16 / 20] OngakuDesktopTests-product
+[18 / 20] OngakuDesktopTests-product
+Build complete! (3.38秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Independent final limiter release" started.
+◇ Test quietProbeRecovers() started.
+LIMITER_RELEASE earlyRMS=0.013481141829761348 lateRMS=0.02828123549160044 expectedRMS=0.028284271247461898 isp=0.8417934868308667
+✔ Test quietProbeRecovers() passed after 1.453 seconds.
+✔ Suite "Independent final limiter release" passed after 1.453 seconds.
+✔ Test run with 1 test in 1 suite passed after 1.453 seconds.

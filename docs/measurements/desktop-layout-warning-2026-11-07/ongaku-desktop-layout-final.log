@@ -1,0 +1,83 @@
+Building for debugging...
+[Using on-disk description]
+[1 / 1]
+[1 / 4]
+[3 / 14] OngakuDesktop-product
+[6 / 18] OngakuDesktop-product
+[8 / 18] OngakuDesktop
+[16 / 24] OngakuDesktop
+[16 / 25] OngakuDesktop-product
+[19 / 24] OngakuDesktopTests-product
+[21 / 26] OngakuDesktopTests-product
+[26 / 30] OngakuDesktopTests-product
+Build complete! (12.38秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Device sync protocol" started.
+◇ Suite "Spectrum backdrop layout" started.
+◇ Suite "Effect rack input ownership" started.
+◇ Test "Manifest messages preserve transfer metadata" started.
+◇ Test "Playlist sync preserves order and can be safely undone" started.
+◇ Test "Backdrop filters update after layout and coalesce to the latest bounds" started.
+◇ Test "Manifest messages preserve independent playlist overlays" started.
+◇ Test "Manifests from an older app remain compatible" started.
+◇ Test "Selected overlays merge counters without replacing playback history" started.
+◇ Test "Bonjour discovery starts and stops at most once per lifecycle transition" started.
+◇ Test "Local copy index follows library replacement and duplicate hashes" started.
+◇ Test "Overlay application changes only selected fields" started.
+◇ Test "SHA-256 verification accepts the original and rejects changed metadata" started.
+◇ Test "Overlay receipt survives message encoding" started.
+◇ Test "Individual transfer requests preserve the stable item ID" started.
+◇ Test "Manifest messages preserve Ongaku track overlays" started.
+◇ Test "Overlay identity matching tolerates display differences but rejects distant durations" started.
+◇ Test "Overlay audit history persists and records conflict reasons" started.
+◇ Test "EQ sections preserve every parameter exactly once and keep band controls together" started.
+✔ Test "Bonjour discovery starts and stops at most once per lifecycle transition" passed after 0.001 seconds.
+✔ Test "Individual transfer requests preserve the stable item ID" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve Ongaku track overlays" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve transfer metadata" passed after 0.001 seconds.
+✔ Test "Manifests from an older app remain compatible" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve independent playlist overlays" passed after 0.001 seconds.
+✔ Test "Overlay receipt survives message encoding" passed after 0.001 seconds.
+✔ Test "Overlay identity matching tolerates display differences but rejects distant durations" passed after 0.001 seconds.
+✔ Test "SHA-256 verification accepts the original and rejects changed metadata" passed after 0.002 seconds.
+✔ Test "EQ sections preserve every parameter exactly once and keep band controls together" passed after 0.059 seconds.
+◇ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" started.
+✔ Test "Local copy index follows library replacement and duplicate hashes" passed after 0.113 seconds.
+✔ Test "Backdrop filters update after layout and coalesce to the latest bounds" passed after 0.141 seconds.
+◇ Test "Zero-size and retired views do not cause invalid filter work" started.
+✔ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" passed after 0.082 seconds.
+◇ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" started.
+✔ Test "Overlay audit history persists and records conflict reasons" passed after 0.251 seconds.
+✔ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" passed after 0.114 seconds.
+◇ Test "Wheel scroll over a control reaches the scroll view, never the control" started.
+✔ Test "Zero-size and retired views do not cause invalid filter work" passed after 0.115 seconds.
+✔ Suite "Spectrum backdrop layout" passed after 0.256 seconds.
+✔ Test "Wheel scroll over a control reaches the scroll view, never the control" passed after 0.005 seconds.
+◇ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" started.
+✔ Test "Overlay application changes only selected fields" passed after 0.279 seconds.
+✔ Test "Selected overlays merge counters without replacing playback history" passed after 0.282 seconds.
+✔ Test "Playlist sync preserves order and can be safely undone" passed after 0.284 seconds.
+✔ Suite "Device sync protocol" passed after 0.284 seconds.
+✔ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" passed after 0.036 seconds.
+◇ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" started.
+✔ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" passed after 0.284 seconds.
+◇ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" started.
+✔ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" passed after 0.010 seconds.
+◇ Test "Two-finger scroll can start on a partially clipped control to reveal it" started.
+✔ Test "Two-finger scroll can start on a partially clipped control to reveal it" passed after 0.004 seconds.
+◇ Test "Momentum produced during a control drag cannot move the rack after mouse-up" started.
+✔ Test "Momentum produced during a control drag cannot move the rack after mouse-up" passed after 0.034 seconds.
+◇ Test "Detaching the rack releases ownership and position protection" started.
+✔ Test "Detaching the rack releases ownership and position protection" passed after 0.010 seconds.
+◇ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" started.
+✔ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" passed after 1.196 seconds.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 49.561 seconds.
+◇ Test "Effect mode survives leaving and returning; OFF remains authoritative" started.
+✔ Test "Effect mode survives leaving and returning; OFF remains authoritative" passed after 2.203 seconds.
+◇ Test "SwiftUI region connects to the actual ancestor scroll view" started.
+✔ Test "SwiftUI region connects to the actual ancestor scroll view" passed after 0.126 seconds.
+✔ Suite "Effect rack input ownership" passed after 53.733 seconds.
+✔ Test run with 30 tests in 3 suites passed after 53.733 seconds.

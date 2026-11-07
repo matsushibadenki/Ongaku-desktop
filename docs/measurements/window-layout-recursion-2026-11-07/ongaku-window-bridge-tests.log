@@ -1,0 +1,136 @@
+Building for debugging...
+[Constructing description]
+[Planning 1 / 186]
+[Planning deferred tasks]
+[1 / 1]
+[1 / 9]
+[1 / 17]
+[5 / 38] OngakuDesktopTests-product
+[11 / 34] OngakuDesktop-product
+[13 / 34] OngakuDesktop
+[16 / 36] OngakuDesktop
+[19 / 41] OngakuDesktop
+[20 / 41] OngakuDesktop
+[22 / 39] OngakuDesktop-product
+[23 / 39] OngakuDesktop-product
+[26 / 37] OngakuDesktopTests-product
+[28 / 39] OngakuDesktopTests-product
+[33 / 38] OngakuDesktopTests-product
+[34 / 38] OngakuDesktopTests-product
+[35 / 38] OngakuDesktopTests-product
+[36 / 38] OngakuDesktopTests-product
+Build complete! (35.55秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Deferred window bridge layout" started.
+◇ Suite "Application settings" started.
+◇ Suite "Spectrum backdrop layout" started.
+◇ Suite "Effect rack input ownership" started.
+◇ Test "Title-bar dragging excludes content and window controls" started.
+◇ Test "Mini Player restores the original window frame" started.
+◇ Test "Window insertion notifications are deferred and coalesced" started.
+◇ Test "A new Ongaku Media folder does not automatically inherit the old catalog" started.
+◇ Test "Existing portable data is never overwritten by legacy migration" started.
+◇ Test "Multiple existing libraries can be enumerated, while an exact selection stays exact" started.
+◇ Test "Backdrop filters update after layout and coalesce to the latest bounds" started.
+◇ Test "Disconnected saved volume does not trigger migration or create a replacement" started.
+◇ Test "The main window keeps all columns below the title bar" started.
+◇ Test "Legacy catalog and artwork move beside managed music" started.
+◇ Test "A completely fresh install stores managed music under the Music directory" started.
+◇ Test "Migration recovery discovers moved libraries and rejects ambiguous or missing data" started.
+◇ Test "Multiple libraries create, rename, switch, archive, and restore" started.
+◇ Test "Switching libraries isolates tracks and playback state" started.
+◇ Test "EQ sections preserve every parameter exactly once and keep band controls together" started.
+◇ Test "Player presentation settings persist and the player defaults to the bottom" started.
+◇ Test "UI qualification accepts only process or runner temporary roots" started.
+◇ Test "App Store versions use numeric semantic comparison" started.
+◇ Test "Imported Music songs reopen from Ongaku without the Music package or original audio" started.
+◇ Test "Title-bar dragging uses screen coordinates across window movement" started.
+◇ Test "New selected media folder registers its audio in place and survives restart" started.
+◇ Test "Resolved recovery bookmarks reconnect only the same library inside the new root" started.
+◇ Test "App Store lookup response decodes the release destination" started.
+◇ Test "Selecting another Music library opens its own Ongaku storage and persists it" started.
+◇ Test "Storage activation creates a catalog, reopens it, and preserves the old library on failure" started.
+◇ Test "A user-selected storage directory is used directly" started.
+◇ Test "A selected Apple Music library resolves and persists its Media folder" started.
+◇ Test "A different existing library can be selected without replacing the missing profile" started.
+◇ Test "Song list columns and sorting persist" started.
+◇ Test "Profile reconnection reports the actual storage location category" started.
+◇ Test "Unavailable volume is distinguished from a missing folder on an accessible volume" started.
+◇ Test "Appearance selection persists and system mode clears the override" started.
+◇ Test "Missing recovery grants never create an empty replacement library" started.
+◇ Test "Existing sidecars prevent a new library from overwriting recoverable data" started.
+◇ Test "Startup migrates legacy catalogs, retries failure, and creates portable libraries" started.
+✔ Test "App Store versions use numeric semantic comparison" passed after 0.001 seconds.
+✔ Test "Title-bar dragging uses screen coordinates across window movement" passed after 0.001 seconds.
+✔ Test "App Store lookup response decodes the release destination" passed after 0.001 seconds.
+✔ Test "Unavailable volume is distinguished from a missing folder on an accessible volume" passed after 0.004 seconds.
+✔ Test "UI qualification accepts only process or runner temporary roots" passed after 0.012 seconds.
+✔ Test "Multiple existing libraries can be enumerated, while an exact selection stays exact" passed after 0.016 seconds.
+✔ Test "Existing portable data is never overwritten by legacy migration" passed after 0.025 seconds.
+✔ Test "Legacy catalog and artwork move beside managed music" passed after 0.026 seconds.
+✔ Test "A new Ongaku Media folder does not automatically inherit the old catalog" passed after 0.027 seconds.
+✔ Test "Resolved recovery bookmarks reconnect only the same library inside the new root" passed after 0.044 seconds.
+✔ Test "Title-bar dragging excludes content and window controls" passed after 0.221 seconds.
+✔ Test "Disconnected saved volume does not trigger migration or create a replacement" passed after 0.309 seconds.
+✔ Test "The main window keeps all columns below the title bar" passed after 0.321 seconds.
+✔ Test "A completely fresh install stores managed music under the Music directory" passed after 0.334 seconds.
+✔ Test "Player presentation settings persist and the player defaults to the bottom" passed after 0.342 seconds.
+✔ Test "Multiple libraries create, rename, switch, archive, and restore" passed after 0.390 seconds.
+✔ Test "A user-selected storage directory is used directly" passed after 0.413 seconds.
+✔ Test "A selected Apple Music library resolves and persists its Media folder" passed after 0.526 seconds.
+✔ Test "Song list columns and sorting persist" passed after 0.539 seconds.
+✔ Test "Profile reconnection reports the actual storage location category" passed after 0.549 seconds.
+✔ Test "Appearance selection persists and system mode clears the override" passed after 0.557 seconds.
+✔ Test "Missing recovery grants never create an empty replacement library" passed after 0.567 seconds.
+✔ Test "Existing sidecars prevent a new library from overwriting recoverable data" passed after 0.583 seconds.
+✔ Test "Startup migrates legacy catalogs, retries failure, and creates portable libraries" passed after 0.670 seconds.
+✔ Test "Mini Player restores the original window frame" passed after 0.679 seconds.
+✔ Test "Migration recovery discovers moved libraries and rejects ambiguous or missing data" passed after 0.696 seconds.
+✔ Test "Window insertion notifications are deferred and coalesced" passed after 0.719 seconds.
+◇ Test "A moved probe configures only its latest window and hooks its current button" started.
+✔ Test "EQ sections preserve every parameter exactly once and keep band controls together" passed after 0.726 seconds.
+◇ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" started.
+✔ Test "A different existing library can be selected without replacing the missing profile" passed after 0.795 seconds.
+✔ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" passed after 0.102 seconds.
+◇ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" started.
+✔ Test "Backdrop filters update after layout and coalesce to the latest bounds" passed after 0.839 seconds.
+◇ Test "Zero-size and retired views do not cause invalid filter work" started.
+✔ Test "A moved probe configures only its latest window and hooks its current button" passed after 0.161 seconds.
+◇ Test "Dismantling before queued attachment prevents later window mutation" started.
+✔ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" passed after 0.051 seconds.
+◇ Test "Wheel scroll over a control reaches the scroll view, never the control" started.
+✔ Test "Dismantling before queued attachment prevents later window mutation" passed after 0.105 seconds.
+✔ Suite "Deferred window bridge layout" passed after 0.987 seconds.
+✔ Test "Wheel scroll over a control reaches the scroll view, never the control" passed after 0.121 seconds.
+◇ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" started.
+✔ Test "Zero-size and retired views do not cause invalid filter work" passed after 0.221 seconds.
+✔ Suite "Spectrum backdrop layout" passed after 1.061 seconds.
+✔ Test "New selected media folder registers its audio in place and survives restart" passed after 1.078 seconds.
+✔ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" passed after 0.078 seconds.
+◇ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" started.
+✔ Test "Switching libraries isolates tracks and playback state" passed after 1.131 seconds.
+✔ Test "Imported Music songs reopen from Ongaku without the Music package or original audio" passed after 1.210 seconds.
+✔ Test "Storage activation creates a catalog, reopens it, and preserves the old library on failure" passed after 1.345 seconds.
+✔ Test "Selecting another Music library opens its own Ongaku storage and persists it" passed after 1.401 seconds.
+✔ Suite "Application settings" passed after 1.402 seconds.
+✔ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" passed after 0.320 seconds.
+◇ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" started.
+✔ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" passed after 0.022 seconds.
+◇ Test "Two-finger scroll can start on a partially clipped control to reveal it" started.
+✔ Test "Two-finger scroll can start on a partially clipped control to reveal it" passed after 0.018 seconds.
+◇ Test "Momentum produced during a control drag cannot move the rack after mouse-up" started.
+✔ Test "Momentum produced during a control drag cannot move the rack after mouse-up" passed after 0.055 seconds.
+◇ Test "Detaching the rack releases ownership and position protection" started.
+✔ Test "Detaching the rack releases ownership and position protection" passed after 0.023 seconds.
+◇ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" started.
+✔ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" passed after 1.539 seconds.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 49.183 seconds.
+◇ Test "Effect mode survives leaving and returning; OFF remains authoritative" started.
+✔ Test "Effect mode survives leaving and returning; OFF remains authoritative" passed after 2.585 seconds.
+◇ Test "SwiftUI region connects to the actual ancestor scroll view" started.
+✔ Test "SwiftUI region connects to the actual ancestor scroll view" passed after 0.146 seconds.
+✔ Suite "Effect rack input ownership" passed after 54.980 seconds.
+✔ Test run with 51 tests in 4 suites passed after 54.980 seconds.
