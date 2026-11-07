@@ -1,0 +1,9 @@
+(lldb) settings set target.disable-aslr false
+(lldb) command script import /private/tmp/ongaku_ca_startup.py
+(lldb) command script add -f ongaku_ca_startup.trace trace_startup
+(lldb) trace_startup
+Process 98342 exited with status = 9 (0x00000009) killed
+launch=success root=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuLayoutTrace-6k84uod9
+observedSeconds=15.00 breakpointLocations=0 lastState=6
+hit=False
+(lldb) quit

@@ -32,6 +32,7 @@ struct SpectrumGlassLayoutTests {
         #expect(view.appearance?.name == .aqua && view.alphaValue == 0.8)
         let mask = try #require(view.layer?.mask as? CAGradientLayer)
         #expect(mask.frame.size == view.bounds.size)
+        #expect(mask.actions?["bounds"] is NSNull && mask.actions?["position"] is NSNull)
         #expect(view.layer?.backgroundFilters?.count == 2)
         view.layout()
         await nextMainTurn()

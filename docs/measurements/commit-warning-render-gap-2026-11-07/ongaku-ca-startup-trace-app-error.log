@@ -1,0 +1,27 @@
+2026-11-07 19:02:46.027480+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Looking up debug dylib relative path
+2026-11-07 19:02:46.027618+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Found debug dylib relative path string `OngakuDesktop.debug.dylib`
+2026-11-07 19:02:46.027625+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Looking up debug dylib entry point name
+2026-11-07 19:02:46.027630+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] No debug dylib entry point name defined.
+2026-11-07 19:02:46.027633+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Looking up debug dylib install name
+2026-11-07 19:02:46.027636+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Found debug dylib install name string `@rpath/OngakuDesktop.debug.dylib`
+2026-11-07 19:02:46.027640+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Looking for Previews JIT link entry point.
+2026-11-07 19:02:46.027835+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] No Previews JIT entry point found.
+2026-11-07 19:02:46.027841+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Gave PreviewsInjection a chance to run and it returned, continuing with debug dylib.
+2026-11-07 19:02:46.027844+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Looking for main entry point.
+2026-11-07 19:02:46.027847+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Opening debug dylib with '@rpath/OngakuDesktop.debug.dylib'
+2026-11-07 19:02:46.027859+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Debug dylib handle: 0x73738a20
+2026-11-07 19:02:46.027865+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] No entry point found. Checking for alias.
+2026-11-07 19:02:46.027869+0900 OngakuDesktop[98342:1840136] [PreviewsAgentExecutorLibrary] Calling provided entry point.
+2026-11-07 19:02:46.062136+0900 OngakuDesktop[98342:1840136] [plugin] AddInstanceForFactory: No factory registered for id <CFUUID 0x7ac103c780> F8BB1C28-BAE8-11D6-9C31-00039315CD46
+2026-11-07 19:02:46.345775+0900 OngakuDesktop[98342:1840183] [Connection] Unable to get remoteObjectProxy, error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}
+2026-11-07 19:02:46.345831+0900 OngakuDesktop[98342:1840183] [Application] Error registering app with AppIntents framework: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}
+2026-11-07 19:02:47.373580+0900 OngakuDesktop[98342:1840187] [Connection] Unable to get remoteObjectProxy, error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}
+2026-11-07 19:02:47.373616+0900 OngakuDesktop[98342:1840187] [Connection] Unable to re-register with Process Instance Registry, error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}
+2026-11-07 19:02:47.576399+0900 OngakuDesktop[98342:1840182] [ClientDonation] (+[PPSClientDonation isRegisteredSubsystem:category:]) Permission denied: CoreMedia / CM-ASSETCREATION
+2026-11-07 19:02:47.576977+0900 OngakuDesktop[98342:1840299] [] <<<< FigFile >>>> signalled err=-17913 at <>:774
+2026-11-07 19:02:47.616282+0900 OngakuDesktop[98342:1840299] [] <<<< FigFile >>>> signalled err=-17913 at <>:774
+2026-11-07 19:02:49.495247+0900 OngakuDesktop[98342:1840283] [Connection] Unable to get remoteObjectProxy, error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}
+2026-11-07 19:02:49.495391+0900 OngakuDesktop[98342:1840283] [Connection] Unable to re-register with Process Instance Registry, error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}
+2026-11-07 19:02:53.761037+0900 OngakuDesktop[98342:1840183] [Connection] Will NOT re-try to establish the connection
+2026-11-07 19:02:53.761178+0900 OngakuDesktop[98342:1840183] [Connection] Unable to get remoteObjectProxy, error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}
+2026-11-07 19:02:53.761228+0900 OngakuDesktop[98342:1840183] [Connection] Unable to re-register with Process Instance Registry, error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut" UserInfo={NSDebugDescription=connection to service named com.apple.linkd.autoShortcut}

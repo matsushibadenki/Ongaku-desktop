@@ -1,5 +1,13 @@
 # Ongaku Desktop ロードマップ
 
+## Mac commit警告の追加保護とiPhone実機gapの切り分け — 2026-11-07
+
+- 🟢 [Done] Mac背景マスクの明示的CATransactionを除き、geometryの暗黙アニメーションを個別無効化。maskの同一参照再設定と進捗スライダーの同一appearance再設定を回避。警告の発生元と断定せず、防御的変更として管理。
+- 🟢 [Done] iPhone実機ログのSpeaker・effects=noneで400.8msのrender gapと434.8msのtap gapを確認。取消要求からworker終了までのcancelLatencyMsを追加し、総実行時間elapsedと分離。未計測はunknownとし、音声処理・出力設定は変更しない。
+- 🟢 [Done] Mac 52試験／4 suite、iPhone取消時計2群・表示保護4群、両Debug署名なしビルドが成功。隔離Mac起動も確認。[ログ解釈・試験・制限](quality/COMMIT_WARNING_RENDER_GAP_2026-11-07.md)を保存。デバッグmarkerは別のAppKit処理でも停止し、根因の証拠とは扱わない。
+- ⭕️ [Pending] Macの実88.2kHz・44.1/48kHz曲切替・bypass・タブ／テーマ／サイズで、警告出力と対応する実スタックを採取し発生元を確定。新しいcommit警告と旧レイアウト再帰は別に検証し、署名済み実アプリで再確認。
+- ⭕️ [Pending] iPhone内蔵スピーカーのエフェクト初回／再表示で、cancelLatencyMsと実機UI／render／allocator／workerの時系列を採取。約401msのgapとノイズは未解決として維持し、snapshot復旧時間・停止再開・復帰・温度電力も確認。
+
 ## iPhone描画の画像共有と全準備経路の取消境界 — 2026-11-07
 
 - 🟢 [Done] ライト系スライダーの同一つまみ画像の反復生成を共有し、表示倍率変更にも追従。実画面の生成24回→初回1回・再表示0回、7テーマ×2倍率の画像一致／共有とスクロール・先頭復帰・Pro保持を確認。固定の初回フレーム時間は保証しない。

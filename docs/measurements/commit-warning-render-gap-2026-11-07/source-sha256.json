@@ -1,0 +1,7 @@
+{
+  "Ongaku-desktop/Sources/OngakuDesktop/PlayerBar.swift": "38815cfed1f76582e405d2831bdf09312f34cdb21edcf394ef46f6cc7b7f7935",
+  "Ongaku-desktop/Tests/OngakuDesktopTests/SpectrumGlassLayoutTests.swift": "8aeea847318371ba50b9578b5f6fe09258fd148cbda92eb9f1c1c3f524028af7",
+  "Ongaku/audio/HiResPlaybackEngine.swift": "32fa837a1c0d3d256404596761f0efb4207ba55900d08ed464a6ae8c0151c310",
+  "Ongaku/tests/PreparationCancelTimingRegression.swift": "171329795aa862c366cbba15238325cc81009c627605ced72ffbbadc351e1853",
+  "Ongaku/tests/run_preparation_cancel_timing_regression.sh": "0c307b69747066b83758f154c5ed850c87dec4347a80efc425ffdbdba09fa1b9"
+}

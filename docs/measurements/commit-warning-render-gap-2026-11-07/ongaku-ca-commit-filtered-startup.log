@@ -1,0 +1,133 @@
+(lldb) settings set target.disable-aslr false
+(lldb) command script import /private/tmp/ongaku_ca_trace_filtered.py
+(lldb) command script add -f ongaku_ca_trace_filtered.trace trace_ca
+(lldb) trace_ca
+Process 98234 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 1.1
+       frame #0: 0x00000001995d1b2c AppKit`_NSReturnCarbonMenu
+AppKit`_NSReturnCarbonMenu:
+->  0x1995d1b2c <+0>: ret    
+
+AppKit`-[NSCarbonMenuImpl _returnMenuRefWithToken:]:
+    0x1995d1b30 <+0>: pacibsp 
+    0x1995d1b34 <+4>: sub    sp, sp, #0x50
+    0x1995d1b38 <+8>: stp    x24, x23, [sp, #0x10]
+Target 0: (OngakuDesktop) stopped.
+Process 98234 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 1.1
+       frame #0: 0x00000001995d1b2c AppKit`_NSReturnCarbonMenu
+AppKit`_NSReturnCarbonMenu:
+->  0x1995d1b2c <+0>: ret    
+
+AppKit`-[NSCarbonMenuImpl _returnMenuRefWithToken:]:
+    0x1995d1b30 <+0>: pacibsp 
+    0x1995d1b34 <+4>: sub    sp, sp, #0x50
+    0x1995d1b38 <+8>: stp    x24, x23, [sp, #0x10]
+Target 0: (OngakuDesktop) stopped.
+Process 98234 stopped
+* thread #1, queue = 'com.apple.main-thread', stop reason = breakpoint 1.1
+       frame #0: 0x00000001995d1b2c AppKit`_NSReturnCarbonMenu
+AppKit`_NSReturnCarbonMenu:
+->  0x1995d1b2c <+0>: ret    
+
+AppKit`-[NSCarbonMenuImpl _returnMenuRefWithToken:]:
+    0x1995d1b30 <+0>: pacibsp 
+    0x1995d1b34 <+4>: sub    sp, sp, #0x50
+    0x1995d1b38 <+8>: stp    x24, x23, [sp, #0x10]
+Target 0: (OngakuDesktop) stopped.
+Process 98234 exited with status = 9 (0x00000009) killed
+launch=success root=/var/folders/yz/bsd6nq0941lc9tsfd9pxxhb40000gn/T/OngakuLayoutTrace-3p8s8szn
+CA_COMMIT_CANDIDATE_STACK
+#0 _NSReturnCarbonMenu :4294967295
+#1 ___lldb_unnamed_symbol_18b65ed58 :4294967295
+#2 ___lldb_unnamed_symbol_18b40e3b8 :4294967295
+#3 ___lldb_unnamed_symbol_18b40efb8 :4294967295
+#4 -[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:] :4294967295
+#5 -[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:] :4294967295
+#6 -[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:] :4294967295
+#7 -[NSView _updateConstraintsForSubtreeIfNeededCollectingViewsWithInvalidBaselines:] :4294967295
+#8 __45-[NSView updateConstraintsForSubtreeIfNeeded]_block_invoke_2 :4294967295
+#9 __45-[NSView updateConstraintsForSubtreeIfNeeded]_block_invoke :4294967295
+#10 NSPerformVisuallyAtomicChange :4294967295
+#11 -[NSView updateConstraintsForSubtreeIfNeeded] :4294967295
+#12 -[NSView(NSConstraintBasedLayoutInternal) systemLayoutSizeFittingSize:withHorizontalFittingPriority:verticalFittingPriority:] :4294967295
+#13 -[NSSplitViewController _setupSplitView] :4294967295
+#14 -[NSSplitViewController viewDidLoad] :4294967295
+#15 -[NSViewController _sendViewDidLoad] :4294967295
+#16 __39-[NSViewController _loadViewIfRequired]_block_invoke :4294967295
+#17 NSPerformVisuallyAtomicChange :4294967295
+#18 -[NSViewController _loadViewIfRequired] :4294967295
+#19 -[NSViewController view] :4294967295
+#20 function signature specialization <Arg[3] = Dead, Arg[4] = Dead> of SwiftUI.NavigationSplitCore.NavigationSplitCoordinator.makeSplitViewController(content: SwiftUI.NavigationSplitCore.NavigationSplitContent, parameters: SwiftUI.NavigationSplitParameters, columnVisibility: SwiftUI.CompositeNavigationSplitViewVisibility, seeds: SwiftUI.NavigationState.Seeds, transaction: SwiftUI.Transaction, environment: SwiftUI.EnvironmentValues) -> SwiftUI.NavigationSplitViewController :4294967295
+#21 protocol witness for SwiftUI.NSViewControllerRepresentable.makeNSViewController(context: SwiftUI.NSViewControllerRepresentableContext<τ_0_0>) -> τ_0_0.NSViewControllerType in conformance SwiftUI.NavigationSplitCore.NavigationSplitRepresentable : SwiftUI.NSViewControllerRepresentable in SwiftUI :4294967295
+#22 SwiftUI.PlatformViewRepresentableAdaptor.makeViewProvider(context: SwiftUI.PlatformViewRepresentableContext<SwiftUI.PlatformViewRepresentableAdaptor<τ_0_0>>) -> τ_0_0.NSViewControllerType :4294967295
+#23 protocol witness for SwiftUI.CoreViewRepresentable.makeViewProvider(context: SwiftUI.PlatformViewRepresentableContext<τ_0_0>) -> τ_0_0.PlatformViewProvider in conformance SwiftUI.PlatformViewRepresentableAdaptor<τ_0_0> : SwiftUI.CoreViewRepresentable in SwiftUI :4294967295
+#24 closure #1 @Swift.MainActor () -> SwiftUI.UncheckedSendable<τ_0_0.Host> in closure #2 () -> Swift.Optional<τ_0_0.Host> in closure #1 () -> Swift.Optional<τ_0_0.Host> in closure #6 () -> Swift.Optional<τ_0_0.Host> in closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> () :4294967295
+#25 closure #2 () -> Swift.Optional<τ_0_0.Host> in closure #1 () -> Swift.Optional<τ_0_0.Host> in closure #6 () -> Swift.Optional<τ_0_0.Host> in closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> () :4294967295
+#26 partial apply forwarder for closure #2 () -> Swift.Optional<τ_0_0.Host> in closure #1 () -> Swift.Optional<τ_0_0.Host> in closure #6 () -> Swift.Optional<τ_0_0.Host> in closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> () :4294967295
+#27 SwiftUI.RepresentableContextValues.asCurrent<τ_0_0>(do: () -> τ_0_0) -> τ_0_0 :4294967295
+#28 closure #1 () -> Swift.Optional<τ_0_0.Host> in closure #6 () -> Swift.Optional<τ_0_0.Host> in closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> () :4294967295
+#29 closure #1 () -> () in SwiftUI.PlatformViewChild.updateValue() -> () :4294967295
+#30 partial apply forwarder for implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<τ_1_0>) -> AttributeGraph.Attribute<τ_0_0> in AttributeGraph.Attribute.init<τ_0_0 where τ_0_0 == τ_1_0.Value, τ_1_0: AttributeGraph.StatefulRule>(τ_1_0) -> AttributeGraph.Attribute<τ_0_0> :4294967295
+#31 AG::Graph::UpdateStack::update() :4294967295
+#32 AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int) :4294967295
+#33 AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long) :4294967295
+#34 AGGraphGetValue :4294967295
+#35 SwiftUI.InvalidatableLeafLayoutComputer.view.getter : SwiftUI.ViewLeafView<τ_0_0> :4294967295
+#36 SwiftUI.InvalidatableLeafLayoutComputer.updateValue() -> () :4294967295
+#37 partial apply forwarder for implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<τ_1_0>) -> AttributeGraph.Attribute<τ_0_0> in AttributeGraph.Attribute.init<τ_0_0 where τ_0_0 == τ_1_0.Value, τ_1_0: AttributeGraph.StatefulRule>(τ_1_0) -> AttributeGraph.Attribute<τ_0_0> :4294967295
+#38 AG::Graph::UpdateStack::update() :4294967295
+#39 AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int) :4294967295
+#40 AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long) :4294967295
+#41 AGGraphGetInputValue :4294967295
+#42 function signature specialization <Arg[3] = Dead> of SwiftUI.MoveTransition.MoveLayout.sizeThatFits(in: SwiftUI._ProposedSize, context: SwiftUI.SizeAndSpacingContext, child: SwiftUI.LayoutProxy) -> __C.CGSize :4294967295
+#43 merged SwiftUI.UnaryLayoutEngine.sizeThatFits(SwiftUI._ProposedSize) -> __C.CGSize :4294967295
+#44 ___lldb_unnamed_symbol_19041e6c4 :4294967295
+#45 SwiftUI.LayoutEngineBox.sizeThatFits(SwiftUI._ProposedSize) -> __C.CGSize :4294967295
+#46 SwiftUI._FlexFrameLayout.sizeThatFits(in: SwiftUI._ProposedSize, context: SwiftUI.SizeAndSpacingContext, child: SwiftUI.LayoutProxy) -> __C.CGSize :4294967295
+#47 protocol witness for SwiftUI.UnaryLayout.sizeThatFits(in: SwiftUI._ProposedSize, context: SwiftUI.SizeAndSpacingContext, child: SwiftUI.LayoutProxy) -> __C.CGSize in conformance SwiftUI._FlexFrameLayout : SwiftUI.UnaryLayout in SwiftUI :4294967295
+#48 merged SwiftUI.UnaryLayoutEngine.sizeThatFits(SwiftUI._ProposedSize) -> __C.CGSize :4294967295
+#49 ___lldb_unnamed_symbol_19041e6c4 :4294967295
+#50 SwiftUI.LayoutEngine.lengthThatFits(_: SwiftUI._ProposedSize, in: SwiftUI.Axis) -> CoreGraphics.CGFloat :4294967295
+#51 SwiftUI.LayoutEngineBox.lengthThatFits(_: SwiftUI._ProposedSize, in: SwiftUI.Axis) -> CoreGraphics.CGFloat :4294967295
+#52 SwiftUI.LayoutProxy.lengthThatFits(_: SwiftUI._ProposedSize, in: SwiftUI.Axis) -> CoreGraphics.CGFloat :4294967295
+#53 function signature specialization <Arg[2] = Exploded> of majorAxisLength(ofChild: Swift.Int, forMajorProposal: CoreGraphics.CGFloat) -> CoreGraphics.CGFloat :4294967295
+#54 SwiftUI.StackLayout.UnmanagedImplementation.prioritize(_: Swift.UnsafeMutableBufferPointer<SwiftUI.StackLayout.Child>, proposedSize: SwiftUI.ProposedViewSize) -> () :4294967295
+#55 SwiftUI.StackLayout.UnmanagedImplementation.sizeChildrenGenerallyWithConcreteMajorProposal(in: SwiftUI.ProposedViewSize, minorProposalForChild: (SwiftUI.StackLayout.Child) -> Swift.Optional<CoreGraphics.CGFloat>) -> () :4294967295
+#56 function signature specialization <Arg[1] = [Closure Propagated : $s7SwiftUI11StackLayoutV23UnmanagedImplementation33_00690F480F8D293143B214DBE6D72CD0LLV13placeChildren2inyAA16ProposedViewSizeV_tF12CoreGraphics7CGFloatVSgAC5ChildAELLVXEfU_, Argument Types : [Swift.Optional<CoreGraphics.CGFloat>]> of SwiftUI.StackLayout.UnmanagedImplementation.placeChildren1(in: SwiftUI.ProposedViewSize, minorProposalForChild: (SwiftUI.StackLayout.Child) -> Swift.Optional<CoreGraphics.CGFloat>) -> () :4294967295
+#57 SwiftUI.StackLayout.UnmanagedImplementation.placeChildren(in: SwiftUI.ProposedViewSize) -> () :4294967295
+#58 merged protocol witness for SwiftUI.Layout.sizeThatFits(proposal: SwiftUI.ProposedViewSize, subviews: SwiftUI.LayoutSubviews, cache: inout τ_0_0.Cache) -> __C.CGSize in conformance SwiftUI.VStackLayout : SwiftUI.Layout in SwiftUI :4294967295
+#59 closure #1 () -> __C.CGSize in SwiftUI.ViewLayoutEngine.sizeThatFits(SwiftUI._ProposedSize) -> __C.CGSize :4294967295
+#60 SwiftUI.ViewLayoutEngine.sizeThatFits(SwiftUI._ProposedSize) -> __C.CGSize :4294967295
+#61 SwiftUI.LayoutEngineBox.sizeThatFits(SwiftUI._ProposedSize) -> __C.CGSize :4294967295
+#62 SwiftUI.LayoutProxy.dimensions(in: SwiftUI._ProposedSize) -> SwiftUI.ViewDimensions :4294967295
+#63 SwiftUI._FrameLayout.placement(of: SwiftUI.LayoutProxy, in: SwiftUI.PlacementContext) -> SwiftUI._Placement :4294967295
+#64 SwiftUI.UnaryLayoutEngine.childPlacement(at: SwiftUI.ViewSize) -> SwiftUI._Placement :4294967295
+#65 SwiftUI.LayoutEngineBox.childPlacement(at: SwiftUI.ViewSize) -> SwiftUI._Placement :4294967295
+#66 merged generic specialization <SwiftUI.LayoutPriorityLayout> of SwiftUI.UnaryChildGeometry.value.getter : SwiftUI.ViewGeometry :4294967295
+#67 merged generic specialization <SwiftUI.ViewGeometry, SwiftUI.UnaryChildGeometry<SwiftUI.LayoutPriorityLayout>> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<τ_1_0>) -> AttributeGraph.Attribute<τ_0_0> in AttributeGraph.Attribute.init<τ_0_0 where τ_0_0 == τ_1_0.Value, τ_1_0: AttributeGraph.Rule>(τ_1_0) -> AttributeGraph.Attribute<τ_0_0> :4294967295
+#68 AG::Graph::UpdateStack::update() :4294967295
+#69 AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int) :4294967295
+#70 AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long) :4294967295
+#71 AGGraphGetValue :4294967295
+#72 generic specialization <Swift.Array<SwiftUI.ViewGeometry>, SwiftUI.LayoutChildGeometries> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<τ_1_0>) -> AttributeGraph.Attribute<τ_0_0> in AttributeGraph.Attribute.init<τ_0_0 where τ_0_0 == τ_1_0.Value, τ_1_0: AttributeGraph.Rule>(τ_1_0) -> AttributeGraph.Attribute<τ_0_0> :4294967295
+#73 AG::Graph::UpdateStack::update() :4294967295
+#74 AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int) :4294967295
+#75 AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long) :4294967295
+#76 AGGraphGetValue :4294967295
+#77 SwiftUI.DynamicLayoutViewChildGeometry.updateValue() -> () :4294967295
+#78 generic specialization <SwiftUI.ViewGeometry, SwiftUI.DynamicLayoutViewChildGeometry> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<τ_1_0>) -> AttributeGraph.Attribute<τ_0_0> in AttributeGraph.Attribute.init<τ_0_0 where τ_0_0 == τ_1_0.Value, τ_1_0: AttributeGraph.StatefulRule>(τ_1_0) -> AttributeGraph.Attribute<τ_0_0> :4294967295
+#79 AG::Graph::UpdateStack::update() :4294967295
+#80 AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int) :4294967295
+#81 AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long) :4294967295
+#82 AGGraphGetValue :4294967295
+#83 merged generic specialization <SwiftUI.LayoutPriorityLayout> of SwiftUI.UnaryChildGeometry.value.getter : SwiftUI.ViewGeometry :4294967295
+#84 merged generic specialization <SwiftUI.ViewGeometry, SwiftUI.UnaryChildGeometry<SwiftUI.LayoutPriorityLayout>> of implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<τ_1_0>) -> AttributeGraph.Attribute<τ_0_0> in AttributeGraph.Attribute.init<τ_0_0 where τ_0_0 == τ_1_0.Value, τ_1_0: AttributeGraph.Rule>(τ_1_0) -> AttributeGraph.Attribute<τ_0_0> :4294967295
+#85 AG::Graph::UpdateStack::update() :4294967295
+#86 AG::Graph::update_attribute(AG::data::ptr<AG::Node>, unsigned int) :4294967295
+#87 AG::Graph::input_value_ref_slow(AG::data::ptr<AG::Node>, AG::AttributeID, unsigned int, unsigned int, AGSwiftMetadata const*, unsigned char&, long) :4294967295
+#88 AGGraphGetValue :4294967295
+#89 merged generic specialization <SwiftUI.LayoutPriorityLayout> of SwiftUI.UnaryChildGeometry.value.getter : SwiftUI.ViewGeometry :4294967295
+observedSeconds=2.39 breakpointLocations=1 lastState=5
+candidateHit=True unrelatedMarkerStops=2
+(lldb) quit

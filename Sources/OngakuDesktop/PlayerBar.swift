@@ -267,6 +267,7 @@ struct PlaybackProgressSlider: NSViewRepresentable {
     func makeNSView(context: Context) -> NSSlider {
         let slider = NSSlider()
         slider.cell = PlaybackProgressSliderCell()
+        slider.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
         slider.isContinuous = true
         slider.target = context.coordinator
         slider.action = #selector(Coordinator.changed(_:))
@@ -281,7 +282,10 @@ struct PlaybackProgressSlider: NSViewRepresentable {
         slider.maxValue = range.upperBound
         slider.doubleValue = min(max(value, range.lowerBound), range.upperBound)
         slider.isEnabled = isEnabled
-        slider.appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua)
+        let appearanceName: NSAppearance.Name = colorScheme == .dark ? .darkAqua : .aqua
+        if slider.appearance?.name != appearanceName {
+            slider.appearance = NSAppearance(named: appearanceName)
+        }
         slider.setAccessibilityLabel(L10n.text("miniPlayer.progress"))
         _ = AppTheme.playbackAccent
         slider.needsDisplay = true
@@ -865,6 +869,7 @@ final class SpectrumGlassView: NSVisualEffectView {
     private var pendingStyle: (NSAppearance.Name, CGFloat)?
     private let transmissionMask: CAGradientLayer = {
         let mask = CAGradientLayer()
+        mask.actions = ["bounds": NSNull(), "position": NSNull()]
         // Vary the actual backdrop opacity, not just the foreground reflection.
         mask.colors = [
             NSColor.white.cgColor,
@@ -916,11 +921,10 @@ final class SpectrumGlassView: NSVisualEffectView {
         guard size.width > 0, size.height > 0, size != filteredSize else { return }
         filteredSize = size
 
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
+        // This mask owns no implicit geometry animations. Avoid opening an
+        // explicit transaction if a nested AppKit run loop is already committing.
         transmissionMask.frame = CGRect(origin: .zero, size: size)
-        layer?.mask = transmissionMask
-        CATransaction.commit()
+        if layer?.mask !== transmissionMask { layer?.mask = transmissionMask }
 
         // Sample the backdrop with a little refraction, then soften it just
         // enough to retain shapes and color behind the glass.
