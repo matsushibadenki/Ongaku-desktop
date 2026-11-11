@@ -2772,6 +2772,13 @@ private final class StorageWriteGate: @unchecked Sendable {
     func arm() { lock.withLock { armed = true } }
     func waitUntilEntered() -> Bool { entered.wait(timeout: .now() + 5) == .success }
     func waitUntilResumed() -> Bool { resume.wait(timeout: .now() + 10) == .success }
+    func waitOffExecutor(_ wait: @escaping @Sendable () -> Bool) async -> Bool {
+        await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(returning: wait())
+            }
+        }
+    }
     func consume() -> Bool { lock.withLock { let value = armed; armed = false; return value } }
 }
 
@@ -3421,10 +3428,10 @@ struct StorageDelayedFailureTests {
         defer { gate.resume.signal() }
         await first.setImportStagedTestGate {
             gate.entered.signal()
-            _ = await Task.detached { @Sendable [gate] in gate.waitUntilResumed() }.value
+            _ = await gate.waitOffExecutor { gate.waitUntilResumed() }
         }
         let importing = Task { await first.importFiles([source], existing: []) }
-        let reached = await Task.detached { @Sendable [gate] in gate.waitUntilEntered() }.value
+        let reached = await gate.waitOffExecutor { gate.waitUntilEntered() }
         #expect(reached)
         guard reached else { gate.resume.signal(); _ = await importing.value; return }
         do { _ = try await first.load(); Issue.record("Same actor recovered an active import") }
