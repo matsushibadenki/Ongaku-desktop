@@ -316,31 +316,38 @@ struct AudioRoutingDSPTests {
         let route: OngakuAudioRoute
         init(_ route: OngakuAudioRoute) { self.route = route }
     }
-    @Test func concurrentLivePublicationAndAudioProcessingRemainBounded() throws {
+    @Test func concurrentLivePublicationAndAudioProcessingRemainBounded() async throws {
         let doc = AudioRoutingDocument.parallel
         let shared = ConcurrentRoute(try engine(doc))
-        let work = DispatchGroup()
-        work.enter()
-        DispatchQueue.global().async {
-            defer { work.leave() }
+        let parameterSets = try (0..<100).map { index in
+            var updated = doc
+            updated.nodes[1].parameters = [index.isMultiple(of: 2) ? 0.25 : 1.5]
+            updated.nodes[2].parameters = [Double(1 + index % 100), 0.4, 0.5]
+            updated.nodes[3].parameters = [0.25, 0.75]
+            return try updated.plan().nativeSteps
+        }
+        let (input, output) = buffers(frames: 128)
+        for index in 0..<256 { input.floatChannelData![0][index] = 0.1 }
+
+        // Exercise publication while rendering without blocking a cooperative
+        // executor thread or timing unrelated graph planning on the CI runner.
+        let completed = AsyncStream<Void>.makeStream()
+        let publications = DispatchQueue(label: "com.ongaku.tests.route-publication")
+        publications.async {
+            defer { completed.continuation.finish() }
             for index in 0..<2000 {
-                var updated = doc
-                updated.nodes[1].parameters = [index.isMultiple(of: 2) ? 0.25 : 1.5]
-                updated.nodes[2].parameters = [Double(1+index%100),0.4,0.5]
-                updated.nodes[3].parameters = [0.25,0.75]
                 do {
-                    let steps = try updated.plan().nativeSteps
-                    try steps.withUnsafeBufferPointer { try shared.route.updateParameters($0.baseAddress!,count: UInt($0.count)) }
+                    try parameterSets[index % parameterSets.count].withUnsafeBufferPointer {
+                        try shared.route.updateParameters($0.baseAddress!, count: UInt($0.count))
+                    }
                 } catch { Issue.record(error) }
             }
         }
-        let (input,output) = buffers(frames: 128)
-        for f in 0..<256 { input.floatChannelData![0][f] = 0.1 }
         for _ in 0..<2000 {
-            #expect(shared.route.processFrames(128,input: input.audioBufferList,output: output.mutableAudioBufferList) == noErr)
+            #expect(shared.route.processFrames(128, input: input.audioBufferList, output: output.mutableAudioBufferList) == noErr)
             #expect((0..<256).allSatisfy { output.floatChannelData![0][$0].isFinite && abs(output.floatChannelData![0][$0]) < 1 })
         }
-        #expect(work.wait(timeout: .now()+10) == .success)
+        for await _ in completed.stream {}
     }
 
     private func engine(_ doc: AudioRoutingDocument, rate: Double = 48000) throws -> OngakuAudioRoute {
