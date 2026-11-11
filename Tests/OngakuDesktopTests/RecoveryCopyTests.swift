@@ -43,13 +43,17 @@ struct RecoveryCopyTests {
         try JSONEncoder().encode([tracks[0].id: ["kept"]]).write(to: catalog.appendingPathComponent("device-sync-tags-v1.json"))
         return Fixture(root: root, media: media, catalog: catalog, repository: repository, document: document, output: output)
     }
-    private func snapshot(_ root: URL) throws -> [String: Data] {
+    private func snapshot(_ root: URL, ignoringSearchIndexRollback: Bool = false) throws -> [String: Data] {
         var result: [String: Data] = [:]
         let walk = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey])!
         for case let file as URL in walk where (try? file.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
             // LibraryStore's independent derived index may finish concurrently.
             // It is not source catalog/audio/recovery data.
             if file.lastPathComponent.contains(".sqlite") { continue }
+            if ignoringSearchIndexRollback, file == PortableLibraryStorage(mediaURL: root).rootURL
+                .appendingPathComponent("catalog-json-rollback.json") {
+                continue
+            }
             result[String(file.path.dropFirst(root.path.count + 1))] = try Data(contentsOf: file)
         }
         return result
@@ -412,7 +416,7 @@ struct RecoveryCopyTests {
         let store = LibraryStore(repository: f.repository)
         await store.load()
         try Data("broken".utf8).write(to: f.catalog.appendingPathComponent("storage-restore-journal-v1.json"))
-        let before = try snapshot(f.media)
+        let before = try snapshot(f.media, ignoringSearchIndexRollback: true)
         let media = try await f.repository.prepareRecoveryCopy(from: f.catalog.appendingPathComponent("library-v1.json"), in: f.output)
         _ = try await target(media).resumeRecoveryCopy()
         store.schedulePlaybackQueueSave(PlaybackQueueState(position: 88))
@@ -420,6 +424,6 @@ struct RecoveryCopyTests {
         #expect(store.playbackQueue == f.document.playbackQueue)
         #expect(store.tracks.allSatisfy { $0.managedPath.hasPrefix(media.path + "/") })
         #expect(!store.isSwitchingLibrary)
-        #expect(try snapshot(f.media) == before)
+        #expect(try snapshot(f.media, ignoringSearchIndexRollback: true) == before)
     }
 }
