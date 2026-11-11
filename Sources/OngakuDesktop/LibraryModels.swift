@@ -13,6 +13,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
     case duplicates
     case needsAttention
     case effects
+    case applicationAudio
 
     var id: String { rawValue }
 
@@ -30,6 +31,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .duplicates: "sidebar.duplicates"
         case .needsAttention: "sidebar.attention"
         case .effects: "sidebar.effects"
+        case .applicationAudio: "sidebar.applicationAudio"
         }
     }
 
@@ -47,6 +49,7 @@ enum LibrarySection: String, CaseIterable, Identifiable, Sendable {
         case .duplicates: "square.on.square"
         case .needsAttention: "exclamationmark.shield"
         case .effects: "dial.medium"
+        case .applicationAudio: "waveform"
         }
     }
 
@@ -1565,6 +1568,8 @@ enum StandardLibraryResolver {
         case .duplicates:
             let ids = Set(DuplicateTrackAnalyzer.groups(in: tracks).flatMap { $0.tracks.map(\.id) })
             return tracks.filter { ids.contains($0.id) }
+        case .applicationAudio:
+            return []
         case .songs, .albums, .artists, .effects:
             return tracks
         }

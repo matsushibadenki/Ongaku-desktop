@@ -5,6 +5,17 @@ import Darwin
 import Foundation
 
 actor LibraryRepository {
+    // File I/O and flock polling are synchronous. Keep them off the cooperative
+    // pool so an import suspended on metadata can resume while another instance
+    // waits for its lock, even on a runner with few executor threads.
+    private nonisolated let storageQueue = DispatchSerialQueue(
+        label: "com.ongaku.desktop.library-storage", qos: .userInitiated
+    )
+
+    nonisolated var unownedExecutor: UnownedSerialExecutor {
+        storageQueue.asUnownedSerialExecutor()
+    }
+
     enum OverlayJournalStep: Sendable { case journalWritten, catalogWritten, tagsWritten }
     struct OverlayJournalInterruption: Error {}
     private struct OverlayJournal: Codable {

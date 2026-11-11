@@ -277,3 +277,49 @@ final class EqualizerAudioEffect: AudioEffectNode {
     }
 }
 
+
+/// Fixed-frequency graphic EQ for the Pro rack.
+final class GraphicEqualizerAudioEffect: AudioEffectNode {
+    static let frequencies: [Float] = [31.25, 62.5, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
+    static let bandLabels = ["31", "63", "125", "250", "500", "1k", "2k", "4k", "8k", "16k"]
+
+    let kind: RealtimeAudioEffectKind = .graphicEqualizer
+    private(set) var isEnabled = false
+    private(set) var estimatedGainBoostDB = 0.0
+    private let equalizer = AVAudioUnitEQ(numberOfBands: frequencies.count)
+
+    var nodes: [AVAudioNode] { [equalizer] }
+    var inputNode: AVAudioNode { equalizer }
+    var outputNode: AVAudioNode { equalizer }
+
+    func attach(to engine: AVAudioEngine) {
+        equalizer.bypass = true
+        engine.attach(equalizer)
+    }
+
+    func connectInternalNodes(engine: AVAudioEngine, format: AVAudioFormat?) {}
+
+    func detach(from engine: AVAudioEngine) {
+        engine.detach(equalizer)
+    }
+
+    func apply(setting: RealtimeAudioEffectSetting) {
+        isEnabled = setting.isEnabled
+        equalizer.bypass = !isEnabled
+        estimatedGainBoostDB = 0
+        let rate = equalizer.inputFormat(forBus: 0).sampleRate
+        for (index, band) in equalizer.bands.enumerated() {
+            let frequency = Self.frequencies[index]
+            let normalized = setting.parameters["band\(index)"] ?? 0.5
+            let gain = normalized.isFinite ? (min(1, max(0, normalized)) - 0.5) * 24 : 0
+            let supported = rate > 0 && Double(frequency) < rate / 2
+            band.bypass = !supported || gain == 0
+            guard supported else { continue }
+            band.filterType = .parametric
+            band.frequency = frequency
+            band.bandwidth = 1
+            band.gain = Float(gain)
+            if isEnabled { estimatedGainBoostDB += max(0, gain) }
+        }
+    }
+}

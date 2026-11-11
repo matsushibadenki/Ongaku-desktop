@@ -1,0 +1,20 @@
+{
+  "date": "2026-11-11",
+  "Synth": {
+    "path": "/Users/Shared/Program/Xcode/Synth",
+    "commit": "e06791f035a2e4b72579ee2766d2dcda2069d3db"
+  },
+  "UNGE": {
+    "path": "/Users/littlebuddha/Desktop/alias/UNGE",
+    "commit": "06320346a2e71edbcf63c7e4a4bbe14f33ce1147"
+  },
+  "snapshots": {
+    "Synth/EffectsDSP.swift": "02300259cd4a52a4e0bae4627b28b933afe7b13ce876f4d7124486fcce9676b4",
+    "Synth/EffectsGraph.swift": "e2898820f9b08812170b1bb51de30595ce8234f6cb8201487efba34cee2f17b1",
+    "Synth/EffectsPatchView.swift": "6879c0c8e660fcde5ea86eb0ceba790d3f83a63ebfc2f7d22d0e1b3d74713c45",
+    "Synth/PatchNodeCard.swift": "41734b7a5bc019ad62d53ccf4944d46ca2072491ed1f985bb81a63efbd24a8a3",
+    "UNGE/LICENSE-MIT": "78237ebb394cddbe4d3277446479d17498feac54f757cfc508b35df20d90b138",
+    "UNGE/command.rs": "fec73cda7c8d5d276a87694c6958082619f23ecfdf7dc4a2a0bcb5f3b5634606",
+    "UNGE/model.rs": "779fc98a60664187219388536344321511e11f1e880e7b0ddf1d319dff90725e"
+  }
+}

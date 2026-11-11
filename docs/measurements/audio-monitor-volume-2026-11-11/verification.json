@@ -1,0 +1,65 @@
+{
+  "file": "/tmp/ongaku-monitor-volume-qa/Ongaku Capture Test Source 2026-11-11T02-51-31Z 5503BC47.wav",
+  "duration": 39.178666666666665,
+  "sample_rate": 48000,
+  "bits": 32,
+  "channels": 2,
+  "segments": [
+    {
+      "monitor_volume": "100%",
+      "recording_seconds": [
+        2,
+        4
+      ],
+      "rms_dbfs": -39.39370180419139,
+      "peak_dbfs": -36.370784433076054
+    },
+    {
+      "monitor_volume": "0%",
+      "recording_seconds": [
+        13,
+        15
+      ],
+      "rms_dbfs": -39.393702979419515,
+      "peak_dbfs": -36.37056231486822
+    },
+    {
+      "monitor_volume": "25.51%",
+      "recording_seconds": [
+        20,
+        22
+      ],
+      "rms_dbfs": -39.393703580008804,
+      "peak_dbfs": -36.371862079972125
+    },
+    {
+      "monitor_volume": "100% restored",
+      "recording_seconds": [
+        33,
+        35
+      ],
+      "rms_dbfs": -39.39370448758151,
+      "peak_dbfs": -36.37056231486822
+    }
+  ],
+  "rms_range_db": 2.6833901216605227e-06,
+  "tests": 49,
+  "suites": 7,
+  "native_recording_samples_identical_during_monitor_changes": true,
+  "monitor_levels_ui_dbfs": {
+    "100%": -36.4,
+    "0%": "-infinity",
+    "25.51%": -48.2
+  },
+  "output_frames": 1878865,
+  "output_underruns": 0,
+  "capture_status": 0,
+  "original_graph_restored": true,
+  "original_source_restored": true,
+  "installed_app_updated": false,
+  "builds": {
+    "debug": "succeeded",
+    "app_store_release_unsigned": "succeeded"
+  },
+  "final_branch_layout_ui_verified": true
+}

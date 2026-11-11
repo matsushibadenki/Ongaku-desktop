@@ -1,0 +1,2 @@
+local.ongaku.retained-tab-audit: 17825
+PASS: retained hosts, local state, navigation paths, appearance/disappearance, refresh, no native tab bar; idle prewarm, late-playing rejection, active host preservation, warm state reuse, navigation/teardown cancellation

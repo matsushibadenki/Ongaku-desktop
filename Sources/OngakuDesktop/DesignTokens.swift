@@ -81,10 +81,12 @@ enum AppTheme {
         dark: ThemeRGB(red: 0.180, green: 0.180, blue: 0.180)
     )
     static let contactShadow = Color.black.opacity(0.16)
-    @MainActor static var metal: LinearGradient {
+    @MainActor static var metal: LinearGradient { metalGradient(endingAt: .bottomTrailing) }
+
+    @MainActor static func metalGradient(endingAt end: UnitPoint) -> LinearGradient {
         let colors = appearance.pastelColor.map { [surfaceHighlight, $0] }
             ?? [surfaceHighlight, surface, canvas]
-        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+        return LinearGradient(colors: colors, startPoint: .topLeading, endPoint: end)
     }
     @MainActor static var raisedEdge: LinearGradient {
         LinearGradient(colors: [surfaceHighlight, rule],
@@ -134,10 +136,10 @@ extension View {
             .foregroundStyle(AppTheme.prominentInk)
     }
 
-    func ongakuPanel() -> some View {
+    func ongakuPanel(gradientEnd: UnitPoint = .bottomTrailing) -> some View {
         background {
             RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
-                .fill(AppTheme.metal)
+                .fill(AppTheme.metalGradient(endingAt: gradientEnd))
                 .overlay {
                     RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
                         .strokeBorder(AppTheme.raisedEdge, lineWidth: 1)

@@ -167,3 +167,47 @@ struct AudioOutputManager {
         )
     }
 }
+
+struct ApplicationAudioOutput: Identifiable, Equatable, Sendable {
+    let id: String // Persistent Core Audio UID, never the transient device ID.
+    let name: String
+}
+
+enum ApplicationAudioOutputs {
+    static func list() -> [ApplicationAudioOutput] {
+        var address = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDevices,
+            mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var size: UInt32 = 0
+        guard AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size) == noErr else { return [] }
+        var devices = [AudioDeviceID](repeating: 0, count: Int(size)/MemoryLayout<AudioDeviceID>.size)
+        guard !devices.isEmpty else { return [] }
+        let status = devices.withUnsafeMutableBytes {
+            AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &address, 0, nil, &size, $0.baseAddress!)
+        }
+        guard status == noErr else { return [] }
+        return devices.prefix(Int(size)/MemoryLayout<AudioDeviceID>.size).compactMap { device in
+            var address = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyStreamConfiguration,
+                mScope: kAudioDevicePropertyScopeOutput, mElement: kAudioObjectPropertyElementMain)
+            var size: UInt32 = 0
+            guard AudioObjectGetPropertyDataSize(device, &address, 0, nil, &size) == noErr,
+                  size >= MemoryLayout<AudioBufferList>.size else { return nil }
+            let memory = UnsafeMutableRawPointer.allocate(byteCount: Int(size), alignment: MemoryLayout<AudioBufferList>.alignment)
+            defer { memory.deallocate() }
+            guard AudioObjectGetPropertyData(device, &address, 0, nil, &size, memory) == noErr else { return nil }
+            let channels = UnsafeMutableAudioBufferListPointer(memory.assumingMemoryBound(to: AudioBufferList.self))
+                .reduce(0) { $0 + Int($1.mNumberChannels) }
+            guard channels >= 2 else { return nil }
+            func string(_ selector: AudioObjectPropertySelector) -> String? {
+                var address = AudioObjectPropertyAddress(mSelector: selector, mScope: kAudioObjectPropertyScopeGlobal,
+                                                        mElement: kAudioObjectPropertyElementMain)
+                var value: Unmanaged<CFString>?
+                var size = UInt32(MemoryLayout<Unmanaged<CFString>?>.size)
+                guard AudioObjectGetPropertyData(device, &address, 0, nil, &size, &value) == noErr else { return nil }
+                return value.map { $0.takeRetainedValue() as String }
+            }
+            guard let uid = string(kAudioDevicePropertyDeviceUID), let name = string(kAudioObjectPropertyName),
+                  !name.hasPrefix("Ongaku Application Audio"), !name.hasPrefix("CADefaultDeviceAggregate-") else { return nil }
+            return ApplicationAudioOutput(id: uid, name: name)
+        }.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+}

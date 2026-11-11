@@ -1,2 +1,4 @@
 "NSAppleMusicUsageDescription" = "Ongaku uses Apple Music access to search and play the catalog and add selected songs to your cloud music library.";
 "NSLocalNetworkUsageDescription" = "Ongaku uses your local network to securely sync selected music files with your iPhone or iPad.";
+
+"NSAudioCaptureUsageDescription" = "Ongaku records audio from the app you select and saves it to your chosen audio file.";

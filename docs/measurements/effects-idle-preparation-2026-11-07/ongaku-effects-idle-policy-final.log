@@ -1,0 +1,2 @@
+PASS: cold idle excludes all playing/loading/recovery/inactive/system states; no cold engine access
+PASS: hidden controls suppress updates, visible controls batch and catch up, retired activation is ignored

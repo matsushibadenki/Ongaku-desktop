@@ -401,7 +401,7 @@ struct ContentView: View {
     }
 }
 
-private struct RequiredImportMetadataView: View {
+struct RequiredImportMetadataView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var drafts: [RequiredImportMetadataDraft]
     let onImport: ([RequiredImportMetadataDraft]) -> Void

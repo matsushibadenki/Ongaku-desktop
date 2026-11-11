@@ -1347,3 +1347,169 @@
 "library.error.recoveryCopyIncomplete" = "This recovery copy is incomplete or could not be verified. Keep it and the original data. Use Resume Recovery Copy in Storage settings.";
 "settings.storage.recoveryCopy.notOpened" = "Recovery copy created: %@. The active library changed while copying, so it was kept selected.";
 "settings.storage.recoveryCopy.keepMissing" = "Keep track information when audio cannot be found";
+
+// Application audio capture
+"sidebar.applicationAudio" = "App Audio";
+"capture.subtitle" = "Application → Nodes → Output / WAV";
+"capture.ready" = "Ready";
+"capture.recording" = "Recording";
+"capture.source" = "Application";
+"capture.refresh" = "Refresh applications";
+"capture.noSources" = "No audio applications";
+"capture.noSourcesHelp" = "Play audio in another app, then refresh.";
+"capture.level" = "Output level";
+"capture.start" = "Record";
+"capture.stop" = "Stop recording";
+"capture.reveal" = "Show in Finder";
+"capture.import" = "Add to Library";
+"capture.waiting" = "Waiting for audio. Check source playback and System Settings → Privacy & Security → Screen & System Audio Recording.";
+"capture.help" = "Process the selected application through the node route. Adjust gain and effects live. An output node sends audio to the chosen device and mutes the original app while running. Double-click the recording node to choose its folder, quality and track information. Stop before changing connections or devices.";
+"capture.requiresOS" = "Requires macOS 14.2 or later.";
+"capture.sourceChanged" = "The audio source or format changed. Recording stopped; the partial file was kept. Refresh and start a new recording.";
+"capture.interrupted" = "Recording stopped before sleep. The partial file was kept.";
+"capture.writeError" = "Audio processing stopped (error %d). Any recorded file remains at the chosen location.";
+"capture.startError" = "Could not start audio processing: %@. Check the selected device, system audio recording permission and, when recording, a new writable destination.";
+
+// Node audio routing (Synth / UNGE native adaptation)
+"routing.title" = "Audio routing";
+"routing.node.0" = "Application";
+"routing.node.1" = "Gain";
+"routing.node.2" = "Low-pass";
+"routing.node.3" = "Delay";
+"routing.node.4" = "Mixer";
+"routing.node.5" = "Meter";
+"routing.node.6" = "Recorder";
+"routing.gain" = "Gain (×)";
+"routing.cutoff" = "Cutoff (Hz)";
+"routing.time" = "Time (ms)";
+"routing.feedback" = "Feedback";
+"routing.mix" = "Wet mix";
+"routing.inputA" = "Input A (×)";
+"routing.inputB" = "Input B (×)";
+"routing.add" = "Add node";
+"routing.remove" = "Remove node";
+"routing.undo" = "Undo routing edit";
+"routing.redo" = "Redo routing edit";
+"routing.zoomOut" = "Zoom out";
+"routing.zoomIn" = "Zoom in";
+"routing.help" = "Pinch the trackpad to zoom the canvas (50–150%). Drag between ports to connect, or click output then input. Right-click a port or cable to disconnect. Drag titles to move nodes even while audio is running. Sliders and bypass take effect live; while stopped, use Apply. Stop before changing connections or devices.";
+"routing.connecting" = "Connect %@ to an input";
+"routing.cancel" = "Cancel connection";
+"routing.connections" = "Connections";
+"routing.disconnect" = "Disconnect cable";
+"routing.inputPort" = "%@ input %@";
+"routing.outputPort" = "%@ output %@";
+"routing.apply" = "Apply";
+"routing.bypass" = "Bypass";
+"routing.templates" = "Routing templates";
+"routing.serial" = "Series";
+"routing.parallel" = "Parallel delay mix";
+"routing.error.document" = "Invalid graph, node limit, or parameter value.";
+"routing.error.port" = "These ports cannot be connected.";
+"routing.error.occupied" = "This input is already connected. Disconnect it first.";
+"routing.error.cycle" = "A feedback loop cannot be connected. Use the Delay feedback control.";
+"routing.error.disconnected" = "Connect every required input to the recording or output node.";
+"routing.error.revision" = "The graph changed during this edit. Select the node and try again.";
+"routing.error.locked" = "Stop audio before changing connections or devices.";
+"routing.error.persistence" = "The saved route could not be opened. A default route is shown; saved data stays unchanged until you edit.";
+"routing.chooseSource" = "Choose an application";
+
+"routing.node.7" = "Output device";
+
+"routing.device" = "Output device";
+
+"routing.chooseDevice" = "Choose an output device";
+
+"routing.deviceMissing" = "Device unavailable";
+
+"routing.monitorTemplate" = "Speakers / headphones";
+
+"routing.monitoring" = "Monitoring";
+
+"routing.start" = "Start";
+
+"routing.stop" = "Stop";
+
+"routing.error.device" = "Select an available output device.";
+
+"routing.sessionChanged" = "The input or output device changed. The session has stopped.";
+
+"routing.bypassOn" = "Bypassed";
+
+"routing.bypassOff" = "Active";
+
+"routing.nodeActions" = "Node actions";
+
+"routing.refreshDevices" = "Refresh output devices";
+
+"routing.recordingDestination" = "Choose a WAV destination when starting.";
+
+"routing.noConnections" = "No connections";
+
+"routing.disconnectAll" = "Disconnect all cables from this port";
+
+/* Node recording settings */
+"routing.settings" = "Settings";
+"routing.settingsTitle" = "%@ Settings";
+"routing.doubleClickSettings" = "Double-click to open settings";
+"routing.noExtraSettings" = "No additional settings";
+"recording.quality.16" = "16-bit PCM";
+"recording.quality.24" = "24-bit PCM";
+"recording.quality.32" = "32-bit Float";
+"recording.sourceRate" = "Source rate";
+"recording.chooseDirectoryFirst" = "Choose a writable recording folder in the Recording node.";
+"recording.invalid" = "Check the recording settings and text length.";
+"recording.done" = "Done";
+"recording.destination" = "Destination";
+"recording.folder" = "Folder";
+"recording.chooseFolder" = "Choose Folder…";
+"recording.filename" = "File name";
+"recording.quality" = "Audio Quality";
+"recording.bitDepth" = "Bit depth";
+"recording.sampleRate" = "Sample rate";
+"recording.qualityHelp" = "WAV recording. The date and a unique ID are appended to the file name. Higher sample rates do not restore detail absent from the source. Changes apply to the next recording.";
+"recording.metadata" = "Track Information";
+"recording.title" = "Title";
+"recording.artist" = "Artist";
+"recording.album" = "Album";
+"recording.genre" = "Genre";
+"recording.comment" = "Comment";
+"recording.save" = "Save";
+
+/* Independent monitoring volume */
+"routing.monitorVolume" = "Monitor volume";
+"routing.monitorVolumeHelp" = "Adjusts only this output. Recording levels are unchanged. At 0%, monitoring is silent while recording continues.";
+"routing.recordMonitorTemplate" = "Record + monitor";
+
+"routing.inputBoost" = "Input boost";
+"routing.inputBoostHelp" = "Amplifies the signal before the output port, affecting both recording and monitoring. 1× keeps the original level. Peaks above 0 dBFS may distort at the final output.";
+
+"routing.clipLamp" = "Clip indicator";
+"routing.clipDetected" = "Clipping detected";
+"routing.clipClear" = "No clipping detected";
+"routing.clipHelp" = "Lights when a sample exceeds 0 dBFS. Click to clear; starting a new session also clears it.";
+"routing.levelMeter" = "Level meter";
+"routing.levelColorsHelp" = "Green: up to −6 dBFS. Yellow: up to −3 dBFS. Red: above −3 dBFS.";
+
+"routing.node.8" = "Waveform";
+
+"routing.deviceCurrentRate" = "Current device rate";
+
+"routing.node.9" = "10-band equalizer";
+
+"routing.helpTitle" = "Routing help";
+"routing.stageActions" = "Stage actions";
+"routing.connectPort" = "Connect port";
+
+"routing.node.10" = "Compressor";
+"routing.threshold" = "Threshold (dBFS)";
+"routing.ratio" = "Ratio (:1)";
+"routing.attack" = "Attack (ms)";
+"routing.release" = "Release (ms)";
+"routing.makeup" = "Makeup gain (dB)";
+
+"routing.node.11" = "Limiter";
+"routing.ceiling" = "Ceiling (dBFS)";
+
+"effect.graphic_equalizer.name" = "10-band equalizer";
+"effect.graphic_equalizer.description" = "Adjust ten bands from 31 Hz to 16 kHz by −12 to +12 dB.";

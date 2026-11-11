@@ -369,7 +369,9 @@ struct EffectModuleCard: View, Equatable {
 
             Divider().overlay(AppTheme.rule)
 
-            if kind == .equalizer {
+            if kind == .graphicEqualizer {
+                graphicEqualizerControls
+            } else if kind == .equalizer {
                 ForEach(EqualizerParameterSection.all) { section in
                     VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
                         HStack(spacing: AppTheme.spaceXS) {
@@ -389,11 +391,37 @@ struct EffectModuleCard: View, Equatable {
             }
         }
         .padding(AppTheme.spaceMD)
-        .ongakuPanel()
+        .ongakuPanel(gradientEnd: .topTrailing)
         .overlay {
             RoundedRectangle(cornerRadius: AppTheme.radiusMedium, style: .continuous)
                 .stroke(setting.isEnabled ? AppTheme.accent.opacity(0.42) : AppTheme.rule.opacity(0.55), lineWidth: 1)
+                .allowsHitTesting(false)
         }
+    }
+
+    private var graphicEqualizerControls: some View {
+        HStack(spacing: 4) {
+            ForEach(kind.parameterDefinitions, id: \.key) { definition in
+                let binding = parameterBinding(definition)
+                let gain = Binding<Double>(
+                    get: { (binding.wrappedValue) * 24 - 12 },
+                    set: { binding.wrappedValue = ($0 + 12) / 24 }
+                )
+                VStack(spacing: 4) {
+                    Text(gain.wrappedValue.formatted(.number.precision(.fractionLength(0))))
+                        .monospacedDigit()
+                    AudioRoutingVerticalSlider(value: gain, range: -12...12,
+                                               label: definition.name + " Hz", finish: {}, rackInput: input)
+                        .effectRackControl()
+                    Text(definition.name).lineLimit(1).minimumScaleFactor(0.75)
+                }
+                .font(.caption2)
+                .frame(width: 24)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.horizontal, 4)
+        .disabled(!setting.isEnabled)
     }
 
     private func parameterControls(_ definitions: [EffectParameterDefinition]) -> some View {

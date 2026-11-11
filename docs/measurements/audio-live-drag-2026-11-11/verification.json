@@ -1,0 +1,51 @@
+{
+  "date": "2026-11-11",
+  "environment": "Isolated QA application and library, Japanese dark, 100% zoom",
+  "input": "Self-generated 440/660 Hz low-level stereo test tone",
+  "output": "External headphones",
+  "session_seconds": 30.539,
+  "output_frames": 1464250,
+  "underruns": 0,
+  "status": 0,
+  "moves_while_running": [
+    {
+      "kind": "gain",
+      "screen_delta": [
+        65,
+        65
+      ],
+      "saved_model_delta": [
+        50,
+        50
+      ]
+    },
+    {
+      "kind": "application",
+      "screen_delta": [
+        -13,
+        26
+      ],
+      "saved_model_delta": [
+        -10,
+        20
+      ]
+    }
+  ],
+  "verified": [
+    "Audio duration and meter continued across both moves",
+    "Coordinates persisted while audio session was running",
+    "All non-position node fields and edges unchanged",
+    "Two Undo actions after stop restored the full pre-test graph",
+    "Original input application selection restored without starting it"
+  ],
+  "tests": {
+    "count": 39,
+    "suites": 5,
+    "result": "passed"
+  },
+  "builds": {
+    "debug": "succeeded",
+    "app_store_release_unsigned": "succeeded"
+  },
+  "installed_app_updated": false
+}

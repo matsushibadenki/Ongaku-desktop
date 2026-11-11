@@ -194,6 +194,20 @@
 		FA5720000000000000000000 /* PastelVUMeterScale.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000000 /* PastelVUMeterScale.swift */; };
 		FA5720000000000000000001 /* PastelChannelVUMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA5700000000000000000001 /* PastelChannelVUMeter.swift */; };
 		U20000000000000000000001 /* OngakuDesktopUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = U10000000000000000000001 /* OngakuDesktopUITests.swift */; };
+		DAA111110000000000000002 /* ApplicationAudioCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA111110000000000000001; };
+		DAA444440000000000000002 /* AudioNodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA444440000000000000001; };
+		DAA111110000000000000003 /* ApplicationAudioCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA111110000000000000001; };
+		DAA444440000000000000003 /* AudioNodeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAA444440000000000000001; };
+		DAA111110000000000000005 /* ApplicationAudioCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = DAA111110000000000000004; };
+		DAA111110000000000000006 /* ApplicationAudioCapture.mm in Sources */ = {isa = PBXBuildFile; fileRef = DAA111110000000000000004; };
+		DBB111110000000000000002 /* AudioRoutingGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000001; };
+		DBB111110000000000000003 /* AudioRoutingGraph.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000001; };
+		DBB111110000000000000012 /* AudioRoutingGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000011; };
+		DBB111110000000000000013 /* AudioRoutingGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000011; };
+		DBB111110000000000000022 /* AudioRoutingDSP.mm in Sources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000021; };
+		DBB111110000000000000023 /* AudioRoutingDSP.mm in Sources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000021; };
+		DBB111110000000000000042 /* UNGE-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000041; };
+		DBB111110000000000000043 /* UNGE-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = DBB111110000000000000041; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -318,6 +332,13 @@
 		S10000000000000000000001 /* OngakuDesktop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OngakuDesktop.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		U10000000000000000000001 /* OngakuDesktopUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OngakuDesktopUITests.swift; sourceTree = "<group>"; };
 		U10000000000000000000002 /* OngakuDesktopUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OngakuDesktopUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		DAA111110000000000000001 /* ApplicationAudioCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/ApplicationAudioCapture.swift; sourceTree = SOURCE_ROOT; };
+		DAA444440000000000000001 /* AudioNodeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/AudioNodeSettings.swift; sourceTree = SOURCE_ROOT; };
+		DAA111110000000000000004 /* ApplicationAudioCapture.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Sources/OngakuAudioDSP/ApplicationAudioCapture.mm; sourceTree = SOURCE_ROOT; };
+		DBB111110000000000000001 /* AudioRoutingGraph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/AudioRoutingGraph.swift; sourceTree = SOURCE_ROOT; };
+		DBB111110000000000000011 /* AudioRoutingGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sources/OngakuDesktop/AudioRoutingGraphView.swift; sourceTree = SOURCE_ROOT; };
+		DBB111110000000000000021 /* AudioRoutingDSP.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Sources/OngakuAudioDSP/AudioRoutingDSP.mm; sourceTree = SOURCE_ROOT; };
+		DBB111110000000000000041 /* UNGE-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Sources/OngakuDesktop/Resources/UNGE-LICENSE.txt; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -406,6 +427,13 @@
 				A202610170000000000000012 /* Sources/OngakuAudioDSP/TruePeakAudioUnit.mm */,
 				A4EF008FA1AE94E03BD87EC86 /* Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm */,
 				A202610220000000000000031 /* Sources/OngakuAudioDSP/GainEnvelopeAudioUnit.mm */,
+				DAA111110000000000000004 /* ApplicationAudioCapture.mm */,
+				DAA111110000000000000001 /* ApplicationAudioCapture.swift */,
+				DAA444440000000000000001 /* AudioNodeSettings.swift */,
+				DBB111110000000000000041 /* UNGE-LICENSE.txt */,
+				DBB111110000000000000021 /* AudioRoutingDSP.mm */,
+				DBB111110000000000000011 /* AudioRoutingGraphView.swift */,
+				DBB111110000000000000001 /* AudioRoutingGraph.swift */,
 				A202610170000000000000040 /* Sources/OngakuDesktop/EffectTransitionPolicy.swift */,
 				A202610170000000000000041 /* Sources/OngakuDesktop/EffectParameterTransition.swift */,
 				A202610190000000000000001 /* Sources/OngakuDesktop/TransportOutputEnvelope.swift */,
@@ -641,6 +669,7 @@
 				200000000000000000000029 /* Packaging/Assets.xcassets in Resources */,
 				200000000000000000000034 /* InfoPlist.strings in Resources */,
 				200000000000000000000045 /* Resources/PrivacyInfo.xcprivacy in Resources */,
+				DBB111110000000000000042 /* UNGE-LICENSE.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -662,6 +691,7 @@
 				E8DA8ED030825B1B00B38A1B /* Packaging/Assets.xcassets in Resources */,
 				E8DA8ED130825B1B00B38A1B /* InfoPlist.strings in Resources */,
 				E8DA8ED230825B1B00B38A1B /* Resources/PrivacyInfo.xcprivacy in Resources */,
+				DBB111110000000000000043 /* UNGE-LICENSE.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -686,6 +716,12 @@
 				A202610170000000000000022 /* Sources/OngakuAudioDSP/TruePeakAudioUnit.mm in Sources */,
 				A465E0087AAC540D6807918C0 /* Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm in Sources */,
 				A202610220000000000000032 /* Sources/OngakuAudioDSP/GainEnvelopeAudioUnit.mm in Sources */,
+				DAA111110000000000000005 /* ApplicationAudioCapture.mm in Sources */,
+				DAA111110000000000000002 /* ApplicationAudioCapture.swift in Sources */,
+				DAA444440000000000000002 /* AudioNodeSettings.swift in Sources */,
+				DBB111110000000000000022 /* AudioRoutingDSP.mm in Sources */,
+				DBB111110000000000000012 /* AudioRoutingGraphView.swift in Sources */,
+				DBB111110000000000000002 /* AudioRoutingGraph.swift in Sources */,
 				A202610170000000000000020 /* Sources/OngakuDesktop/FinalOutputProtection.swift in Sources */,
 				200000000000000000000001 /* OngakuDesktopApp.swift in Sources */,
 				200000000000000000000002 /* DesignTokens.swift in Sources */,
@@ -796,6 +832,12 @@
 				A202610170000000000000023 /* Sources/OngakuAudioDSP/TruePeakAudioUnit.mm in Sources */,
 				A87EC60EF8D4A4A5EA0E03292 /* Sources/OngakuAudioDSP/SpectralTransientAudioUnit.mm in Sources */,
 				A202610220000000000000033 /* Sources/OngakuAudioDSP/GainEnvelopeAudioUnit.mm in Sources */,
+				DAA111110000000000000006 /* ApplicationAudioCapture.mm in Sources */,
+				DAA111110000000000000003 /* ApplicationAudioCapture.swift in Sources */,
+				DAA444440000000000000003 /* AudioNodeSettings.swift in Sources */,
+				DBB111110000000000000023 /* AudioRoutingDSP.mm in Sources */,
+				DBB111110000000000000013 /* AudioRoutingGraphView.swift in Sources */,
+				DBB111110000000000000003 /* AudioRoutingGraph.swift in Sources */,
 				A202610170000000000000021 /* Sources/OngakuDesktop/FinalOutputProtection.swift in Sources */,
 				E8DA8E8E30825B1B00B38A1B /* OngakuDesktopApp.swift in Sources */,
 				E8DA8E8F30825B1B00B38A1B /* DesignTokens.swift in Sources */,
@@ -1036,10 +1078,11 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
 				ENABLE_APP_SANDBOX = NO;
+				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktop.entitlements;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Sources/OngakuAudioDSP/include";
@@ -1051,7 +1094,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.12;
+				MARKETING_VERSION = 0.1.13;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -1073,10 +1116,11 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
 				ENABLE_APP_SANDBOX = NO;
+				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktop.entitlements;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/Sources/OngakuAudioDSP/include";
@@ -1088,7 +1132,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.12;
+				MARKETING_VERSION = 0.1.13;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -1157,7 +1201,7 @@
 				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktopAppStore.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
 				ENABLE_APP_SANDBOX = YES;
@@ -1172,7 +1216,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.12;
+				MARKETING_VERSION = 0.1.13;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
 				PRODUCT_NAME = OngakuDesktop;
 				SDKROOT = macosx;
@@ -1195,7 +1239,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = Packaging/OngakuDesktopAppStore.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = 3WH28SSRZC;
 				ENABLE_APP_SANDBOX = YES;
@@ -1210,7 +1254,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 0.1.12;
+				MARKETING_VERSION = 0.1.13;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ongaku.desktop;
 				PRODUCT_NAME = OngakuDesktop;
 				SDKROOT = macosx;

@@ -1,0 +1,2 @@
+2026-11-11 10:40:00.171 OngakuRoutingQA[24804:317388] Ongaku routing render: {"counts":{"cableDraw":2,"cardBody":36,"clockBody":31,"graphBody":4,"meterBody":287},"phase":"session","seconds":30.544478893280029}
+2026-11-11 10:40:00.177 OngakuRoutingQA[24804:317388] Ongaku application audio stopped: duration=30.539 outputFrames=1464250 underruns=0 status=0

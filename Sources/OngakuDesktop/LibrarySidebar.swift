@@ -196,6 +196,16 @@ struct LibrarySidebar: View {
                 }
                 .fixedSize(horizontal: true, vertical: false)
                 .tag(SidebarDestination.section(.effects))
+                Label {
+                    Text(L10n.text("sidebar.applicationAudio"))
+                } icon: {
+                    sidebarSystemImage("waveform")
+                }
+                .tag(SidebarDestination.section(.applicationAudio))
+                if #available(macOS 14.2, *) {
+                    ApplicationAudioCaptureSidebarStatus()
+                }
+
             }
 
             Section(L10n.text("sidebar.integrity")) {

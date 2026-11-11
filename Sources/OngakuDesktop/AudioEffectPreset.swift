@@ -101,6 +101,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
     case warm
     case space
     case equalizer
+    case graphicEqualizer
     case highQualityEnhancement
 
     var id: String { rawValue }
@@ -117,6 +118,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
         case .optoFET: return L10n.text("effect.opto_fet.name")
         case .warm: return L10n.text("effect.warm.name")
         case .space: return L10n.text("effect.space.name")
+        case .graphicEqualizer: return L10n.text("effect.graphic_equalizer.name")
         case .equalizer: return L10n.text("effect.equalizer.name")
         case .highQualityEnhancement: return L10n.text("effect.high_quality_enhancement.name")
         }
@@ -134,6 +136,7 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
         case .optoFET: return L10n.text("effect.opto_fet.description")
         case .warm: return L10n.text("effect.warm.description")
         case .space: return L10n.text("effect.space.description")
+        case .graphicEqualizer: return L10n.text("effect.graphic_equalizer.description")
         case .equalizer: return L10n.text("effect.equalizer.description")
         case .highQualityEnhancement: return L10n.text("effect.high_quality_enhancement.description")
         }
@@ -203,6 +206,10 @@ enum RealtimeAudioEffectKind: String, CaseIterable, Identifiable, Codable, Senda
                 EffectParameterDefinition(key: "preDelay", name: L10n.text("effect.parameter.pre_delay"), defaultValue: 0.24),
                 EffectParameterDefinition(key: "damping", name: L10n.text("effect.parameter.damping"), defaultValue: 0.46)
             ]
+        case .graphicEqualizer:
+            return GraphicEqualizerAudioEffect.bandLabels.enumerated().map { index, label in
+                EffectParameterDefinition(key: "band\(index)", name: label, defaultValue: 0.5, isBiPolar: true)
+            }
         case .equalizer:
             return [
                 EffectParameterDefinition(key: "hpf", name: L10n.text("effect.parameter.hpf"), defaultValue: 0.0, group: "FILTER"),

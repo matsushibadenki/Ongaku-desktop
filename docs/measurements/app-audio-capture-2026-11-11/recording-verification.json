@@ -1,0 +1,46 @@
+[
+  {
+    "file": "Ongaku-app-audio-test-20261111.wav",
+    "formatCode": 3,
+    "sampleRate": 48000,
+    "channels": 2,
+    "bitsPerSample": 32,
+    "frames": 2176000,
+    "durationSeconds": 45.333333333333336,
+    "channelMeasurements": [
+      {
+        "peak": 0.01526153739541769,
+        "firstSecondPositiveCrossings": 440
+      },
+      {
+        "peak": 0.0152613939717412,
+        "firstSecondPositiveCrossings": 660
+      }
+    ],
+    "managedCopies": 0,
+    "managedCopyIdentical": false,
+    "sha256": "b28cee6d164c6a9880aab9bc0ea8766e8bddc8a5a598de700cf02be044f45827"
+  },
+  {
+    "file": "Ongaku-app-audio-import-test-20261111.wav",
+    "formatCode": 3,
+    "sampleRate": 48000,
+    "channels": 2,
+    "bitsPerSample": 32,
+    "frames": 357888,
+    "durationSeconds": 7.456,
+    "channelMeasurements": [
+      {
+        "peak": 0.01525508239865303,
+        "firstSecondPositiveCrossings": 440
+      },
+      {
+        "peak": 0.015249749645590782,
+        "firstSecondPositiveCrossings": 660
+      }
+    ],
+    "managedCopies": 1,
+    "managedCopyIdentical": true,
+    "sha256": "79a809cbf198206c0d451ba62f08c2cf6deed91211aee55639b7e4932cb8a28b"
+  }
+]

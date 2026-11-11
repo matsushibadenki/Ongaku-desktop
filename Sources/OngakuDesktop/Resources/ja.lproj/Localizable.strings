@@ -1347,3 +1347,169 @@
 "library.error.recoveryCopyIncomplete" = "救済コピーが未完了、または検証できません。元データとコピーを保持し、保存先設定の「救済コピーを再開」から続行してください。";
 "settings.storage.recoveryCopy.notOpened" = "救済コピーを作成しました: %@。コピー中に利用中のライブラリが変わったため、切り替えずに保持しました。";
 "settings.storage.recoveryCopy.keepMissing" = "音源が見つからない曲も情報を残して続行";
+
+// Application audio capture
+"sidebar.applicationAudio" = "アプリ音声";
+"capture.subtitle" = "アプリ → ノード → 出力／WAV";
+"capture.ready" = "待機中";
+"capture.recording" = "録音中";
+"capture.source" = "入力アプリ";
+"capture.refresh" = "アプリ一覧を更新";
+"capture.noSources" = "入力アプリなし";
+"capture.noSourcesHelp" = "他のアプリで音声を再生してから一覧を更新してください。";
+"capture.level" = "出力レベル";
+"capture.start" = "録音開始";
+"capture.stop" = "録音を停止";
+"capture.reveal" = "Finderに表示";
+"capture.import" = "ライブラリへ追加";
+"capture.waiting" = "音声を待機中。入力アプリの再生と、システム設定の「プライバシーとセキュリティ」→「画面収録とシステムオーディオ録音」の許可を確認してください。";
+"capture.help" = "選択したアプリの音をノードで処理します。ゲインやエフェクトは実行中も調整できます。出力ノードは選択機器へ送り、実行中だけ元アプリをミュートします。録音ノードをダブルクリックすると保存先・音質・楽曲情報を設定できます。接続や機器の変更前には停止してください。";
+"capture.requiresOS" = "macOS 14.2以降が必要です。";
+"capture.sourceChanged" = "入力アプリまたは音声形式が変わったため停止しました。途中までのファイルは保存されています。一覧を更新して新しく録音してください。";
+"capture.interrupted" = "スリープ前に録音を停止しました。途中までのファイルは保存されています。";
+"capture.writeError" = "音声処理を停止しました（エラー %d）。録音済みのファイルは保存先に残ります。";
+"capture.startError" = "音声処理を開始できませんでした：%@。選択した出力機器とシステム音声録音の許可、録音時は書き込み可能な新規保存先を確認してください。";
+
+// Node audio routing (Synth / UNGE native adaptation)
+"routing.title" = "音声経路";
+"routing.node.0" = "アプリ入力";
+"routing.node.1" = "ゲイン";
+"routing.node.2" = "ローパス";
+"routing.node.3" = "ディレイ";
+"routing.node.4" = "ミキサー";
+"routing.node.5" = "メーター";
+"routing.node.6" = "録音";
+"routing.gain" = "ゲイン（倍）";
+"routing.cutoff" = "周波数（Hz）";
+"routing.time" = "時間（ms）";
+"routing.feedback" = "フィードバック";
+"routing.mix" = "ウェット比率";
+"routing.inputA" = "入力A（倍）";
+"routing.inputB" = "入力B（倍）";
+"routing.add" = "ノードを追加";
+"routing.remove" = "ノードを削除";
+"routing.undo" = "経路の編集を元に戻す";
+"routing.redo" = "経路の編集をやり直す";
+"routing.zoomOut" = "縮小";
+"routing.zoomIn" = "拡大";
+"routing.help" = "トラックパッドのピンチでノードエリアを拡大・縮小できます（50〜150%）。ポート間をドラッグして接続します。出力、入力の順にクリックしても接続できます。ポートや接続線を右クリックすると解除できます。入力中も見出しをドラッグして移動でき、スライダーとバイパスは即座に反映されます。停止中の調整は「適用」で確定します。接続や機器の変更前には停止してください。";
+"routing.connecting" = "%@の接続先を選択";
+"routing.cancel" = "接続をキャンセル";
+"routing.connections" = "接続";
+"routing.disconnect" = "接続を切断";
+"routing.inputPort" = "%@ 入力%@";
+"routing.outputPort" = "%@ 出力%@";
+"routing.apply" = "適用";
+"routing.bypass" = "バイパス";
+"routing.templates" = "経路テンプレート";
+"routing.serial" = "直列";
+"routing.parallel" = "並列ディレイミックス";
+"routing.error.document" = "経路、ノード数、または設定値が無効です。";
+"routing.error.port" = "この端子同士は接続できません。";
+"routing.error.occupied" = "この入力は接続済みです。先に切断してください。";
+"routing.error.cycle" = "循環する接続はできません。ディレイのフィードバック設定を使用してください。";
+"routing.error.disconnected" = "必要な入力を録音または出力ノードまで接続してください。";
+"routing.error.revision" = "編集中に経路が変わりました。ノードを選び直してください。";
+"routing.error.locked" = "接続や機器の変更前に音声処理を停止してください。";
+"routing.error.persistence" = "保存した経路を開けませんでした。初期経路を表示しています。編集するまで保存データは変更しません。";
+"routing.chooseSource" = "入力アプリを選択";
+
+"routing.node.7" = "出力デバイス";
+
+"routing.device" = "出力デバイス";
+
+"routing.chooseDevice" = "出力デバイスを選択";
+
+"routing.deviceMissing" = "デバイスが見つかりません";
+
+"routing.monitorTemplate" = "スピーカー／イヤホン";
+
+"routing.monitoring" = "出力中";
+
+"routing.start" = "開始";
+
+"routing.stop" = "停止";
+
+"routing.error.device" = "利用可能な出力デバイスを選択してください。";
+
+"routing.sessionChanged" = "入力または出力デバイスが変更されたため停止しました。";
+
+"routing.bypassOn" = "バイパス中";
+
+"routing.bypassOff" = "処理有効";
+
+"routing.nodeActions" = "ノード操作";
+
+"routing.refreshDevices" = "出力デバイス一覧を更新";
+
+"routing.recordingDestination" = "開始時にWAVの保存先を選択";
+
+"routing.noConnections" = "接続はありません";
+
+"routing.disconnectAll" = "このポートの接続をすべて解除";
+
+/* Node recording settings */
+"routing.settings" = "設定";
+"routing.settingsTitle" = "%@の設定";
+"routing.doubleClickSettings" = "ダブルクリックで設定を開く";
+"routing.noExtraSettings" = "追加の設定はありません";
+"recording.quality.16" = "16ビット PCM";
+"recording.quality.24" = "24ビット PCM";
+"recording.quality.32" = "32ビット Float";
+"recording.sourceRate" = "入力に合わせる";
+"recording.chooseDirectoryFirst" = "録音ノードで書き込み可能な保存フォルダを選択してください。";
+"recording.invalid" = "録音設定と入力文字数を確認してください。";
+"recording.done" = "完了";
+"recording.destination" = "保存先";
+"recording.folder" = "フォルダ";
+"recording.chooseFolder" = "フォルダを選択…";
+"recording.filename" = "ファイル名";
+"recording.quality" = "音質";
+"recording.bitDepth" = "ビット深度";
+"recording.sampleRate" = "サンプルレート";
+"recording.qualityHelp" = "WAV形式で録音します。ファイル名には日時と識別子を付加します。サンプルレートを上げても入力にない音の情報は復元されません。設定は次の録音から適用されます。";
+"recording.metadata" = "楽曲情報";
+"recording.title" = "曲名";
+"recording.artist" = "アーティスト";
+"recording.album" = "アルバム";
+"recording.genre" = "ジャンル";
+"recording.comment" = "コメント";
+"recording.save" = "保存";
+
+/* Independent monitoring volume */
+"routing.monitorVolume" = "試聴音量";
+"routing.monitorVolumeHelp" = "この出力だけの音量を調整します。録音音量には影響しません。0%でも録音は継続します。";
+"routing.recordMonitorTemplate" = "録音＋試聴";
+
+"routing.inputBoost" = "入力増幅";
+"routing.inputBoostHelp" = "出力ポートの手前で増幅し、録音と試聴の両方に反映します。1×は元の音量です。ピークが0 dBFSを超えると、最終出力で音が歪む場合があります。";
+
+"routing.clipLamp" = "クリップ警告";
+"routing.clipDetected" = "クリップを検出";
+"routing.clipClear" = "クリップ未検出";
+"routing.clipHelp" = "0 dBFSを超える信号を検出すると点灯します。クリックで解除し、新しい入力セッションの開始時にもリセットします。";
+"routing.levelMeter" = "レベルメーター";
+"routing.levelColorsHelp" = "−6 dBFS以下は緑、−3 dBFS以下は黄、それ以上は赤で表示します。";
+
+"routing.node.8" = "波形";
+
+"routing.deviceCurrentRate" = "機器の現在値";
+
+"routing.node.9" = "10バンドイコライザー";
+
+"routing.helpTitle" = "操作ヘルプ";
+"routing.stageActions" = "ステージ操作";
+"routing.connectPort" = "接続する";
+
+"routing.node.10" = "コンプレッサー";
+"routing.threshold" = "しきい値（dBFS）";
+"routing.ratio" = "レシオ（:1）";
+"routing.attack" = "アタック（ms）";
+"routing.release" = "リリース（ms）";
+"routing.makeup" = "補正ゲイン（dB）";
+
+"routing.node.11" = "リミッター";
+"routing.ceiling" = "出力上限（dBFS）";
+
+"effect.graphic_equalizer.name" = "10バンドイコライザー";
+"effect.graphic_equalizer.description" = "31 Hz〜16 kHzの各帯域を−12〜+12 dBで調整します。";

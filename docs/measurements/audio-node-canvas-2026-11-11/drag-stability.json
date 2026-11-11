@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-11",
+  "qa_bundle": "com.ongaku.desktop.routingqa",
+  "checks": [
+    {
+      "zoom": 1,
+      "screen_drag_points": [
+        65,
+        65
+      ],
+      "saved_model_delta": [
+        50,
+        50
+      ],
+      "projected_screen_delta": [
+        65.0,
+        65.0
+      ]
+    },
+    {
+      "zoom": 0.75,
+      "screen_drag_points": [
+        78,
+        39
+      ],
+      "saved_model_delta": [
+        79.99999999999994,
+        39.999999999999986
+      ],
+      "projected_screen_delta": [
+        77.99999999999994,
+        38.999999999999986
+      ]
+    }
+  ],
+  "undo_restored_initial_graph": true,
+  "debug_build": "succeeded",
+  "app_store_release_unsigned_build": "succeeded",
+  "limits": "Automated drags verify final coordinates and cable endpoints; continuous frame-by-frame motion was not captured."
+}

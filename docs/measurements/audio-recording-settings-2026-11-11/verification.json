@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-11",
+  "app": "com.ongaku.desktop.routingqa",
+  "isolated_library": true,
+  "tests": {
+    "passed": 45,
+    "suites": 6,
+    "quality_rate_combinations": 9,
+    "metadata": [
+      "title",
+      "artist",
+      "album",
+      "genre",
+      "comment"
+    ],
+    "unicode": [
+      "Japanese",
+      "Simplified Chinese"
+    ]
+  },
+  "builds": {
+    "Debug": "passed",
+    "AppStore_Release_unsigned": "passed"
+  },
+  "ui": {
+    "recorder_double_click": true,
+    "folder_selection_from_node": true,
+    "save_cancel": true,
+    "recording_configuration_locked_during_capture": true,
+    "gain_details_window": true,
+    "dark_appearance": true,
+    "restored_original_graph": true,
+    "restored_source_selection": true
+  },
+  "recording": {
+    "duration_seconds": 12.459,
+    "status": 0,
+    "format": "WAV PCM",
+    "bits": 24,
+    "rate": 44100,
+    "channels": 2,
+    "bytes": 3300664,
+    "riff_length_valid": true,
+    "chunks": [
+      "fmt ",
+      "LIST",
+      "id3 ",
+      "FLLR",
+      "data"
+    ],
+    "imported_with_metadata": true
+  },
+  "installed_app_updated": false
+}

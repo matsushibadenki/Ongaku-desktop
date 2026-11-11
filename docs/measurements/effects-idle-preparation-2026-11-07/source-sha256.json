@@ -1,0 +1,12 @@
+{
+  "audio/AudioPlayerViewModel.swift": "24240d95dffddbc04bbc5e860693db9e346bdb139efdf41568e2766a08bd84f6",
+  "audio/ContentView.swift": "1ca9111e2d678f90187830a39085999f37b4ab533954fa8708b42b38e1b78699",
+  "audio/CoalescedViewUpdates.swift": "a354282ca3e25bffc5b14c412f7657bfc65509efcbb53e5b7ba027878058b55f",
+  "audio/RetainedTabContent.swift": "7e874130cc30280c340b631089d7cd395ed11889d1f56dcacf617e8ca136a194",
+  "tests/EffectsIdlePolicyRegression.swift": "49591ed2e6934f8424db4a88286f8e460cda5453b0e225943f670bf970eaaf9e",
+  "tests/run_effects_idle_policy_regression.sh": "d4a57c0b0be045c0983f232e621f7677fb01785680f82b28a7bcfae2f387082f",
+  "tests/RetainedTabContentAuditApp.swift": "67d755c99238b4d331663c7a60793516c2d6b61c2e4c8bd58ab18918bdc15ca7",
+  "tests/run_retained_tab_content_audit.sh": "ef972eb0da2be817236957f854c25dc484db7c67096378f40381cb15991323fc",
+  "tests/EffectsSwitchPlaybackAuditApp.swift": "51637ddb2e7195ff1fa544c7501601f65ae56f0ba12c811b2d4e592c6cd08a43",
+  "tests/run_effects_switch_playback_audit.sh": "5b38c508c9bde99fda04efbda8739ac10c8bed10ead17ed9bffbfa83ab3f8c4d"
+}

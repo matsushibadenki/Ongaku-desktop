@@ -177,13 +177,17 @@ struct LibraryContent: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
+            if library.selectedPlaylist != nil || library.selectedSection != .applicationAudio {
+                header
+            }
 
             if library.selectedPlaylist == nil && library.selectedSection == .ongakuMix {
                 ongakuMixBanner
             }
 
-            if !library.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            if library.selectedPlaylist == nil && library.selectedSection == .applicationAudio {
+                sectionContent
+            } else if !library.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 unifiedSearchContent
             } else if library.isPresentationUpdating && library.selectedSection != .effects {
                 ProgressView(L10n.text("library.preparing"))
@@ -537,6 +541,13 @@ struct LibraryContent: View {
             DuplicateLibraryView(groups: library.filteredDuplicateGroups)
         case .effects:
             EffectsRackView(selectedTab: $selectedEffectTab)
+        case .applicationAudio:
+            if #available(macOS 14.2, *) {
+                ApplicationAudioCaptureView()
+            } else {
+                ContentUnavailableView(L10n.text("sidebar.applicationAudio"), systemImage: "app.badge.waveform",
+                                       description: Text(L10n.text("capture.requiresOS")))
+            }
         }
     }
 
@@ -570,11 +581,11 @@ struct LibraryContent: View {
                         .font(.callout.monospacedDigit())
                         .foregroundStyle(AppTheme.secondaryInk)
                         .accessibilityIdentifier("library.visible-count")
-                        .accessibilityValue(String(library.filteredTracks.count))
+                        .accessibilityValue(library.selectedSection == .applicationAudio ? headerSubtitle : String(library.filteredTracks.count))
                 }
             }
             Spacer()
-            if library.selectedSection != .effects {
+            if library.selectedSection != .effects && library.selectedSection != .applicationAudio {
                 Button {
                     isShowingFilters.toggle()
                 } label: {
@@ -603,6 +614,9 @@ struct LibraryContent: View {
     }
 
     private var headerSubtitle: String {
+        if library.selectedPlaylist == nil && library.selectedSection == .applicationAudio {
+            return L10n.text("capture.subtitle")
+        }
         if library.selectedPlaylist == nil && library.selectedSection == .effects {
             let summary = player.effectCountSummary(for: selectedEffectTab)
             return L10n.format("effects.enabledCount", summary.enabled, summary.total)

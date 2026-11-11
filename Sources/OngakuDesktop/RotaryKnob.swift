@@ -216,6 +216,7 @@ final class EffectRackInputRouter: @MainActor ObservableObject {
     private var boundsObserver: NSObjectProtocol?
     private var resignObserver: NSObjectProtocol?
     private var restoringBounds = false
+    private var positionRestorePending = false
     private var frozenOrigin: NSPoint?
     private weak var scrollView: NSScrollView?
     private let regions = NSHashTable<EffectRackInputRegionView>.weakObjects()
@@ -229,7 +230,7 @@ final class EffectRackInputRouter: @MainActor ObservableObject {
             forName: NSView.boundsDidChangeNotification,
             object: scrollView.contentView, queue: .main
         ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.restorePosition() }
+            MainActor.assumeIsolated { self?.schedulePositionRestore() }
         }
         resignObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didResignKeyNotification, object: scrollView.window, queue: .main
@@ -294,6 +295,18 @@ final class EffectRackInputRouter: @MainActor ObservableObject {
         else { scrolling = false }
     }
 
+    private func schedulePositionRestore() {
+        // A bounds notification can arrive inside AppKit layout or a layer
+        // commit. Do not mutate the clip or scrollers on that stack.
+        guard !restoringBounds, frozenOrigin != nil, !positionRestorePending else { return }
+        positionRestorePending = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.positionRestorePending = false
+            self.restorePosition()
+        }
+    }
+
     private func restorePosition() {
         guard !restoringBounds, let origin = frozenOrigin, let scrollView else { return }
         let clip = scrollView.contentView
@@ -303,11 +316,7 @@ final class EffectRackInputRouter: @MainActor ObservableObject {
         guard clip.bounds.origin != target else { return }
         restoringBounds = true
         clip.scroll(to: target)
-        // Preserve click ownership immediately; defer only scroller layout.
-        DispatchQueue.main.async { [weak scrollView, weak clip] in
-            guard let scrollView, let clip, scrollView.contentView === clip else { return }
-            scrollView.reflectScrolledClipView(clip)
-        }
+        scrollView.reflectScrolledClipView(clip)
         restoringBounds = false
     }
 
@@ -476,7 +485,7 @@ extension View {
 
 /// Native mouse tracking avoids SwiftUI focus scrolling when clicking a knob.
 /// The SwiftUI layer draws the control and supplies its accessibility actions.
-private struct KnobInputSurface: NSViewRepresentable {
+struct KnobInputSurface: NSViewRepresentable {
     let isEnabled: Bool
     let input: EffectRackInputRouter
     let onPosition: (NSPoint) -> Void

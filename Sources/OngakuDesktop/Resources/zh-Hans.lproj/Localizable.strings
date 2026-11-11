@@ -1347,3 +1347,169 @@
 "library.error.recoveryCopyIncomplete" = "此恢复副本未完成或无法验证。请保留原数据和副本，并在存储设置中选择“继续恢复副本”。";
 "settings.storage.recoveryCopy.notOpened" = "恢复副本已创建：%@。复制期间当前资料库已更改，因此保留当前选择。";
 "settings.storage.recoveryCopy.keepMissing" = "音频无法找到时保留曲目信息并继续";
+
+// Application audio capture
+"sidebar.applicationAudio" = "应用音频";
+"capture.subtitle" = "应用 → 节点 → 输出／WAV";
+"capture.ready" = "就绪";
+"capture.recording" = "正在录制";
+"capture.source" = "音频来源";
+"capture.refresh" = "刷新应用列表";
+"capture.noSources" = "没有音频应用";
+"capture.noSourcesHelp" = "请在其他应用中播放音频，然后刷新列表。";
+"capture.level" = "输出电平";
+"capture.start" = "开始录音";
+"capture.stop" = "停止录制";
+"capture.reveal" = "在访达中显示";
+"capture.import" = "添加到资料库";
+"capture.waiting" = "正在等待音频。请检查来源应用是否正在播放，以及系统设置 → 隐私与安全性 → 屏幕与系统音频录制权限。";
+"capture.help" = "通过节点处理所选应用的音频。运行时可实时调整增益和效果。输出节点将音频发送到所选设备，并仅在运行期间静音原应用。双击录音节点可设置文件夹、音质和曲目信息。更改连接或设备前请先停止。";
+"capture.requiresOS" = "需要macOS 14.2或更高版本。";
+"capture.sourceChanged" = "音频来源或格式已更改，录制已停止并保留已录制的文件。请刷新并重新录制。";
+"capture.interrupted" = "已在睡眠前停止录制，并保留已录制的文件。";
+"capture.writeError" = "音频处理已停止（错误 %d）。已录制的文件保留在所选位置。";
+"capture.startError" = "无法启动音频处理：%@。请检查所选设备、系统音频录制权限，以及录音时的新文件保存位置。";
+
+// Node audio routing (Synth / UNGE native adaptation)
+"routing.title" = "音频路由";
+"routing.node.0" = "应用输入";
+"routing.node.1" = "增益";
+"routing.node.2" = "低通";
+"routing.node.3" = "延迟";
+"routing.node.4" = "混音器";
+"routing.node.5" = "电平表";
+"routing.node.6" = "录制";
+"routing.gain" = "增益（倍）";
+"routing.cutoff" = "截止频率（Hz）";
+"routing.time" = "时间（ms）";
+"routing.feedback" = "反馈";
+"routing.mix" = "湿声比例";
+"routing.inputA" = "输入A（倍）";
+"routing.inputB" = "输入B（倍）";
+"routing.add" = "添加节点";
+"routing.remove" = "删除节点";
+"routing.undo" = "撤销路由编辑";
+"routing.redo" = "重做路由编辑";
+"routing.zoomOut" = "缩小";
+"routing.zoomIn" = "放大";
+"routing.help" = "在触控板上捏合可缩放节点区域（50–150%）。在端口之间拖动以连接，也可依次点击输出和输入端口。右键点击端口或连线可断开连接。运行时也可拖动标题移动节点，滑块和旁通立即生效。停止时点击应用以确认调整。更改连接或设备前请先停止。";
+"routing.connecting" = "选择%@的输入目标";
+"routing.cancel" = "取消连接";
+"routing.connections" = "连接";
+"routing.disconnect" = "断开连接";
+"routing.inputPort" = "%@ 输入%@";
+"routing.outputPort" = "%@ 输出%@";
+"routing.apply" = "应用";
+"routing.bypass" = "旁通";
+"routing.templates" = "路由模板";
+"routing.serial" = "串联";
+"routing.parallel" = "并联延迟混音";
+"routing.error.document" = "路由、节点数量或参数值无效。";
+"routing.error.port" = "无法连接这些端口。";
+"routing.error.occupied" = "此输入已连接，请先断开。";
+"routing.error.cycle" = "不支持循环连接，请使用延迟节点的反馈参数。";
+"routing.error.disconnected" = "请将所有必需的输入连接到录音或输出节点。";
+"routing.error.revision" = "编辑期间路由已更改，请重新选择节点。";
+"routing.error.locked" = "请先停止音频处理，再更改连接或设备。";
+"routing.error.persistence" = "无法打开已保存的路由。已显示默认路由，编辑前不会更改已保存数据。";
+"routing.chooseSource" = "选择输入应用";
+
+"routing.node.7" = "输出设备";
+
+"routing.device" = "输出设备";
+
+"routing.chooseDevice" = "选择输出设备";
+
+"routing.deviceMissing" = "设备不可用";
+
+"routing.monitorTemplate" = "扬声器／耳机";
+
+"routing.monitoring" = "正在输出";
+
+"routing.start" = "开始";
+
+"routing.stop" = "停止";
+
+"routing.error.device" = "请选择可用的输出设备。";
+
+"routing.sessionChanged" = "输入或输出设备已改变，会话已停止。";
+
+"routing.bypassOn" = "已旁路";
+
+"routing.bypassOff" = "处理中";
+
+"routing.nodeActions" = "节点操作";
+
+"routing.refreshDevices" = "刷新输出设备";
+
+"routing.recordingDestination" = "开始时选择WAV保存位置";
+
+"routing.noConnections" = "没有连接";
+
+"routing.disconnectAll" = "断开此端口的所有连接";
+
+/* Node recording settings */
+"routing.settings" = "设置";
+"routing.settingsTitle" = "%@设置";
+"routing.doubleClickSettings" = "双击打开设置";
+"routing.noExtraSettings" = "没有其他设置";
+"recording.quality.16" = "16位 PCM";
+"recording.quality.24" = "24位 PCM";
+"recording.quality.32" = "32位 Float";
+"recording.sourceRate" = "跟随输入";
+"recording.chooseDirectoryFirst" = "请在录音节点中选择可写入的文件夹。";
+"recording.invalid" = "请检查录音设置和文本长度。";
+"recording.done" = "完成";
+"recording.destination" = "保存位置";
+"recording.folder" = "文件夹";
+"recording.chooseFolder" = "选择文件夹…";
+"recording.filename" = "文件名";
+"recording.quality" = "音质";
+"recording.bitDepth" = "位深度";
+"recording.sampleRate" = "采样率";
+"recording.qualityHelp" = "以 WAV 格式录音。文件名附加日期和唯一标识。提高采样率不会恢复输入中不存在的细节。更改在下次录音时生效。";
+"recording.metadata" = "曲目信息";
+"recording.title" = "标题";
+"recording.artist" = "艺人";
+"recording.album" = "专辑";
+"recording.genre" = "流派";
+"recording.comment" = "备注";
+"recording.save" = "保存";
+
+/* Independent monitoring volume */
+"routing.monitorVolume" = "监听音量";
+"routing.monitorVolumeHelp" = "仅调节此输出，不影响录音音量。设为0%时监听静音，录音仍继续。";
+"routing.recordMonitorTemplate" = "录音＋监听";
+
+"routing.inputBoost" = "输入增益";
+"routing.inputBoostHelp" = "在输出端口之前放大信号，同时影响录音和监听。1×保持原始音量。峰值超过0 dBFS时，最终输出可能失真。";
+
+"routing.clipLamp" = "削波指示灯";
+"routing.clipDetected" = "检测到削波";
+"routing.clipClear" = "未检测到削波";
+"routing.clipHelp" = "检测到超过0 dBFS的采样时亮起。点击清除；开始新的输入会话时也会重置。";
+"routing.levelMeter" = "电平表";
+"routing.levelColorsHelp" = "绿色：不超过−6 dBFS。黄色：不超过−3 dBFS。红色：高于−3 dBFS。";
+
+"routing.node.8" = "波形";
+
+"routing.deviceCurrentRate" = "设备当前采样率";
+
+"routing.node.9" = "10 段均衡器";
+
+"routing.helpTitle" = "路由帮助";
+"routing.stageActions" = "画布操作";
+"routing.connectPort" = "连接端口";
+
+"routing.node.10" = "压缩器";
+"routing.threshold" = "阈值（dBFS）";
+"routing.ratio" = "压缩比（:1）";
+"routing.attack" = "启动（ms）";
+"routing.release" = "释放（ms）";
+"routing.makeup" = "补偿增益（dB）";
+
+"routing.node.11" = "限幅器";
+"routing.ceiling" = "输出上限（dBFS）";
+
+"effect.graphic_equalizer.name" = "10 段均衡器";
+"effect.graphic_equalizer.description" = "以 −12 至 +12 dB 调节 31 Hz 至 16 kHz 的十个频段。";

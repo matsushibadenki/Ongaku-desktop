@@ -78,7 +78,11 @@ struct EffectRackInputTests {
         #expect(f.router.route(down) === down)
         #expect(f.router.controlPressed)
         let original = f.scrollView.contentView.bounds.origin
-        f.scrollView.contentView.scroll(to: NSPoint(x: 0, y: original.y + 30))
+        let displaced = NSPoint(x: original.x, y: original.y + 30)
+        f.scrollView.contentView.scroll(to: displaced)
+        #expect(f.scrollView.contentView.bounds.origin == displaced,
+                "The notification must not synchronously reenter AppKit scrolling")
+        try await Task.sleep(for: .milliseconds(30))
         #expect(f.scrollView.contentView.bounds.origin == original)
         _ = f.router.route(f.scroll(at: f.blankPoint, phase: .began))
         _ = f.router.route(f.scroll(at: f.blankPoint, precise: false))

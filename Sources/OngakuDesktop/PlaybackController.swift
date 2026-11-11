@@ -1186,6 +1186,7 @@ final class PlaybackController: ObservableObject {
         engine.attach(transportAudioGain.node)
 #endif
         finalOutputProtection.attach(to: engine)
+        AudioMixerCapacity.reserveAvailableMixers(in: engine)
         // Apply once after the first graph has its negotiated processing format.
         primaryPlayerNode.volume = 1
         secondaryPlayerNode.volume = 1
@@ -1882,6 +1883,7 @@ final class PlaybackController: ObservableObject {
         engine.disconnectNodeOutput(transportAudioGain.node)
 #endif
         engine.disconnectNodeOutput(engine.mainMixerNode)
+        AudioMixerCapacity.reserveAvailableMixers(in: engine)
 
         // Both player nodes share a source mixer so compatible tracks can overlap
         // without rebuilding the DSP graph at the song boundary.
@@ -1928,8 +1930,9 @@ final class PlaybackController: ObservableObject {
         finalOutputProtection.resetWhileStopped(engine: engine)
         outputSampleRate = hardwareFormat.sampleRate
         outputChannelCount = hardwareFormat.channelCount
-        installMeterTap()
+        // Reserve before installing the tap, which can prepare the mixer.
         AudioMixerCapacity.reserveAvailableMixers(in: engine)
+        installMeterTap()
 #if ONGAKU_STARTUP_AUDIT
         StartupCostAudit.measure("engine.prepare") { engine.prepare() }
 #else
@@ -1938,6 +1941,11 @@ final class PlaybackController: ObservableObject {
         configuredGraph = configuration
         graphConfigurationGeneration &+= 1
         logSignalPath(reason: "engine-configured")
+        let mixerFrames = engine.attachedNodes.compactMap { ($0 as? AVAudioMixerNode)?.auAudioUnit.maximumFramesToRender }
+        let sourceFrames = sourceMixerNode.auAudioUnit.maximumFramesToRender
+        let mainFrames = engine.mainMixerNode.auAudioUnit.maximumFramesToRender
+        let outputFrames = engine.outputNode.auAudioUnit.maximumFramesToRender
+        Self.signalPathLogger.info("renderCapacity source=\(sourceFrames) main=\(mainFrames) output=\(outputFrames) mixerMin=\(mixerFrames.min() ?? 0)")
     }
 
     private func observeSystemAudioEvents() {

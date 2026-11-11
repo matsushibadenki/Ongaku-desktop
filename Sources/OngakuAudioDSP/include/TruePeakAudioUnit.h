@@ -11,3 +11,5 @@ FOUNDATION_EXPORT AVAudioTime * _Nullable OngakuSafePlayerTime(
 @end
 NS_ASSUME_NONNULL_END
 #import "SpectralTransientAudioUnit.h"
+
+#import "ApplicationAudioCapture.h"

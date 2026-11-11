@@ -57,6 +57,9 @@ enum AudioEffectModuleRegistry {
         .init(kind: .simulation, isIncluded: true, clippingReductionParameterKeys: ["intensity", "bass"]) {
             SimulationAudioEffect()
         },
+        .init(kind: .graphicEqualizer, pageTab: .pro, clippingReductionParameterKeys: []) {
+            GraphicEqualizerAudioEffect()
+        },
         .init(kind: .equalizer, isIncluded: true, clippingReductionParameterKeys: ["trim"]) {
             EqualizerAudioEffect()
         },

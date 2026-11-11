@@ -1,2 +1,4 @@
 "NSAppleMusicUsageDescription" = "OngakuはApple Musicカタログの検索・再生と、選択した曲のクラウドミュージックライブラリへの追加にアクセスを使用します。";
 "NSLocalNetworkUsageDescription" = "Ongakuは、選択した音楽ファイルをiPhoneまたはiPadと安全に同期するためにローカルネットワークを使用します。";
+
+"NSAudioCaptureUsageDescription" = "選択したアプリの音声を取り込み、指定した音声ファイルに保存します。";

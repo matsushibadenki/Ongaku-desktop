@@ -1,0 +1,72 @@
+{
+  "date": "2026-11-11",
+  "configuration": "Debug, opt-in ONGAKU_ROUTING_DIAGNOSTICS=1",
+  "environment": "macOS, separate com.ongaku.desktop.routingqa, isolated empty library, Japanese dark appearance, 100% zoom",
+  "graph": [
+    "application",
+    "gain",
+    "delay",
+    "mixer",
+    "meter",
+    "device"
+  ],
+  "source": "Self-generated 48 kHz stereo low-amplitude 440/660 Hz tone, separate test source application",
+  "output": "External headphones",
+  "before": {
+    "counts": {
+      "cableDraw": 365,
+      "cardBody": 2190,
+      "graphBody": 365,
+      "gridDraw": 365
+    },
+    "seconds": 38.65356397628784,
+    "rates_per_second": {
+      "graphBody": 9.442855003588038,
+      "cardBody": 56.65713002152823,
+      "gridDraw": 9.442855003588038,
+      "cableDraw": 9.442855003588038
+    }
+  },
+  "after": {
+    "counts": {
+      "cardBody": 12,
+      "clockBody": 37,
+      "graphBody": 2,
+      "meterBody": 342
+    },
+    "phase": "session",
+    "seconds": 36.423385977745056,
+    "rates_per_second": {
+      "graphBody": 0.05490977695544324,
+      "cardBody": 0.3294586617326595,
+      "gridDraw": 0.0,
+      "cableDraw": 0.0
+    }
+  },
+  "after_audio": {
+    "duration_seconds": 36.416,
+    "output_frames": 1746512,
+    "underruns": 0,
+    "status": 0
+  },
+  "ui_verified": [
+    "Canvas fills central split pane from main toolbar to player",
+    "Floating template/add/history/zoom toolbar",
+    "Node-header drag updates node position and connected cable endpoints",
+    "Undo restores node position",
+    "Zoom out and in retain full viewport coverage"
+  ],
+  "limitations": [
+    "Counts are SwiftUI body evaluations and Canvas draw closure invocations, not FPS or GPU frame time",
+    "Short UI-automated drag verified function only; no sustained drag benchmark",
+    "Meter leaf is in the scrollable graph and outside initial viewport; same graph and zoom used before/after",
+    "Install and production library untouched"
+  ],
+  "validation": {
+    "tests": 30,
+    "suites": 5,
+    "result": "passed",
+    "debug_build": "succeeded",
+    "app_store_release_unsigned_build": "succeeded"
+  }
+}

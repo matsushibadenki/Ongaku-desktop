@@ -1,0 +1,4 @@
+PASS: shipping preflight cancels optional tasks before activation and is idempotent
+PASS: re-entry is protected without shortening the render-gap cooldown
+PASS: native Music/cold-engine presentation does not cancel recovery or initialize DSP
+PASS: expired protection waits for playback, resumes both tasks once and preserves an existing preload

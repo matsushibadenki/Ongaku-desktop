@@ -8,6 +8,7 @@ struct AudioEffectPresetTests {
     func registryBuildsCompleteOrderedPipeline() {
         #expect(AudioEffectModuleRegistry.activeKinds == [
             .simulation,
+            .graphicEqualizer,
             .equalizer,
             .body,
             .exciter, .spectralTransient, .vocalPresence,
@@ -18,7 +19,7 @@ struct AudioEffectPresetTests {
             .bbe,
             .highQualityEnhancement
         ])
-        #expect(AudioEffectModuleRegistry.makePipeline().count == 12)
+        #expect(AudioEffectModuleRegistry.makePipeline().count == 13)
         #expect(AudioEffectModuleRegistry.activeKinds(for: .off).isEmpty)
     }
 
@@ -68,7 +69,7 @@ struct AudioEffectPresetTests {
                 for: .pro,
                 settings: settings,
                 effectsBypassed: false
-            ) == AudioEffectCountSummary(enabled: 2, total: 11)
+            ) == AudioEffectCountSummary(enabled: 2, total: 12)
         )
         #expect(
             AudioEffectModuleRegistry.countSummary(

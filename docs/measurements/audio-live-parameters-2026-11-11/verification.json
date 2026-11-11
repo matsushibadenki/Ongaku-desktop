@@ -1,0 +1,96 @@
+{
+  "date": "2026-11-11",
+  "configuration": "Debug QA, isolated library, Japanese dark, 50% zoom for viewing all six nodes",
+  "input": "Self-generated low-level 48 kHz stereo 440/660 Hz tone from Ongaku Capture Test Source",
+  "output": "External headphones",
+  "session_seconds": 62.389,
+  "output_frames": 2992866,
+  "underruns": 0,
+  "status": 0,
+  "observations": [
+    {
+      "control": "mixer B",
+      "value": 0,
+      "meter_dbfs": -42.4
+    },
+    {
+      "control": "mixer A",
+      "value": 1,
+      "meter_dbfs": -36.3
+    },
+    {
+      "control": "gain",
+      "value": 0.25,
+      "meter_dbfs": -48.4
+    },
+    {
+      "control": "gain bypass",
+      "value": true,
+      "meter_dbfs": -36.3
+    },
+    {
+      "control": "delay ms",
+      "value": 600
+    },
+    {
+      "control": "delay feedback",
+      "value": 0.5
+    }
+  ],
+  "saved_controls": [
+    {
+      "kind": 0,
+      "parameters": [],
+      "bypassed": false
+    },
+    {
+      "kind": 1,
+      "parameters": [
+        0.25
+      ],
+      "bypassed": true
+    },
+    {
+      "kind": 3,
+      "parameters": [
+        600,
+        0.5,
+        0.35
+      ],
+      "bypassed": false
+    },
+    {
+      "kind": 4,
+      "parameters": [
+        1,
+        0
+      ],
+      "bypassed": false
+    },
+    {
+      "kind": 5,
+      "parameters": [],
+      "bypassed": false
+    },
+    {
+      "kind": 7,
+      "parameters": [],
+      "bypassed": false
+    }
+  ],
+  "restored_original_graph_with_undo": true,
+  "tests": {
+    "count": 37,
+    "suites": 5,
+    "result": "passed"
+  },
+  "builds": {
+    "debug": "succeeded",
+    "app_store_release_unsigned": "succeeded"
+  },
+  "limitations": [
+    "No subjective listening or long-duration hardware stress test",
+    "Delay branch was muted at mixer during UI delay control checks; DSP tail preservation and updates verified separately with PCM tests",
+    "Installed app unchanged"
+  ]
+}

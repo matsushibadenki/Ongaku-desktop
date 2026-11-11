@@ -1,0 +1,18 @@
+{
+  "tests": 56,
+  "suites": 9,
+  "final_visual_tests": 4,
+  "final_debug_build": "succeeded",
+  "thresholds_dbfs": [
+    -6,
+    -3
+  ],
+  "clip_threshold": "sample absolute value > 1 (0 dBFS)",
+  "single_sample_transient_retained": true,
+  "positive_and_negative_samples_tested": true,
+  "stopped_warning_retained": true,
+  "click_acknowledgement_and_session_reset_tested": true,
+  "light_and_dark_rendered": true,
+  "live_capture_tested": false,
+  "installed_app_updated": false
+}

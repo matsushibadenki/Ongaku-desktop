@@ -15,7 +15,7 @@ let package = Package(
         .target(
             name: "OngakuAudioDSP",
             cxxSettings: [.unsafeFlags(["-fobjc-arc"])],
-            linkerSettings: [.linkedFramework("AVFoundation"), .linkedFramework("AudioToolbox")]
+            linkerSettings: [.linkedFramework("AVFoundation"), .linkedFramework("AudioToolbox"), .linkedFramework("CoreAudio")]
         ),
         .executableTarget(
             name: "OngakuDesktop",

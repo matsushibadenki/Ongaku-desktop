@@ -1,0 +1,42 @@
+{
+  "sessions": [
+    {
+      "durationSeconds": 16.619,
+      "outputFrames": 795904,
+      "underruns": 0,
+      "status": 0,
+      "test": "MacBook Air speakers (output only)"
+    },
+    {
+      "durationSeconds": 21.824,
+      "outputFrames": 1046012,
+      "underruns": 0,
+      "status": 0,
+      "test": "External headphones (output only)"
+    },
+    {
+      "durationSeconds": 20.203,
+      "outputFrames": 967993,
+      "underruns": 0,
+      "status": 0,
+      "test": "External headphones + WAV (source terminated)"
+    }
+  ],
+  "simultaneousRecording": {
+    "file": "Ongaku-monitor-and-record-20261111.wav",
+    "frames": 969728,
+    "sampleRate": 48000,
+    "channels": 2,
+    "bitsPerSample": 32,
+    "durationSeconds": 20.202666666666666,
+    "channelPeakSecondTwo": [
+      0.01525941677391529,
+      0.015257658436894417
+    ],
+    "positiveZeroCrossingsSecondTwo": [
+      440,
+      660
+    ]
+  },
+  "conditions": "Isolated QA bundle/library; own 440/660 Hz test source only; no microphone or personal application audio. Hardware output callbacks consumed frames; acoustic measurement and physical disconnect not performed."
+}

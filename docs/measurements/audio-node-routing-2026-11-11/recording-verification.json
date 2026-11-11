@@ -1,0 +1,39 @@
+{
+  "file": "Ongaku-routing-gain-half-20261111.wav",
+  "formatCode": 3,
+  "sampleRate": 48000,
+  "channels": 2,
+  "bitsPerSample": 32,
+  "frames": 507904,
+  "durationSeconds": 10.581333333333333,
+  "channelPeak": [
+    0.007630839012563229,
+    0.00763087859377265
+  ],
+  "peakDBFS": [
+    -42.348554172766164,
+    -42.34850911911943
+  ],
+  "inputNominalPeak": 0.0152587890625,
+  "gain": 0.5,
+  "peakToNominalInputRatio": [
+    0.5000946655273437,
+    0.5000972595214844
+  ],
+  "positiveZeroCrossingsPerSecond": [
+    440,
+    660
+  ],
+  "path": "application → gain(0.5) → meter → recorder",
+  "testSource": "Own 440/660 Hz stereo PCM test app; no personal app audio",
+  "verifiedUI": [
+    "connect/disconnect",
+    "move at 75% zoom",
+    "gain apply",
+    "record/stop",
+    "recording edit lock",
+    "restore on relaunch",
+    "parallel template",
+    "undo/redo"
+  ]
+}

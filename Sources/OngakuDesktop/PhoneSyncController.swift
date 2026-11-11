@@ -167,6 +167,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         interruptActiveTransfers()
         session.disconnect()
         connectionState = .disconnected
+        lock.withLock { peersByID.removeAll() }
         discoveredPhones = []
         remoteItems = []
         remoteStorageInfo = nil
@@ -373,7 +374,8 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 
     private func invite(_ phone: DiscoveredPhone, automatically: Bool) {
         guard let peer = lock.withLock({ peersByID[phone.id] }) else { return }
-        guard session.connectedPeers.isEmpty else { return }
+        guard isStarted, session.connectedPeers.isEmpty else { return }
+        if case .connecting = connectionState { return }
         if automatically {
             guard automaticInvitationCooldowns[phone.id, default: .distantPast] <= .now else {
                 return
@@ -497,8 +499,10 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             start()
             return
         }
-        discoveredPhones = []
-        connectionState = .searching
+        if case .connecting = connectionState { return }
+        guard session.connectedPeers.isEmpty else { return }
+        // An active Bonjour browser only reports changes. Keep known phones
+        // visible so the user can retry an invitation after a connection error.
         beginBrowsing()
     }
 
@@ -1013,7 +1017,7 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
         withDiscoveryInfo info: [String: String]?
     ) {
         Task { @MainActor [weak self] in
-            guard let self else { return }
+            guard let self, isStarted, browserLifecycle.isBrowsing else { return }
             let id = peerID.displayName
             lock.withLock { peersByID[id] = peerID }
             let phone = DiscoveredPhone(

@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-11",
+  "environment": "Separate QA bundle, isolated library, Japanese dark, 100% zoom, six nodes",
+  "tests": {
+    "count": 42,
+    "suites": 5,
+    "result": "passed"
+  },
+  "builds": {
+    "debug": "succeeded",
+    "app_store_release_unsigned": "succeeded"
+  },
+  "ui_verified": [
+    "Right-click source-to-gain edge and disconnect",
+    "Drag source output to gain input and reconnect",
+    "Right-click gain input and disconnect",
+    "Drag gain input to source output and reconnect in reverse gesture direction",
+    "Output port context menu lists both outgoing branches",
+    "Disconnect all outgoing branches; one Undo restores both",
+    "Drag onto blank canvas leaves existing connections unchanged",
+    "Undo all verification edits restores exact pre-test document"
+  ],
+  "initial_edges": 6,
+  "final_edges": 6,
+  "document_restored_exactly": true,
+  "limitations": [
+    "Connections remain locked during an active audio session",
+    "Other languages and zoom extremes were not visually exercised",
+    "No sustained-drag frame-time measurement"
+  ],
+  "installed_app_updated": false
+}
