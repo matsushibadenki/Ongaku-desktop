@@ -127,9 +127,13 @@ struct M0QualityGateTests {
         }
     }
 
-    @Test("Music and local-network usage descriptions exist in all supported languages")
+    @Test("Music, local-network, and audio capture usage descriptions exist in all supported languages")
     func requiredUsageDescriptions() throws {
-        let requiredKeys = Set(["NSAppleMusicUsageDescription", "NSLocalNetworkUsageDescription"])
+        let requiredKeys = Set([
+            "NSAppleMusicUsageDescription",
+            "NSLocalNetworkUsageDescription",
+            "NSAudioCaptureUsageDescription"
+        ])
         for locale in Self.locales {
             let strings = try Self.stringsTable(named: "InfoPlist", locale: locale)
             #expect(Set(strings.keys) == requiredKeys)
