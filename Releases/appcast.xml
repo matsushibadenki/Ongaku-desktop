@@ -6,6 +6,21 @@
         <description>Signed stable releases of Ongaku Desktop.</description>
         <language>en</language>
         <item>
+            <title>0.1.13</title>
+            <pubDate>Wed, 11 Nov 2026 17:01:06 +0900</pubDate>
+            <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.13</link>
+            <sparkle:version>21</sparkle:version>
+            <sparkle:shortVersionString>0.1.13</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <description sparkle:format="markdown"><![CDATA[## Ongaku Desktop 0.1.13
+
+- Adds a 10-band graphic equalizer in Pro and app-audio routing and recording on macOS 14.2 or later.
+- Improves library access during imports, Effects rack scrolling, and iPhone sync retries.
+- Includes a Developer ID signed, Apple-notarized universal app for Apple Silicon and Intel Macs. Unzip it and move OngakuDesktop.app to Applications.
+]]></description>
+            <enclosure url="https://github.com/matsushibadenki/Ongaku-desktop/releases/download/v0.1.13/OngakuDesktop-0.1.13-universal.zip" length="10255306" type="application/octet-stream" sparkle:edSignature="kNAahMoLPnpU4cRSn2gFu5hLUOObvYJWfd5aUQXVUiCS30lv+dUCJc4rYkS0PHzCj+E30oeJy4+PDdXq344HAw=="/>
+        </item>
+        <item>
             <title>0.1.11</title>
             <pubDate>Tue, 20 Oct 2026 15:21:15 +0900</pubDate>
             <link>https://github.com/matsushibadenki/Ongaku-desktop/releases/tag/v0.1.11</link>
