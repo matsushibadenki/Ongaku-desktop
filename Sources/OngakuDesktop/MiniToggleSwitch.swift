@@ -21,14 +21,14 @@ struct MiniToggleSwitch: View {
             } label: {
                 ZStack {
                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(AppTheme.raised)
+                        .fill(isOn ? AppTheme.accent.opacity(0.48) : AppTheme.raised)
                         .overlay {
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
                                 .fill(AppTheme.ink.opacity(isHovering || isFocused ? 0.055 : 0))
                         }
                         .overlay {
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                .stroke(isFocused ? AppTheme.accent : AppTheme.rule, lineWidth: 1)
+                                .stroke(isFocused ? AppTheme.accent : (isOn ? AppTheme.accent.opacity(0.8) : AppTheme.rule), lineWidth: 1)
                         }
 
                     RoundedRectangle(cornerRadius: 2, style: .continuous)
@@ -111,11 +111,11 @@ struct SquareLeverToggle: View {
         } label: {
             ZStack {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(isOn ? AppTheme.accent.opacity(0.22) : AppTheme.raised)
+                    .fill(isOn ? AppTheme.accent.opacity(0.48) : AppTheme.raised)
                     .overlay {
                         RoundedRectangle(cornerRadius: 4, style: .continuous)
                             .stroke(
-                                isFocused ? AppTheme.accent : AppTheme.rule,
+                                isFocused ? AppTheme.accent : (isOn ? AppTheme.accent.opacity(0.8) : AppTheme.rule),
                                 lineWidth: 1
                             )
                     }

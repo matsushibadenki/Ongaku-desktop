@@ -75,6 +75,18 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private let defaults: UserDefaults
+    private struct ResourceCommit {
+        let item: DeviceSyncItem
+        let generation: UUID
+        let requiresReceipt: Bool
+        let completion: (@Sendable (Error?) -> Void)?
+        var gate = DeviceResourceCommitGate()
+        var timeout: DispatchWorkItem?
+    }
+    // Accessed only on the main queue.
+    private var resourceCommits: [UUID: ResourceCommit] = [:]
+    private var remoteSupportsResourceReceipts = false
+    private var remoteSupportsChunkTransfer = false
     private let lock = NSLock()
     private var peersByID: [String: MCPeerID] = [:]
     private var localItems: [UUID: DeviceSyncItem] = [:]
@@ -101,6 +113,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
     private var chunkTransfers: DeviceChunkTransferWorker!
     private var chunkEventTask: Task<Void, Never>?
 
+    private var reconnectRequests = DeviceSyncReconnectRequests()
     private var automaticInvitationCooldowns: [String: Date] = [:]
     private static let connectionLogger = Logger(subsystem: "OngakuDesktop", category: "DeviceSync")
     private var browserLifecycle = NearbyBrowserLifecycle()
@@ -625,9 +638,11 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 
         let itemID = bulkUploadQueue.removeFirst()
         bulkSyncCurrentTitle = lock.withLock { localItems[itemID]?.title }
+        let generation = chunkTransfers.client.connection
         sendLocalItem(itemID, direction: .macToPhone) { [weak self] error in
             DispatchQueue.main.async {
-                guard let self, self.isBulkSyncing else { return }
+                guard let self, self.isBulkSyncing,
+                      self.chunkTransfers.client.isCurrent(generation) else { return }
                 if error == nil {
                     self.bulkSyncCompletedCount += 1
                 } else {
@@ -684,7 +699,8 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             generatedAt: .now,
             items: values.0.sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending },
             overlays: values.1,
-            playlistOverlays: values.2
+            playlistOverlays: values.2,
+            supportsChunkTransfer: true
         )))
     }
 
@@ -744,14 +760,107 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             return
         }
 
-        chunkTransfers.client.submit(.outgoing(UUID(), item, url, direction, completion), connection: connection)
+        if lock.withLock({ remoteSupportsChunkTransfer }) {
+            chunkTransfers.client.submit(.outgoing(UUID(), item, url, direction, completion), connection: connection)
+        } else {
+            let generation = chunkTransfers.client.connection
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.chunkTransfers.client.isCurrent(generation) else { return }
+                self.sendCompatibleResource(item, url: url, direction: direction, completion: completion)
+            }
+        }
+    }
+
+    /// Older iPhone releases understand resource announcements, but not chunk offers.
+    private func sendCompatibleResource(_ item: DeviceSyncItem, url: URL,
+                                        direction: DeviceSyncDirection,
+                                        completion: (@Sendable (Error?) -> Void)?) {
+        guard let peer = session.connectedPeers.first else {
+            completion?(CocoaError(.fileNoSuchFile)); return
+        }
+        let id = UUID()
+        let generation = chunkTransfers.client.connection
+        resourceCommits[id] = ResourceCommit(item: item, generation: generation,
+            requiresReceipt: lock.withLock { remoteSupportsResourceReceipts }, completion: completion)
+        updateTransfer(.init(id: id, item: item, direction: direction, phase: .transferring))
+        do {
+            try session.send(encoder.encode(DeviceSyncMessage.resource(.init(
+                transferID: id, direction: direction, item: item))), toPeers: [peer], with: .reliable)
+        } catch {
+            finishResourceCommit(id, error: error); return
+        }
+        Self.connectionLogger.notice("sync.transfer.transport resource")
+        let progress = session.sendResource(at: url, withName: id.uuidString, toPeer: peer) { [weak self] error in
+            // Enqueue cleanup after progress registration, even for immediate completion.
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.removeProgress(for: id)
+                guard self.chunkTransfers.client.isCurrent(generation) else { return }
+                if let error { self.finishResourceCommit(id, error: error); return }
+                guard var pending = self.resourceCommits[id] else { return }
+                pending.gate.transportFinished = true
+                self.resourceCommits[id] = pending
+                if pending.gate.isComplete {
+                    self.finishResourceCommit(id, error: nil)
+                } else {
+                    self.updateTransfer(id: id, phase: .verifying)
+                    let timeout = DispatchWorkItem { [weak self] in
+                        self?.finishResourceCommit(id, error: URLError(.timedOut))
+                    }
+                    self.resourceCommits[id]?.timeout = timeout
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 120, execute: timeout)
+                }
+            }
+        }
+        if let progress { observe(progress, transferID: id) }
+        else { finishResourceCommit(id, error: URLError(.cannotConnectToHost)) }
+    }
+
+    private func finishResourceCommit(_ id: UUID, error: Error?) {
+        guard let pending = resourceCommits.removeValue(forKey: id) else { return }
+        pending.timeout?.cancel()
+        removeProgress(for: id)
+        _ = lock.withLock { terminalTransferActions.removeValue(forKey: id) }
+        guard chunkTransfers.client.isCurrent(pending.generation) else { return }
+        let cancelled = (error as NSError?)?.domain == NSCocoaErrorDomain
+            && (error as NSError?)?.code == CocoaError.userCancelled.rawValue
+        updateTransfer(id: id, phase: cancelled ? .cancelled : error.map { .failed($0.localizedDescription) } ?? .completed)
+        pending.completion?(error)
+    }
+
+    private func receiveResourceCommits(_ manifest: DeviceSyncManifest) {
+        for id in Array(resourceCommits.keys) {
+            guard var pending = resourceCommits[id], chunkTransfers.client.isCurrent(pending.generation) else { continue }
+            if pending.requiresReceipt {
+                guard let receipt = manifest.resourceReceipts?.first(where: {
+                    $0.transferID == id && $0.sha256 == pending.item.sha256
+                }) else { continue }
+                if let message = receipt.error {
+                    finishResourceCommit(id, error: NSError(domain: "Ongaku.Sync.Receiver", code: 1,
+                        userInfo: [NSLocalizedDescriptionKey: message]))
+                    continue
+                }
+            } else {
+                // Old iPhone sends a fresh manifest only after verifying/importing the file.
+                guard manifest.items.contains(where: { $0.sha256 == pending.item.sha256 }) else { continue }
+            }
+            pending.gate.receiverConfirmed = true
+            resourceCommits[id] = pending
+            if pending.gate.isComplete { finishResourceCommit(id, error: nil) }
+        }
     }
 
     private func handle(_ message: DeviceSyncMessage, connection: UUID? = nil) {
         if let connection, !chunkTransfers.client.isCurrent(connection) { return }
         switch message {
         case .manifest(let manifest):
+            lock.withLock {
+                remoteSupportsChunkTransfer = manifest.supportsChunkTransfer == true
+                remoteSupportsResourceReceipts = manifest.supportsResourceReceipts == true
+            }
             DispatchQueue.main.async { [weak self] in
+                if let connection, self?.chunkTransfers.client.isCurrent(connection) != true { return }
+                self?.receiveResourceCommits(manifest)
                 self?.remoteItems = manifest.items
                 self?.remoteStorageInfo = manifest.storage
                 self?.remoteOverlays = manifest.overlays ?? []
@@ -912,6 +1021,12 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
 
     private func applyTransferControl(_ control: DeviceTransferControl, notifyPeer: Bool, connection: UUID? = nil) {
         chunkTransfers.client.submit(.control(control, notifyPeer: notifyPeer), connection: connection)
+        if control.action == .cancel || control.action == .insufficientStorage {
+            DispatchQueue.main.async { [weak self] in
+                self?.finishResourceCommit(control.transferID, error: CocoaError(
+                    control.action == .cancel ? .userCancelled : .fileWriteOutOfSpace))
+            }
+        }
         let value = lock.withLock {
             (transferProgresses[control.transferID], pendingResources[control.transferID] != nil)
         }
@@ -926,7 +1041,7 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
             value.0?.cancel(); removeProgress(for: control.transferID)
             updateTransfer(id: control.transferID, phase: control.action == .cancel ? .cancelled : .insufficientStorage)
         }
-        if notifyPeer { send(.transferControl(control)) }
+        if notifyPeer && lock.withLock({ remoteSupportsChunkTransfer }) { send(.transferControl(control)) }
     }
 
     private func interruptActiveTransfers(resetChunkLink: Bool = true) {
@@ -940,7 +1055,10 @@ final class PhoneSyncController: NSObject, ObservableObject, @unchecked Sendable
         }
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            for index in transfers.indices where ids.contains(transfers[index].id) && transfers[index].isActive {
+            let waiting = Set(self.resourceCommits.keys)
+            self.resourceCommits.values.forEach { $0.timeout?.cancel() }
+            self.resourceCommits.removeAll()
+            for index in transfers.indices where ids.union(waiting).contains(transfers[index].id) && transfers[index].isActive {
                 transfers[index].phase = .interrupted
             }
         }
@@ -1032,6 +1150,13 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
             } else {
                 discoveredPhones.append(phone)
             }
+            if session.connectedPeers.isEmpty {
+                if case .connecting = connectionState { return }
+                if reconnectRequests.consume(info?["reconnectRequest"], peer: id) {
+                    invite(phone, automatically: false)
+                    return
+                }
+            }
             attemptAutomaticConnection(to: phone)
         }
     }
@@ -1061,7 +1186,10 @@ extension PhoneSyncController: MCNearbyServiceBrowserDelegate {
 
 extension PhoneSyncController: MCSessionDelegate {
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        if state == .notConnected { chunkTransfers.client.disconnect() }
+        if state == .notConnected {
+            lock.withLock { remoteSupportsChunkTransfer = false; remoteSupportsResourceReceipts = false }
+            chunkTransfers.client.disconnect()
+        }
         let connection = chunkTransfers.client.connection
         Task { @MainActor [weak self] in
             guard let self, chunkTransfers.client.isCurrent(connection) else { return }

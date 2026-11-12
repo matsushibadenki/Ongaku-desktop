@@ -193,7 +193,8 @@ final class MobileSyncController: NSObject, ObservableObject, @unchecked Sendabl
             deviceName: peerID.displayName,
             generatedAt: .now,
             items: items ?? localItems,
-            storage: Self.deviceStorageInfo()
+            storage: Self.deviceStorageInfo(),
+            supportsChunkTransfer: true
         )))
     }
 

@@ -357,6 +357,7 @@ struct EffectModuleCard: View, Equatable {
     @EnvironmentObject private var input: EffectRackInputRouter
     let setting: RealtimeAudioEffectSetting
     let player: PlaybackController
+    @State private var isExpanded = true
     private var kind: RealtimeAudioEffectKind { setting.kind }
 
     nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
@@ -367,27 +368,34 @@ struct EffectModuleCard: View, Equatable {
         VStack(alignment: .leading, spacing: AppTheme.spaceMD) {
             header
 
-            Divider().overlay(AppTheme.rule)
+            if isExpanded {
+                Text(kind.description)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.secondaryInk)
+                    .fixedSize(horizontal: false, vertical: true)
 
-            if kind == .graphicEqualizer {
-                graphicEqualizerControls
-            } else if kind == .equalizer {
-                ForEach(EqualizerParameterSection.all) { section in
-                    VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
-                        HStack(spacing: AppTheme.spaceXS) {
-                            Text(section.title)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(AppTheme.secondaryInk)
-                                .fixedSize()
-                            Rectangle()
-                                .fill(AppTheme.rule)
-                                .frame(height: 1)
+                Divider().overlay(AppTheme.rule)
+
+                if kind == .graphicEqualizer {
+                    graphicEqualizerControls
+                } else if kind == .equalizer {
+                    ForEach(EqualizerParameterSection.all) { section in
+                        VStack(alignment: .leading, spacing: AppTheme.spaceXS) {
+                            HStack(spacing: AppTheme.spaceXS) {
+                                Text(section.title)
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(AppTheme.secondaryInk)
+                                    .fixedSize()
+                                Rectangle()
+                                    .fill(AppTheme.rule)
+                                    .frame(height: 1)
+                            }
+                            parameterControls(section.parameters)
                         }
-                        parameterControls(section.parameters)
                     }
+                } else {
+                    parameterControls(kind.parameterDefinitions)
                 }
-            } else {
-                parameterControls(kind.parameterDefinitions)
             }
         }
         .padding(AppTheme.spaceMD)
@@ -454,21 +462,30 @@ struct EffectModuleCard: View, Equatable {
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: AppTheme.spaceSM) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: AppTheme.spaceXS) {
-                    Circle()
-                        .fill(setting.isEnabled ? AppTheme.good : AppTheme.rule)
-                        .frame(width: 7, height: 7)
-                    Text(kind.displayName)
-                        .font(.headline)
-                        .foregroundStyle(AppTheme.ink)
-                }
-                Text(kind.description)
-                    .font(.caption)
+        HStack(alignment: .center, spacing: AppTheme.spaceSM) {
+            Button {
+                guard !input.isScrolling else { return }
+                isExpanded.toggle()
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 10, weight: .semibold))
+                    .rotationEffect(.degrees(isExpanded ? 90 : 0))
                     .foregroundStyle(AppTheme.secondaryInk)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(width: 24, height: 24)
+                    .background(AppTheme.secondaryInk.opacity(0.08), in: Circle())
+                    .contentShape(Circle())
             }
+            .buttonStyle(.plain)
+            .help(L10n.text(isExpanded ? "effects.collapse" : "effects.expand"))
+            .accessibilityLabel(L10n.text(isExpanded ? "effects.collapse" : "effects.expand") + ": " + kind.displayName)
+            .accessibilityValue(L10n.text(isExpanded ? "effects.expanded" : "effects.collapsed"))
+            .effectRackControl()
+
+            Text(kind.displayName)
+                .font(.headline)
+                .foregroundStyle(AppTheme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(1)
 
             Spacer(minLength: AppTheme.spaceSM)
 

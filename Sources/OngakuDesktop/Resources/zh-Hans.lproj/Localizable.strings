@@ -1495,7 +1495,7 @@
 
 "routing.deviceCurrentRate" = "设备当前采样率";
 
-"routing.node.9" = "10 段均衡器";
+"routing.node.9" = "10-Band Equalizer";
 
 "routing.helpTitle" = "路由帮助";
 "routing.stageActions" = "画布操作";
@@ -1511,5 +1511,11 @@
 "routing.node.11" = "限幅器";
 "routing.ceiling" = "输出上限（dBFS）";
 
-"effect.graphic_equalizer.name" = "10 段均衡器";
+"effect.graphic_equalizer.name" = "10-Band Equalizer";
 "effect.graphic_equalizer.description" = "以 −12 至 +12 dB 调节 31 Hz 至 16 kHz 的十个频段。";
+
+/* Effect card disclosure */
+"effects.collapse" = "收起参数";
+"effects.expand" = "展开参数";
+"effects.expanded" = "已展开";
+"effects.collapsed" = "已收起";

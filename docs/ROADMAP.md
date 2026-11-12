@@ -1,5 +1,29 @@
 # Ongaku Desktop ロードマップ
 
+## 同期の保存確認・受信直列化・iPhoneからの再接続 — 2026-11-12
+
+- 🟢 [Done] Macの互換resource送信は通信終了だけで成功扱いにせず、iPhoneの保存確認を待機。通知のID／SHA-256照合、順序逆転、失敗、120秒の確認待ち上限、キャンセル、接続世代変更を扱う。旧iPhoneは受信後manifestのハッシュで確認。
+- 🟢 [Done] iPhoneの受信を直列化し、1曲のハッシュ・読込検証後に原子的に保存。同期インデックスを増分更新して重複を防ぎ、古い全体走査結果の上書きを拒否。受信ごとの全曲SHA-256再計算を廃止し、画面ライブラリ更新を集約。
+- 🟢 [Done] iPhoneの明示的な再試行を広告トークンでMacへ通知。Macは失敗状態・自動招待の5分待機にかかわらず、新しい要求に1回だけ再招待。承認中／接続中の重複要求を抑止し、iPhoneの全曲走査より先に待受けを開始。ペアリング承認は維持。
+- 🟢 [Done] Mac同期19テスト、製品iPhone受信コードを使う7群の回帰、両Debugビルド、3言語リソースの構文確認成功。[検証記録](quality/SYNC_COMMIT_RECONNECT_2026-11-12.md)。
+- ⭕️ [Pending] 実Mac/iPhoneの双方向接続・単曲／一括転送・保存失敗・切断再接続・確認待ちタイムアウト。実音源の読込、実容量不足、アプリ強制終了後の一時ファイル清掃。修正はソースのみで、両端の実機更新・配布は未実施。
+
+
+## Mac→iPhone同期の転送方式不整合 — 2026-11-12
+
+- 🟢 [Done] Macが常にchunkOfferを送る一方、製品iPhoneのDesktopSyncControllerはresource方式のみ受信する不整合を修正。manifestに任意のsupportsChunkTransferを追加し、明示的にtrueの相手だけにチャンク転送。未指定／falseはresource転送を使用。切断時は対応情報を破棄。
+- 🟢 [Done] iPhone送受信のProgress通知を進捗率へ反映し、切断・完了時に監視を解除。Macの互換送信は既存の進捗監視・一括送信の完了処理へ接続。英語等のエフェクトUI変更とは独立。
+- 🟢 [Done] iPhone Simulator Debugビルド成功、Mac Debugビルドと同期16テスト成功（旧manifest・対応フラグ・resource封筒の互換回帰を含む）。[検証記録](quality/SYNC_RESOURCE_COMPATIBILITY_2026-11-12.md)。
+- ⭕️ [Pending] 実Mac→iPhoneの単曲／一括転送、逆方向、切断再接続、容量不足、長時間・大容量、実際の進捗表示。現行iPhoneとのresource方式はチャンク単位の中断再開には非対応。今回の修正はソースのみで、利用中アプリの更新が必要。
+
+
+## エフェクト見出しと折りたたみ — 2026-11-12
+
+- 🟢 [Done] iPhone／Macのエフェクト名とON/OFFを縦中央揃えに統一。タイトル左の丸いシェブロンで説明・パラメーターを開閉し、閉じてもON/OFFは操作可能。iPhoneのHeadphone Spatialにも適用。表示状態と音声設定を分離し、3言語の読み上げに対応。
+- 🟢 [Done] iPhone Simulator Debugビルド、Mac SwiftPM Debugビルドと描画／入力回帰17テスト／2 suite、6言語リソースの構文確認が成功。[検証記録](quality/EFFECT_CARD_DISCLOSURE_2026-11-12.md)。
+- ⭕️ [Pending] 新規開閉操作の実画面確認、狭い幅・文字拡大・ライト／ダーク・VoiceOver、再生中の連続開閉。GUI確認環境の制約により目視未完了。インストール版には未反映。
+
+
 ## アプリ音声の波形ノード
 
 - 🟢 [Done] ノード追加メニューに「波形」を追加。約128msのステレオ振幅範囲とピーク・クリップ警告を表示し、音声を次のノードへ通過させる。英語・日本語・简体中文に対応。

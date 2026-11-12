@@ -73,3 +73,7 @@ further feature expansion. Implemented features and verified release readiness
 are tracked separately. The Mobile companion now commits and verifies its manifest
 before acknowledging a transfer; physical-device interruption testing remains part
 of release qualification.
+
+## Effect names
+
+Use the same English display name for each audio effect in every locale. Localize descriptions and controls.

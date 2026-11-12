@@ -1,0 +1,69 @@
+Building for debugging...
+[2 / 14]
+[4 / 14] OngakuDesktop
+[9 / 19] OngakuDesktop
+[17 / 39] OngakuDesktop-product
+[19 / 39] OngakuDesktop-product
+[22 / 39] OngakuDesktop-product
+[23 / 41] OngakuDesktop
+[25 / 41] OngakuDesktop-product
+[27 / 43] OngakuDesktop-product
+[30 / 43] OngakuDesktop
+[31 / 47] OngakuDesktop-product
+[34 / 50] OngakuDesktop_OngakuDesktop
+[38 / 50] OngakuDesktop
+[38 / 50] OngakuDesktop-product
+[38 / 50] OngakuDesktop
+[38 / 50] OngakuDesktop-product
+[41 / 53] OngakuDesktop
+[41 / 53] OngakuDesktop-product
+[43 / 53] OngakuDesktop
+[45 / 53] OngakuDesktop
+[49 / 60] OngakuDesktopTests-product
+[60 / 71] OngakuDesktopTests-product
+[62 / 68] OngakuDesktopTests-product
+[64 / 68] OngakuDesktopTests-product
+[66 / 68] OngakuDesktopTests-product
+Build complete! (62.33秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Effect rack rendering boundaries" started.
+◇ Suite "Effect rack input ownership" started.
+◇ Test "Unchanged cards ignore unrelated controller changes; parameter and enable edits propagate" started.
+◇ Test "EQ sections preserve every parameter exactly once and keep band controls together" started.
+✔ Test "EQ sections preserve every parameter exactly once and keep band controls together" passed after 0.165 seconds.
+✔ Test "Unchanged cards ignore unrelated controller changes; parameter and enable edits propagate" passed after 0.165 seconds.
+◇ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" started.
+◇ Test "Page boundary ignores transport updates but tracks settings, bypass and tab snapshots" started.
+✔ Test "Page boundary ignores transport updates but tracks settings, bypass and tab snapshots" passed after 0.116 seconds.
+✔ Test "Detaching clears scroll ownership without publishing into a destroying SwiftUI graph" passed after 0.116 seconds.
+◇ Test "Repeated size/place proposals reuse exact geometry; resize and invalidation remeasure" started.
+◇ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" started.
+✔ Test "Repeated size/place proposals reuse exact geometry; resize and invalidation remeasure" passed after 0.008 seconds.
+✔ Test "Two-finger scroll starts over GUI or blank space while controls remain locked" passed after 0.008 seconds.
+✔ Suite "Effect rack rendering boundaries" passed after 0.290 seconds.
+◇ Test "Wheel scroll over a control reaches the scroll view, never the control" started.
+✔ Test "Wheel scroll over a control reaches the scroll view, never the control" passed after 0.002 seconds.
+◇ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" started.
+✔ Test "Control click/drag blocks scrolling and focus-induced clip movement until release" passed after 0.071 seconds.
+◇ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" started.
+✔ Test "Finger-up and momentum keep controls frozen; a fresh gesture can start afterwards" passed after 0.275 seconds.
+◇ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" started.
+✔ Test "Scrollbar remains available and locks GUI; unrelated windows are untouched" passed after 0.011 seconds.
+◇ Test "Two-finger scroll can start on a partially clipped control to reveal it" started.
+✔ Test "Two-finger scroll can start on a partially clipped control to reveal it" passed after 0.004 seconds.
+◇ Test "Momentum produced during a control drag cannot move the rack after mouse-up" started.
+✔ Test "Momentum produced during a control drag cannot move the rack after mouse-up" passed after 0.038 seconds.
+◇ Test "Detaching the rack releases ownership and position protection" started.
+✔ Test "Detaching the rack releases ownership and position protection" passed after 0.012 seconds.
+◇ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" started.
+✔ Test "Rendered knob click/drag changes value without any clip movement, including at the viewport edge" passed after 1.196 seconds.
+◇ Test "Production effects rack preserves scroll position across repeated parameter clicks" started.
+✔ Test "Production effects rack preserves scroll position across repeated parameter clicks" passed after 50.847 seconds.
+◇ Test "Effect mode survives leaving and returning; OFF remains authoritative" started.
+✔ Test "Effect mode survives leaving and returning; OFF remains authoritative" passed after 2.593 seconds.
+◇ Test "SwiftUI region connects to the actual ancestor scroll view" started.
+✔ Test "SwiftUI region connects to the actual ancestor scroll view" passed after 0.157 seconds.
+✔ Suite "Effect rack input ownership" passed after 55.503 seconds.
+✔ Test run with 17 tests in 2 suites passed after 55.503 seconds.

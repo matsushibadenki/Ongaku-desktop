@@ -1,0 +1,12 @@
+    cd /Users/Shared/Program/Xcode/Ongaku
+    builtin-swiftStdLibTool --copy --verbose --scan-executable /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app/audio.debug.dylib --scan-folder /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app/Frameworks --scan-folder /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app/PlugIns --scan-folder /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app/SystemExtensions --scan-folder /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app/Extensions --platform iphonesimulator --toolchain /var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-v27.2.47.0.bqoi5v/Metal.xctoolchain --toolchain /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain --destination /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app/Frameworks --strip-bitcode --strip-bitcode-tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/bitcode_strip --emit-dependency-info /tmp/ongaku-disclosure-build/Build/Intermediates.noindex/Ongaku.build/Debug-iphonesimulator/audio.build/SwiftStdLibToolInputDependencies.dep --filter-for-swift-os --back-deploy-swift-span
+Ignoring --strip-bitcode because --sign was not passed
+
+PruneExplicitPrecompiledModules /tmp/ongaku-disclosure-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/ongaku-disclosure-build/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/ongaku-disclosure-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+** BUILD SUCCEEDED **
+

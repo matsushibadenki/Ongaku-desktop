@@ -1495,7 +1495,7 @@
 
 "routing.deviceCurrentRate" = "Current device rate";
 
-"routing.node.9" = "10-band equalizer";
+"routing.node.9" = "10-Band Equalizer";
 
 "routing.helpTitle" = "Routing help";
 "routing.stageActions" = "Stage actions";
@@ -1511,5 +1511,11 @@
 "routing.node.11" = "Limiter";
 "routing.ceiling" = "Ceiling (dBFS)";
 
-"effect.graphic_equalizer.name" = "10-band equalizer";
+"effect.graphic_equalizer.name" = "10-Band Equalizer";
 "effect.graphic_equalizer.description" = "Adjust ten bands from 31 Hz to 16 kHz by −12 to +12 dB.";
+
+/* Effect card disclosure */
+"effects.collapse" = "Collapse parameters";
+"effects.expand" = "Expand parameters";
+"effects.expanded" = "Expanded";
+"effects.collapsed" = "Collapsed";

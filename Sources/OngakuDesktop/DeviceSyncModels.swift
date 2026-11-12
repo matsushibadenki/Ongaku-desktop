@@ -296,6 +296,16 @@ struct DeviceSyncManifest: Codable, Equatable, Sendable {
     var storage: DeviceStorageInfo? = nil
     var overlays: [DeviceSyncTrackOverlay]? = nil
     var playlistOverlays: [DeviceSyncPlaylistOverlay]? = nil
+    var supportsChunkTransfer: Bool? = nil
+    var supportsResourceReceipts: Bool? = nil
+    var resourceReceipts: [DeviceResourceReceipt]? = nil
+}
+
+struct DeviceResourceReceipt: Codable, Equatable, Sendable {
+    var transferID: UUID
+    var sha256: String
+    /// nil means the verified file was committed to the receiver's library.
+    var error: String? = nil
 }
 
 struct DeviceSyncResourceAnnouncement: Codable, Sendable {
@@ -480,5 +490,21 @@ enum DeviceSyncFileIntegrity {
             return false
         }
         return try sha256(of: url, checkCancellation: checkCancellation) == item.sha256
+    }
+}
+
+/// Both transport completion and receiver commit are required, in either order.
+struct DeviceResourceCommitGate {
+    var transportFinished = false
+    var receiverConfirmed = false
+    var isComplete: Bool { transportFinished && receiverConfirmed }
+}
+
+/// An explicit retry bypasses automatic cooldown only once per advertised request.
+struct DeviceSyncReconnectRequests {
+    private var consumed: [String: Set<UUID>] = [:]
+    mutating func consume(_ token: String?, peer: String) -> Bool {
+        guard let token, let id = UUID(uuidString: token) else { return false }
+        return consumed[peer, default: []].insert(id).inserted
     }
 }

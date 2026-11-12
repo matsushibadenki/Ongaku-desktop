@@ -1,0 +1,48 @@
+Building for debugging...
+[1 / 1]
+[3 / 13] OngakuDesktop-product
+[7 / 17] OngakuDesktop
+[15 / 25] OngakuDesktop
+[15 / 25] OngakuDesktop-product
+[18 / 23] OngakuDesktopTests-product
+[20 / 25] OngakuDesktopTests-product
+[26 / 30] OngakuDesktopTests-product
+Build complete! (6.90秒)
+◇ Test run started.
+↳ Testing Library Version: 2403
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite "Device sync protocol" started.
+◇ Test "Legacy manifests default to resource transport; chunk support requires explicit opt-in" started.
+◇ Test "Playlist sync preserves order and can be safely undone" started.
+◇ Test "Local copy index follows library replacement and duplicate hashes" started.
+◇ Test "Manifest messages preserve Ongaku track overlays" started.
+◇ Test "Overlay receipt survives message encoding" started.
+◇ Test "Overlay identity matching tolerates display differences but rejects distant durations" started.
+◇ Test "Manifest messages preserve independent playlist overlays" started.
+◇ Test "Selected overlays merge counters without replacing playback history" started.
+◇ Test "Individual transfer requests preserve the stable item ID" started.
+◇ Test "Manifest messages preserve transfer metadata" started.
+◇ Test "Manifests from an older app remain compatible" started.
+◇ Test "Overlay application changes only selected fields" started.
+◇ Test "Bonjour discovery starts and stops at most once per lifecycle transition" started.
+◇ Test "Overlay audit history persists and records conflict reasons" started.
+◇ Test "Resource fallback preserves the wire format understood by the shipping iPhone" started.
+◇ Test "SHA-256 verification accepts the original and rejects changed metadata" started.
+✔ Test "Legacy manifests default to resource transport; chunk support requires explicit opt-in" passed after 0.001 seconds.
+✔ Test "Bonjour discovery starts and stops at most once per lifecycle transition" passed after 0.001 seconds.
+✔ Test "Individual transfer requests preserve the stable item ID" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve Ongaku track overlays" passed after 0.001 seconds.
+✔ Test "Overlay receipt survives message encoding" passed after 0.001 seconds.
+✔ Test "Resource fallback preserves the wire format understood by the shipping iPhone" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve independent playlist overlays" passed after 0.001 seconds.
+✔ Test "Manifests from an older app remain compatible" passed after 0.001 seconds.
+✔ Test "Manifest messages preserve transfer metadata" passed after 0.001 seconds.
+✔ Test "Overlay identity matching tolerates display differences but rejects distant durations" passed after 0.001 seconds.
+✔ Test "SHA-256 verification accepts the original and rejects changed metadata" passed after 0.001 seconds.
+✔ Test "Local copy index follows library replacement and duplicate hashes" passed after 0.060 seconds.
+✔ Test "Overlay audit history persists and records conflict reasons" passed after 0.167 seconds.
+✔ Test "Selected overlays merge counters without replacing playback history" passed after 0.190 seconds.
+✔ Test "Overlay application changes only selected fields" passed after 0.194 seconds.
+✔ Test "Playlist sync preserves order and can be safely undone" passed after 0.202 seconds.
+✔ Suite "Device sync protocol" passed after 0.202 seconds.
+✔ Test run with 16 tests in 1 suite passed after 0.202 seconds.

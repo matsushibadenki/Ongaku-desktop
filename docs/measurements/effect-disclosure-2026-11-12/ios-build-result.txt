@@ -1,0 +1,13 @@
+Command: xcodebuild -project Ongaku.xcodeproj -scheme audio -configuration Debug -destination generic/platform=iOS Simulator -derivedDataPath /tmp/ongaku-disclosure-build CODE_SIGNING_ALLOWED=NO build
+Touch /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app (in target 'audio' from project 'Ongaku')
+    cd /Users/Shared/Program/Xcode/Ongaku
+    /usr/bin/touch -c /tmp/ongaku-disclosure-build/Build/Products/Debug-iphonesimulator/audio.app
+
+PruneExplicitPrecompiledModules /tmp/ongaku-disclosure-build/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/ongaku-disclosure-build/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/ongaku-disclosure-build/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+** BUILD SUCCEEDED **
+

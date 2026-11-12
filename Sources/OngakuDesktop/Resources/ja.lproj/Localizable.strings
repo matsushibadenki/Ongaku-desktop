@@ -1495,7 +1495,7 @@
 
 "routing.deviceCurrentRate" = "機器の現在値";
 
-"routing.node.9" = "10バンドイコライザー";
+"routing.node.9" = "10-Band Equalizer";
 
 "routing.helpTitle" = "操作ヘルプ";
 "routing.stageActions" = "ステージ操作";
@@ -1511,5 +1511,11 @@
 "routing.node.11" = "リミッター";
 "routing.ceiling" = "出力上限（dBFS）";
 
-"effect.graphic_equalizer.name" = "10バンドイコライザー";
+"effect.graphic_equalizer.name" = "10-Band Equalizer";
 "effect.graphic_equalizer.description" = "31 Hz〜16 kHzの各帯域を−12〜+12 dBで調整します。";
+
+/* Effect card disclosure */
+"effects.collapse" = "パラメーターを折りたたむ";
+"effects.expand" = "パラメーターを展開";
+"effects.expanded" = "展開中";
+"effects.collapsed" = "折りたたみ中";

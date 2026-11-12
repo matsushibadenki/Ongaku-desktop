@@ -4,6 +4,77 @@ import Testing
 
 @Suite("Device sync protocol")
 struct DeviceSyncTests {
+    @Test("Legacy manifests default to resource transport; chunk support requires explicit opt-in")
+    func legacyTransportNegotiation() throws {
+        let legacy = Data(#"{"deviceName":"iPhone","generatedAt":0,"items":[]}"#.utf8)
+        let decoded = try JSONDecoder().decode(DeviceSyncManifest.self, from: legacy)
+        #expect(decoded.supportsChunkTransfer == nil)
+        #expect(decoded.supportsChunkTransfer != true)
+        for supported in [false, true] {
+            var manifest = decoded
+            manifest.supportsChunkTransfer = supported
+            let roundTrip = try JSONDecoder().decode(DeviceSyncManifest.self, from: JSONEncoder().encode(manifest))
+            #expect(roundTrip.supportsChunkTransfer == supported)
+        }
+    }
+
+    @Test("Resource fallback preserves the wire format understood by the shipping iPhone")
+    func compatibleResourceEnvelope() throws {
+        struct LegacyEnvelope: Decodable {
+            let kind: String
+            let resource: DeviceSyncResourceAnnouncement
+        }
+        let announcement = DeviceSyncResourceAnnouncement(transferID: UUID(), direction: .macToPhone, item: makeItem())
+        let data = try JSONEncoder().encode(DeviceSyncMessage.resource(announcement))
+        let legacy = try JSONDecoder().decode(LegacyEnvelope.self, from: data)
+        #expect(legacy.kind == "resource")
+        #expect(legacy.resource.transferID == announcement.transferID)
+        #expect(legacy.resource.item == announcement.item)
+        #expect(legacy.resource.direction == .macToPhone)
+    }
+
+    @Test("Receiver commit and transport completion are both required, in either order")
+    func resourceCommitOrder() {
+        var gate = DeviceResourceCommitGate()
+        gate.transportFinished = true
+        #expect(!gate.isComplete)
+        gate.receiverConfirmed = true
+        #expect(gate.isComplete)
+        gate = DeviceResourceCommitGate()
+        gate.receiverConfirmed = true
+        #expect(!gate.isComplete)
+        gate.transportFinished = true
+        #expect(gate.isComplete)
+    }
+
+    @Test("Commit receipts preserve transfer identity, hash, success and failure")
+    func resourceCommitReceipts() throws {
+        for error in [nil, "Disk full"] as [String?] {
+            let receipt = DeviceResourceReceipt(transferID: UUID(), sha256: "abc", error: error)
+            let manifest = DeviceSyncManifest(deviceName: "iPhone", generatedAt: .now, items: [],
+                supportsResourceReceipts: true, resourceReceipts: [receipt])
+            let decoded = try JSONDecoder().decode(DeviceSyncManifest.self, from: JSONEncoder().encode(manifest))
+            #expect(decoded.resourceReceipts == [receipt])
+            #expect(decoded.supportsResourceReceipts == true)
+        }
+    }
+
+    @Test("Explicit phone retry bypasses cooldown once; rediscovery is not another request")
+    func explicitPhoneRetry() {
+        var requests = DeviceSyncReconnectRequests()
+        let first = UUID().uuidString
+        let results = [
+            requests.consume(nil, peer: "iPhone"),
+            requests.consume("invalid", peer: "iPhone"),
+            requests.consume(first, peer: "iPhone"),
+            requests.consume(first, peer: "iPhone"),
+            requests.consume(UUID().uuidString, peer: "iPhone"),
+            requests.consume(first, peer: "iPhone"), // Late rediscovery of an older request.
+            requests.consume(first, peer: "Other iPhone")
+        ]
+        #expect(results == [false, false, true, false, true, false, true])
+    }
+
     private func isolatedWorker(_ root: URL) -> DeviceChunkTransferWorker {
         DeviceChunkTransferWorker(checkpointDirectory: root.appendingPathComponent("checkpoints"),
             destination: .directory(root.appendingPathComponent("received")), send: { _ in })
